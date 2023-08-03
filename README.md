@@ -5,9 +5,9 @@ Levitation protocol is a modular decentralized sequencer (DS) platform that enab
 
 [See Levitation protocol overview for more detail](https://github.com/skalenetwork/levitation_decentralized_zk_sequencer)
 
-**This is repo is a Polygon Hermez module for Levitation.
+**This is repo is a Polygon Hermez module for Levitation**.
 
-Thanks to the Hermez team for all the code we are just making little tweaks!**
+**Thanks to the Hermez team for all the code we are just making little tweaks!**
 
 For Levitation we need to inject little tweaks to the ZkEVM node. This is the frond end node that implements ETH API.
 Other components do not need to be modified much.
