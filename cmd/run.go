@@ -187,6 +187,15 @@ func start(cliCtx *cli.Context) error {
 			seqSender := createSequenceSender(*c, poolInstance, ethTxManagerStorage, st, eventLog)
 			go seqSender.Start(ctx)
 		case RPC:
+
+			//LEVITATION_BEGIN
+			// Start CandidateBlockPullAgent
+			log.Errorf("LEVITATION:Will now start new CandidateBlockPullAgent")
+			if err := jsonrpc.NewCandidateBlockPullAgent(c.RPC, l2ChainID).Start(); err != nil {
+				log.Fatal(err)
+			}
+			//LEVITATION_END
+
 			ev.Component = event.Component_RPC
 			ev.Description = "Running JSON-RPC server"
 			err := eventLog.LogEvent(ctx, ev)
@@ -204,6 +213,7 @@ func start(cliCtx *cli.Context) error {
 			for _, a := range cliCtx.StringSlice(config.FlagHTTPAPI) {
 				apis[a] = true
 			}
+
 			go runJSONRPCServer(*c, etherman, l2ChainID, poolInstance, st, apis)
 		case SYNCHRONIZER:
 			ev.Component = event.Component_Synchronizer
@@ -314,6 +324,7 @@ func runSynchronizer(cfg config.Config, etherman *etherman.Client, ethTxManager 
 
 func runJSONRPCServer(c config.Config, etherman *etherman.Client, chainID uint64, pool *pool.Pool, st *state.State, apis map[string]bool) {
 	var err error
+
 	storage := jsonrpc.NewStorage()
 	c.RPC.MaxCumulativeGasUsed = c.Sequencer.MaxCumulativeGasUsed
 	if !c.IsTrustedSequencer {
@@ -373,14 +384,6 @@ func runJSONRPCServer(c config.Config, etherman *etherman.Client, chainID uint64
 	if err := jsonrpc.NewServer(c.RPC, chainID, pool, st, storage, services).Start(); err != nil {
 		log.Fatal(err)
 	}
-
-	//LEVITATION_BEGIN
-	// Start CandidateBlockPullAgent
-	log.Infof("LEVITATION:Will not start New")
-	if err := jsonrpc.NewCandidateBlockPullAgent(c.RPC, chainID).Start(); err != nil {
-		log.Fatal(err)
-	}
-	//LEVITATION_END
 }
 
 func createSequencer(cfg config.Config, pool *pool.Pool, etmStorage *ethtxmanager.PostgresStorage, st *state.State, eventLog *event.EventLog) *sequencer.Sequencer {

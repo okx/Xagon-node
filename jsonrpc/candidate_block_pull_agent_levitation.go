@@ -24,16 +24,14 @@ func NewCandidateBlockPullAgent(
 		chainID:       chainID,
 		exitRequested: false,
 	}
-
-	log.Infof("LEVITATION:Created NewCandidateBlockPullAgent")
 	return agent
 }
 
 // Start initializes the JSON RPC server to listen for request
 func (agent *CandidateBlockPullAgent) Start() error {
-	log.Infof("LEVITATION:Starting NewCandidateBlockPullAgent ...")
+	log.Infof("LEVITATION:Starting NewCandidateBlockPullAgent")
 	go agent.doWork()
-	log.Infof("LEVITATION:Started NewCandidateBlockPullAgent ...")
+	log.Infof("LEVITATION:Started NewCandidateBlockPullAgent")
 	return nil
 }
 
