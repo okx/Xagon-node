@@ -187,15 +187,13 @@ func start(cliCtx *cli.Context) error {
 			seqSender := createSequenceSender(*c, poolInstance, ethTxManagerStorage, st, eventLog)
 			go seqSender.Start(ctx)
 		case RPC:
-
 			//LEVITATION_BEGIN
 			// Start CandidateBlockPullAgent
-			log.Errorf("LEVITATION:Will now start new CandidateBlockPullAgent")
+			log.Info("LEVITATION:Will now start new CandidateBlockPullAgent")
 			if err := jsonrpc.NewCandidateBlockPullAgent(c.RPC, l2ChainID).Start(); err != nil {
 				log.Fatal(err)
 			}
 			//LEVITATION_END
-
 			ev.Component = event.Component_RPC
 			ev.Description = "Running JSON-RPC server"
 			err := eventLog.LogEvent(ctx, ev)
