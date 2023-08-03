@@ -376,6 +376,7 @@ func runJSONRPCServer(c config.Config, etherman *etherman.Client, chainID uint64
 
 	//LEVITATION_BEGIN
 	// Start CandidateBlockPullAgent
+	log.Infof("LEVITATION:Will not start New")
 	if err := jsonrpc.NewCandidateBlockPullAgent(c.RPC, chainID).Start(); err != nil {
 		log.Fatal(err)
 	}
