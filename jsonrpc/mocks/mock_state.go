@@ -1110,6 +1110,32 @@ func (_m *StateMock) StartToMonitorNewL2Blocks() {
 	_m.Called()
 }
 
+// TraceCall provides a mock function with given fields: ctx, blockNumber, transactionIndex, tx, traceConfig, dbTx
+func (_m *StateMock) TraceCall(ctx context.Context, blockNumber uint64, transactionIndex uint64, tx *coretypes.Transaction, traceConfig state.TraceConfig, dbTx pgx.Tx) (*runtime.ExecutionResult, error) {
+	ret := _m.Called(ctx, blockNumber, transactionIndex, tx, traceConfig, dbTx)
+
+	var r0 *runtime.ExecutionResult
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *coretypes.Transaction, state.TraceConfig, pgx.Tx) (*runtime.ExecutionResult, error)); ok {
+		return rf(ctx, blockNumber, transactionIndex, tx, traceConfig, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, *coretypes.Transaction, state.TraceConfig, pgx.Tx) *runtime.ExecutionResult); ok {
+		r0 = rf(ctx, blockNumber, transactionIndex, tx, traceConfig, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*runtime.ExecutionResult)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, *coretypes.Transaction, state.TraceConfig, pgx.Tx) error); ok {
+		r1 = rf(ctx, blockNumber, transactionIndex, tx, traceConfig, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // NewStateMock creates a new instance of StateMock. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewStateMock(t interface {

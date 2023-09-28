@@ -29,6 +29,7 @@ type StateInterface interface {
 	StartToMonitorNewL2Blocks()
 	BeginStateTransaction(ctx context.Context) (pgx.Tx, error)
 	DebugTransaction(ctx context.Context, transactionHash common.Hash, traceConfig state.TraceConfig, dbTx pgx.Tx) (*runtime.ExecutionResult, error)
+	TraceCall(ctx context.Context, blockNumber uint64, senderAddress common.Address, tx *types.Transaction, traceConfig state.TraceConfig, dbTx pgx.Tx) (*runtime.ExecutionResult, error)
 	EstimateGas(transaction *types.Transaction, senderAddress common.Address, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error)
 	GetBalance(ctx context.Context, address common.Address, root common.Hash) (*big.Int, error)
 	GetCode(ctx context.Context, address common.Address, root common.Hash) ([]byte, error)

@@ -20,6 +20,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime/instrumentation/js"
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime/instrumentation/tracers"
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime/instrumentation/tracers/native"
+	"github.com/0xPolygonHermez/zkevm-node/state/runtime/instrumentation/tracers/sentio"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -446,6 +447,297 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 		if err != nil {
 			log.Errorf("debug transaction: failed to create jsTracer, err: %v", err)
 			return nil, fmt.Errorf("failed to create jsTracer, err: %v", err)
+		}
+	} else if *traceConfig.Tracer == "sentioTracer" {
+		customTracer, err = sentio.NewSentioTracer(tracerContext, traceConfig.TracerConfig)
+		if err != nil {
+			log.Errorf("debug transaction: failed to create sentioTracer, err: %v", err)
+			return nil, fmt.Errorf("failed to create sentioTracer, err: %v", err)
+		}
+	} else if *traceConfig.Tracer == "sentioPrestateTracer" {
+		customTracer, err = sentio.NewSentioPrestateTracer(tracerContext, traceConfig.TracerConfig)
+		if err != nil {
+			log.Errorf("debug transaction: failed to create sentioPrestateTracer, err: %v", err)
+			return nil, fmt.Errorf("failed to create sentioPrestateTracer, err: %v", err)
+		}
+	} else {
+		return nil, fmt.Errorf("invalid tracer: %v, err: %v", traceConfig.Tracer, err)
+	}
+
+	fakeDB := &FakeDB{State: s, stateRoot: batch.StateRoot.Bytes()}
+	evm := fakevm.NewFakeEVM(fakevm.BlockContext{BlockNumber: big.NewInt(1)}, fakevm.TxContext{GasPrice: gasPrice}, fakeDB, params.TestChainConfig, fakevm.Config{Debug: true, Tracer: customTracer})
+
+	traceResult, err := s.buildTrace(evm, result.ExecutorTrace, customTracer)
+	if err != nil {
+		log.Errorf("debug transaction: failed parse the trace using the tracer: %v", err)
+		return nil, fmt.Errorf("failed parse the trace using the tracer: %v", err)
+	}
+
+	result.ExecutorTraceResult = traceResult
+
+	return result, nil
+}
+
+// TraceCall execute a tx to generate its trace
+func (s *State) TraceCall(ctx context.Context, blockNumber uint64, sender common.Address, tx *types.Transaction, traceConfig TraceConfig, dbTx pgx.Tx) (*runtime.ExecutionResult, error) {
+	// gets the l2 block including the transaction
+	block, err := s.GetL2BlockByNumber(ctx, blockNumber, dbTx)
+	if err != nil {
+		return nil, err
+	}
+
+	// get the previous L2 Block
+	previousBlockNumber := uint64(0)
+	if blockNumber > 0 {
+		previousBlockNumber = blockNumber - 1
+	}
+	previousBlock, err := s.GetL2BlockByNumber(ctx, previousBlockNumber, dbTx)
+	if err != nil {
+		return nil, err
+	}
+
+	// gets batch that including the l2 block
+	batch, err := s.GetBatchByL2BlockNumber(ctx, block.NumberU64(), dbTx)
+	if err != nil {
+		return nil, err
+	}
+
+	forkId := s.GetForkIDByBatchNumber(batch.BatchNumber)
+	// gets batch that including the previous l2 block
+	previousBatch, err := s.GetBatchByL2BlockNumber(ctx, previousBlock.NumberU64(), dbTx)
+	if err != nil {
+		return nil, err
+	}
+
+	loadedNonce, err := s.tree.GetNonce(ctx, sender, previousBlock.Root().Bytes())
+	if err != nil {
+		return nil, err
+	}
+	nonce := loadedNonce.Uint64()
+
+	v, _ := new(big.Int).SetString("0x1c", 0)
+	r, _ := new(big.Int).SetString("0xa54492cfacf71aef702421b7fbc70636537a7b2fbe5718c5ed970a001bb7756b", 0)
+	ss, _ := new(big.Int).SetString("0x2e9fb27acc75955b898f0b12ec52aa34bf08f01db654374484b80bf12f0d841e", 0)
+	tx = types.NewTx(&types.LegacyTx{
+		Nonce:    nonce,
+		To:       tx.To(),
+		Value:    tx.Value(),
+		Gas:      tx.Gas(),
+		GasPrice: tx.GasPrice(),
+		Data:     tx.Data(),
+		V:        v,
+		R:        r,
+		S:        ss,
+	})
+
+	transactionHash := tx.Hash()
+
+	// generate batch l2 data for the transaction
+	batchL2Data, err := EncodeTransactions([]types.Transaction{*tx}, []uint8{MaxEffectivePercentage}, forkId)
+	if err != nil {
+		return nil, err
+	}
+
+	var txHashToGenerateCallTrace []byte
+	var txHashToGenerateExecuteTrace []byte
+
+	if traceConfig.IsDefaultTracer() {
+		txHashToGenerateExecuteTrace = transactionHash.Bytes()
+	} else {
+		txHashToGenerateCallTrace = transactionHash.Bytes()
+	}
+
+	// Create Batch
+	traceConfigRequest := &executor.TraceConfig{
+		TxHashToGenerateCallTrace:    txHashToGenerateCallTrace,
+		TxHashToGenerateExecuteTrace: txHashToGenerateExecuteTrace,
+		// set the defaults to the maximum information we can have.
+		// this is needed to process custom tracers later
+		DisableStorage:   cFalse,
+		DisableStack:     cFalse,
+		EnableMemory:     cTrue,
+		EnableReturnData: cTrue,
+	}
+
+	// if the default tracer is used, then we review the information
+	// we want to have in the trace related to the parameters we received.
+	if traceConfig.IsDefaultTracer() {
+		if traceConfig.DisableStorage {
+			traceConfigRequest.DisableStorage = cTrue
+		}
+		if traceConfig.DisableStack {
+			traceConfigRequest.DisableStack = cTrue
+		}
+		if !traceConfig.EnableMemory {
+			traceConfigRequest.EnableMemory = cFalse
+		}
+		if !traceConfig.EnableReturnData {
+			traceConfigRequest.EnableReturnData = cFalse
+		}
+	}
+
+	oldStateRoot := previousBlock.Root()
+	processBatchRequest := &executor.ProcessBatchRequest{
+		OldBatchNum:      batch.BatchNumber - 1,
+		OldStateRoot:     oldStateRoot.Bytes(),
+		OldAccInputHash:  previousBatch.AccInputHash.Bytes(),
+		From:             sender.String(),
+		BatchL2Data:      batchL2Data,
+		GlobalExitRoot:   batch.GlobalExitRoot.Bytes(),
+		EthTimestamp:     uint64(batch.Timestamp.Unix()),
+		Coinbase:         batch.Coinbase.String(),
+		UpdateMerkleTree: cFalse,
+		ChainId:          s.cfg.ChainID,
+		ForkId:           forkId,
+		TraceConfig:      traceConfigRequest,
+	}
+
+	// Send Batch to the Executor
+	startTime := time.Now()
+	processBatchResponse, err := s.executorClient.ProcessBatch(ctx, processBatchRequest)
+	endTime := time.Now()
+	if err != nil {
+		return nil, err
+	} else if processBatchResponse.Error != executor.ExecutorError_EXECUTOR_ERROR_NO_ERROR {
+		err = executor.ExecutorErr(processBatchResponse.Error)
+		s.eventLog.LogExecutorError(ctx, processBatchResponse.Error, processBatchRequest)
+		return nil, err
+	}
+
+	// Transactions are decoded only for logging purposes
+	// as they are not longer needed in the convertToProcessBatchResponse function
+	txs, _, _, err := DecodeTxs(batchL2Data, forkId)
+	if err != nil && !errors.Is(err, ErrInvalidData) {
+		return nil, err
+	}
+
+	for _, tx := range txs {
+		log.Debugf(tx.Hash().String())
+	}
+
+	convertedResponse, err := s.convertToProcessBatchResponse(processBatchResponse)
+	if err != nil {
+		return nil, err
+	}
+
+	// Sanity check
+	response := convertedResponse.Responses[0]
+	log.Debugf(response.TxHash.String())
+	if response.TxHash != transactionHash {
+		return nil, fmt.Errorf("tx hash not found in executor response")
+	}
+
+	// const path = "/Users/thiago/github.com/0xPolygonHermez/zkevm-node/dist/%v.json"
+	// filePath := fmt.Sprintf(path, "EXECUTOR_processBatchResponse")
+	// c, _ := json.MarshalIndent(processBatchResponse, "", "    ")
+	// os.WriteFile(filePath, c, 0644)
+
+	// filePath = fmt.Sprintf(path, "NODE_execution_trace")
+	// c, _ = json.MarshalIndent(response.ExecutionTrace, "", "    ")
+	// os.WriteFile(filePath, c, 0644)
+
+	// filePath = fmt.Sprintf(path, "NODE_call_trace")
+	// c, _ = json.MarshalIndent(response.CallTrace, "", "    ")
+	// os.WriteFile(filePath, c, 0644)
+
+	result := &runtime.ExecutionResult{
+		CreateAddress: response.CreateAddress,
+		GasLeft:       response.GasLeft,
+		GasUsed:       response.GasUsed,
+		ReturnValue:   response.ReturnValue,
+		StateRoot:     response.StateRoot.Bytes(),
+		StructLogs:    response.ExecutionTrace,
+		ExecutorTrace: response.CallTrace,
+	}
+
+	// if is the default trace, return the result
+	if traceConfig.IsDefaultTracer() {
+		return result, nil
+	}
+
+	//senderAddress, err := GetSender(*tx)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	context := instrumentation.Context{
+		From:         sender.String(),
+		Input:        tx.Data(),
+		Gas:          tx.Gas(),
+		Value:        tx.Value(),
+		Output:       result.ReturnValue,
+		GasPrice:     tx.GasPrice().String(),
+		OldStateRoot: oldStateRoot,
+		Time:         uint64(endTime.Sub(startTime)),
+		GasUsed:      result.GasUsed,
+	}
+
+	// Fill trace context
+	if tx.To() == nil {
+		context.Type = "CREATE"
+		context.To = result.CreateAddress.Hex()
+	} else {
+		context.Type = "CALL"
+		context.To = tx.To().Hex()
+	}
+
+	result.ExecutorTrace.Context = context
+
+	gasPrice, ok := new(big.Int).SetString(context.GasPrice, encoding.Base10)
+	if !ok {
+		log.Errorf("debug transaction: failed to parse gasPrice")
+		return nil, fmt.Errorf("failed to parse gasPrice")
+	}
+
+	tracerContext := &tracers.Context{
+		BlockHash:   block.Hash(),
+		BlockNumber: big.NewInt(int64(blockNumber)),
+		TxIndex:     0,
+		TxHash:      transactionHash,
+	}
+
+	var customTracer tracers.Tracer
+	if traceConfig.Is4ByteTracer() {
+		customTracer, err = native.NewFourByteTracer(tracerContext, traceConfig.TracerConfig)
+		if err != nil {
+			log.Errorf("debug transaction: failed to create 4byteTracer, err: %v", err)
+			return nil, fmt.Errorf("failed to create 4byteTracer, err: %v", err)
+		}
+	} else if traceConfig.IsCallTracer() {
+		customTracer, err = native.NewCallTracer(tracerContext, traceConfig.TracerConfig)
+		if err != nil {
+			log.Errorf("debug transaction: failed to create callTracer, err: %v", err)
+			return nil, fmt.Errorf("failed to create callTracer, err: %v", err)
+		}
+	} else if traceConfig.IsNoopTracer() {
+		customTracer, err = native.NewNoopTracer(tracerContext, traceConfig.TracerConfig)
+		if err != nil {
+			log.Errorf("debug transaction: failed to create noopTracer, err: %v", err)
+			return nil, fmt.Errorf("failed to create noopTracer, err: %v", err)
+		}
+	} else if traceConfig.IsPrestateTracer() {
+		customTracer, err = native.NewPrestateTracer(tracerContext, traceConfig.TracerConfig)
+		if err != nil {
+			log.Errorf("debug transaction: failed to create prestateTracer, err: %v", err)
+			return nil, fmt.Errorf("failed to create prestateTracer, err: %v", err)
+		}
+	} else if traceConfig.IsJSCustomTracer() {
+		customTracer, err = js.NewJsTracer(*traceConfig.Tracer, tracerContext, traceConfig.TracerConfig)
+		if err != nil {
+			log.Errorf("debug transaction: failed to create jsTracer, err: %v", err)
+			return nil, fmt.Errorf("failed to create jsTracer, err: %v", err)
+		}
+	} else if *traceConfig.Tracer == "sentioTracer" {
+		customTracer, err = sentio.NewSentioTracer(tracerContext, traceConfig.TracerConfig)
+		if err != nil {
+			log.Errorf("debug transaction: failed to create sentioTracer, err: %v", err)
+			return nil, fmt.Errorf("failed to create sentioTracer, err: %v", err)
+		}
+	} else if *traceConfig.Tracer == "sentioPrestateTracer" {
+		customTracer, err = sentio.NewSentioPrestateTracer(tracerContext, traceConfig.TracerConfig)
+		if err != nil {
+			log.Errorf("debug transaction: failed to create sentioPrestateTracer, err: %v", err)
+			return nil, fmt.Errorf("failed to create sentioPrestateTracer, err: %v", err)
 		}
 	} else {
 		return nil, fmt.Errorf("invalid tracer: %v, err: %v", traceConfig.Tracer, err)

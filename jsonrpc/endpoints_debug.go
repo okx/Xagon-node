@@ -18,7 +18,9 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime/fakevm"
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime/instrumentation"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/common/hexutil"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/holiman/uint256"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -304,7 +306,7 @@ func (d *DebugEndpoints) buildTraceTransaction(ctx context.Context, hash common.
 	}
 
 	// check tracer
-	if traceCfg.Tracer != nil && *traceCfg.Tracer != "" && !isBuiltInTracer(*traceCfg.Tracer) && !isJSCustomTracer(*traceCfg.Tracer) {
+	if traceCfg.Tracer != nil && *traceCfg.Tracer != "" && !isBuiltInTracer(*traceCfg.Tracer) && !isJSCustomTracer(*traceCfg.Tracer) && !isSentioTracer(*traceCfg.Tracer) {
 		return RPCErrorResponse(types.DefaultErrorCode, "invalid tracer", nil, false)
 	}
 
@@ -440,6 +442,65 @@ func (d *DebugEndpoints) buildStructLogs(stateStructLogs []instrumentation.Struc
 	return structLogs
 }
 
+func (d *DebugEndpoints) buildTraceCall(ctx context.Context, blockNumber uint64, sender common.Address, tx *ethTypes.Transaction, cfg *traceConfig, dbTx pgx.Tx) (interface{}, types.Error) {
+	traceCfg := cfg
+	if traceCfg == nil {
+		traceCfg = defaultTraceConfig
+	}
+
+	// check tracer
+	if traceCfg.Tracer != nil && *traceCfg.Tracer != "" && !isBuiltInTracer(*traceCfg.Tracer) && !isJSCustomTracer(*traceCfg.Tracer) && !isSentioTracer(*traceCfg.Tracer) {
+		return RPCErrorResponse(types.DefaultErrorCode, "invalid tracer", nil, false)
+	}
+
+	stateTraceConfig := state.TraceConfig{
+		DisableStack:     traceCfg.DisableStack,
+		DisableStorage:   traceCfg.DisableStorage,
+		EnableMemory:     traceCfg.EnableMemory,
+		EnableReturnData: traceCfg.EnableReturnData,
+		Tracer:           traceCfg.Tracer,
+		TracerConfig:     traceCfg.TracerConfig,
+	}
+	result, err := d.state.TraceCall(ctx, blockNumber, sender, tx, stateTraceConfig, dbTx)
+	if errors.Is(err, state.ErrNotFound) {
+		return RPCErrorResponse(types.DefaultErrorCode, "transaction not found", nil, false)
+	} else if err != nil {
+		errorMessage := fmt.Sprintf("failed to get trace: %v", err.Error())
+		return nil, types.NewRPCError(types.DefaultErrorCode, errorMessage)
+	}
+
+	// if a tracer was specified, then return the trace result
+	if stateTraceConfig.Tracer != nil && *stateTraceConfig.Tracer != "" && len(result.ExecutorTraceResult) > 0 {
+		return result.ExecutorTraceResult, nil
+	}
+
+	//receipt, err := d.state.GetTransactionReceipt(ctx, tx.Hash(), dbTx)
+	//if err != nil {
+	//	const errorMessage = "failed to tx receipt"
+	//	log.Errorf("%v: %v", errorMessage, err)
+	//	return nil, types.NewRPCError(types.DefaultErrorCode, errorMessage)
+	//}
+
+	//failed := receipt.Status == ethTypes.ReceiptStatusFailed
+	// TODO check is this enough or not
+	failed := result.Failed()
+	var returnValue interface{}
+	if stateTraceConfig.EnableReturnData {
+		returnValue = common.Bytes2Hex(result.ReturnValue)
+	}
+
+	structLogs := d.buildStructLogs(result.StructLogs, *traceCfg)
+
+	resp := traceTransactionResponse{
+		Gas:         result.GasUsed,
+		Failed:      failed,
+		ReturnValue: returnValue,
+		StructLogs:  structLogs,
+	}
+
+	return resp, nil
+}
+
 // isBuiltInTracer checks if the tracer is one of the
 // built-in tracers
 func isBuiltInTracer(tracer string) bool {
@@ -459,6 +520,48 @@ func isJSCustomTracer(tracer string) bool {
 	return strings.Contains(tracer, "result") && strings.Contains(tracer, "fault")
 }
 
+// // getHttpScheme tries to get the scheme from the http request in different ways
+// func getHttpScheme(r *http.Request) (string, error) {
+// 	// scheme headers
+// 	headers := []string{"X-Forwarded-Proto", "X-Forwarded-Protocol", "X-Url-Scheme"}
+// 	for _, header := range headers {
+// 		value := r.Header.Get(header)
+// 		if value == "http" || value == "https" {
+// 			return value, nil
+// 		} else if value != "" {
+// 			return "", fmt.Errorf("header %v must be set to HTTP or HTTPS, value found: %s", header, value)
+// 		}
+// 	}
+
+// 	// https on/off headers
+// 	headers = []string{"X-Forwarded-Ssl", "Front-End-Https"}
+// 	for _, header := range headers {
+// 		value := r.Header.Get(header)
+// 		if value == "on" {
+// 			return "https", nil
+// 		} else if value == "off" {
+// 			return "http", nil
+// 		} else if value != "" {
+// 			return "", fmt.Errorf("header %v must be set to ON or OFF, value found: %s", header, value)
+// 		}
+// 	}
+
+//		// httpRequest TLS check
+//		scheme := "http"
+//		if r.TLS != nil {
+//			scheme = "https"
+//		}
+//		return scheme, nil
+//	}
+func isSentioTracer(tracer string) bool {
+	switch tracer {
+	case "sentioTracer", "sentioPrestateTracer":
+		return true
+	default:
+		return false
+	}
+}
+
 // waitTimeout waits for the waitGroup for the specified max timeout.
 // Returns true if waiting timed out.
 func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
@@ -473,4 +576,120 @@ func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
 	case <-time.After(timeout):
 		return true // timed out
 	}
+}
+
+type BlockOverrides struct {
+	BlockNumber *hexutil.Uint64         `json:"blockNumber"`
+	Coinbase    *common.Address         `json:"coinbase"`
+	Timestamp   *hexutil.Uint64         `json:"timestamp"`
+	GasLimit    *hexutil.Uint           `json:"gasLimit"`
+	Difficulty  *hexutil.Uint           `json:"difficulty"`
+	BaseFee     *uint256.Int            `json:"baseFee"`
+	BlockHash   *map[uint64]common.Hash `json:"blockHash"`
+}
+
+type Bundle struct {
+	Transactions  []*types.TxArgs `json:"transactions"`
+	BlockOverride BlockOverrides  `json:"blockOverride"`
+}
+
+type StateContext struct {
+	BlockNumber      *types.BlockNumberOrHash `json:"blockNumber"`
+	TransactionIndex int                      `json:"transactionIndex"`
+}
+
+type Account struct {
+	Nonce     *hexutil.Uint64              `json:"nonce"`
+	Code      *hexutil.Bytes               `json:"code"`
+	Balance   **hexutil.Big                `json:"balance"`
+	State     *map[common.Hash]uint256.Int `json:"state"`
+	StateDiff *map[common.Hash]uint256.Int `json:"stateDiff"`
+}
+
+type StateOverrides map[common.Address]Account
+
+// Copoed from endpoints_eth, TODO reuse old code
+func (e *DebugEndpoints) getBlockByArg(ctx context.Context, blockArg *types.BlockNumberOrHash, dbTx pgx.Tx) (*ethTypes.Block, types.Error) {
+	// If no block argument is provided, return the latest block
+	if blockArg == nil {
+		block, err := e.state.GetLastL2Block(ctx, dbTx)
+		if err != nil {
+			return nil, types.NewRPCError(types.DefaultErrorCode, "failed to get the last block number from state")
+		}
+		return block, nil
+	}
+
+	// If we have a block hash, try to get the block by hash
+	if blockArg.IsHash() {
+		block, err := e.state.GetL2BlockByHash(ctx, blockArg.Hash().Hash(), dbTx)
+		if errors.Is(err, state.ErrNotFound) {
+			return nil, types.NewRPCError(types.DefaultErrorCode, "header for hash not found")
+		} else if err != nil {
+			return nil, types.NewRPCError(types.DefaultErrorCode, fmt.Sprintf("failed to get block by hash %v", blockArg.Hash().Hash()))
+		}
+		return block, nil
+	}
+
+	// Otherwise, try to get the block by number
+	blockNum, rpcErr := blockArg.Number().GetNumericBlockNumber(ctx, e.state, e.etherman, dbTx)
+	if rpcErr != nil {
+		return nil, rpcErr
+	}
+	block, err := e.state.GetL2BlockByNumber(context.Background(), blockNum, dbTx)
+	if errors.Is(err, state.ErrNotFound) || block == nil {
+		return nil, types.NewRPCError(types.DefaultErrorCode, "header not found")
+	} else if err != nil {
+		return nil, types.NewRPCError(types.DefaultErrorCode, fmt.Sprintf("failed to get block by number %v", blockNum))
+	}
+
+	return block, nil
+}
+
+func (d *DebugEndpoints) TraceCallMany(bundles []*Bundle, simulateContext *StateContext, cfg *traceConfig) (interface{}, types.Error) {
+	return d.txMan.NewDbTxScope(d.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
+		block, err := d.getBlockByArg(ctx, simulateContext.BlockNumber, dbTx)
+		if errors.Is(err, state.ErrNotFound) {
+			return nil, types.NewRPCError(types.DefaultErrorCode, fmt.Sprintf("block %d %s not found", simulateContext.BlockNumber.Number(), simulateContext.BlockNumber.Hash()))
+		} else if err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, "failed to get block by hash", err, false)
+		}
+		var traceCallManyResponse []interface{}
+
+		for _, bundle := range bundles {
+			var txs []*ethTypes.Transaction
+
+			var sender common.Address
+			for _, txArg := range bundle.Transactions {
+				defaultSenderAddress := common.HexToAddress(DefaultSenderAddress)
+				senderAddress, tx, err := txArg.ToTransaction(ctx, d.state, d.cfg.MaxCumulativeGasUsed, block.Root(), defaultSenderAddress, dbTx)
+				sender = senderAddress
+				if err != nil {
+					return RPCErrorResponse(types.DefaultErrorCode, "failed to convert arguments into an unsigned transaction", err, false)
+				}
+				txs = append(txs, tx)
+			}
+
+			traces, rpcErr := d.buildTraceCallMany(ctx, block.NumberU64(), sender, txs, cfg, dbTx)
+			if rpcErr != nil {
+				return nil, rpcErr
+			}
+			traceCallManyResponse = append(traceCallManyResponse, traces)
+		}
+
+		return traceCallManyResponse, nil
+	})
+}
+
+// TODO be able to override `BlockOverrides`, state overrides, etc
+func (d *DebugEndpoints) buildTraceCallMany(ctx context.Context, blockNumber uint64, sender common.Address, txs []*ethTypes.Transaction, cfg *traceConfig, dbTx pgx.Tx) (interface{}, types.Error) {
+	var traces []interface{}
+	for _, tx := range txs {
+		traceTransaction, err := d.buildTraceCall(ctx, blockNumber, sender, tx, cfg, dbTx)
+		if err != nil {
+			errMsg := fmt.Sprintf("failed to get trace for simulation %v", tx.Hash().String())
+			return RPCErrorResponse(types.DefaultErrorCode, errMsg, err, false)
+		}
+		traces = append(traces, traceTransaction)
+	}
+	return traces, nil
 }
