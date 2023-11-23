@@ -467,7 +467,7 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 	fakeDB := &FakeDB{State: s, stateRoot: batch.StateRoot.Bytes()}
 	evm := fakevm.NewFakeEVM(fakevm.BlockContext{BlockNumber: big.NewInt(1)}, fakevm.TxContext{GasPrice: gasPrice}, fakeDB, params.TestChainConfig, fakevm.Config{Debug: true, Tracer: customTracer})
 
-	traceResult, err := s.buildTrace(evm, result.ExecutorTrace, customTracer)
+	traceResult, err := s.buildTrace(evm, result, customTracer)
 	if err != nil {
 		log.Errorf("debug transaction: failed parse the trace using the tracer: %v", err)
 		return nil, fmt.Errorf("failed parse the trace using the tracer: %v", err)
