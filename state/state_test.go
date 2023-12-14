@@ -2803,8 +2803,6 @@ func TestBigDataTx(t *testing.T) {
 	}
 
 	response, err := executorClient.ProcessBatch(ctx, processBatchRequest)
-	//require.NoError(t, err) //TODO need rebuild fork6 e2e image
-	//require.Equal(t, executor.ExecutorError_EXECUTOR_ERROR_INVALID_BATCH_L2_DATA, response.Error)
-	_ = response
-	_ = err
+	require.NoError(t, err)
+	require.Equal(t, executor.ExecutorError_EXECUTOR_ERROR_INVALID_BATCH_L2_DATA, response.Error)
 }

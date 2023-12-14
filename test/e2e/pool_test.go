@@ -239,7 +239,7 @@ func TestHasOpCode(t *testing.T) {
 	log.Debug("get tx EGPLog")
 	egpLog, err := opsMan.State().PostgresStorage.GetTransactionEGPLogByHash(ctx, scCallOpGasPrice.Hash(), nil)
 	require.NoError(t, err)
-	//require.Equal(t, egpLog.GasPriceOC, true) //TODO need rebuild fork6 e2e image
+	require.Equal(t, egpLog.GasPriceOC, true)
 
 	log.Debug("calling opBalance")
 	scCallBalance, err := sc.OpBalance(auth)
@@ -252,6 +252,5 @@ func TestHasOpCode(t *testing.T) {
 	log.Debug("get tx EGPLog")
 	egpLog, err = opsMan.State().PostgresStorage.GetTransactionEGPLogByHash(ctx, scCallBalance.Hash(), nil)
 	require.NoError(t, err)
-	_ = egpLog
-	//require.Equal(t, egpLog.BalanceOC, true) //TODO need rebuild fork6 e2e image
+	require.Equal(t, egpLog.BalanceOC, true)
 }

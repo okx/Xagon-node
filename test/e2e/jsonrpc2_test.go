@@ -577,9 +577,8 @@ func TestEstimateTxWithDataBiggerThanMaxAllowed(t *testing.T) {
 		Data:     make([]byte, 120000), // large data
 	})
 	rpcErr := err.(rpc.Error)
-	//assert.Equal(t, -32000, rpcErr.ErrorCode()) //TODO need rebuild fork6 e2e image
-	//assert.Equal(t, "batch_l2_data is invalid", rpcErr.Error())
-	_ = rpcErr
+	assert.Equal(t, -32000, rpcErr.ErrorCode())
+	assert.Equal(t, "batch_l2_data is invalid", rpcErr.Error())
 }
 
 // waitTimeout waits for the waitgroup for the specified max timeout.
