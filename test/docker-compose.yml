@@ -320,7 +320,7 @@ services:
 
   x1-mock-l1-network:
     container_name: x1-mock-l1-network
-    image: okexchain/x1-geth:e2e_v0.1.0_20231113
+    image: zjg555543/geth:v0.1.1_20231214_00
     ports:
       - 8545:8545
       - 8546:8546
@@ -350,7 +350,7 @@ services:
 
   x1-prover:
     container_name: x1-prover
-    image: hermeznetwork/zkevm-prover:v2.2.0
+    image: hermeznetwork/zkevm-prover:v3.0.2
     ports:
       # - 50051:50051 # Prover
       - 50052:50052 # Mock prover
@@ -439,7 +439,7 @@ services:
 
   x1-permissionless-prover:
     container_name: x1-permissionless-prover
-    image: hermeznetwork/zkevm-prover:v2.2.0
+    image: hermeznetwork/zkevm-prover:v3.0.2
     ports:
       # - 50058:50058 # Prover
       - 50059:50052 # Mock prover
