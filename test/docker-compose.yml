@@ -320,7 +320,7 @@ services:
 
   x1-mock-l1-network:
     container_name: x1-mock-l1-network
-    image: zjg555543/geth:v0.1.1_20231214_00
+    image: okexchain/x1-geth:e2e_v0.1.1_20231214
     ports:
       - 8545:8545
       - 8546:8546
