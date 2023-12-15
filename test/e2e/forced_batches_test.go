@@ -127,7 +127,6 @@ func sendForcedBatch(t *testing.T, txs []byte, opsman *operations.Manager) (*sta
 
 	auth, err := operations.GetAuth(operations.DefaultSequencerPrivateKey, operations.DefaultL1ChainID)
 	require.NoError(t, err)
-
 	log.Info("Using address: ", auth.From)
 
 	num, err := zkEvm.LastForceBatch(&bind.CallOpts{Pending: false})

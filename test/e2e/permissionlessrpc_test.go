@@ -117,7 +117,7 @@ func TestPermissionlessJRPC(t *testing.T) {
 		Password:  testutils.GetEnv("PERMISSIONLESSPGPASSWORD", "test_password"),
 		Name:      testutils.GetEnv("PERMISSIONLESSPGDATABASE", "state_db"),
 		Host:      testutils.GetEnv("PERMISSIONLESSPGHOST", "localhost"),
-		Port:      testutils.GetEnv("PERMISSIONLESSPGPORT", "5434"),
+		Port:      testutils.GetEnv("PERMISSIONLESSPGPORT", "5444"),
 		EnableLog: true,
 		MaxConns:  4,
 	})

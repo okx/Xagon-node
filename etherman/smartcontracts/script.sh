@@ -14,3 +14,4 @@ gen matic
 gen polygonzkevmglobalexitroot
 gen mockverifier
 gen datacommittee
+gen polygonzkevmbridgel2

@@ -28,7 +28,7 @@ import (
 )
 
 const (
-	forkID6 = 6
+	forkID5 = 5
 )
 
 func init() {
@@ -97,7 +97,8 @@ func TestForcedBatchEvent(t *testing.T) {
 	initBlock, err := etherman.EthClient.BlockByNumber(ctx, nil)
 	require.NoError(t, err)
 
-	amount, err := etherman.ZkEVM.GetForcedBatchFee(&bind.CallOpts{Pending: false})
+	//amount, err := etherman.ZkEVM.GetForcedBatchFee(&bind.CallOpts{Pending: false})
+	amount := big.NewInt(0)
 	require.NoError(t, err)
 	rawTxs := "f84901843b9aca00827b0c945fbdb2315678afecb367f032d93f642f64180aa380a46057361d00000000000000000000000000000000000000000000000000000000000000048203e9808073efe1fa2d3e27f26f32208550ea9b0274d49050b816cadab05a771f4275d0242fd5d92b3fb89575c070e6c930587c520ee65a3aa8cfe382fcad20421bf51d621c"
 	data, err := hex.DecodeString(rawTxs)
@@ -144,7 +145,8 @@ func TestSequencedBatchesEvent(t *testing.T) {
 	ger, err := etherman.GlobalExitRootManager.GetLastGlobalExitRoot(nil)
 	require.NoError(t, err)
 
-	amount, err := etherman.ZkEVM.GetForcedBatchFee(&bind.CallOpts{Pending: false})
+	//amount, err := etherman.ZkEVM.GetForcedBatchFee(&bind.CallOpts{Pending: false})
+	amount := big.NewInt(0)
 	require.NoError(t, err)
 	rawTxs := "f84901843b9aca00827b0c945fbdb2315678afecb367f032d93f642f64180aa380a46057361d00000000000000000000000000000000000000000000000000000000000000048203e9808073efe1fa2d3e27f26f32208550ea9b0274d49050b816cadab05a771f4275d0242fd5d92b3fb89575c070e6c930587c520ee65a3aa8cfe382fcad20421bf51d621c"
 	data, err := hex.DecodeString(rawTxs)
@@ -166,13 +168,13 @@ func TestSequencedBatchesEvent(t *testing.T) {
 		GlobalExitRoot:     ger,
 		Timestamp:          currentBlock.Time(),
 		MinForcedTimestamp: uint64(blocks[2].ForcedBatches[0].ForcedAt.Unix()),
-		TransactionsHash:   crypto.Keccak256Hash(common.Hex2Bytes(rawTxs)),
+		Transactions:       common.Hex2Bytes(rawTxs),
 	})
 	sequences = append(sequences, polygonzkevm.PolygonZkEVMBatchData{
 		GlobalExitRoot:     ger,
 		Timestamp:          currentBlock.Time() + 1,
 		MinForcedTimestamp: 0,
-		TransactionsHash:   crypto.Keccak256Hash(common.Hex2Bytes(rawTxs)),
+		Transactions:       common.Hex2Bytes(rawTxs),
 	})
 	_, err = etherman.ZkEVM.SequenceBatches(auth, sequences, auth.From, []byte{})
 	require.NoError(t, err)
@@ -189,7 +191,7 @@ func TestSequencedBatchesEvent(t *testing.T) {
 	t.Log("Blocks: ", blocks)
 	assert.Equal(t, 4, len(blocks))
 	assert.Equal(t, 1, len(blocks[3].SequencedBatches))
-	assert.Equal(t, crypto.Keccak256Hash(common.Hex2Bytes(rawTxs)), common.Hash(blocks[3].SequencedBatches[0][1].TransactionsHash))
+	assert.Equal(t, common.Hex2Bytes(rawTxs), blocks[3].SequencedBatches[0][1].Transactions)
 	assert.Equal(t, currentBlock.Time(), blocks[3].SequencedBatches[0][0].Timestamp)
 	assert.Equal(t, ger, blocks[3].SequencedBatches[0][0].GlobalExitRoot)
 	assert.Equal(t, auth.From, blocks[3].SequencedBatches[0][0].Coinbase)
@@ -213,7 +215,7 @@ func TestVerifyBatchEvent(t *testing.T) {
 		GlobalExitRoot:     common.Hash{},
 		Timestamp:          initBlock.Time(),
 		MinForcedTimestamp: 0,
-		TransactionsHash:   crypto.Keccak256Hash(common.Hex2Bytes(rawTxs)),
+		Transactions:       common.Hex2Bytes(rawTxs),
 	}
 	_, err = etherman.ZkEVM.SequenceBatches(auth, []polygonzkevm.PolygonZkEVMBatchData{tx}, auth.From, []byte{})
 	require.NoError(t, err)
@@ -253,7 +255,8 @@ func TestSequenceForceBatchesEvent(t *testing.T) {
 	initBlock, err := etherman.EthClient.BlockByNumber(ctx, nil)
 	require.NoError(t, err)
 
-	amount, err := etherman.ZkEVM.GetForcedBatchFee(&bind.CallOpts{Pending: false})
+	//amount, err := etherman.ZkEVM.GetForcedBatchFee(&bind.CallOpts{Pending: false})
+	amount := big.NewInt(0)
 	require.NoError(t, err)
 	rawTxs := "f84901843b9aca00827b0c945fbdb2315678afecb367f032d93f642f64180aa380a46057361d00000000000000000000000000000000000000000000000000000000000000048203e9808073efe1fa2d3e27f26f32208550ea9b0274d49050b816cadab05a771f4275d0242fd5d92b3fb89575c070e6c930587c520ee65a3aa8cfe382fcad20421bf51d621c"
 	data, err := hex.DecodeString(rawTxs)
@@ -320,14 +323,14 @@ func TestSendSequences(t *testing.T) {
 	require.NoError(t, err)
 
 	tx1 := types.NewTransaction(uint64(0), common.Address{}, big.NewInt(10), uint64(1), big.NewInt(10), []byte{})
-	batchL2Data, err := state.EncodeTransactions([]types.Transaction{*tx1}, constants.EffectivePercentage, forkID6)
+	batchL2Data, err := state.EncodeTransactions([]types.Transaction{*tx1}, constants.EffectivePercentage, forkID5)
 	require.NoError(t, err)
 	sequence := ethmanTypes.Sequence{
 		GlobalExitRoot: ger,
 		Timestamp:      int64(currentBlock.Time() - 1),
 		BatchL2Data:    batchL2Data,
 	}
-	tx, err := etherman.sequenceBatches(*auth, []ethmanTypes.Sequence{sequence}, auth.From, nil)
+	tx, err := etherman.sequenceBatches(*auth, []ethmanTypes.Sequence{sequence}, auth.From, []byte{})
 	require.NoError(t, err)
 	log.Debug("TX: ", tx.Hash())
 	ethBackend.Commit()

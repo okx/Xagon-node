@@ -36,7 +36,7 @@ services:
     zkevm-node:
         image: zkevm-node
 
-    zkevm-mock-l1-network:
+    x1-mock-l1-network:
         image: imageorg/imagerepo@sha256:f7bc95017b64a6dee98dd2e3a98cbea8c715de137d0f599b1b16f683c2dae955
     zkevm-mock-prover:
         image: hezprover
@@ -153,7 +153,7 @@ services:
 			description: "multiple container with matching image and existing digest",
 			initialFileContents: `version: '3'
 services:
-    zkevm-mock-l1-network:
+    x1-mock-l1-network:
         image: imageorg/networkImagerepo@sha256:oldDigest
     zkevm-node:
         image: imageorg/imagerepo@sha256:oldDigest
@@ -164,7 +164,7 @@ services:
 			newDigest: "sha256:newDigest",
 			expectedFinalFileContents: `version: '3'
 services:
-    zkevm-mock-l1-network:
+    x1-mock-l1-network:
         image: imageorg/networkImagerepo@sha256:oldDigest
     zkevm-node:
         image: imageorg/imagerepo@sha256:newDigest

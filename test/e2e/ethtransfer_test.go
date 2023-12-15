@@ -38,6 +38,7 @@ func TestEthTransfer(t *testing.T) {
 	// Load eth client
 	client, err := ethclient.Dial(operations.DefaultL2NetworkURL)
 	require.NoError(t, err)
+
 	// Send txs
 	nTxs := 10
 	amount := big.NewInt(10000)

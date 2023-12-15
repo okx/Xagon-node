@@ -44,7 +44,7 @@ GlobalQueue = 1024
 		ByteGasCost = 16
 		ZeroByteGasCost = 4
 		NetProfit = 1
-	    BreakEvenFactor = 1.1			
+	    BreakEvenFactor = 1.1
 		FinalDeviationPct = 10
 		L2GasPriceSuggesterFactor = 0.5
 	[Pool.DB]
@@ -109,7 +109,7 @@ MaxTxLifetime = "3h"
 [SequenceSender]
 WaitPeriodSendSequence = "15s"
 LastBatchVirtualizationTimeMaxWaitPeriod = "10s"
-MaxTxSizeForL1 = 131072
+MaxBatchesForL1 = 10
 L2Coinbase = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 PrivateKey = {Path = "./test/sequencer.keystore", Password = "testonly"}
 

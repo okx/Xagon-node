@@ -1,10 +1,10 @@
 package sequencer
 
 import (
-	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"math/big"
 	"time"
 
+	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/ethereum/go-ethereum/common"
 )

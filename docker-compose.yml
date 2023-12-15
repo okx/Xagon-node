@@ -1,19 +1,19 @@
 version: "3.5"
 networks:
   default:
-    name: zkevm
+    name: x1
 services:
-  zkevm-rpc:
-    container_name: zkevm-rpc
+  x1-rpc:
+    container_name: x1-rpc
     restart: unless-stopped
     depends_on:
-      zkevm-pool-db:
+      x1-pool-db:
         condition: service_healthy
-      zkevm-state-db:
+      x1-state-db:
         condition: service_healthy
-      zkevm-sync:
+      x1-sync:
         condition: service_started
-    image: zkevm-node
+    image: x1-node
     deploy:
       resources:
         limits:
@@ -30,15 +30,15 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/zkevm-node run --network ${ZKEVM_NETWORK} --cfg /app/config.toml --components rpc"
+      - "/app/x1-node run --network ${ZKEVM_NETWORK} --cfg /app/config.toml --components rpc"
 
-  zkevm-sync:
-    container_name: zkevm-sync
+  x1-sync:
+    container_name: x1-sync
     restart: unless-stopped
     depends_on:
-      zkevm-state-db:
+      x1-state-db:
         condition: service_healthy
-    image: zkevm-node
+    image: x1-node
     ports:
       - 9092:9091 # needed if metrics enabled
     deploy:
@@ -54,10 +54,10 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/zkevm-node run --network ${ZKEVM_NETWORK} --cfg /app/config.toml --components synchronizer"
+      - "/app/x1-node run --network ${ZKEVM_NETWORK} --cfg /app/config.toml --components synchronizer"
 
-  zkevm-state-db:
-    container_name: zkevm-state-db
+  x1-state-db:
+    container_name: x1-state-db
     restart: unless-stopped
     image: postgres:15
     healthcheck:
@@ -82,8 +82,8 @@ services:
       - "-c"
       - "config_file=/etc/postgresql.conf"
 
-  zkevm-pool-db:
-    container_name: zkevm-pool-db
+  x1-pool-db:
+    container_name: x1-pool-db
     restart: unless-stopped
     image: postgres:15
     healthcheck:
@@ -104,12 +104,12 @@ services:
       - "-N"
       - "500"
 
-  zkevm-prover:
-    container_name: zkevm-prover
+  x1-prover:
+    container_name: x1-prover
     restart: unless-stopped
     image: hermeznetwork/zkevm-prover:v3.0.2
     depends_on:
-      zkevm-state-db:
+      x1-state-db:
         condition: service_healthy
     ports:
       - 50061:50061 # MT

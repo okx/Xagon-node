@@ -1,0 +1,34 @@
+PrivateKey = {Path = "/pk/test-member.keystore", Password = "testonly"}
+
+[L1]
+WsURL = "ws://x1-mock-l1-network:8546"
+RpcURL = "http://x1-mock-l1-network:8545"
+ZkEVMAddress = "0x0D9088C72Cd4F08e9dDe474D8F5394147f64b22C"
+DataCommitteeAddress = "0x6Ae5b0863dBF3477335c0102DBF432aFf04ceb22"
+Timeout = "3m"
+RetryPeriod = "5s"
+
+[Log]
+Environment = "development" # "production" or "development"
+Level = "debug"
+Outputs = ["stderr"]
+
+[DB]
+User = "committee_user"
+Password = "committee_password"
+Name = "committee_db"
+Host = "x1-data-availability-db"
+Port = "5432"
+EnableLog = false
+MaxConns = 200
+
+[RPC]
+Host = "0.0.0.0"
+Port = 8444
+ReadTimeout = "60s"
+WriteTimeout = "60s"
+MaxRequestsPerIPAndSecond = 500
+SequencerNodeURI = ""
+EnableL2SuggestedGasPricePolling = false
+	[RPC.WebSockets]
+		Enabled = false

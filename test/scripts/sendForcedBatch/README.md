@@ -1,5 +1,5 @@
 
 Command:
 ```
-go run main.go send --url http://localhost:8545 --smc 0x610178dA211FEF7D417bC0e6FeD39F05609AD788
+go run main.go send --url http://localhost:8545 --smc 0x0D9088C72Cd4F08e9dDe474D8F5394147f64b22C
 ```

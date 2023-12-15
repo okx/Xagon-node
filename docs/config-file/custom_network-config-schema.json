@@ -73,6 +73,15 @@
 					"maxItems": 20,
 					"minItems": 20,
 					"description": "Address of the L1 GlobalExitRootManager contract"
+				},
+				"dataCommitteeContract": {
+					"items": {
+						"type": "integer"
+					},
+					"type": "array",
+					"maxItems": 20,
+					"minItems": 20,
+					"description": "Address of the data availability committee contract"
 				}
 			},
 			"additionalProperties": false,

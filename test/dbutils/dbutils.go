@@ -11,13 +11,13 @@ import (
 // InitOrResetState will initializes the State db running the migrations or
 // will reset all the known data and rerun the migrations
 func InitOrResetState(cfg db.Config) error {
-	return initOrReset(cfg, "xgon-state-db")
+	return initOrReset(cfg, "x1-state-db")
 }
 
 // InitOrResetPool will initializes the Pool db running the migrations or
 // will reset all the known data and rerun the migrations
 func InitOrResetPool(cfg db.Config) error {
-	return initOrReset(cfg, "xgon-pool-db")
+	return initOrReset(cfg, "x1-pool-db")
 }
 
 // initOrReset will initializes the db running the migrations or

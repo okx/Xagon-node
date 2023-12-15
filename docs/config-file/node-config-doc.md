@@ -414,6 +414,7 @@ MaxGasPriceLimit=0
 
 | Property                                                                        | Pattern | Type    | Deprecated | Definition | Title/Description                                                                                    |
 | ------------------------------------------------------------------------------- | ------- | ------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------- |
+| - [FreeClaimGasLimit](#Pool_FreeClaimGasLimit )                                 | No      | integer | No         | -          | FreeClaimGasLimit is the max gas allowed use to do a free claim                                      |
 | - [IntervalToRefreshBlockedAddresses](#Pool_IntervalToRefreshBlockedAddresses ) | No      | string  | No         | -          | Duration                                                                                             |
 | - [IntervalToRefreshGasPrices](#Pool_IntervalToRefreshGasPrices )               | No      | string  | No         | -          | Duration                                                                                             |
 | - [MaxTxBytesSize](#Pool_MaxTxBytesSize )                                       | No      | integer | No         | -          | MaxTxBytesSize is the max size of a transaction in bytes                                             |
@@ -424,9 +425,24 @@ MaxGasPriceLimit=0
 | - [PollMinAllowedGasPriceInterval](#Pool_PollMinAllowedGasPriceInterval )       | No      | string  | No         | -          | Duration                                                                                             |
 | - [AccountQueue](#Pool_AccountQueue )                                           | No      | integer | No         | -          | AccountQueue represents the maximum number of non-executable transaction slots permitted per account |
 | - [GlobalQueue](#Pool_GlobalQueue )                                             | No      | integer | No         | -          | GlobalQueue represents the maximum number of non-executable transaction slots for all accounts       |
+| - [FreeGasAddress](#Pool_FreeGasAddress )                                       | No      | string  | No         | -          | FreeGasAddress is the default free gas address                                                       |
 | - [EffectiveGasPrice](#Pool_EffectiveGasPrice )                                 | No      | object  | No         | -          | EffectiveGasPrice is the config for the effective gas price calculation                              |
 
-### <a name="Pool_IntervalToRefreshBlockedAddresses"></a>7.1. `Pool.IntervalToRefreshBlockedAddresses`
+### <a name="Pool_FreeClaimGasLimit"></a>7.1. `Pool.FreeClaimGasLimit`
+
+**Type:** : `integer`
+
+**Default:** `150000`
+
+**Description:** FreeClaimGasLimit is the max gas allowed use to do a free claim
+
+**Example setting the default value** (150000):
+```
+[Pool]
+FreeClaimGasLimit=150000
+```
+
+### <a name="Pool_IntervalToRefreshBlockedAddresses"></a>7.2. `Pool.IntervalToRefreshBlockedAddresses`
 
 **Title:** Duration
 
@@ -453,7 +469,7 @@ blocked address list from db to memory
 IntervalToRefreshBlockedAddresses="5m0s"
 ```
 
-### <a name="Pool_IntervalToRefreshGasPrices"></a>7.2. `Pool.IntervalToRefreshGasPrices`
+### <a name="Pool_IntervalToRefreshGasPrices"></a>7.3. `Pool.IntervalToRefreshGasPrices`
 
 **Title:** Duration
 
@@ -479,7 +495,7 @@ IntervalToRefreshBlockedAddresses="5m0s"
 IntervalToRefreshGasPrices="5s"
 ```
 
-### <a name="Pool_MaxTxBytesSize"></a>7.3. `Pool.MaxTxBytesSize`
+### <a name="Pool_MaxTxBytesSize"></a>7.4. `Pool.MaxTxBytesSize`
 
 **Type:** : `integer`
 
@@ -493,7 +509,7 @@ IntervalToRefreshGasPrices="5s"
 MaxTxBytesSize=100132
 ```
 
-### <a name="Pool_MaxTxDataBytesSize"></a>7.4. `Pool.MaxTxDataBytesSize`
+### <a name="Pool_MaxTxDataBytesSize"></a>7.5. `Pool.MaxTxDataBytesSize`
 
 **Type:** : `integer`
 
@@ -507,7 +523,7 @@ MaxTxBytesSize=100132
 MaxTxDataBytesSize=100000
 ```
 
-### <a name="Pool_DB"></a>7.5. `[Pool.DB]`
+### <a name="Pool_DB"></a>7.6. `[Pool.DB]`
 
 **Type:** : `object`
 **Description:** DB is the database configuration
@@ -522,7 +538,7 @@ MaxTxDataBytesSize=100000
 | - [EnableLog](#Pool_DB_EnableLog ) | No      | boolean | No         | -          | EnableLog                                                  |
 | - [MaxConns](#Pool_DB_MaxConns )   | No      | integer | No         | -          | MaxConns is the maximum number of connections in the pool. |
 
-#### <a name="Pool_DB_Name"></a>7.5.1. `Pool.DB.Name`
+#### <a name="Pool_DB_Name"></a>7.6.1. `Pool.DB.Name`
 
 **Type:** : `string`
 
@@ -536,7 +552,7 @@ MaxTxDataBytesSize=100000
 Name="pool_db"
 ```
 
-#### <a name="Pool_DB_User"></a>7.5.2. `Pool.DB.User`
+#### <a name="Pool_DB_User"></a>7.6.2. `Pool.DB.User`
 
 **Type:** : `string`
 
@@ -550,7 +566,7 @@ Name="pool_db"
 User="pool_user"
 ```
 
-#### <a name="Pool_DB_Password"></a>7.5.3. `Pool.DB.Password`
+#### <a name="Pool_DB_Password"></a>7.6.3. `Pool.DB.Password`
 
 **Type:** : `string`
 
@@ -564,21 +580,21 @@ User="pool_user"
 Password="pool_password"
 ```
 
-#### <a name="Pool_DB_Host"></a>7.5.4. `Pool.DB.Host`
+#### <a name="Pool_DB_Host"></a>7.6.4. `Pool.DB.Host`
 
 **Type:** : `string`
 
-**Default:** `"zkevm-pool-db"`
+**Default:** `"x1-pool-db"`
 
 **Description:** Host address of database
 
-**Example setting the default value** ("zkevm-pool-db"):
+**Example setting the default value** ("x1-pool-db"):
 ```
 [Pool.DB]
-Host="zkevm-pool-db"
+Host="x1-pool-db"
 ```
 
-#### <a name="Pool_DB_Port"></a>7.5.5. `Pool.DB.Port`
+#### <a name="Pool_DB_Port"></a>7.6.5. `Pool.DB.Port`
 
 **Type:** : `string`
 
@@ -592,7 +608,7 @@ Host="zkevm-pool-db"
 Port="5432"
 ```
 
-#### <a name="Pool_DB_EnableLog"></a>7.5.6. `Pool.DB.EnableLog`
+#### <a name="Pool_DB_EnableLog"></a>7.6.6. `Pool.DB.EnableLog`
 
 **Type:** : `boolean`
 
@@ -606,7 +622,7 @@ Port="5432"
 EnableLog=false
 ```
 
-#### <a name="Pool_DB_MaxConns"></a>7.5.7. `Pool.DB.MaxConns`
+#### <a name="Pool_DB_MaxConns"></a>7.6.7. `Pool.DB.MaxConns`
 
 **Type:** : `integer`
 
@@ -620,7 +636,7 @@ EnableLog=false
 MaxConns=200
 ```
 
-### <a name="Pool_DefaultMinGasPriceAllowed"></a>7.6. `Pool.DefaultMinGasPriceAllowed`
+### <a name="Pool_DefaultMinGasPriceAllowed"></a>7.7. `Pool.DefaultMinGasPriceAllowed`
 
 **Type:** : `integer`
 
@@ -634,7 +650,7 @@ MaxConns=200
 DefaultMinGasPriceAllowed=1000000000
 ```
 
-### <a name="Pool_MinAllowedGasPriceInterval"></a>7.7. `Pool.MinAllowedGasPriceInterval`
+### <a name="Pool_MinAllowedGasPriceInterval"></a>7.8. `Pool.MinAllowedGasPriceInterval`
 
 **Title:** Duration
 
@@ -660,7 +676,7 @@ DefaultMinGasPriceAllowed=1000000000
 MinAllowedGasPriceInterval="5m0s"
 ```
 
-### <a name="Pool_PollMinAllowedGasPriceInterval"></a>7.8. `Pool.PollMinAllowedGasPriceInterval`
+### <a name="Pool_PollMinAllowedGasPriceInterval"></a>7.9. `Pool.PollMinAllowedGasPriceInterval`
 
 **Title:** Duration
 
@@ -686,7 +702,7 @@ MinAllowedGasPriceInterval="5m0s"
 PollMinAllowedGasPriceInterval="15s"
 ```
 
-### <a name="Pool_AccountQueue"></a>7.9. `Pool.AccountQueue`
+### <a name="Pool_AccountQueue"></a>7.10. `Pool.AccountQueue`
 
 **Type:** : `integer`
 
@@ -700,7 +716,7 @@ PollMinAllowedGasPriceInterval="15s"
 AccountQueue=64
 ```
 
-### <a name="Pool_GlobalQueue"></a>7.10. `Pool.GlobalQueue`
+### <a name="Pool_GlobalQueue"></a>7.11. `Pool.GlobalQueue`
 
 **Type:** : `integer`
 
@@ -714,7 +730,21 @@ AccountQueue=64
 GlobalQueue=1024
 ```
 
-### <a name="Pool_EffectiveGasPrice"></a>7.11. `[Pool.EffectiveGasPrice]`
+### <a name="Pool_FreeGasAddress"></a>7.12. `Pool.FreeGasAddress`
+
+**Type:** : `string`
+
+**Default:** `"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"`
+
+**Description:** FreeGasAddress is the default free gas address
+
+**Example setting the default value** ("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"):
+```
+[Pool]
+FreeGasAddress="0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
+```
+
+### <a name="Pool_EffectiveGasPrice"></a>7.13. `[Pool.EffectiveGasPrice]`
 
 **Type:** : `object`
 **Description:** EffectiveGasPrice is the config for the effective gas price calculation
@@ -730,7 +760,7 @@ GlobalQueue=1024
 | - [FinalDeviationPct](#Pool_EffectiveGasPrice_FinalDeviationPct )                 | No      | integer | No         | -          | FinalDeviationPct is the max allowed deviation percentage BreakEvenGasPrice on re-calculation                                                                                                        |
 | - [L2GasPriceSuggesterFactor](#Pool_EffectiveGasPrice_L2GasPriceSuggesterFactor ) | No      | number  | No         | -          | L2GasPriceSuggesterFactor is the factor to apply to L1 gas price to get the suggested L2 gas price used in the<br />calculations when the effective gas price is disabled (testing/metrics purposes) |
 
-#### <a name="Pool_EffectiveGasPrice_Enabled"></a>7.11.1. `Pool.EffectiveGasPrice.Enabled`
+#### <a name="Pool_EffectiveGasPrice_Enabled"></a>7.13.1. `Pool.EffectiveGasPrice.Enabled`
 
 **Type:** : `boolean`
 
@@ -744,7 +774,7 @@ GlobalQueue=1024
 Enabled=false
 ```
 
-#### <a name="Pool_EffectiveGasPrice_L1GasPriceFactor"></a>7.11.2. `Pool.EffectiveGasPrice.L1GasPriceFactor`
+#### <a name="Pool_EffectiveGasPrice_L1GasPriceFactor"></a>7.13.2. `Pool.EffectiveGasPrice.L1GasPriceFactor`
 
 **Type:** : `number`
 
@@ -758,7 +788,7 @@ Enabled=false
 L1GasPriceFactor=0.25
 ```
 
-#### <a name="Pool_EffectiveGasPrice_ByteGasCost"></a>7.11.3. `Pool.EffectiveGasPrice.ByteGasCost`
+#### <a name="Pool_EffectiveGasPrice_ByteGasCost"></a>7.13.3. `Pool.EffectiveGasPrice.ByteGasCost`
 
 **Type:** : `integer`
 
@@ -772,7 +802,7 @@ L1GasPriceFactor=0.25
 ByteGasCost=16
 ```
 
-#### <a name="Pool_EffectiveGasPrice_ZeroByteGasCost"></a>7.11.4. `Pool.EffectiveGasPrice.ZeroByteGasCost`
+#### <a name="Pool_EffectiveGasPrice_ZeroByteGasCost"></a>7.13.4. `Pool.EffectiveGasPrice.ZeroByteGasCost`
 
 **Type:** : `integer`
 
@@ -786,7 +816,7 @@ ByteGasCost=16
 ZeroByteGasCost=4
 ```
 
-#### <a name="Pool_EffectiveGasPrice_NetProfit"></a>7.11.5. `Pool.EffectiveGasPrice.NetProfit`
+#### <a name="Pool_EffectiveGasPrice_NetProfit"></a>7.13.5. `Pool.EffectiveGasPrice.NetProfit`
 
 **Type:** : `number`
 
@@ -800,7 +830,7 @@ ZeroByteGasCost=4
 NetProfit=1
 ```
 
-#### <a name="Pool_EffectiveGasPrice_BreakEvenFactor"></a>7.11.6. `Pool.EffectiveGasPrice.BreakEvenFactor`
+#### <a name="Pool_EffectiveGasPrice_BreakEvenFactor"></a>7.13.6. `Pool.EffectiveGasPrice.BreakEvenFactor`
 
 **Type:** : `number`
 
@@ -814,7 +844,7 @@ NetProfit=1
 BreakEvenFactor=1.1
 ```
 
-#### <a name="Pool_EffectiveGasPrice_FinalDeviationPct"></a>7.11.7. `Pool.EffectiveGasPrice.FinalDeviationPct`
+#### <a name="Pool_EffectiveGasPrice_FinalDeviationPct"></a>7.13.7. `Pool.EffectiveGasPrice.FinalDeviationPct`
 
 **Type:** : `integer`
 
@@ -828,7 +858,7 @@ BreakEvenFactor=1.1
 FinalDeviationPct=10
 ```
 
-#### <a name="Pool_EffectiveGasPrice_L2GasPriceSuggesterFactor"></a>7.11.8. `Pool.EffectiveGasPrice.L2GasPriceSuggesterFactor`
+#### <a name="Pool_EffectiveGasPrice_L2GasPriceSuggesterFactor"></a>7.13.8. `Pool.EffectiveGasPrice.L2GasPriceSuggesterFactor`
 
 **Type:** : `number`
 
@@ -866,6 +896,9 @@ L2GasPriceSuggesterFactor=0.5
 | - [MaxLogsBlockRange](#RPC_MaxLogsBlockRange )                               | No      | integer          | No         | -          | MaxLogsBlockRange is a configuration to set the max range for block number when querying TXs<br />logs in a single call to the state, if zero it means no limit                       |
 | - [MaxNativeBlockHashBlockRange](#RPC_MaxNativeBlockHashBlockRange )         | No      | integer          | No         | -          | MaxNativeBlockHashBlockRange is a configuration to set the max range for block number when querying<br />native block hashes in a single call to the state, if zero it means no limit |
 | - [EnableHttpLog](#RPC_EnableHttpLog )                                       | No      | boolean          | No         | -          | EnableHttpLog allows the user to enable or disable the logs related to the HTTP<br />requests to be captured by the server.                                                           |
+| - [EnablePendingTransactionFilter](#RPC_EnablePendingTransactionFilter )     | No      | boolean          | No         | -          | EnablePendingTransactionFilter enables pending transaction filter that can support query L2 pending transaction                                                                       |
+| - [Nacos](#RPC_Nacos )                                                       | No      | object           | No         | -          | Nacos configuration                                                                                                                                                                   |
+| - [NacosWs](#RPC_NacosWs )                                                   | No      | object           | No         | -          | NacosWs configuration                                                                                                                                                                 |
 
 ### <a name="RPC_Host"></a>8.1. `RPC.Host`
 
@@ -1166,6 +1199,156 @@ requests to be captured by the server.
 ```
 [RPC]
 EnableHttpLog=true
+```
+
+### <a name="RPC_EnablePendingTransactionFilter"></a>8.17. `RPC.EnablePendingTransactionFilter`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** EnablePendingTransactionFilter enables pending transaction filter that can support query L2 pending transaction
+
+**Example setting the default value** (false):
+```
+[RPC]
+EnablePendingTransactionFilter=false
+```
+
+### <a name="RPC_Nacos"></a>8.18. `[RPC.Nacos]`
+
+**Type:** : `object`
+**Description:** Nacos configuration
+
+| Property                                               | Pattern | Type   | Deprecated | Definition | Title/Description                                                                          |
+| ------------------------------------------------------ | ------- | ------ | ---------- | ---------- | ------------------------------------------------------------------------------------------ |
+| - [URLs](#RPC_Nacos_URLs )                             | No      | string | No         | -          | URLs nacos server urls for discovery service of rest api, url is separated by ","          |
+| - [NamespaceId](#RPC_Nacos_NamespaceId )               | No      | string | No         | -          | NamespaceId nacos namepace id for discovery service of rest api                            |
+| - [ApplicationName](#RPC_Nacos_ApplicationName )       | No      | string | No         | -          | ApplicationName rest application name in  nacos                                            |
+| - [ExternalListenAddr](#RPC_Nacos_ExternalListenAddr ) | No      | string | No         | -          | ExternalListenAddr Set the rest-server external ip and port, when it is launched by Docker |
+
+#### <a name="RPC_Nacos_URLs"></a>8.18.1. `RPC.Nacos.URLs`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Description:** URLs nacos server urls for discovery service of rest api, url is separated by ","
+
+**Example setting the default value** (""):
+```
+[RPC.Nacos]
+URLs=""
+```
+
+#### <a name="RPC_Nacos_NamespaceId"></a>8.18.2. `RPC.Nacos.NamespaceId`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Description:** NamespaceId nacos namepace id for discovery service of rest api
+
+**Example setting the default value** (""):
+```
+[RPC.Nacos]
+NamespaceId=""
+```
+
+#### <a name="RPC_Nacos_ApplicationName"></a>8.18.3. `RPC.Nacos.ApplicationName`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Description:** ApplicationName rest application name in  nacos
+
+**Example setting the default value** (""):
+```
+[RPC.Nacos]
+ApplicationName=""
+```
+
+#### <a name="RPC_Nacos_ExternalListenAddr"></a>8.18.4. `RPC.Nacos.ExternalListenAddr`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Description:** ExternalListenAddr Set the rest-server external ip and port, when it is launched by Docker
+
+**Example setting the default value** (""):
+```
+[RPC.Nacos]
+ExternalListenAddr=""
+```
+
+### <a name="RPC_NacosWs"></a>8.19. `[RPC.NacosWs]`
+
+**Type:** : `object`
+**Description:** NacosWs configuration
+
+| Property                                                 | Pattern | Type   | Deprecated | Definition | Title/Description                                                                          |
+| -------------------------------------------------------- | ------- | ------ | ---------- | ---------- | ------------------------------------------------------------------------------------------ |
+| - [URLs](#RPC_NacosWs_URLs )                             | No      | string | No         | -          | URLs nacos server urls for discovery service of rest api, url is separated by ","          |
+| - [NamespaceId](#RPC_NacosWs_NamespaceId )               | No      | string | No         | -          | NamespaceId nacos namepace id for discovery service of rest api                            |
+| - [ApplicationName](#RPC_NacosWs_ApplicationName )       | No      | string | No         | -          | ApplicationName rest application name in  nacos                                            |
+| - [ExternalListenAddr](#RPC_NacosWs_ExternalListenAddr ) | No      | string | No         | -          | ExternalListenAddr Set the rest-server external ip and port, when it is launched by Docker |
+
+#### <a name="RPC_NacosWs_URLs"></a>8.19.1. `RPC.NacosWs.URLs`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Description:** URLs nacos server urls for discovery service of rest api, url is separated by ","
+
+**Example setting the default value** (""):
+```
+[RPC.NacosWs]
+URLs=""
+```
+
+#### <a name="RPC_NacosWs_NamespaceId"></a>8.19.2. `RPC.NacosWs.NamespaceId`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Description:** NamespaceId nacos namepace id for discovery service of rest api
+
+**Example setting the default value** (""):
+```
+[RPC.NacosWs]
+NamespaceId=""
+```
+
+#### <a name="RPC_NacosWs_ApplicationName"></a>8.19.3. `RPC.NacosWs.ApplicationName`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Description:** ApplicationName rest application name in  nacos
+
+**Example setting the default value** (""):
+```
+[RPC.NacosWs]
+ApplicationName=""
+```
+
+#### <a name="RPC_NacosWs_ExternalListenAddr"></a>8.19.4. `RPC.NacosWs.ExternalListenAddr`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Description:** ExternalListenAddr Set the rest-server external ip and port, when it is launched by Docker
+
+**Example setting the default value** (""):
+```
+[RPC.NacosWs]
+ExternalListenAddr=""
 ```
 
 ## <a name="Synchronizer"></a>9. `[Synchronizer]`
@@ -2098,11 +2281,13 @@ Must be one of:
 | ------------------------------------------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | - [WaitPeriodSendSequence](#SequenceSender_WaitPeriodSendSequence )                                     | No      | string           | No         | -          | Duration                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | - [LastBatchVirtualizationTimeMaxWaitPeriod](#SequenceSender_LastBatchVirtualizationTimeMaxWaitPeriod ) | No      | string           | No         | -          | Duration                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| - [MaxTxSizeForL1](#SequenceSender_MaxTxSizeForL1 )                                                     | No      | integer          | No         | -          | MaxTxSizeForL1 is the maximum size a single transaction can have. This field has<br />non-trivial consequences: larger transactions than 128KB are significantly harder and<br />more expensive to propagate; larger transactions also take more resources<br />to validate whether they fit into the pool or not.                                                                                                            |
+| - [MaxTxSizeForL1](#SequenceSender_MaxTxSizeForL1 )                                                     | No      | integer          | No         | -          | // MaxTxSizeForL1 is the maximum size a single transaction can have. This field has<br />// non-trivial consequences: larger transactions than 128KB are significantly harder and<br />// more expensive to propagate; larger transactions also take more resources<br />// to validate whether they fit into the pool or not.                                                                                                |
+| - [MaxBatchesForL1](#SequenceSender_MaxBatchesForL1 )                                                   | No      | integer          | No         | -          | MaxBatchesForL1 is the maximum amount of batches to be sequenced in a single L1 tx                                                                                                                                                                                                                                                                                                                                            |
 | - [SenderAddress](#SequenceSender_SenderAddress )                                                       | No      | array of integer | No         | -          | SenderAddress defines which private key the eth tx manager needs to use<br />to sign the L1 txs                                                                                                                                                                                                                                                                                                                               |
 | - [L2Coinbase](#SequenceSender_L2Coinbase )                                                             | No      | array of integer | No         | -          | L2Coinbase defines which address is going to receive the fees                                                                                                                                                                                                                                                                                                                                                                 |
 | - [PrivateKey](#SequenceSender_PrivateKey )                                                             | No      | object           | No         | -          | PrivateKey defines all the key store files that are going<br />to be read in order to provide the private keys to sign the L1 txs                                                                                                                                                                                                                                                                                             |
 | - [ForkUpgradeBatchNumber](#SequenceSender_ForkUpgradeBatchNumber )                                     | No      | integer          | No         | -          | Batch number where there is a forkid change (fork upgrade)                                                                                                                                                                                                                                                                                                                                                                    |
+| - [UseValidium](#SequenceSender_UseValidium )                                                           | No      | boolean          | No         | -          | UseValidium is a flag to enable/disable the use of validium                                                                                                                                                                                                                                                                                                                                                                   |
 | - [GasOffset](#SequenceSender_GasOffset )                                                               | No      | integer          | No         | -          | GasOffset is the amount of gas to be added to the gas estimation in order<br />to provide an amount that is higher than the estimated one. This is used<br />to avoid the TX getting reverted in case something has changed in the network<br />state after the estimation which can cause the TX to require more gas to be<br />executed.<br /><br />ex:<br />gas estimation: 1000<br />gas offset: 100<br />final gas: 1100 |
 
 ### <a name="SequenceSender_WaitPeriodSendSequence"></a>11.1. `SequenceSender.WaitPeriodSendSequence`
@@ -2162,26 +2347,40 @@ LastBatchVirtualizationTimeMaxWaitPeriod="5s"
 
 **Type:** : `integer`
 
-**Default:** `131072`
+**Default:** `0`
 
-**Description:** MaxTxSizeForL1 is the maximum size a single transaction can have. This field has
-non-trivial consequences: larger transactions than 128KB are significantly harder and
-more expensive to propagate; larger transactions also take more resources
-to validate whether they fit into the pool or not.
+**Description:** // MaxTxSizeForL1 is the maximum size a single transaction can have. This field has
+// non-trivial consequences: larger transactions than 128KB are significantly harder and
+// more expensive to propagate; larger transactions also take more resources
+// to validate whether they fit into the pool or not.
 
-**Example setting the default value** (131072):
+**Example setting the default value** (0):
 ```
 [SequenceSender]
-MaxTxSizeForL1=131072
+MaxTxSizeForL1=0
 ```
 
-### <a name="SequenceSender_SenderAddress"></a>11.4. `SequenceSender.SenderAddress`
+### <a name="SequenceSender_MaxBatchesForL1"></a>11.4. `SequenceSender.MaxBatchesForL1`
+
+**Type:** : `integer`
+
+**Default:** `10`
+
+**Description:** MaxBatchesForL1 is the maximum amount of batches to be sequenced in a single L1 tx
+
+**Example setting the default value** (10):
+```
+[SequenceSender]
+MaxBatchesForL1=10
+```
+
+### <a name="SequenceSender_SenderAddress"></a>11.5. `SequenceSender.SenderAddress`
 
 **Type:** : `array of integer`
 **Description:** SenderAddress defines which private key the eth tx manager needs to use
 to sign the L1 txs
 
-### <a name="SequenceSender_L2Coinbase"></a>11.5. `SequenceSender.L2Coinbase`
+### <a name="SequenceSender_L2Coinbase"></a>11.6. `SequenceSender.L2Coinbase`
 
 **Type:** : `array of integer`
 
@@ -2195,7 +2394,7 @@ to sign the L1 txs
 L2Coinbase="0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 ```
 
-### <a name="SequenceSender_PrivateKey"></a>11.6. `[SequenceSender.PrivateKey]`
+### <a name="SequenceSender_PrivateKey"></a>11.7. `[SequenceSender.PrivateKey]`
 
 **Type:** : `object`
 **Description:** PrivateKey defines all the key store files that are going
@@ -2206,7 +2405,7 @@ to be read in order to provide the private keys to sign the L1 txs
 | - [Path](#SequenceSender_PrivateKey_Path )         | No      | string | No         | -          | Path is the file path for the key store file           |
 | - [Password](#SequenceSender_PrivateKey_Password ) | No      | string | No         | -          | Password is the password to decrypt the key store file |
 
-#### <a name="SequenceSender_PrivateKey_Path"></a>11.6.1. `SequenceSender.PrivateKey.Path`
+#### <a name="SequenceSender_PrivateKey_Path"></a>11.7.1. `SequenceSender.PrivateKey.Path`
 
 **Type:** : `string`
 
@@ -2220,7 +2419,7 @@ to be read in order to provide the private keys to sign the L1 txs
 Path="/pk/sequencer.keystore"
 ```
 
-#### <a name="SequenceSender_PrivateKey_Password"></a>11.6.2. `SequenceSender.PrivateKey.Password`
+#### <a name="SequenceSender_PrivateKey_Password"></a>11.7.2. `SequenceSender.PrivateKey.Password`
 
 **Type:** : `string`
 
@@ -2234,7 +2433,7 @@ Path="/pk/sequencer.keystore"
 Password="testonly"
 ```
 
-### <a name="SequenceSender_ForkUpgradeBatchNumber"></a>11.7. `SequenceSender.ForkUpgradeBatchNumber`
+### <a name="SequenceSender_ForkUpgradeBatchNumber"></a>11.8. `SequenceSender.ForkUpgradeBatchNumber`
 
 **Type:** : `integer`
 
@@ -2248,7 +2447,21 @@ Password="testonly"
 ForkUpgradeBatchNumber=0
 ```
 
-### <a name="SequenceSender_GasOffset"></a>11.8. `SequenceSender.GasOffset`
+### <a name="SequenceSender_UseValidium"></a>11.9. `SequenceSender.UseValidium`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** UseValidium is a flag to enable/disable the use of validium
+
+**Example setting the default value** (true):
+```
+[SequenceSender]
+UseValidium=true
+```
+
+### <a name="SequenceSender_GasOffset"></a>11.10. `SequenceSender.GasOffset`
 
 **Type:** : `integer`
 
@@ -2572,12 +2785,13 @@ GasOffset=0
 **Type:** : `object`
 **Description:** L1: Configuration related to L1
 
-| Property                                                                                          | Pattern | Type             | Deprecated | Definition | Title/Description                                |
-| ------------------------------------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ------------------------------------------------ |
-| - [chainId](#NetworkConfig_l1Config_chainId )                                                     | No      | integer          | No         | -          | Chain ID of the L1 network                       |
-| - [polygonZkEVMAddress](#NetworkConfig_l1Config_polygonZkEVMAddress )                             | No      | array of integer | No         | -          | Address of the L1 contract                       |
-| - [maticTokenAddress](#NetworkConfig_l1Config_maticTokenAddress )                                 | No      | array of integer | No         | -          | Address of the L1 Matic token Contract           |
-| - [polygonZkEVMGlobalExitRootAddress](#NetworkConfig_l1Config_polygonZkEVMGlobalExitRootAddress ) | No      | array of integer | No         | -          | Address of the L1 GlobalExitRootManager contract |
+| Property                                                                                          | Pattern | Type             | Deprecated | Definition | Title/Description                                   |
+| ------------------------------------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | --------------------------------------------------- |
+| - [chainId](#NetworkConfig_l1Config_chainId )                                                     | No      | integer          | No         | -          | Chain ID of the L1 network                          |
+| - [polygonZkEVMAddress](#NetworkConfig_l1Config_polygonZkEVMAddress )                             | No      | array of integer | No         | -          | Address of the L1 contract                          |
+| - [maticTokenAddress](#NetworkConfig_l1Config_maticTokenAddress )                                 | No      | array of integer | No         | -          | Address of the L1 Matic token Contract              |
+| - [polygonZkEVMGlobalExitRootAddress](#NetworkConfig_l1Config_polygonZkEVMGlobalExitRootAddress ) | No      | array of integer | No         | -          | Address of the L1 GlobalExitRootManager contract    |
+| - [dataCommitteeContract](#NetworkConfig_l1Config_dataCommitteeContract )                         | No      | array of integer | No         | -          | Address of the data availability committee contract |
 
 #### <a name="NetworkConfig_l1Config_chainId"></a>13.1.1. `NetworkConfig.l1Config.chainId`
 
@@ -2607,6 +2821,11 @@ chainId=0
 
 **Type:** : `array of integer`
 **Description:** Address of the L1 GlobalExitRootManager contract
+
+#### <a name="NetworkConfig_l1Config_dataCommitteeContract"></a>13.1.5. `NetworkConfig.l1Config.dataCommitteeContract`
+
+**Type:** : `array of integer`
+**Description:** Address of the data availability committee contract
 
 ### <a name="NetworkConfig_L2GlobalExitRootManagerAddr"></a>13.2. `NetworkConfig.L2GlobalExitRootManagerAddr`
 
@@ -2713,19 +2932,31 @@ GenesisBlockNum=0
 **Type:** : `object`
 **Description:** Configuration of the gas price suggester service
 
-| Property                                                                       | Pattern | Type    | Deprecated | Definition | Title/Description                                                                                                                        |
-| ------------------------------------------------------------------------------ | ------- | ------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| - [Type](#L2GasPriceSuggester_Type )                                           | No      | string  | No         | -          | -                                                                                                                                        |
-| - [DefaultGasPriceWei](#L2GasPriceSuggester_DefaultGasPriceWei )               | No      | integer | No         | -          | DefaultGasPriceWei is used to set the gas price to be used by the default gas pricer or as minimim gas price by the follower gas pricer. |
-| - [MaxGasPriceWei](#L2GasPriceSuggester_MaxGasPriceWei )                       | No      | integer | No         | -          | MaxGasPriceWei is used to limit the gas price returned by the follower gas pricer to a maximum value. It is ignored if 0.                |
-| - [MaxPrice](#L2GasPriceSuggester_MaxPrice )                                   | No      | object  | No         | -          | -                                                                                                                                        |
-| - [IgnorePrice](#L2GasPriceSuggester_IgnorePrice )                             | No      | object  | No         | -          | -                                                                                                                                        |
-| - [CheckBlocks](#L2GasPriceSuggester_CheckBlocks )                             | No      | integer | No         | -          | -                                                                                                                                        |
-| - [Percentile](#L2GasPriceSuggester_Percentile )                               | No      | integer | No         | -          | -                                                                                                                                        |
-| - [UpdatePeriod](#L2GasPriceSuggester_UpdatePeriod )                           | No      | string  | No         | -          | Duration                                                                                                                                 |
-| - [CleanHistoryPeriod](#L2GasPriceSuggester_CleanHistoryPeriod )               | No      | string  | No         | -          | Duration                                                                                                                                 |
-| - [CleanHistoryTimeRetention](#L2GasPriceSuggester_CleanHistoryTimeRetention ) | No      | string  | No         | -          | Duration                                                                                                                                 |
-| - [Factor](#L2GasPriceSuggester_Factor )                                       | No      | number  | No         | -          | -                                                                                                                                        |
+| Property                                                                                   | Pattern | Type    | Deprecated | Definition | Title/Description                                                                                                                        |
+| ------------------------------------------------------------------------------------------ | ------- | ------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| - [Type](#L2GasPriceSuggester_Type )                                                       | No      | string  | No         | -          | -                                                                                                                                        |
+| - [DefaultGasPriceWei](#L2GasPriceSuggester_DefaultGasPriceWei )                           | No      | integer | No         | -          | DefaultGasPriceWei is used to set the gas price to be used by the default gas pricer or as minimim gas price by the follower gas pricer. |
+| - [MaxGasPriceWei](#L2GasPriceSuggester_MaxGasPriceWei )                                   | No      | integer | No         | -          | MaxGasPriceWei is used to limit the gas price returned by the follower gas pricer to a maximum value. It is ignored if 0.                |
+| - [MaxPrice](#L2GasPriceSuggester_MaxPrice )                                               | No      | object  | No         | -          | -                                                                                                                                        |
+| - [IgnorePrice](#L2GasPriceSuggester_IgnorePrice )                                         | No      | object  | No         | -          | -                                                                                                                                        |
+| - [CheckBlocks](#L2GasPriceSuggester_CheckBlocks )                                         | No      | integer | No         | -          | -                                                                                                                                        |
+| - [Percentile](#L2GasPriceSuggester_Percentile )                                           | No      | integer | No         | -          | -                                                                                                                                        |
+| - [UpdatePeriod](#L2GasPriceSuggester_UpdatePeriod )                                       | No      | string  | No         | -          | Duration                                                                                                                                 |
+| - [CleanHistoryPeriod](#L2GasPriceSuggester_CleanHistoryPeriod )                           | No      | string  | No         | -          | Duration                                                                                                                                 |
+| - [CleanHistoryTimeRetention](#L2GasPriceSuggester_CleanHistoryTimeRetention )             | No      | string  | No         | -          | Duration                                                                                                                                 |
+| - [KafkaURL](#L2GasPriceSuggester_KafkaURL )                                               | No      | string  | No         | -          | -                                                                                                                                        |
+| - [Topic](#L2GasPriceSuggester_Topic )                                                     | No      | string  | No         | -          | -                                                                                                                                        |
+| - [GroupID](#L2GasPriceSuggester_GroupID )                                                 | No      | string  | No         | -          | -                                                                                                                                        |
+| - [Username](#L2GasPriceSuggester_Username )                                               | No      | string  | No         | -          | -                                                                                                                                        |
+| - [Password](#L2GasPriceSuggester_Password )                                               | No      | string  | No         | -          | -                                                                                                                                        |
+| - [RootCAPath](#L2GasPriceSuggester_RootCAPath )                                           | No      | string  | No         | -          | -                                                                                                                                        |
+| - [L1CoinId](#L2GasPriceSuggester_L1CoinId )                                               | No      | integer | No         | -          | -                                                                                                                                        |
+| - [L2CoinId](#L2GasPriceSuggester_L2CoinId )                                               | No      | integer | No         | -          | -                                                                                                                                        |
+| - [DefaultL1CoinPrice](#L2GasPriceSuggester_DefaultL1CoinPrice )                           | No      | number  | No         | -          | DefaultL1CoinPrice is the L1 token's coin price                                                                                          |
+| - [DefaultL2CoinPrice](#L2GasPriceSuggester_DefaultL2CoinPrice )                           | No      | number  | No         | -          | DefaultL2CoinPrice is the native token's coin price                                                                                      |
+| - [GasPriceUsdt](#L2GasPriceSuggester_GasPriceUsdt )                                       | No      | number  | No         | -          | -                                                                                                                                        |
+| - [EnableFollowerAdjustByL2L1Price](#L2GasPriceSuggester_EnableFollowerAdjustByL2L1Price ) | No      | boolean | No         | -          | EnableFollowerAdjustByL2L1Price is dynamic adjust the factor through the L1 and L2 coins price in follower strategy                      |
+| - [Factor](#L2GasPriceSuggester_Factor )                                                   | No      | number  | No         | -          | -                                                                                                                                        |
 
 ### <a name="L2GasPriceSuggester_Type"></a>14.1. `L2GasPriceSuggester.Type`
 
@@ -2871,7 +3102,157 @@ CleanHistoryPeriod="1h0m0s"
 CleanHistoryTimeRetention="5m0s"
 ```
 
-### <a name="L2GasPriceSuggester_Factor"></a>14.11. `L2GasPriceSuggester.Factor`
+### <a name="L2GasPriceSuggester_KafkaURL"></a>14.11. `L2GasPriceSuggester.KafkaURL`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Example setting the default value** (""):
+```
+[L2GasPriceSuggester]
+KafkaURL=""
+```
+
+### <a name="L2GasPriceSuggester_Topic"></a>14.12. `L2GasPriceSuggester.Topic`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Example setting the default value** (""):
+```
+[L2GasPriceSuggester]
+Topic=""
+```
+
+### <a name="L2GasPriceSuggester_GroupID"></a>14.13. `L2GasPriceSuggester.GroupID`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Example setting the default value** (""):
+```
+[L2GasPriceSuggester]
+GroupID=""
+```
+
+### <a name="L2GasPriceSuggester_Username"></a>14.14. `L2GasPriceSuggester.Username`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Example setting the default value** (""):
+```
+[L2GasPriceSuggester]
+Username=""
+```
+
+### <a name="L2GasPriceSuggester_Password"></a>14.15. `L2GasPriceSuggester.Password`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Example setting the default value** (""):
+```
+[L2GasPriceSuggester]
+Password=""
+```
+
+### <a name="L2GasPriceSuggester_RootCAPath"></a>14.16. `L2GasPriceSuggester.RootCAPath`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Example setting the default value** (""):
+```
+[L2GasPriceSuggester]
+RootCAPath=""
+```
+
+### <a name="L2GasPriceSuggester_L1CoinId"></a>14.17. `L2GasPriceSuggester.L1CoinId`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Example setting the default value** (0):
+```
+[L2GasPriceSuggester]
+L1CoinId=0
+```
+
+### <a name="L2GasPriceSuggester_L2CoinId"></a>14.18. `L2GasPriceSuggester.L2CoinId`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Example setting the default value** (0):
+```
+[L2GasPriceSuggester]
+L2CoinId=0
+```
+
+### <a name="L2GasPriceSuggester_DefaultL1CoinPrice"></a>14.19. `L2GasPriceSuggester.DefaultL1CoinPrice`
+
+**Type:** : `number`
+
+**Default:** `0`
+
+**Description:** DefaultL1CoinPrice is the L1 token's coin price
+
+**Example setting the default value** (0):
+```
+[L2GasPriceSuggester]
+DefaultL1CoinPrice=0
+```
+
+### <a name="L2GasPriceSuggester_DefaultL2CoinPrice"></a>14.20. `L2GasPriceSuggester.DefaultL2CoinPrice`
+
+**Type:** : `number`
+
+**Default:** `0`
+
+**Description:** DefaultL2CoinPrice is the native token's coin price
+
+**Example setting the default value** (0):
+```
+[L2GasPriceSuggester]
+DefaultL2CoinPrice=0
+```
+
+### <a name="L2GasPriceSuggester_GasPriceUsdt"></a>14.21. `L2GasPriceSuggester.GasPriceUsdt`
+
+**Type:** : `number`
+
+**Default:** `0`
+
+**Example setting the default value** (0):
+```
+[L2GasPriceSuggester]
+GasPriceUsdt=0
+```
+
+### <a name="L2GasPriceSuggester_EnableFollowerAdjustByL2L1Price"></a>14.22. `L2GasPriceSuggester.EnableFollowerAdjustByL2L1Price`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** EnableFollowerAdjustByL2L1Price is dynamic adjust the factor through the L1 and L2 coins price in follower strategy
+
+**Example setting the default value** (false):
+```
+[L2GasPriceSuggester]
+EnableFollowerAdjustByL2L1Price=false
+```
+
+### <a name="L2GasPriceSuggester_Factor"></a>14.23. `L2GasPriceSuggester.Factor`
 
 **Type:** : `number`
 
@@ -2899,12 +3280,12 @@ Factor=0.15
 
 **Type:** : `string`
 
-**Default:** `"zkevm-prover:50071"`
+**Default:** `"x1-prover:50071"`
 
-**Example setting the default value** ("zkevm-prover:50071"):
+**Example setting the default value** ("x1-prover:50071"):
 ```
 [Executor]
-URI="zkevm-prover:50071"
+URI="x1-prover:50071"
 ```
 
 ### <a name="Executor_MaxResourceExhaustedAttempts"></a>15.2. `Executor.MaxResourceExhaustedAttempts`
@@ -2972,14 +3353,14 @@ MaxGRPCMessageSize=100000000
 
 **Type:** : `string`
 
-**Default:** `"zkevm-prover:50061"`
+**Default:** `"x1-prover:50061"`
 
 **Description:** URI is the server URI.
 
-**Example setting the default value** ("zkevm-prover:50061"):
+**Example setting the default value** ("x1-prover:50061"):
 ```
 [MTClient]
-URI="zkevm-prover:50061"
+URI="x1-prover:50061"
 ```
 
 ## <a name="Metrics"></a>17. `[Metrics]`
@@ -3263,14 +3644,14 @@ Password="prover_pass"
 
 **Type:** : `string`
 
-**Default:** `"zkevm-state-db"`
+**Default:** `"x1-state-db"`
 
 **Description:** Host address of database
 
-**Example setting the default value** ("zkevm-state-db"):
+**Example setting the default value** ("x1-state-db"):
 ```
 [HashDB]
-Host="zkevm-state-db"
+Host="x1-state-db"
 ```
 
 ### <a name="HashDB_Port"></a>19.5. `HashDB.Port`
@@ -3542,14 +3923,14 @@ Password="state_password"
 
 **Type:** : `string`
 
-**Default:** `"zkevm-state-db"`
+**Default:** `"x1-state-db"`
 
 **Description:** Host address of database
 
-**Example setting the default value** ("zkevm-state-db"):
+**Example setting the default value** ("x1-state-db"):
 ```
 [State.DB]
-Host="zkevm-state-db"
+Host="x1-state-db"
 ```
 
 #### <a name="State_DB_Port"></a>20.8.5. `State.DB.Port`

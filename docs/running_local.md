@@ -8,11 +8,11 @@
 
 This documentation will help you running the following components:
 
-- zkEVM Node Databases
+- X1 Node Databases
 - Explorer Databases
 - L1 Network
 - Prover
-- zkEVM Node components
+- X1 Node components
 - Explorers
 
 ## Requirements
@@ -23,8 +23,8 @@ The current version of the environment requires `go`, `docker` and `docker-compo
 - <https://www.docker.com/get-started>
 - <https://docs.docker.com/compose/install/>
 
-The `zkevm-node` docker image must be built at least once and every time a change is made to the code.
-If you haven't build the `zkevm-node` image yet, you must run:
+The `x1-node` docker image must be built at least once and every time a change is made to the code.
+If you haven't build the `x1-node` image yet, you must run:
 
 ```bash
 make build-docker
@@ -32,7 +32,7 @@ make build-docker
 
 ## A look at how the binary works:
 
-The `zkevm-node` allows certain commands to interact with smart contracts, run certain components, create encryption files and print out debug information.
+The `x1-node` allows certain commands to interact with smart contracts, run certain components, create encryption files and print out debug information.
 
 To interact with the binary program we provide docker compose files, and a Makefile to spin up/down the different services and components, ensuring a smooth deployment locally and better interface in command line for developers.
 
@@ -93,7 +93,7 @@ make run-approve-matic
 ## Accessing the environment
 
 - **Databases**:
-  - zkEVM Node *State* Database 
+  - X1 Node *State* Database 
     - `Type:` Postgres DB
     - `User:` state_user
     - `Password:` state_password
@@ -101,7 +101,7 @@ make run-approve-matic
     - `Host:` localhost
     - `Port:` 5432
     - `Url:` <postgres://state_user:srare_password@localhost:5432/state-db>
-  - zkEVM Node *Pool* Database 
+  - X1 Node *Pool* Database 
     - `Type:` Postgres DB
     - `User:` pool_user
     - `Password:` pool_password
@@ -109,7 +109,7 @@ make run-approve-matic
     - `Host:` localhost
     - `Port:` 5433
     - `Url:` <postgres://pool_user:pool_password@localhost:5433/pool_db>
-  - zkEVM Node *JSON-RPC* Database 
+  - X1 Node *JSON-RPC* Database 
     - `Type:` Postgres DB
     - `User:` rpc_user
     - `Password:` rpc_password
@@ -139,7 +139,7 @@ make run-approve-matic
     - `Host:` localhost
     - `Port:` 8545
     - `Url:` <http://localhost:8545>
-  - zkEVM Node
+  - X1 Node
     - `Type:` JSON RPC
     - `Host:` localhost
     - `Port:` 8123
@@ -173,7 +173,7 @@ To configure your Metamask to use your local environment, follow these steps:
 3. On the left menu, click on Networks
 4. Click on `Add Network` button
 5. Fill up the L2 network information
-    1. `Network Name:` Polygon zkEVM - Local
+    1. `Network Name:` X1 - Local
     2. `New RPC URL:` <http://localhost:8123>
     3. `ChainID:` 1001
     4. `Currency Symbol:` ETH
@@ -191,22 +191,24 @@ To configure your Metamask to use your local environment, follow these steps:
 
 | Address | Description |
 |---|---|
-| 0x610178dA211FEF7D417bC0e6FeD39F05609AD788 | Proof of Efficiency |
-| 0xff0EE8ea08cEf5cb4322777F5CC3E8A584B8A4A0 | Bridge |
-| 0x5FbDB2315678afecb367f032d93F642f64180aa3 | Matic token |
-| 0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6 | GlobalExitRootManager |
+| 0x0D9088C72Cd4F08e9dDe474D8F5394147f64b22C | Proof of Efficiency |
+| 0x10B65c586f795aF3eCCEe594fE4E38E1F059F780 | Bridge |
+| 0xcFE6D77a653b988203BfAc9C6a69eA9D583bdC2b | Matic token |
+| 0x82109a709138A2953C720D3d775168717b668ba6 | L1 OKB token |
+| 0x82109a709138A2953C720D3d775168717b668ba6 | L2 WETH token |
+| 0xEd236da21Ff62bC7B62608AdB818da49E8549fa7 | GlobalExitRootManager |
 
-## Deployer Account
-
+## Admin Account
 | Address | Private Key |
 |---|---|
-| 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 | 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 |
+| 0x2ECF31eCe36ccaC2d3222A303b1409233ECBB225 | 0xde3ca643a52f5543e84ba984c4419ff40dbabd0e483c31c1d09fee8168d68e38 |
 
 ## Sequencer Account
 
 | Address | Private Key |
 |---|---|
 | 0x617b3a3528F9cDd6630fd3301B9c8911F7Bf063D | 0x28b2b0318721be8c8339199172cd7cc8f5e273800a35616ec893083a4b32c02e |
+| 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266 | 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80 |
 
 ## Accounts
 

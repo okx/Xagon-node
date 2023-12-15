@@ -4,8 +4,9 @@ package sequencer
 
 import (
 	context "context"
-	"github.com/0xPolygonHermez/zkevm-node/pool"
 	big "math/big"
+
+	"github.com/0xPolygonHermez/zkevm-node/pool"
 
 	common "github.com/ethereum/go-ethereum/common"
 

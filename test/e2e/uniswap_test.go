@@ -42,6 +42,7 @@ func TestUniswap(t *testing.T) {
 			SenderAddress:                            "0x617b3a3528F9cDd6630fd3301B9c8911F7Bf063D",
 			LastBatchVirtualizationTimeMaxWaitPeriod: "5s",
 			WaitPeriodSendSequence:                   "5s",
+			MaxBatchesForL1:                          10,
 			MaxTxSizeForL1:                           131072,
 			PrivateKey:                               "0x28b2b0318721be8c8339199172cd7cc8f5e273800a35616ec893083a4b32c02e",
 		},

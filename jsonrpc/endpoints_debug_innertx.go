@@ -3,6 +3,7 @@ package jsonrpc
 import (
 	"context"
 	"errors"
+
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"

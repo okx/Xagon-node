@@ -6,9 +6,9 @@ import (
 	"encoding/json"
 	"math/big"
 
+	"github.com/0xPolygonHermez/zkevm-node/state/runtime/fakevm"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
-	"github.com/0xPolygonHermez/zkevm-node/state/runtime/fakevm"
 )
 
 var _ = (*callFrameMarshaling)(nil)
@@ -16,7 +16,7 @@ var _ = (*callFrameMarshaling)(nil)
 // MarshalJSON marshals as JSON.
 func (c callFrame) MarshalJSON() ([]byte, error) {
 	type callFrame0 struct {
-		Type         fakevm.OpCode       `json:"-"`
+		Type         fakevm.OpCode   `json:"-"`
 		From         common.Address  `json:"from"`
 		Gas          hexutil.Uint64  `json:"gas"`
 		GasUsed      hexutil.Uint64  `json:"gasUsed"`
@@ -50,7 +50,7 @@ func (c callFrame) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals from JSON.
 func (c *callFrame) UnmarshalJSON(input []byte) error {
 	type callFrame0 struct {
-		Type         *fakevm.OpCode      `json:"-"`
+		Type         *fakevm.OpCode  `json:"-"`
 		From         *common.Address `json:"from"`
 		Gas          *hexutil.Uint64 `json:"gas"`
 		GasUsed      *hexutil.Uint64 `json:"gasUsed"`

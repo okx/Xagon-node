@@ -17,8 +17,8 @@ main(){
 
         echo "${script_contents}" > "${script_file_path}"
 
-        docker cp "${script_file_path}" zkevm-state-db:"${script_file_path}"
-        docker exec zkevm-state-db bash -c "chmod a+x ${script_file_path} && psql ${DBNAME} ${DBUSER} -v ON_ERROR_STOP=ON --single-transaction -f ${script_file_path}"
+        docker cp "${script_file_path}" x1-state-db:"${script_file_path}"
+        docker exec x1-state-db bash -c "chmod a+x ${script_file_path} && psql ${DBNAME} ${DBUSER} -v ON_ERROR_STOP=ON --single-transaction -f ${script_file_path}"
 
         echo "Done"
     done

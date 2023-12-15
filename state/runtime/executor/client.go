@@ -33,7 +33,7 @@ func NewExecutorClient(ctx context.Context, c Config) (ExecutorServiceClient, *g
 			log.Infof("Retrying connection to executor #%d", connectionRetries)
 			time.Sleep(time.Duration(delay) * time.Second)
 			connectionRetries = connectionRetries + 1
-			out, err := exec.Command("docker", []string{"logs", "xgon-prover"}...).Output()
+			out, err := exec.Command("docker", []string{"logs", "x1-prover"}...).Output()
 			if err == nil {
 				log.Infof("Prover logs:\n%s\n", out)
 			}

@@ -10,5 +10,5 @@ scrape_configs:
     metrics_path: /metrics
     static_configs:
       - targets:
-          - zkevm-json-rpc:9091 #inside port of the zkevm-json-rpc
-          - zkevm-sequencer:9091 #inside port of the zkevm-sequencer
+          - x1-json-rpc:9091 #inside port of the x1-json-rpc
+          - x1-sequencer:9091 #inside port of the x1-sequencer

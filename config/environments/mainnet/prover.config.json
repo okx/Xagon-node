@@ -92,7 +92,7 @@
     "starkInfoFile": "zkevm.starkinfo.json",
     "starkInfoC12aFile": "zkevm.c12a.starkinfo.json",
     "starkInfoRecursive1File": "zkevm.recursive1.starkinfo.json",
-    "databaseURL": "postgresql://prover_user:prover_pass@zkevm-state-db:5432/prover_db",
+    "databaseURL": "postgresql://prover_user:prover_pass@x1-state-db:5432/prover_db",
     "dbNodesTableName": "state.nodes",
     "dbProgramTableName": "state.program",
     "dbAsyncWrite": false,

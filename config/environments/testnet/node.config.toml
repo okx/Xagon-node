@@ -9,9 +9,9 @@ AccountQueue = 64
 	User = "state_user"
 	Password = "state_password"
 	Name = "state_db"
-	Host = "zkevm-state-db"
+	Host = "x1-state-db"
 	Port = "5432"
-	EnableLog = false	
+	EnableLog = false
 	MaxConns = 200
 	[State.Batch]
 		[State.Batch.Constraints]
@@ -40,7 +40,7 @@ FreeGasAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 	User = "pool_user"
 	Password = "pool_password"
 	Name = "pool_db"
-	Host = "zkevm-pool-db"
+	Host = "x1-pool-db"
 	Port = "5432"
 	EnableLog = false
 	MaxConns = 200
@@ -58,7 +58,7 @@ Port = 8545
 ReadTimeout = "60s"
 WriteTimeout = "60s"
 MaxRequestsPerIPAndSecond = 5000
-SequencerNodeURI = "https://rpc.public.zkevm-test.net/"
+SequencerNodeURI = "https://rpc.public.x1-test.net/"
 EnableL2SuggestedGasPricePolling = false
 	[RPC.WebSockets]
 		Enabled = true
@@ -79,10 +79,10 @@ SyncInterval = "2s"
 SyncChunkSize = 100
 
 [MTClient]
-URI = "zkevm-prover:50061"
+URI = "x1-prover:50061"
 
 [Executor]
-URI = "zkevm-prover:50071"
+URI = "x1-prover:50071"
 MaxResourceExhaustedAttempts = 3
 WaitOnResourceExhaustion = "1s"
 MaxGRPCMessageSize = 100000000
@@ -99,7 +99,7 @@ ProfilingEnabled = false
 User = "prover_user"
 Password = "prover_pass"
 Name = "prover_db"
-Host = "zkevm-state-db"
+Host = "x1-state-db"
 Port = "5432"
 EnableLog = false
 MaxConns = 200

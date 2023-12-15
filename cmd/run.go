@@ -5,6 +5,14 @@ import (
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
+	"net"
+	"net/http"
+	"net/http/pprof"
+	"os"
+	"os/signal"
+	"runtime"
+	"time"
+
 	dataCommitteeClient "github.com/0xPolygon/cdk-data-availability/client"
 	datastreamerlog "github.com/0xPolygonHermez/zkevm-data-streamer/log"
 	"github.com/0xPolygonHermez/zkevm-node"
@@ -34,13 +42,6 @@ import (
 	"github.com/jackc/pgx/v4/pgxpool"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/urfave/cli/v2"
-	"net"
-	"net/http"
-	"net/http/pprof"
-	"os"
-	"os/signal"
-	"runtime"
-	"time"
 )
 
 func start(cliCtx *cli.Context) error {

@@ -7,9 +7,9 @@ import (
 
 func Test_logStatisticsInstance_Summary(t *testing.T) {
 	type fields struct {
-		timestamp  map[LogTag]time.Time
-		statistics map[LogTag]int64
-		tags       map[LogTag]string
+		timestamp  map[logTag]time.Time
+		statistics map[logTag]int64
+		tags       map[logTag]string
 	}
 	tests := []struct {
 		name   string
@@ -18,8 +18,8 @@ func Test_logStatisticsInstance_Summary(t *testing.T) {
 	}{
 		// TODO: Add test cases.
 		{"1", fields{
-			timestamp: map[LogTag]time.Time{NewRound: time.Now().Add(-time.Second)},
-			statistics: map[LogTag]int64{
+			timestamp: map[logTag]time.Time{NewRound: time.Now().Add(-time.Second)},
+			statistics: map[logTag]int64{
 				BatchGas:                        111111,
 				TxCounter:                       10,
 				GetTx:                           time.Second.Milliseconds(),
@@ -35,7 +35,7 @@ func Test_logStatisticsInstance_Summary(t *testing.T) {
 				FinalizeBatchCloseBatch:         time.Second.Milliseconds() * 10,
 				FinalizeBatchOpenBatch:          time.Second.Milliseconds() * 10,
 			},
-			tags: map[LogTag]string{BatchCloseReason: "deadline", FinalizeBatchNumber: "123"},
+			tags: map[logTag]string{BatchCloseReason: "deadline", FinalizeBatchNumber: "123"},
 		}, "test"},
 	}
 	for _, tt := range tests {

@@ -60,7 +60,7 @@ PR opened and pushing changes to PRs. There are two variants, `trusted` and
 
 ## updatedeps
 
-The `zkevm-node` repo requires some external resources for working. We call
+The `x1-node` repo requires some external resources for working. We call
 these resources custom dependencies (as opposed to the golang packages required
 by the code).
 
@@ -80,7 +80,7 @@ for changes the client/server golang code is generated from them.
 
 With all the potential changes we create a new PR and the tests are run on it,
 so that we can review and eventually approve the changes to be included in the
-`zkevm-node` repo.
+`x1-node` repo.
 
 ### When is executed
 

@@ -13,8 +13,8 @@ RUN cd /src && make build
 
 # CONTAINER FOR RUNNING BINARY
 FROM alpine:3.18.0
-COPY --from=build /src/dist/xgon-node /app/xgon-node
+COPY --from=build /src/dist/x1-node /app/x1-node
 COPY --from=build /src/config/environments/testnet/node.config.toml /app/example.config.toml
 RUN apk update && apk add postgresql15-client
 EXPOSE 8123
-CMD ["/bin/sh", "-c", "/app/xgon-node run"]
+CMD ["/bin/sh", "-c", "/app/x1-node run"]

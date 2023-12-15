@@ -9,7 +9,8 @@ import (
 var instance *logStatisticsInstance
 var once sync.Once
 
-func GetLogStatistics() LogStatistics {
+// GetLogStatistics is get log instance for statistic
+func GetLogStatistics() logStatistics {
 	once.Do(func() {
 		instance = &logStatisticsInstance{}
 		instance.init()
@@ -18,40 +19,40 @@ func GetLogStatistics() LogStatistics {
 }
 
 type logStatisticsInstance struct {
-	timestamp  map[LogTag]time.Time
-	statistics map[LogTag]int64 // value maybe the counter or time.Duration(ms)
-	tags       map[LogTag]string
+	timestamp  map[logTag]time.Time
+	statistics map[logTag]int64 // value maybe the counter or time.Duration(ms)
+	tags       map[logTag]string
 }
 
 func (l *logStatisticsInstance) init() {
-	l.timestamp = make(map[LogTag]time.Time)
-	l.statistics = make(map[LogTag]int64)
-	l.tags = make(map[LogTag]string)
+	l.timestamp = make(map[logTag]time.Time)
+	l.statistics = make(map[logTag]int64)
+	l.tags = make(map[logTag]string)
 }
 
-func (l *logStatisticsInstance) CumulativeCounting(tag LogTag) {
+func (l *logStatisticsInstance) CumulativeCounting(tag logTag) {
 	l.statistics[tag]++
 }
 
-func (l *logStatisticsInstance) CumulativeValue(tag LogTag, value int64) {
+func (l *logStatisticsInstance) CumulativeValue(tag logTag, value int64) {
 	l.statistics[tag] += value
 }
 
-func (l *logStatisticsInstance) CumulativeTiming(tag LogTag, duration time.Duration) {
+func (l *logStatisticsInstance) CumulativeTiming(tag logTag, duration time.Duration) {
 	l.statistics[tag] += duration.Milliseconds()
 }
 
-func (l *logStatisticsInstance) SetTag(tag LogTag, value string) {
+func (l *logStatisticsInstance) SetTag(tag logTag, value string) {
 	l.tags[tag] = value
 }
 
-func (l *logStatisticsInstance) UpdateTimestamp(tag LogTag, tm time.Time) {
+func (l *logStatisticsInstance) UpdateTimestamp(tag logTag, tm time.Time) {
 	l.timestamp[tag] = tm
 }
 
 func (l *logStatisticsInstance) ResetStatistics() {
-	l.statistics = make(map[LogTag]int64)
-	l.tags = make(map[LogTag]string)
+	l.statistics = make(map[logTag]int64)
+	l.tags = make(map[logTag]string)
 }
 
 func (l *logStatisticsInstance) Summary() string {

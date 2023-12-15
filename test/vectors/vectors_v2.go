@@ -71,7 +71,7 @@ func GenerateGenesisActions(genesis []GenesisEntity) []*state.GenesisAction {
 			}
 			genesisActions = append(genesisActions, action)
 		}
-		
+
 		if genesisEntity.IsSmartContract && len(genesisEntity.Storage) > 0 {
 			for storageKey, storageValue := range genesisEntity.Storage {
 				action := &state.GenesisAction{

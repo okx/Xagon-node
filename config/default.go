@@ -16,7 +16,7 @@ Outputs = ["stderr"]
 	User = "state_user"
 	Password = "state_password"
 	Name = "state_db"
-	Host = "xgon-state-db"
+	Host = "x1-state-db"
 	Port = "5432"
 	EnableLog = false	
 	MaxConns = 200
@@ -58,7 +58,7 @@ FreeGasAddress = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 	User = "pool_user"
 	Password = "pool_password"
 	Name = "pool_db"
-	Host = "xgon-pool-db"
+	Host = "x1-pool-db"
 	Port = "5432"
 	EnableLog = false
 	MaxConns = 200
@@ -146,7 +146,7 @@ MaxTxLifetime = "3h"
 [SequenceSender]
 WaitPeriodSendSequence = "5s"
 LastBatchVirtualizationTimeMaxWaitPeriod = "5s"
-MaxTxSizeForL1 = 1000
+MaxBatchesForL1 = 10
 L2Coinbase = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 PrivateKey = {Path = "/pk/sequencer.keystore", Password = "testonly"}
 UseValidium = true
@@ -174,10 +174,10 @@ CleanHistoryPeriod = "1h"
 CleanHistoryTimeRetention = "5m"
 
 [MTClient]
-URI = "xgon-prover:50061"
+URI = "x1-prover:50061"
 
 [Executor]
-URI = "xgon-prover:50071"
+URI = "x1-prover:50071"
 MaxResourceExhaustedAttempts = 3
 WaitOnResourceExhaustion = "1s"
 MaxGRPCMessageSize = 100000000
@@ -191,7 +191,7 @@ Enabled = false
 User = "prover_user"
 Password = "prover_pass"
 Name = "prover_db"
-Host = "xgon-state-db"
+Host = "x1-state-db"
 Port = "5432"
 EnableLog = false
 MaxConns = 200

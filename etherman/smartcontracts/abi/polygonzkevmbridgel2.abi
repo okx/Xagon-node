@@ -80,6 +80,24 @@
       "type": "error"
     },
     {
+      "inputs": [],
+      "name": "TokenNotPermitted",
+      "type": "error"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "allowed",
+          "type": "bool"
+        }
+      ],
+      "name": "AllL2TokensPermissionSet",
+      "type": "event"
+    },
+    {
       "anonymous": false,
       "inputs": [
         {
@@ -201,6 +219,25 @@
       "inputs": [
         {
           "indexed": false,
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "bool",
+          "name": "allowed",
+          "type": "bool"
+        }
+      ],
+      "name": "L2TokenPermissionSet",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
           "internalType": "uint32",
           "name": "originNetwork",
           "type": "uint32"
@@ -226,6 +263,19 @@
       ],
       "name": "NewWrappedToken",
       "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "WETHToken",
+      "outputs": [
+        {
+          "internalType": "contract TokenWrapped",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
     },
     {
       "inputs": [],
@@ -283,6 +333,11 @@
           "internalType": "address",
           "name": "destinationAddress",
           "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "amountWETH",
+          "type": "uint256"
         },
         {
           "internalType": "bool",
@@ -457,6 +512,32 @@
     },
     {
       "inputs": [],
+      "name": "gasTokenAddress",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "gasTokenNetwork",
+      "outputs": [
+        {
+          "internalType": "uint32",
+          "name": "",
+          "type": "uint32"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
       "name": "getDepositRoot",
       "outputs": [
         {
@@ -570,11 +651,39 @@
           "internalType": "address",
           "name": "_polygonZkEVMaddress",
           "type": "address"
+        },
+        {
+          "internalType": "address",
+          "name": "_gasTokenAddress",
+          "type": "address"
+        },
+        {
+          "internalType": "uint32",
+          "name": "_gasTokenNetwork",
+          "type": "uint32"
+        },
+        {
+          "internalType": "contract TokenWrapped",
+          "name": "_WETHToken",
+          "type": "address"
         }
       ],
       "name": "initialize",
       "outputs": [],
       "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "isAllL2TokensAllowed",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
       "type": "function"
     },
     {
@@ -599,6 +708,25 @@
     {
       "inputs": [],
       "name": "isEmergencyState",
+      "outputs": [
+        {
+          "internalType": "bool",
+          "name": "",
+          "type": "bool"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "name": "isTokenAllowed",
       "outputs": [
         {
           "internalType": "bool",
@@ -685,6 +813,37 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "bool",
+          "name": "allowed",
+          "type": "bool"
+        }
+      ],
+      "name": "setAllL2TokensAllowed",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "token",
+          "type": "address"
+        },
+        {
+          "internalType": "bool",
+          "name": "allowed",
+          "type": "bool"
+        }
+      ],
+      "name": "setL2TokenBridgePermission",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {

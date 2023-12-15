@@ -2,10 +2,10 @@ package sequencer
 
 import (
 	"context"
-	ethmanTypes "github.com/0xPolygonHermez/zkevm-node/etherman/types"
 	"math/big"
 	"time"
 
+	ethmanTypes "github.com/0xPolygonHermez/zkevm-node/etherman/types"
 	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/state/metrics"

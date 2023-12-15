@@ -129,6 +129,7 @@ func NewSimulatedEtherman(cfg Config, auth *bind.TransactOpts) (etherman *Client
 		ZkEVM:                 poe,
 		Matic:                 maticContract,
 		GlobalExitRootManager: globalExitRoot,
+		DataCommittee:         da,
 		SCAddresses:           []common.Address{poeAddr, exitManagerAddr, dataCommitteeAddr},
 		auth:                  map[common.Address]bind.TransactOpts{},
 		cfg:                   cfg,
@@ -137,5 +138,5 @@ func NewSimulatedEtherman(cfg Config, auth *bind.TransactOpts) (etherman *Client
 	if err != nil {
 		return nil, nil, common.Address{}, nil, nil, err
 	}
-	return c, client, maticAddr, br, nil, nil
+	return c, client, maticAddr, br, da, nil
 }

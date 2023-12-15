@@ -2,7 +2,7 @@
 
 ## JSON RPC Service:
 
-This service will sync transactions from L2 to L1, it does not require a Prover to be working, just an RPC and Synchronizer. 
+This service will sync transactions from L2 to L1, it does not require a Prover to be working, just an RPC and Synchronizer.
 
 ### Services needed:
 
@@ -45,9 +45,9 @@ Additionally, the [`production-setup.md`](./production-setup.md) goes through th
 
 ### Docker services:
 
-- `zkevm-sync`
-- `zkevm-prover` (`Merkle Tree`, `Executor`)
-- `zkevm-rpc` 
+- `x1-sync`
+- `x1-prover` (`Merkle Tree`, `Executor`)
+- `x1-rpc`
 - Databases
 
 ## If you want to create Proofs:
@@ -56,7 +56,7 @@ This mode is a tad more complicated, as it will require more services and more m
 
 Requirements for the Prover service (sans MT/Executor): 1TB RAM 128 cores
 
-### Services needed: 
+### Services needed:
 
 *Please perform each of these steps (downloading and running) before continuing!*
 
@@ -96,7 +96,7 @@ For *only* Prover Config (`only-prover-config.json`):
 
 ### Docker services:
 
-- `zkevm-sync`
-- `zkevm-prover` (`Prover`, `Merkle Tree`, `Executor`)
-- `zkevm-aggregator` 
+- `x1-sync`
+- `x1-prover` (`Prover`, `Merkle Tree`, `Executor`)
+- `x1-aggregator`
 - Databases

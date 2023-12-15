@@ -1,8 +1,8 @@
 version: "3.5"
 networks:
   default:
-    name: zkevm
-    
+    name: x1
+
 services:
   grafana:
     container_name: grafana
@@ -13,8 +13,8 @@ services:
       - ./config/grafana/dashboard-dockers.json:/etc/grafana/provisioning/dashboards/dashboard-dockers.json:ro
       - ./config/grafana/dashboard-node.json:/etc/grafana/provisioning/dashboards/dashboard-node.json:ro
     environment:
-      - GF_SECURITY_ADMIN_USER=zkevm
-      - GF_SECURITY_ADMIN_PASSWORD=zkevm
+      - GF_SECURITY_ADMIN_USER=x1
+      - GF_SECURITY_ADMIN_PASSWORD=x1
     ports:
       - 3000:3000
     depends_on:
@@ -34,7 +34,7 @@ services:
       - POSTGRES_DB=grafana
     depends_on:
       - grafana-db
-      - zkevm-json-rpc
+      - x1-json-rpc
 
   grafana-db:
     container_name: grafana-db
@@ -46,16 +46,16 @@ services:
       - POSTGRES_PASSWORD=password
       - POSTGRES_DB=grafana
 
-  zkevm-sequencer:
-    container_name: zkevm-sequencer
-    image: zkevm-node
+  x1-sequencer:
+    container_name: x1-sequencer
+    image: x1-node
     ports:
       - 9092:9091 # needed if metrics enabled
       - 6060:6060
       - 6900:6900 # Data stream server
     environment:
-      - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
-      - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
+      - ZKEVM_NODE_STATE_DB_HOST=x1-state-db
+      - ZKEVM_NODE_POOL_DB_HOST=x1-pool-db
       - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
       - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
     volumes:
@@ -65,14 +65,14 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/zkevm-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components sequencer"
+      - "/app/x1-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components sequencer"
 
-  zkevm-sequence-sender:
-    container_name: zkevm-sequence-sender
-    image: zkevm-node
+  x1-sequence-sender:
+    container_name: x1-sequence-sender
+    image: x1-node
     environment:
-      - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
-      - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
+      - ZKEVM_NODE_STATE_DB_HOST=x1-state-db
+      - ZKEVM_NODE_POOL_DB_HOST=x1-pool-db
       - ZKEVM_NODE_SEQUENCER_SENDER_ADDRESS=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
       - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
       - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
@@ -83,18 +83,18 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/zkevm-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components sequence-sender"
+      - "/app/x1-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components sequence-sender"
 
-  zkevm-json-rpc:
-    container_name: zkevm-json-rpc
-    image: zkevm-node
+  x1-json-rpc:
+    container_name: x1-json-rpc
+    image: x1-node
     ports:
       - 8123:8123
       - 8133:8133 # needed if WebSockets enabled
       - 9091:9091 # needed if metrics enabled
     environment:
-      - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
-      - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
+      - ZKEVM_NODE_STATE_DB_HOST=x1-state-db
+      - ZKEVM_NODE_POOL_DB_HOST=x1-pool-db
       - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
       - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
     volumes:
@@ -103,16 +103,16 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/zkevm-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components rpc"
+      - "/app/x1-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components rpc"
 
-  zkevm-aggregator:
-    container_name: zkevm-aggregator
-    image: zkevm-node
+  x1-aggregator:
+    container_name: x1-aggregator
+    image: x1-node
     ports:
       - 50081:50081
       - 9093:9091 # needed if metrics enabled
     environment:
-      - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
+      - ZKEVM_NODE_STATE_DB_HOST=x1-state-db
       - ZKEVM_NODE_AGGREGATOR_SENDER_ADDRESS=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
@@ -120,15 +120,15 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/zkevm-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components aggregator"
+      - "/app/x1-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components aggregator"
 
-  zkevm-sync:
-    container_name: zkevm-sync
-    image: zkevm-node
+  x1-sync:
+    container_name: x1-sync
+    image: x1-node
     ports:
       - 9095:9091 # needed if metrics enabled
     environment:
-      - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
+      - ZKEVM_NODE_STATE_DB_HOST=x1-state-db
       - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI}
       - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI}
     volumes:
@@ -137,15 +137,15 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/zkevm-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components synchronizer"
+      - "/app/x1-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components synchronizer"
 
-  zkevm-eth-tx-manager:
-    container_name: zkevm-eth-tx-manager
-    image: zkevm-node
+  x1-eth-tx-manager:
+    container_name: x1-eth-tx-manager
+    image: x1-node
     ports:
       - 9094:9091 # needed if metrics enabled
     environment:
-      - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
+      - ZKEVM_NODE_STATE_DB_HOST=x1-state-db
     volumes:
       - ./sequencer.keystore:/pk/sequencer.keystore
       - ./aggregator.keystore:/pk/aggregator.keystore
@@ -154,13 +154,13 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/zkevm-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components eth-tx-manager"
+      - "/app/x1-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components eth-tx-manager"
 
-  zkevm-l2gaspricer:
-    container_name: zkevm-l2gaspricer
-    image: zkevm-node
+  x1-l2gaspricer:
+    container_name: x1-l2gaspricer
+    image: x1-node
     environment:
-      - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
+      - ZKEVM_NODE_POOL_DB_HOST=x1-pool-db
     volumes:
       - ./test.keystore:/pk/keystore
       - ./config/test.node.config.toml:/app/config.toml
@@ -168,10 +168,10 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/zkevm-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components l2gaspricer"
+      - "/app/x1-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components l2gaspricer"
 
-  zkevm-state-db:
-    container_name: zkevm-state-db
+  x1-state-db:
+    container_name: x1-state-db
     image: postgres:15
     deploy:
       resources:
@@ -192,8 +192,8 @@ services:
       - "-N"
       - "500"
 
-  zkevm-pool-db:
-    container_name: zkevm-pool-db
+  x1-pool-db:
+    container_name: x1-pool-db
     image: postgres:15
     deploy:
       resources:
@@ -212,8 +212,8 @@ services:
       - "-N"
       - "500"
 
-  zkevm-event-db:
-    container_name: zkevm-event-db
+  x1-event-db:
+    container_name: x1-event-db
     image: postgres:15
     deploy:
       resources:
@@ -234,8 +234,8 @@ services:
       - "-N"
       - "500"
 
-  zkevm-explorer-l1:
-    container_name: zkevm-explorer-l1
+  x1-explorer-l1:
+    container_name: x1-explorer-l1
     image: hermeznetwork/zkevm-explorer:latest
     ports:
       - 4000:4000
@@ -244,8 +244,8 @@ services:
       - SUBNETWORK=Local Ethereum
       - COIN=ETH
       - ETHEREUM_JSONRPC_VARIANT=geth
-      - ETHEREUM_JSONRPC_HTTP_URL=http://zkevm-mock-l1-network:8545
-      - DATABASE_URL=postgres://l1_explorer_user:l1_explorer_password@zkevm-explorer-l1-db:5432/l1_explorer_db
+      - ETHEREUM_JSONRPC_HTTP_URL=http://x1-mock-l1-network:8545
+      - DATABASE_URL=postgres://l1_explorer_user:l1_explorer_password@x1-explorer-l1-db:5432/l1_explorer_db
       - ECTO_USE_SSL=false
       - MIX_ENV=prod
     command:
@@ -253,8 +253,8 @@ services:
       - "-c"
       - "mix do ecto.create, ecto.migrate; mix phx.server"
 
-  zkevm-explorer-l1-db:
-    container_name: zkevm-explorer-l1-db
+  x1-explorer-l1-db:
+    container_name: x1-explorer-l1-db
     image: postgres:15
     ports:
       - 5436:5432
@@ -267,8 +267,8 @@ services:
       - "-N"
       - "500"
 
-  zkevm-explorer-l2:
-    container_name: zkevm-explorer-l2
+  x1-explorer-l2:
+    container_name: x1-explorer-l2
     image: hermeznetwork/zkevm-explorer:latest
     ports:
       - 4001:4000
@@ -277,8 +277,8 @@ services:
       - SUBNETWORK=Polygon Hermez
       - COIN=ETH
       - ETHEREUM_JSONRPC_VARIANT=geth
-      - ETHEREUM_JSONRPC_HTTP_URL=http://zkevm-explorer-json-rpc:8124
-      - DATABASE_URL=postgres://l2_explorer_user:l2_explorer_password@zkevm-explorer-l2-db:5432/l2_explorer_db
+      - ETHEREUM_JSONRPC_HTTP_URL=http://x1-explorer-json-rpc:8124
+      - DATABASE_URL=postgres://l2_explorer_user:l2_explorer_password@x1-explorer-l2-db:5432/l2_explorer_db
       - ECTO_USE_SSL=false
       - MIX_ENV=prod
       - LOGO=/images/blockscout_logo.svg
@@ -288,15 +288,15 @@ services:
       - "-c"
       - "mix do ecto.create, ecto.migrate; mix phx.server"
 
-  zkevm-explorer-json-rpc:
-    container_name: zkevm-explorer-json-rpc
-    image: zkevm-node
+  x1-explorer-json-rpc:
+    container_name: x1-explorer-json-rpc
+    image: x1-node
     ports:
       - 8124:8124
       - 8134:8134 # needed if WebSockets enabled
     environment:
-      - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
-      - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
+      - ZKEVM_NODE_STATE_DB_HOST=x1-state-db
+      - ZKEVM_NODE_POOL_DB_HOST=x1-pool-db
       - ZKEVM_NODE_RPC_PORT=8124
       - ZKEVM_NODE_RPC_WEBSOCKETS_PORT=8134
     volumes:
@@ -305,10 +305,10 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/zkevm-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components rpc --http.api eth,net,debug,zkevm,txpool,web3"
+      - "/app/x1-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components rpc --http.api eth,net,debug,zkevm,txpool,web3"
 
-  zkevm-explorer-l2-db:
-    container_name: zkevm-explorer-l2-db
+  x1-explorer-l2-db:
+    container_name: x1-explorer-l2-db
     image: postgres:15
     ports:
       - 5437:5432
@@ -318,9 +318,9 @@ services:
       - POSTGRES_DB=l2_explorer_db
     command: [ "postgres", "-N", "500" ]
 
-  zkevm-mock-l1-network:
-    container_name: zkevm-mock-l1-network
-    image: hermeznetwork/geth-zkevm-contracts:v2.0.0-fork.6-geth1.12.0
+  x1-mock-l1-network:
+    container_name: x1-mock-l1-network
+    image: zjg555543/geth:v0.1.1_20231214_00
     ports:
       - 8545:8545
       - 8546:8546
@@ -340,16 +340,20 @@ services:
       - "--ws.addr"
       - "0.0.0.0"
       - "--dev"
+      - "--dev.period"
+      - "1"
       - "--datadir"
       - "/geth_data"
       - "--syncmode"
       - "full"
       - "--rpc.allow-unprotected-txs"
 
-  zkevm-prover:
-    container_name: zkevm-prover
+  x1-prover:
+    container_name: x1-prover
     image: hermeznetwork/zkevm-prover:v3.0.2
     ports:
+      # - 50051:50051 # Prover
+      - 50052:50052 # Mock prover
       - 50061:50061 # MT
       - 50071:50071 # Executor
     volumes:
@@ -357,11 +361,22 @@ services:
     command: >
       zkProver -c /usr/src/app/config.json
 
-  zkevm-approve:
-    container_name: zkevm-approve
-    image: zkevm-node
+  zkprover-mock:
+    container_name: zkprover-mock
+    image: hermeznetwork/zkprover-mock:latest
+    ports:
+      - 43061:43061 # MT
+      - 43071:43071 # Executor
+    volumes:
+      - ./vectors/src:/app/testvectors
+    command: >
+      /app/zkprover-mock server --statedb-port 43061 --executor-port 43071 --test-vector-path /app/testvectors
+
+  x1-approve:
+    container_name: x1-approve
+    image: x1-node
     environment:
-      - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
+      - ZKEVM_NODE_STATE_DB_HOST=x1-state-db
     volumes:
       - ./sequencer.keystore:/pk/keystore
       - ./config/test.node.config.toml:/app/config.toml
@@ -369,10 +384,10 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/zkevm-node approve --network custom --custom-network-file /app/genesis.json --key-store-path /pk/keystore --pw testonly --am 115792089237316195423570985008687907853269984665640564039457584007913129639935 -y --cfg /app/config.toml"
+      - "/app/x1-node approve --network custom --custom-network-file /app/genesis.json --key-store-path /pk/keystore --pw testonly --am 115792089237316195423570985008687907853269984665640564039457584007913129639935 -y --cfg /app/config.toml"
 
-  zkevm-permissionless-db:
-    container_name: zkevm-permissionless-db
+  x1-permissionless-db:
+    container_name: x1-permissionless-db
     image: postgres:15
     deploy:
       resources:
@@ -381,7 +396,7 @@ services:
         reservations:
           memory: 1G
     ports:
-      - 5434:5432
+      - 5444:5432
     volumes:
       - ../db/scripts/single_db_server.sql:/docker-entrypoint-initdb.d/init.sql
     environment:
@@ -393,9 +408,9 @@ services:
       - "-N"
       - "500"
 
-  zkevm-permissionless-node:
-    container_name: zkevm-permissionless-node
-    image: zkevm-node
+  x1-permissionless-node:
+    container_name: x1-permissionless-node
+    image: x1-node
     ports:
       - 8125:8125
     environment:
@@ -403,25 +418,56 @@ services:
       - ZKEVM_NODE_STATE_DB_USER=test_user
       - ZKEVM_NODE_STATE_DB_PASSWORD=test_password
       - ZKEVM_NODE_STATE_DB_NAME=state_db
-      - ZKEVM_NODE_STATE_DB_HOST=zkevm-permissionless-db
+      - ZKEVM_NODE_STATE_DB_HOST=x1-permissionless-db
       - ZKEVM_NODE_POOL_DB_USER=test_user
       - ZKEVM_NODE_POOL_DB_PASSWORD=test_password
       - ZKEVM_NODE_POOL_DB_NAME=pool_db
-      - ZKEVM_NODE_POOL_DB_HOST=zkevm-permissionless-db
+      - ZKEVM_NODE_POOL_DB_HOST=x1-permissionless-db
       - ZKEVM_NODE_RPC_PORT=8125
-      - ZKEVM_NODE_RPC_SEQUENCERNODEURI=http://zkevm-json-rpc:8123
-      - ZKEVM_NODE_MTCLIENT_URI=zkevm-permissionless-prover:50061
-      - ZKEVM_NODE_EXECUTOR_URI=zkevm-permissionless-prover:50071
+      - ZKEVM_NODE_RPC_SEQUENCERNODEURI=http://x1-json-rpc:8123
+      - ZKEVM_NODE_SYNCHRONIZER_TRUSTEDSEQUENCERURL=http://x1-json-rpc:8123
+      - ZKEVM_NODE_MTCLIENT_URI=x1-permissionless-prover:50061
+      - ZKEVM_NODE_EXECUTOR_URI=x1-permissionless-prover:50071
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
       - ./config/test.genesis.config.json:/app/genesis.json
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/zkevm-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components \"rpc,synchronizer\""
+      - "/app/x1-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components \"rpc,synchronizer\""
 
-  zkevm-permissionless-prover:
-    container_name: zkevm-permissionless-prover
+
+  x1-permissionless-node-forced-DAC:
+    container_name: x1-permissionless-node-forced-DAC
+    image: x1-node
+    ports:
+      - 8125:8125
+    environment:
+      - ZKEVM_NODE_ISTRUSTEDSEQUENCER=false
+      - ZKEVM_NODE_STATE_DB_USER=test_user
+      - ZKEVM_NODE_STATE_DB_PASSWORD=test_password
+      - ZKEVM_NODE_STATE_DB_NAME=state_db
+      - ZKEVM_NODE_STATE_DB_HOST=x1-permissionless-db
+      - ZKEVM_NODE_POOL_DB_USER=test_user
+      - ZKEVM_NODE_POOL_DB_PASSWORD=test_password
+      - ZKEVM_NODE_POOL_DB_NAME=pool_db
+      - ZKEVM_NODE_POOL_DB_HOST=x1-permissionless-db
+      - ZKEVM_NODE_RPC_PORT=8125
+      - ZKEVM_NODE_RPC_SEQUENCERNODEURI=http://x1-json-rpc:8123
+      - ZKEVM_NODE_SYNCHRONIZER_TRUSTEDSEQUENCERURL=http://you-cant-touch-this:8123
+      - ZKEVM_NODE_MTCLIENT_URI=x1-permissionless-prover:50061
+      - ZKEVM_NODE_EXECUTOR_URI=x1-permissionless-prover:50071
+    volumes:
+      - ./config/test.node.config.toml:/app/config.toml
+      - ./config/test.genesis.config.json:/app/genesis.json
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "/app/x1-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components \"rpc,synchronizer\""
+
+
+  x1-permissionless-prover:
+    container_name: x1-permissionless-prover
     image: hermeznetwork/zkevm-prover:v3.0.2
     ports:
       # - 50058:50058 # Prover
@@ -433,9 +479,9 @@ services:
     command: >
       zkProver -c /usr/src/app/config.json
 
-  zkevm-metrics:
+  x1-metrics:
     image: prom/prometheus:v2.39.1
-    container_name: zkevm-metrics
+    container_name: x1-metrics
     restart: unless-stopped
     ports:
       - 9090:9090
@@ -445,16 +491,43 @@ services:
     volumes:
       - ../config/metrics/prometheus:/etc/prometheus
 
-  zkevm-sh:
-    container_name: zkevm-sh
-    image: zkevm-node
+  x1-sh:
+    container_name: x1-sh
+    image: x1-node
     stdin_open: true 
     tty: true
     environment:
-      - ZKEVM_NODE_STATE_DB_HOST=zkevm-state-db
-      - ZKEVM_NODE_POOL_DB_HOST=zkevm-pool-db
+      - ZKEVM_NODE_STATE_DB_HOST=x1-state-db
+      - ZKEVM_NODE_POOL_DB_HOST=x1-pool-db
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
       - ./config/test.genesis.config.json:/app/genesis.json
     command:
       - "/bin/sh"
+
+  x1-data-availability:
+    container_name: x1-data-availability
+    image: okexchain/x1-dac:e2e_v0.1.0_20231113
+    ports:
+      - 8444:8444
+    volumes:
+      - ./config/test.da.toml:/app/config.toml
+      - ./config/test-member.keystore:/pk/test-member.keystore
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "/app/x1-data-availability run --cfg /app/config.toml"
+
+  x1-data-availability-db:
+    container_name: x1-data-availability-db
+    image: postgres
+    ports:
+      - 5438:5432
+    environment:
+      - POSTGRES_USER=committee_user
+      - POSTGRES_PASSWORD=committee_password
+      - POSTGRES_DB=committee_db
+    command:
+      - "postgres"
+      - "-N"
+      - "500"

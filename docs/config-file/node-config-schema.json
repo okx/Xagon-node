@@ -159,6 +159,11 @@
 		},
 		"Pool": {
 			"properties": {
+				"FreeClaimGasLimit": {
+					"type": "integer",
+					"description": "FreeClaimGasLimit is the max gas allowed use to do a free claim",
+					"default": 150000
+				},
 				"IntervalToRefreshBlockedAddresses": {
 					"type": "string",
 					"title": "Duration",
@@ -209,7 +214,7 @@
 						"Host": {
 							"type": "string",
 							"description": "Host address of database",
-							"default": "zkevm-pool-db"
+							"default": "x1-pool-db"
 						},
 						"Port": {
 							"type": "string",
@@ -265,6 +270,11 @@
 					"type": "integer",
 					"description": "GlobalQueue represents the maximum number of non-executable transaction slots for all accounts",
 					"default": 1024
+				},
+				"FreeGasAddress": {
+					"type": "string",
+					"description": "FreeGasAddress is the default free gas address",
+					"default": "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 				},
 				"EffectiveGasPrice": {
 					"properties": {
@@ -435,6 +445,65 @@
 					"type": "boolean",
 					"description": "EnableHttpLog allows the user to enable or disable the logs related to the HTTP\nrequests to be captured by the server.",
 					"default": true
+				},
+				"EnablePendingTransactionFilter": {
+					"type": "boolean",
+					"description": "EnablePendingTransactionFilter enables pending transaction filter that can support query L2 pending transaction",
+					"default": false
+				},
+				"Nacos": {
+					"properties": {
+						"URLs": {
+							"type": "string",
+							"description": "URLs nacos server urls for discovery service of rest api, url is separated by \",\"",
+							"default": ""
+						},
+						"NamespaceId": {
+							"type": "string",
+							"description": "NamespaceId nacos namepace id for discovery service of rest api",
+							"default": ""
+						},
+						"ApplicationName": {
+							"type": "string",
+							"description": "ApplicationName rest application name in  nacos",
+							"default": ""
+						},
+						"ExternalListenAddr": {
+							"type": "string",
+							"description": "ExternalListenAddr Set the rest-server external ip and port, when it is launched by Docker",
+							"default": ""
+						}
+					},
+					"additionalProperties": false,
+					"type": "object",
+					"description": "Nacos configuration"
+				},
+				"NacosWs": {
+					"properties": {
+						"URLs": {
+							"type": "string",
+							"description": "URLs nacos server urls for discovery service of rest api, url is separated by \",\"",
+							"default": ""
+						},
+						"NamespaceId": {
+							"type": "string",
+							"description": "NamespaceId nacos namepace id for discovery service of rest api",
+							"default": ""
+						},
+						"ApplicationName": {
+							"type": "string",
+							"description": "ApplicationName rest application name in  nacos",
+							"default": ""
+						},
+						"ExternalListenAddr": {
+							"type": "string",
+							"description": "ExternalListenAddr Set the rest-server external ip and port, when it is launched by Docker",
+							"default": ""
+						}
+					},
+					"additionalProperties": false,
+					"type": "object",
+					"description": "NacosWs configuration"
 				}
 			},
 			"additionalProperties": false,
@@ -835,8 +904,13 @@
 				},
 				"MaxTxSizeForL1": {
 					"type": "integer",
-					"description": "MaxTxSizeForL1 is the maximum size a single transaction can have. This field has\nnon-trivial consequences: larger transactions than 128KB are significantly harder and\nmore expensive to propagate; larger transactions also take more resources\nto validate whether they fit into the pool or not.",
-					"default": 131072
+					"description": "// MaxTxSizeForL1 is the maximum size a single transaction can have. This field has\n// non-trivial consequences: larger transactions than 128KB are significantly harder and\n// more expensive to propagate; larger transactions also take more resources\n// to validate whether they fit into the pool or not.",
+					"default": 0
+				},
+				"MaxBatchesForL1": {
+					"type": "integer",
+					"description": "MaxBatchesForL1 is the maximum amount of batches to be sequenced in a single L1 tx",
+					"default": 10
 				},
 				"SenderAddress": {
 					"items": {
@@ -878,6 +952,11 @@
 					"type": "integer",
 					"description": "Batch number where there is a forkid change (fork upgrade)",
 					"default": 0
+				},
+				"UseValidium": {
+					"type": "boolean",
+					"description": "UseValidium is a flag to enable/disable the use of validium",
+					"default": true
 				},
 				"GasOffset": {
 					"type": "integer",
@@ -1027,6 +1106,15 @@
 							"maxItems": 20,
 							"minItems": 20,
 							"description": "Address of the L1 GlobalExitRootManager contract"
+						},
+						"dataCommitteeContract": {
+							"items": {
+								"type": "integer"
+							},
+							"type": "array",
+							"maxItems": 20,
+							"minItems": 20,
+							"description": "Address of the data availability committee contract"
 						}
 					},
 					"additionalProperties": false,
@@ -1170,6 +1258,57 @@
 						"300ms"
 					]
 				},
+				"KafkaURL": {
+					"type": "string",
+					"default": ""
+				},
+				"Topic": {
+					"type": "string",
+					"default": ""
+				},
+				"GroupID": {
+					"type": "string",
+					"default": ""
+				},
+				"Username": {
+					"type": "string",
+					"default": ""
+				},
+				"Password": {
+					"type": "string",
+					"default": ""
+				},
+				"RootCAPath": {
+					"type": "string",
+					"default": ""
+				},
+				"L1CoinId": {
+					"type": "integer",
+					"default": 0
+				},
+				"L2CoinId": {
+					"type": "integer",
+					"default": 0
+				},
+				"DefaultL1CoinPrice": {
+					"type": "number",
+					"description": "DefaultL1CoinPrice is the L1 token's coin price",
+					"default": 0
+				},
+				"DefaultL2CoinPrice": {
+					"type": "number",
+					"description": "DefaultL2CoinPrice is the native token's coin price",
+					"default": 0
+				},
+				"GasPriceUsdt": {
+					"type": "number",
+					"default": 0
+				},
+				"EnableFollowerAdjustByL2L1Price": {
+					"type": "boolean",
+					"description": "EnableFollowerAdjustByL2L1Price is dynamic adjust the factor through the L1 and L2 coins price in follower strategy",
+					"default": false
+				},
 				"Factor": {
 					"type": "number",
 					"default": 0.15
@@ -1183,7 +1322,7 @@
 			"properties": {
 				"URI": {
 					"type": "string",
-					"default": "zkevm-prover:50071"
+					"default": "x1-prover:50071"
 				},
 				"MaxResourceExhaustedAttempts": {
 					"type": "integer",
@@ -1214,7 +1353,7 @@
 				"URI": {
 					"type": "string",
 					"description": "URI is the server URI.",
-					"default": "zkevm-prover:50061"
+					"default": "x1-prover:50061"
 				}
 			},
 			"additionalProperties": false,
@@ -1327,7 +1466,7 @@
 				"Host": {
 					"type": "string",
 					"description": "Host address of database",
-					"default": "zkevm-state-db"
+					"default": "x1-state-db"
 				},
 				"Port": {
 					"type": "string",
@@ -1432,7 +1571,7 @@
 						"Host": {
 							"type": "string",
 							"description": "Host address of database",
-							"default": "zkevm-state-db"
+							"default": "x1-state-db"
 						},
 						"Port": {
 							"type": "string",
