@@ -154,7 +154,7 @@ func (t *sentioTracer) CaptureTxEnd(restGas uint64) {
 
 func (t *sentioTracer) CaptureStart(env *fakevm.FakeEVM, from common.Address, to common.Address, create bool, input []byte, gas uint64, value *big.Int) {
 	t.env = env
-	t.receipt.BlockNumber = (*hexutil.Big)(env.Context.BlockNumber)
+	//t.receipt.BlockNumber = (*hexutil.Big)(env.Context.BlockNumber)
 	//if env.Context().GetHash != nil {
 	// TODO this current will block the tracer
 	//	h := env.Context().GetHash(env.Context().BlockNumber)
