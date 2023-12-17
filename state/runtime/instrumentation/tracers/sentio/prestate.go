@@ -213,6 +213,8 @@ func (t *sentioPrestateTracer) CaptureTxEnd(restGas uint64) {
 		postAccount.CodeAddress = state.CodeAddress
 		postAccount.MappingKeys = state.MappingKeys
 
+		postAccount.MappingKeys = t.pre[addr].MappingKeys
+
 		if newBalance.Cmp(t.pre[addr].Balance) != 0 {
 			modified = true
 			postAccount.Balance = newBalance
