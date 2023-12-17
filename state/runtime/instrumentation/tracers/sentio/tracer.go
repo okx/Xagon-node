@@ -160,8 +160,8 @@ func (t *sentioTracer) CaptureStart(env *fakevm.FakeEVM, from common.Address, to
 	//	h := env.Context().GetHash(env.Context().BlockNumber)
 	//	t.receipt.BlockHash = &h
 	//}
-	t.receipt.Nonce = env.StateDB.GetNonce(from) - 1
-	t.receipt.TransactionIndex = 0
+	//t.receipt.Nonce = env.StateDB.GetNonce(from) - 1
+	//t.receipt.TransactionIndex = 0
 
 	rules := env.ChainConfig().Rules(env.Context.BlockNumber, env.Context.Random != nil, env.Context.Time)
 	t.activePrecompiles = fakevm.ActivePrecompiles(rules)
@@ -332,12 +332,12 @@ func (t *sentioTracer) CaptureState(pc uint64, op fakevm.OpCode, gas, cost uint6
 		if !v.IsZero() {
 			// can transfer here is nil
 			//!t.env.Context.CanTransfer(t.env.StateDB, from, v.ToBig())
-			println("transfer", from.String(), "to", to.String(), "value", v.ToBig().String())
-			if t.env.StateDB.GetBalance(from).Cmp(v.ToBig()) < 0 {
-				if call.Error == "" {
-					call.Error = "insufficient funds for transfer"
-				}
-			}
+			//println("transfer", from.String(), "to", to.String(), "value", v.ToBig().String())
+			//if t.env.StateDB.GetBalance(from).Cmp(v.ToBig()) < 0 {
+			//	if call.Error == "" {
+			//		call.Error = "insufficient funds for transfer"
+			//	}
+			//}
 		}
 
 		// Treat this call as pure transfer until it enters the CaptureEnter
