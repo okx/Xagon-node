@@ -303,12 +303,15 @@ func (s *Server) isSingleRequest(data []byte) (bool, error) {
 }
 
 func (s *Server) handleSingleRequest(httpRequest *http.Request, w http.ResponseWriter, data []byte) int {
+	st := time.Now()
 	defer metrics.RequestHandled(metrics.RequestHandledLabelSingle)
 	request, err := s.parseRequest(data)
 	if err != nil {
 		handleInvalidRequest(w, err, http.StatusBadRequest)
 		return 0
 	}
+	defer metrics.RequestMethodCount(request.Method)
+	defer metrics.RequestMethodDuration(request.Method, st)
 	req := handleRequest{Request: request, HttpRequest: httpRequest}
 	response := s.handler.Handle(req)
 
@@ -351,9 +354,12 @@ func (s *Server) handleBatchRequest(httpRequest *http.Request, w http.ResponseWr
 	responses := make([]types.Response, 0, len(requests))
 
 	for _, request := range requests {
+		st := time.Now()
+		metrics.RequestMethodCount(request.Method)
 		req := handleRequest{Request: request, HttpRequest: httpRequest}
 		response := s.handler.Handle(req)
 		responses = append(responses, response)
+		metrics.RequestMethodDuration(request.Method, st)
 	}
 
 	respBytes, _ := json.Marshal(responses)
