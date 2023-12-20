@@ -88,6 +88,7 @@ func (f *FollowerGasPrice) UpdateGasPriceAvg() {
 	}
 	log.Debug("Storing truncated L2 gas price: ", truncateValue)
 	if truncateValue != nil {
+		log.Infof("Set gas prices, L1: %v, L2: %v", l1GasPrice.Uint64(), truncateValue.Uint64())
 		err := f.pool.SetGasPrices(ctx, truncateValue.Uint64(), l1GasPrice.Uint64())
 		if err != nil {
 			log.Errorf("failed to update gas price in poolDB, err: %v", err)
