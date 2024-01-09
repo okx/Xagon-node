@@ -639,7 +639,6 @@ func (s *State) TraceCall(ctx context.Context, blockNumber uint64, sender common
 	// filePath = fmt.Sprintf(path, "NODE_call_trace")
 	// c, _ = json.MarshalIndent(response.CallTrace, "", "    ")
 	// os.WriteFile(filePath, c, 0644)
-
 	result := &runtime.ExecutionResult{
 		CreateAddress: response.CreateAddress,
 		GasLeft:       response.GasLeft,
@@ -648,6 +647,14 @@ func (s *State) TraceCall(ctx context.Context, blockNumber uint64, sender common
 		StateRoot:     response.StateRoot.Bytes(),
 		StructLogs:    response.ExecutionTrace,
 		ExecutorTrace: response.CallTrace,
+		Err:           response.RomError,
+	}
+
+	if result.Err != nil && errors.Is(result.Err, runtime.ErrOutOfCountersStep) {
+		result.Err = fmt.Errorf("%v. arith: %d, memAlign: %d, binary: %d, keccakF: %d, poseidonG: %d, paddingPG %d",
+			result.Err, processBatchResponse.CntArithmetics, processBatchResponse.CntMemAligns,
+			processBatchResponse.CntBinaries, processBatchResponse.CntKeccakHashes, processBatchResponse.CntPoseidonHashes,
+			processBatchResponse.CntPoseidonPaddings)
 	}
 
 	// if is the default trace, return the result

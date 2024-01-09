@@ -686,7 +686,7 @@ func (d *DebugEndpoints) buildTraceCallMany(ctx context.Context, blockNumber uin
 	for _, tx := range txs {
 		traceTransaction, err := d.buildTraceCall(ctx, blockNumber, sender, tx, cfg, dbTx)
 		if err != nil {
-			errMsg := fmt.Sprintf("failed to get trace for simulation %v", tx.Hash().String())
+			errMsg := fmt.Sprintf("failed to get trace for trace call %v, %v", tx.Hash().String(), err.Error())
 			return RPCErrorResponse(types.DefaultErrorCode, errMsg, err, false)
 		}
 		traces = append(traces, traceTransaction)
