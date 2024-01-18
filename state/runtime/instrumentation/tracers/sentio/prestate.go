@@ -38,12 +38,13 @@ func init() {
 type state = map[common.Address]*account
 
 type account struct {
-	Balance     *big.Int                    `json:"balance,omitempty"`
-	Code        []byte                      `json:"code,omitempty"`
-	Nonce       uint64                      `json:"nonce,omitempty"`
-	Storage     map[common.Hash]common.Hash `json:"storage,omitempty"`
-	CodeAddress *common.Address             `json:"codeAddress,omitempty"`
-	MappingKeys map[string]string           `json:"mappingKeys,omitempty"`
+	Balance           *big.Int                        `json:"balance,omitempty"`
+	Code              []byte                          `json:"code,omitempty"`
+	Nonce             uint64                          `json:"nonce,omitempty"`
+	Storage           map[common.Hash]common.Hash     `json:"storage,omitempty"`
+	CodeAddress       *common.Address                 `json:"codeAddress,omitempty"`
+	CodeAddressBySlot map[common.Hash]*common.Address `json:"codeAddressBySlot,omitempty"`
+	MappingKeys       map[string]string               `json:"mappingKeys,omitempty"`
 }
 
 func (a *account) exists() bool {
@@ -155,15 +156,20 @@ func (t *sentioPrestateTracer) CaptureState(pc uint64, op fakevm.OpCode, gas, co
 		size := stackData[stackLen-2]
 		if size.Uint64() == 64 {
 			offset := stackData[stackLen-1]
-			rawkey := scope.Memory.GetCopy(int64(offset.Uint64()), int64(size.Uint64()))
+			rawkey := scope.Memory.GetCopy(int64(offset.Uint64()), 64)
 
 			// only cares 64 bytes for mapping key
 			hashOfKey := crypto.Keccak256(rawkey)
 			t.pre[caller].MappingKeys[common.Bytes2Hex(rawkey)] = "0x" + common.Bytes2Hex(hashOfKey)
+
+			baseSlot := rawkey[32:]
+			t.pre[caller].CodeAddressBySlot[common.BytesToHash(baseSlot)] = scope.Contract.CodeAddr
+			t.pre[caller].CodeAddressBySlot[common.BytesToHash(hashOfKey)] = scope.Contract.CodeAddr
 		}
 	case stackLen >= 1 && (op == fakevm.SLOAD || op == fakevm.SSTORE):
 		slot := common.Hash(stackData[stackLen-1].Bytes32())
 		t.pre[caller].CodeAddress = scope.Contract.CodeAddr
+		t.pre[caller].CodeAddressBySlot[slot] = scope.Contract.CodeAddr
 		t.lookupStorage(caller, slot)
 	case stackLen >= 1 && (op == fakevm.EXTCODECOPY || op == fakevm.EXTCODEHASH || op == fakevm.EXTCODESIZE || op == fakevm.BALANCE || op == fakevm.SELFDESTRUCT):
 		addr := common.Address(stackData[stackLen-1].Bytes20())
@@ -297,11 +303,12 @@ func (t *sentioPrestateTracer) lookupAccount(addr common.Address) {
 	}
 
 	t.pre[addr] = &account{
-		Balance:     t.env.StateDB.GetBalance(addr),
-		Nonce:       t.env.StateDB.GetNonce(addr),
-		Code:        t.env.StateDB.GetCode(addr),
-		Storage:     make(map[common.Hash]common.Hash),
-		MappingKeys: make(map[string]string),
+		Balance:           t.env.StateDB.GetBalance(addr),
+		Nonce:             t.env.StateDB.GetNonce(addr),
+		Code:              t.env.StateDB.GetCode(addr),
+		Storage:           make(map[common.Hash]common.Hash),
+		MappingKeys:       make(map[string]string),
+		CodeAddressBySlot: make(map[common.Hash]*common.Address),
 	}
 }
 

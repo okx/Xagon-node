@@ -15,12 +15,13 @@ var _ = (*accountMarshaling)(nil)
 // MarshalJSON marshals as JSON.
 func (a account) MarshalJSON() ([]byte, error) {
 	type account struct {
-		Balance     *hexutil.Big                `json:"balance,omitempty"`
-		Code        hexutil.Bytes               `json:"code,omitempty"`
-		Nonce       uint64                      `json:"nonce,omitempty"`
-		Storage     map[common.Hash]common.Hash `json:"storage,omitempty"`
-		CodeAddress *common.Address             `json:"codeAddress,omitempty"`
-		MappingKeys map[string]string           `json:"mappingKeys,omitempty"`
+		Balance           *hexutil.Big                    `json:"balance,omitempty"`
+		Code              hexutil.Bytes                   `json:"code,omitempty"`
+		Nonce             uint64                          `json:"nonce,omitempty"`
+		Storage           map[common.Hash]common.Hash     `json:"storage,omitempty"`
+		CodeAddress       *common.Address                 `json:"codeAddress,omitempty"`
+		CodeAddressBySlot map[common.Hash]*common.Address `json:"codeAddressBySlot,omitempty"`
+		MappingKeys       map[string]string               `json:"mappingKeys,omitempty"`
 	}
 	var enc account
 	enc.Balance = (*hexutil.Big)(a.Balance)
@@ -28,6 +29,7 @@ func (a account) MarshalJSON() ([]byte, error) {
 	enc.Nonce = a.Nonce
 	enc.Storage = a.Storage
 	enc.CodeAddress = a.CodeAddress
+	enc.CodeAddressBySlot = a.CodeAddressBySlot
 	enc.MappingKeys = a.MappingKeys
 	return json.Marshal(&enc)
 }
@@ -35,12 +37,13 @@ func (a account) MarshalJSON() ([]byte, error) {
 // UnmarshalJSON unmarshals from JSON.
 func (a *account) UnmarshalJSON(input []byte) error {
 	type account struct {
-		Balance     *hexutil.Big                `json:"balance,omitempty"`
-		Code        *hexutil.Bytes              `json:"code,omitempty"`
-		Nonce       *uint64                     `json:"nonce,omitempty"`
-		Storage     map[common.Hash]common.Hash `json:"storage,omitempty"`
-		CodeAddress *common.Address             `json:"codeAddress,omitempty"`
-		MappingKeys map[string]string           `json:"mappingKeys,omitempty"`
+		Balance           *hexutil.Big                    `json:"balance,omitempty"`
+		Code              *hexutil.Bytes                  `json:"code,omitempty"`
+		Nonce             *uint64                         `json:"nonce,omitempty"`
+		Storage           map[common.Hash]common.Hash     `json:"storage,omitempty"`
+		CodeAddress       *common.Address                 `json:"codeAddress,omitempty"`
+		CodeAddressBySlot map[common.Hash]*common.Address `json:"codeAddressBySlot,omitempty"`
+		MappingKeys       map[string]string               `json:"mappingKeys,omitempty"`
 	}
 	var dec account
 	if err := json.Unmarshal(input, &dec); err != nil {
@@ -60,6 +63,9 @@ func (a *account) UnmarshalJSON(input []byte) error {
 	}
 	if dec.CodeAddress != nil {
 		a.CodeAddress = dec.CodeAddress
+	}
+	if dec.CodeAddressBySlot != nil {
+		a.CodeAddressBySlot = dec.CodeAddressBySlot
 	}
 	if dec.MappingKeys != nil {
 		a.MappingKeys = dec.MappingKeys
