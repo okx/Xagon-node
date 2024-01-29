@@ -38,6 +38,8 @@ const (
 	TxProcessedLabelName = "status"
 	// BatchFinalizeTypeLabelName is the name of the label for the batch finalize type.
 	BatchFinalizeTypeLabelName = "batch_type"
+	// HaltCountName is the name of the metric that counts the halt count.
+	HaltCountName = Prefix + "halt_count"
 )
 
 // TxProcessedLabel represents the possible values for the
@@ -81,6 +83,10 @@ func Register() {
 		{
 			Name: SequencesOversizedDataErrorName,
 			Help: "[SEQUENCER] total count of sequences with oversized data error",
+		},
+		{
+			Name: HaltCountName,
+			Help: "[SEQUENCER] total count of halt",
 		},
 	}
 
@@ -203,4 +209,9 @@ func ProcessingTime(lastProcessTime time.Duration) {
 func WorkerProcessingTime(lastProcessTime time.Duration) {
 	execTimeInSeconds := float64(lastProcessTime) / float64(time.Second)
 	metrics.HistogramObserve(WorkerProcessingTimeName, execTimeInSeconds)
+}
+
+// HaltCount increases the counter for the sequencer halt count.
+func HaltCount() {
+	metrics.CounterAdd(HaltCountName, 1)
 }

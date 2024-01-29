@@ -1839,6 +1839,7 @@ func (s *ClientSynchronizer) halt(ctx context.Context, err error) {
 	if eventErr != nil {
 		log.Errorf("error storing Synchronizer halt event: %v", eventErr)
 	}
+	metrics.HaltCount()
 
 	for {
 		log.Errorf("fatal error: %s", err)

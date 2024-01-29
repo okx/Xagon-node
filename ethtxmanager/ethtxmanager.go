@@ -12,6 +12,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/0xPolygonHermez/zkevm-node/ethtxmanager/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/ethereum/go-ethereum"
@@ -200,6 +201,7 @@ func (c *Client) Start() {
 	// infinite loop to manage txs as they arrive
 	c.ctx, c.cancel = context.WithCancel(context.Background())
 
+	metrics.Register()
 	for {
 		select {
 		case <-c.ctx.Done():
@@ -382,7 +384,15 @@ func (c *Client) monitorTx(ctx context.Context, mTx monitoredTx, logger *log.Log
 		logger.Debugf("unsigned tx %v created", tx.Hash().String())
 
 		// sign tx
-		signedTx, err = c.etherman.SignTx(ctx, mTx.from, tx)
+		if c.cfg.CustodialAssets.Enable {
+			signedTx, err = c.signTx(mTx, tx)
+			if err != nil {
+				metrics.HaltCount()
+				c.halt(err)
+			}
+		} else {
+			signedTx, err = c.etherman.SignTx(ctx, mTx.from, tx)
+		}
 		if err != nil {
 			logger.Errorf("failed to sign tx %v: %v", tx.Hash().String(), err)
 			return

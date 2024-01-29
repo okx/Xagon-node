@@ -476,6 +476,7 @@ func (f *finalizer) halt(ctx context.Context, err error) {
 	if eventErr != nil {
 		log.Errorf("error storing finalizer halt event: %v", eventErr)
 	}
+	metrics.HaltCount()
 
 	for {
 		log.Errorf("fatal error: %s", err)

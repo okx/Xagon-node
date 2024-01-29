@@ -19,10 +19,7 @@ func (c *Client) loadSequencer(value interface{}) {
 }
 
 // fireSequencer fires the sequencer config change
-// BatchRequestsEnabled
-// BatchRequestsLimit
-// GasLimitFactor
-// DisableAPIs
+// FullBatchSleepDuration
 func (c *Client) fireSequencer(key string, value *storage.ConfigChange) {
 	newConf, err := c.unmarshal(value.NewValue)
 	if err != nil {

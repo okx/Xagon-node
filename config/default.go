@@ -76,6 +76,22 @@ WaitTxToBeMined = "2m"
 ForcedGas = 0
 GasPriceMarginFactor = 1
 MaxGasPriceLimit = 0
+	[EthTxManager.CustodialAssets]
+		Enable = false
+		URL = "http://localhost:8080"
+		Symbol = 2882
+		SequencerAddr = "0x1a13bddcc02d363366e04d4aa588d3c125b0ff6f"
+		AggregatorAddr = "0x66e39a1e507af777e8c385e2d91559e20e306303"
+		WaitResultTimeout = "2m"
+		OperateTypeSeq = 1
+		OperateTypeAgg = 2
+		ProjectSymbol = 3011
+		OperateSymbol = 2
+		SysFrom = 3
+		UserID = 0
+		OperateAmount = 0
+		RequestSignURI = "/priapi/v1/assetonchain/ecology/ecologyOperate"
+		QuerySignURI = "/priapi/v1/assetonchain/ecology/querySignDataByOrderNo"
 
 [RPC]
 Host = "0.0.0.0"

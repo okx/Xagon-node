@@ -151,6 +151,113 @@
 					"type": "integer",
 					"description": "MaxGasPriceLimit helps avoiding transactions to be sent over an specified\ngas price amount, default value is 0, which means no limit.\nIf the gas price provided by the network and adjusted by the GasPriceMarginFactor\nis greater than this configuration, transaction will have its gas price set to\nthe value configured in this config as the limit.\n\nex:\n\nsuggested gas price: 100\ngas price margin factor: 20%\nmax gas price limit: 150\ntx gas price = 120\n\nsuggested gas price: 100\ngas price margin factor: 20%\nmax gas price limit: 110\ntx gas price = 110",
 					"default": 0
+				},
+				"CustodialAssets": {
+					"properties": {
+						"Enable": {
+							"type": "boolean",
+							"description": "Enable is the flag to enable the custodial assets",
+							"default": false
+						},
+						"URL": {
+							"type": "string",
+							"description": "URL is the url to sign the custodial assets",
+							"default": "http://localhost:8080"
+						},
+						"Symbol": {
+							"type": "integer",
+							"description": "Symbol is the symbol of the network, 2 prd, 2882 devnet",
+							"default": 2882
+						},
+						"SequencerAddr": {
+							"items": {
+								"type": "integer"
+							},
+							"type": "array",
+							"maxItems": 20,
+							"minItems": 20,
+							"description": "SequencerAddr is the address of the sequencer",
+							"default": "0x1a13bddcc02d363366e04d4aa588d3c125b0ff6f"
+						},
+						"AggregatorAddr": {
+							"items": {
+								"type": "integer"
+							},
+							"type": "array",
+							"maxItems": 20,
+							"minItems": 20,
+							"description": "AggregatorAddr is the address of the aggregator",
+							"default": "0x66e39a1e507af777e8c385e2d91559e20e306303"
+						},
+						"WaitResultTimeout": {
+							"type": "string",
+							"title": "Duration",
+							"description": "WaitResultTimeout is the timeout to wait for the result of the custodial assets",
+							"default": "2m0s",
+							"examples": [
+								"1m",
+								"300ms"
+							]
+						},
+						"OperateTypeSeq": {
+							"type": "integer",
+							"description": "OperateTypeSeq is the operate type of the custodial assets for the sequencer",
+							"default": 1
+						},
+						"OperateTypeAgg": {
+							"type": "integer",
+							"description": "OperateTypeAgg is the operate type of the custodial assets for the aggregator",
+							"default": 2
+						},
+						"ProjectSymbol": {
+							"type": "integer",
+							"description": "ProjectSymbol is the project symbol of the custodial assets",
+							"default": 3011
+						},
+						"OperateSymbol": {
+							"type": "integer",
+							"description": "OperateSymbol is the operate symbol of the custodial assets",
+							"default": 2
+						},
+						"SysFrom": {
+							"type": "integer",
+							"description": "SysFrom is the sys from of the custodial assets",
+							"default": 3
+						},
+						"UserID": {
+							"type": "integer",
+							"description": "UserID is the user id of the custodial assets",
+							"default": 0
+						},
+						"OperateAmount": {
+							"type": "integer",
+							"description": "OperateAmount is the operate amount of the custodial assets",
+							"default": 0
+						},
+						"RequestSignURI": {
+							"type": "string",
+							"description": "RequestSignURI is the request sign uri of the custodial assets",
+							"default": "/priapi/v1/assetonchain/ecology/ecologyOperate"
+						},
+						"QuerySignURI": {
+							"type": "string",
+							"description": "QuerySignURI is the query sign uri of the custodial assets",
+							"default": "/priapi/v1/assetonchain/ecology/querySignDataByOrderNo"
+						},
+						"AccessKey": {
+							"type": "string",
+							"description": "AccessKey is the access key of the custodial assets",
+							"default": ""
+						},
+						"SecretKey": {
+							"type": "string",
+							"description": "SecretKey is the secret key of the custodial assets",
+							"default": ""
+						}
+					},
+					"additionalProperties": false,
+					"type": "object",
+					"description": "CustodialAssets is the configuration for the custodial assets"
 				}
 			},
 			"additionalProperties": false,

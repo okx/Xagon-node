@@ -43,6 +43,9 @@ const (
 
 	// VerifiedBatchNumName is the name of the metric verified batch number
 	VerifiedBatchNumName = Prefix + "verified_batch_num"
+
+	// HaltCountName is the name of the metric that counts synchronizer halt count
+	HaltCountName = Prefix + "halt_count"
 )
 
 // Register the metrics for the synchronizer package.
@@ -95,9 +98,16 @@ func Register() {
 			Help: "[SYNCHRONIZER] verified batch num",
 		},
 	}
+	counters := []prometheus.CounterOpts{
+		{
+			Name: HaltCountName,
+			Help: "[SYNCHRONIZER] total count of halt",
+		},
+	}
 
 	metrics.RegisterGauges(gauge...)
 	metrics.RegisterHistograms(histograms...)
+	metrics.RegisterCounters(counters...)
 }
 
 // VirtualBatchNum set the gauge to the given virtual batch num
@@ -162,4 +172,9 @@ func GetTrustedBatchInfoTime(lastProcessTime time.Duration) {
 func ProcessTrustedBatchTime(lastProcessTime time.Duration) {
 	execTimeInSeconds := float64(lastProcessTime) / float64(time.Second)
 	metrics.HistogramObserve(ProcessTrustedBatchTimeName, execTimeInSeconds)
+}
+
+// HaltCount increases the counter for the synchronizer halt count.
+func HaltCount() {
+	metrics.CounterAdd(HaltCountName, 1)
 }

@@ -248,6 +248,7 @@ Url=""
 | - [ForcedGas](#EthTxManager_ForcedGas )                         | No      | integer         | No         | -          | ForcedGas is the amount of gas to be forced in case of gas estimation error                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | - [GasPriceMarginFactor](#EthTxManager_GasPriceMarginFactor )   | No      | number          | No         | -          | GasPriceMarginFactor is used to multiply the suggested gas price provided by the network<br />in order to allow a different gas price to be set for all the transactions and making it<br />easier to have the txs prioritized in the pool, default value is 1.<br /><br />ex:<br />suggested gas price: 100<br />GasPriceMarginFactor: 1<br />gas price = 100<br /><br />suggested gas price: 100<br />GasPriceMarginFactor: 1.1<br />gas price = 110                                                                                                                                                                                              |
 | - [MaxGasPriceLimit](#EthTxManager_MaxGasPriceLimit )           | No      | integer         | No         | -          | MaxGasPriceLimit helps avoiding transactions to be sent over an specified<br />gas price amount, default value is 0, which means no limit.<br />If the gas price provided by the network and adjusted by the GasPriceMarginFactor<br />is greater than this configuration, transaction will have its gas price set to<br />the value configured in this config as the limit.<br /><br />ex:<br /><br />suggested gas price: 100<br />gas price margin factor: 20%<br />max gas price limit: 150<br />tx gas price = 120<br /><br />suggested gas price: 100<br />gas price margin factor: 20%<br />max gas price limit: 110<br />tx gas price = 110 |
+| - [CustodialAssets](#EthTxManager_CustodialAssets )             | No      | object          | No         | -          | CustodialAssets is the configuration for the custodial assets                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
 ### <a name="EthTxManager_FrequencyToMonitorTxs"></a>6.1. `EthTxManager.FrequencyToMonitorTxs`
 
@@ -406,6 +407,281 @@ tx gas price = 110
 ```
 [EthTxManager]
 MaxGasPriceLimit=0
+```
+
+### <a name="EthTxManager_CustodialAssets"></a>6.7. `[EthTxManager.CustodialAssets]`
+
+**Type:** : `object`
+**Description:** CustodialAssets is the configuration for the custodial assets
+
+| Property                                                                | Pattern | Type             | Deprecated | Definition | Title/Description                                                             |
+| ----------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ----------------------------------------------------------------------------- |
+| - [Enable](#EthTxManager_CustodialAssets_Enable )                       | No      | boolean          | No         | -          | Enable is the flag to enable the custodial assets                             |
+| - [URL](#EthTxManager_CustodialAssets_URL )                             | No      | string           | No         | -          | URL is the url to sign the custodial assets                                   |
+| - [Symbol](#EthTxManager_CustodialAssets_Symbol )                       | No      | integer          | No         | -          | Symbol is the symbol of the network, 2 prd, 2882 devnet                       |
+| - [SequencerAddr](#EthTxManager_CustodialAssets_SequencerAddr )         | No      | array of integer | No         | -          | SequencerAddr is the address of the sequencer                                 |
+| - [AggregatorAddr](#EthTxManager_CustodialAssets_AggregatorAddr )       | No      | array of integer | No         | -          | AggregatorAddr is the address of the aggregator                               |
+| - [WaitResultTimeout](#EthTxManager_CustodialAssets_WaitResultTimeout ) | No      | string           | No         | -          | Duration                                                                      |
+| - [OperateTypeSeq](#EthTxManager_CustodialAssets_OperateTypeSeq )       | No      | integer          | No         | -          | OperateTypeSeq is the operate type of the custodial assets for the sequencer  |
+| - [OperateTypeAgg](#EthTxManager_CustodialAssets_OperateTypeAgg )       | No      | integer          | No         | -          | OperateTypeAgg is the operate type of the custodial assets for the aggregator |
+| - [ProjectSymbol](#EthTxManager_CustodialAssets_ProjectSymbol )         | No      | integer          | No         | -          | ProjectSymbol is the project symbol of the custodial assets                   |
+| - [OperateSymbol](#EthTxManager_CustodialAssets_OperateSymbol )         | No      | integer          | No         | -          | OperateSymbol is the operate symbol of the custodial assets                   |
+| - [SysFrom](#EthTxManager_CustodialAssets_SysFrom )                     | No      | integer          | No         | -          | SysFrom is the sys from of the custodial assets                               |
+| - [UserID](#EthTxManager_CustodialAssets_UserID )                       | No      | integer          | No         | -          | UserID is the user id of the custodial assets                                 |
+| - [OperateAmount](#EthTxManager_CustodialAssets_OperateAmount )         | No      | integer          | No         | -          | OperateAmount is the operate amount of the custodial assets                   |
+| - [RequestSignURI](#EthTxManager_CustodialAssets_RequestSignURI )       | No      | string           | No         | -          | RequestSignURI is the request sign uri of the custodial assets                |
+| - [QuerySignURI](#EthTxManager_CustodialAssets_QuerySignURI )           | No      | string           | No         | -          | QuerySignURI is the query sign uri of the custodial assets                    |
+| - [AccessKey](#EthTxManager_CustodialAssets_AccessKey )                 | No      | string           | No         | -          | AccessKey is the access key of the custodial assets                           |
+| - [SecretKey](#EthTxManager_CustodialAssets_SecretKey )                 | No      | string           | No         | -          | SecretKey is the secret key of the custodial assets                           |
+
+#### <a name="EthTxManager_CustodialAssets_Enable"></a>6.7.1. `EthTxManager.CustodialAssets.Enable`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** Enable is the flag to enable the custodial assets
+
+**Example setting the default value** (false):
+```
+[EthTxManager.CustodialAssets]
+Enable=false
+```
+
+#### <a name="EthTxManager_CustodialAssets_URL"></a>6.7.2. `EthTxManager.CustodialAssets.URL`
+
+**Type:** : `string`
+
+**Default:** `"http://localhost:8080"`
+
+**Description:** URL is the url to sign the custodial assets
+
+**Example setting the default value** ("http://localhost:8080"):
+```
+[EthTxManager.CustodialAssets]
+URL="http://localhost:8080"
+```
+
+#### <a name="EthTxManager_CustodialAssets_Symbol"></a>6.7.3. `EthTxManager.CustodialAssets.Symbol`
+
+**Type:** : `integer`
+
+**Default:** `2882`
+
+**Description:** Symbol is the symbol of the network, 2 prd, 2882 devnet
+
+**Example setting the default value** (2882):
+```
+[EthTxManager.CustodialAssets]
+Symbol=2882
+```
+
+#### <a name="EthTxManager_CustodialAssets_SequencerAddr"></a>6.7.4. `EthTxManager.CustodialAssets.SequencerAddr`
+
+**Type:** : `array of integer`
+
+**Default:** `"0x1a13bddcc02d363366e04d4aa588d3c125b0ff6f"`
+
+**Description:** SequencerAddr is the address of the sequencer
+
+**Example setting the default value** ("0x1a13bddcc02d363366e04d4aa588d3c125b0ff6f"):
+```
+[EthTxManager.CustodialAssets]
+SequencerAddr="0x1a13bddcc02d363366e04d4aa588d3c125b0ff6f"
+```
+
+#### <a name="EthTxManager_CustodialAssets_AggregatorAddr"></a>6.7.5. `EthTxManager.CustodialAssets.AggregatorAddr`
+
+**Type:** : `array of integer`
+
+**Default:** `"0x66e39a1e507af777e8c385e2d91559e20e306303"`
+
+**Description:** AggregatorAddr is the address of the aggregator
+
+**Example setting the default value** ("0x66e39a1e507af777e8c385e2d91559e20e306303"):
+```
+[EthTxManager.CustodialAssets]
+AggregatorAddr="0x66e39a1e507af777e8c385e2d91559e20e306303"
+```
+
+#### <a name="EthTxManager_CustodialAssets_WaitResultTimeout"></a>6.7.6. `EthTxManager.CustodialAssets.WaitResultTimeout`
+
+**Title:** Duration
+
+**Type:** : `string`
+
+**Default:** `"2m0s"`
+
+**Description:** WaitResultTimeout is the timeout to wait for the result of the custodial assets
+
+**Examples:** 
+
+```json
+"1m"
+```
+
+```json
+"300ms"
+```
+
+**Example setting the default value** ("2m0s"):
+```
+[EthTxManager.CustodialAssets]
+WaitResultTimeout="2m0s"
+```
+
+#### <a name="EthTxManager_CustodialAssets_OperateTypeSeq"></a>6.7.7. `EthTxManager.CustodialAssets.OperateTypeSeq`
+
+**Type:** : `integer`
+
+**Default:** `1`
+
+**Description:** OperateTypeSeq is the operate type of the custodial assets for the sequencer
+
+**Example setting the default value** (1):
+```
+[EthTxManager.CustodialAssets]
+OperateTypeSeq=1
+```
+
+#### <a name="EthTxManager_CustodialAssets_OperateTypeAgg"></a>6.7.8. `EthTxManager.CustodialAssets.OperateTypeAgg`
+
+**Type:** : `integer`
+
+**Default:** `2`
+
+**Description:** OperateTypeAgg is the operate type of the custodial assets for the aggregator
+
+**Example setting the default value** (2):
+```
+[EthTxManager.CustodialAssets]
+OperateTypeAgg=2
+```
+
+#### <a name="EthTxManager_CustodialAssets_ProjectSymbol"></a>6.7.9. `EthTxManager.CustodialAssets.ProjectSymbol`
+
+**Type:** : `integer`
+
+**Default:** `3011`
+
+**Description:** ProjectSymbol is the project symbol of the custodial assets
+
+**Example setting the default value** (3011):
+```
+[EthTxManager.CustodialAssets]
+ProjectSymbol=3011
+```
+
+#### <a name="EthTxManager_CustodialAssets_OperateSymbol"></a>6.7.10. `EthTxManager.CustodialAssets.OperateSymbol`
+
+**Type:** : `integer`
+
+**Default:** `2`
+
+**Description:** OperateSymbol is the operate symbol of the custodial assets
+
+**Example setting the default value** (2):
+```
+[EthTxManager.CustodialAssets]
+OperateSymbol=2
+```
+
+#### <a name="EthTxManager_CustodialAssets_SysFrom"></a>6.7.11. `EthTxManager.CustodialAssets.SysFrom`
+
+**Type:** : `integer`
+
+**Default:** `3`
+
+**Description:** SysFrom is the sys from of the custodial assets
+
+**Example setting the default value** (3):
+```
+[EthTxManager.CustodialAssets]
+SysFrom=3
+```
+
+#### <a name="EthTxManager_CustodialAssets_UserID"></a>6.7.12. `EthTxManager.CustodialAssets.UserID`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Description:** UserID is the user id of the custodial assets
+
+**Example setting the default value** (0):
+```
+[EthTxManager.CustodialAssets]
+UserID=0
+```
+
+#### <a name="EthTxManager_CustodialAssets_OperateAmount"></a>6.7.13. `EthTxManager.CustodialAssets.OperateAmount`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Description:** OperateAmount is the operate amount of the custodial assets
+
+**Example setting the default value** (0):
+```
+[EthTxManager.CustodialAssets]
+OperateAmount=0
+```
+
+#### <a name="EthTxManager_CustodialAssets_RequestSignURI"></a>6.7.14. `EthTxManager.CustodialAssets.RequestSignURI`
+
+**Type:** : `string`
+
+**Default:** `"/priapi/v1/assetonchain/ecology/ecologyOperate"`
+
+**Description:** RequestSignURI is the request sign uri of the custodial assets
+
+**Example setting the default value** ("/priapi/v1/assetonchain/ecology/ecologyOperate"):
+```
+[EthTxManager.CustodialAssets]
+RequestSignURI="/priapi/v1/assetonchain/ecology/ecologyOperate"
+```
+
+#### <a name="EthTxManager_CustodialAssets_QuerySignURI"></a>6.7.15. `EthTxManager.CustodialAssets.QuerySignURI`
+
+**Type:** : `string`
+
+**Default:** `"/priapi/v1/assetonchain/ecology/querySignDataByOrderNo"`
+
+**Description:** QuerySignURI is the query sign uri of the custodial assets
+
+**Example setting the default value** ("/priapi/v1/assetonchain/ecology/querySignDataByOrderNo"):
+```
+[EthTxManager.CustodialAssets]
+QuerySignURI="/priapi/v1/assetonchain/ecology/querySignDataByOrderNo"
+```
+
+#### <a name="EthTxManager_CustodialAssets_AccessKey"></a>6.7.16. `EthTxManager.CustodialAssets.AccessKey`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Description:** AccessKey is the access key of the custodial assets
+
+**Example setting the default value** (""):
+```
+[EthTxManager.CustodialAssets]
+AccessKey=""
+```
+
+#### <a name="EthTxManager_CustodialAssets_SecretKey"></a>6.7.17. `EthTxManager.CustodialAssets.SecretKey`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Description:** SecretKey is the secret key of the custodial assets
+
+**Example setting the default value** (""):
+```
+[EthTxManager.CustodialAssets]
+SecretKey=""
 ```
 
 ## <a name="Pool"></a>7. `[Pool]`

@@ -5,12 +5,11 @@ package ethtxmanager
 import (
 	context "context"
 	big "math/big"
+	time "time"
 
 	common "github.com/ethereum/go-ethereum/common"
 
 	mock "github.com/stretchr/testify/mock"
-
-	time "time"
 
 	types "github.com/ethereum/go-ethereum/core/types"
 )
@@ -272,6 +271,11 @@ func (_m *ethermanMock) WaitTxToBeMined(ctx context.Context, tx *types.Transacti
 	}
 
 	return r0, r1
+}
+
+// GetZkEvmAddress provides a mock function with given fields:
+func (_m *ethermanMock) GetZkEVMAddressAndL1ChainID() (common.Address, uint64, error) {
+	return common.Address{}, 0, nil
 }
 
 // newEthermanMock creates a new instance of ethermanMock. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
