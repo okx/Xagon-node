@@ -114,7 +114,7 @@ func GaugeVecSet(name string, label string, value float64) {
 	}
 
 	if cv, ok := GaugeVec(name); ok {
-		cv.WithLabelValues(label).Add(value)
+		cv.WithLabelValues(label).Set(value)
 	}
 }
 
