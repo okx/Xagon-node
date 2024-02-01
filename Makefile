@@ -81,6 +81,7 @@ build: ## Builds the binary locally into ./dist
 .PHONY: build-docker
 build-docker: ## Builds a docker image with the node binary
 	docker build -t x1-node -f ./Dockerfile .
+	docker build -t x1-signer -f ./tools/signer/Dockerfile .
 
 .PHONY: build-docker-nc
 build-docker-nc: ## Builds a docker image with the node binary - but without build cache

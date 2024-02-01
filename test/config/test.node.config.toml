@@ -145,10 +145,13 @@ GeneratingProofCleanupThreshold = "10m"
 
 [EthTxManager]
 ForcedGas = 0
-PrivateKeys = [
-	{Path = "/pk/sequencer.keystore", Password = "testonly"},
-	{Path = "/pk/aggregator.keystore", Password = "testonly"}
-]
+[EthTxManager.CustodialAssets]
+Enable=true
+URL="http://x1-signer:7001"
+Symbol=2882
+SequencerAddr="0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+AggregatorAddr="0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+WaitResultTimeout="2m"
 
 [L2GasPriceSuggester]
 Type = "default"

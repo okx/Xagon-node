@@ -3,12 +3,14 @@ package jsonrpc
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"math/big"
 	"strconv"
 	"strings"
 	"sync"
 
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
+	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	"github.com/jackc/pgx/v4"
@@ -190,4 +192,37 @@ func internalTxTraceToInnerTx(currentTx okFrame, name string, depth int, index i
 		callTx.IsError = true
 	}
 	return callTx
+}
+
+// GetBlockInternalTransactions returns internal transactions by block hash
+func (e *EthEndpoints) GetBlockInternalTransactions(hash types.ArgHash) (interface{}, types.Error) {
+	blockInternalTxs := make(map[common.Hash]interface{})
+	_, err := e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
+		c, err := e.state.GetL2BlockTransactionCountByHash(ctx, hash.Hash(), dbTx)
+		if err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, "failed to count transactions", err, true)
+		}
+		for i := 0; i < int(c); i++ {
+			tx, err := e.state.GetTransactionByL2BlockHashAndIndex(ctx, hash.Hash(), uint64(i), dbTx)
+			if errors.Is(err, state.ErrNotFound) {
+				return nil, nil
+			} else if err != nil {
+				return RPCErrorResponse(types.DefaultErrorCode, "failed to get transaction", err, true)
+			}
+			blockInternalTxs[tx.Hash()] = nil
+		}
+
+		return nil, nil
+	})
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, "failed to count transactions", err, true)
+	}
+	for k := range blockInternalTxs {
+		ret, err := e.GetInternalTransactions(types.ArgHash(k))
+		if err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, "failed to get transaction", err, true)
+		}
+		blockInternalTxs[k] = ret
+	}
+	return blockInternalTxs, nil
 }

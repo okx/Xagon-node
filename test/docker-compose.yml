@@ -531,3 +531,18 @@ services:
       - "postgres"
       - "-N"
       - "500"
+
+  x1-signer:
+    container_name: x1-signer
+    restart: unless-stopped
+    image: x1-signer
+    ports:
+      - 7001:7001
+    volumes:
+      - ./config/signer.config.toml:/app/config.toml
+      - ./sequencer.keystore:/pk/sequencer.keystore
+      - ./aggregator.keystore:/pk/aggregator.keystore
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "/app/x1-signer http -cfg /app/config.toml"
