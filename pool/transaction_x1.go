@@ -26,9 +26,15 @@ func (tx *Transaction) IsClaimTx(freeClaimGasLimit uint64) bool {
 		return false
 	}
 
-	if *tx.To() == l2BridgeAddr &&
-		strings.HasPrefix("0x"+common.Bytes2Hex(tx.Data()), BridgeClaimMethodSignature) {
-		return true
+	if *tx.To() != l2BridgeAddr {
+		return false
 	}
-	return false
+
+	if !strings.HasPrefix("0x"+common.Bytes2Hex(tx.Data()), BridgeClaimMethodSignature) {
+		return false
+	}
+
+	log.Infof("Transaction %s is a claim tx", tx.Hash().String())
+
+	return true
 }
