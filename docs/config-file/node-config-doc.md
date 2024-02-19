@@ -3736,12 +3736,12 @@ MaxBatchBytesSize=120000
 
 **Type:** : `integer`
 
-**Default:** `9223372036854775807`
+**Default:** `1125899906842624`
 
-**Example setting the default value** (9223372036854775807):
+**Example setting the default value** (1125899906842624):
 ```
 [State.Batch.Constraints]
-MaxCumulativeGasUsed=9223372036854775807
+MaxCumulativeGasUsed=1125899906842624
 ```
 
 ##### <a name="State_Batch_Constraints_MaxKeccakHashes"></a>20.9.1.4. `State.Batch.Constraints.MaxKeccakHashes`

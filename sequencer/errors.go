@@ -14,6 +14,8 @@ var (
 	ErrReplacedTransaction = errors.New("replaced transaction")
 	// ErrGetBatchByNumber happens when we get an error trying to get a batch by number (GetBatchByNumber)
 	ErrGetBatchByNumber = errors.New("get batch by number error")
+	// ErrUpdateBatchAsChecked happens when we get an error trying to update a batch as checked (UpdateBatchAsChecked)
+	ErrUpdateBatchAsChecked = errors.New("update batch as checked error")
 	// ErrDecodeBatchL2Data happens when we get an error trying to decode BatchL2Data (DecodeTxs)
 	ErrDecodeBatchL2Data = errors.New("decoding BatchL2Data error")
 	// ErrProcessBatch happens when we get an error trying to process (executor) a batch

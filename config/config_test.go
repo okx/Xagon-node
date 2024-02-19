@@ -487,7 +487,7 @@ func Test_Defaults(t *testing.T) {
 		},
 		{
 			path:          "State.Batch.Constraints.MaxCumulativeGasUsed",
-			expectedValue: uint64(9223372036854775807),
+			expectedValue: uint64(1125899906842624),
 		},
 		{
 			path:          "State.Batch.Constraints.MaxKeccakHashes",

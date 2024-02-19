@@ -234,11 +234,9 @@ type DSState interface {
 	GetDSL2Blocks(ctx context.Context, firstBatchNumber, lastBatchNumber uint64, dbTx pgx.Tx) ([]*DSL2Block, error)
 	GetDSL2Transactions(ctx context.Context, firstL2Block, lastL2Block uint64, dbTx pgx.Tx) ([]*DSL2Transaction, error)
 	GetStorageAt(ctx context.Context, address common.Address, position *big.Int, root common.Hash) (*big.Int, error)
-	GetLastL2BlockHeader(ctx context.Context, dbTx pgx.Tx) (*L2Header, error)
 	GetVirtualBatchParentHash(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (common.Hash, error)
 	GetForcedBatchParentHash(ctx context.Context, forcedBatchNumber uint64, dbTx pgx.Tx) (common.Hash, error)
 	GetL1InfoRootLeafByIndex(ctx context.Context, l1InfoTreeIndex uint32, dbTx pgx.Tx) (L1InfoTreeExitRootStorageEntry, error)
-	GetVirtualBatch(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*VirtualBatch, error)
 }
 
 // GenerateDataStreamerFile generates or resumes a data stream file
@@ -577,6 +575,10 @@ func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.St
 						L2BlockNumber: l2Block.L2BlockNumber,
 						BlockHash:     l2Block.BlockHash,
 						StateRoot:     l2Block.StateRoot,
+					}
+
+					if l2Block.ForkID >= FORKID_ETROG {
+						blockEnd.BlockHash = l2Block.StateRoot
 					}
 
 					_, err = streamServer.AddStreamEntry(EntryTypeL2BlockEnd, blockEnd.Encode())

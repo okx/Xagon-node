@@ -123,7 +123,7 @@ func (s *Sequencer) checkStateInconsistency(ctx context.Context) {
 		}
 
 		if stateInconsistenciesDetected != s.numberOfStateInconsistencies {
-			s.finalizer.Halt(ctx, fmt.Errorf("state inconsistency detected, halting finalizer"))
+			s.finalizer.Halt(ctx, fmt.Errorf("state inconsistency detected, halting finalizer"), false)
 		}
 	}
 }
@@ -140,7 +140,13 @@ func (s *Sequencer) deleteOldPoolTxs(ctx context.Context) {
 	for {
 		time.Sleep(s.cfg.DeletePoolTxsCheckInterval.Duration)
 		log.Infof("trying to get txs to delete from the pool...")
-		txHashes, err := s.stateIntf.GetTxsOlderThanNL1Blocks(ctx, s.cfg.DeletePoolTxsL1BlockConfirmations, nil)
+		earliestTxHash, err := s.pool.GetEarliestProcessedTx(ctx)
+		if err != nil {
+			log.Errorf("failed to get earliest tx hash to delete, err: %v", err)
+			continue
+		}
+
+		txHashes, err := s.stateIntf.GetTxsOlderThanNL1BlocksUntilTxHash(ctx, s.cfg.DeletePoolTxsL1BlockConfirmations, earliestTxHash, nil)
 		if err != nil {
 			log.Errorf("failed to get txs hashes to delete, error: %v", err)
 			continue

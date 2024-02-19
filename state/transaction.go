@@ -209,13 +209,18 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 		return err
 	}
 
+	gasLimit := l2Block.GasLimit
+	if gasLimit > MaxL2BlockGasLimit {
+		gasLimit = MaxL2BlockGasLimit
+	}
+
 	header := &types.Header{
 		Number:     new(big.Int).SetUint64(l2Block.BlockNumber),
 		ParentHash: prevL2BlockHash,
 		Coinbase:   l2Block.Coinbase,
 		Root:       l2Block.BlockHash, //BlockHash returned by the executor is the StateRoot in Etrog
 		GasUsed:    l2Block.GasUsed,
-		GasLimit:   l2Block.GasLimit,
+		GasLimit:   gasLimit,
 		Time:       l2Block.Timestamp,
 	}
 
@@ -630,7 +635,7 @@ func (s *State) StoreTransaction(ctx context.Context, batchNumber uint64, proces
 		Coinbase:   coinbase,
 		Root:       processedTx.StateRoot,
 		GasUsed:    processedTx.GasUsed,
-		GasLimit:   s.cfg.MaxCumulativeGasUsed,
+		GasLimit:   MaxTxGasLimit,
 		Time:       timestamp,
 	})
 	header.GlobalExitRoot = globalExitRoot

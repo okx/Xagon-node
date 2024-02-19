@@ -57,8 +57,13 @@ func (p *State) GetSyncingInfo(ctx context.Context, dbTx pgx.Tx) (SyncingInfo, e
 		return SyncingInfo{}, err
 	}
 
-	info.EstimatedHighestBlock = ^uint64(0)
 	info.IsSynchronizing = syncData.LastBatchNumberSeen > lastBatchNumber
+	if info.IsSynchronizing {
+		// Estimation of block counting 1 l2block per missing batch
+		info.EstimatedHighestBlock = lastBlockNumber + (syncData.LastBatchNumberConsolidated - lastBatchNumber)
+	} else {
+		info.EstimatedHighestBlock = lastBlockNumber
+	}
 
 	return info, nil
 }

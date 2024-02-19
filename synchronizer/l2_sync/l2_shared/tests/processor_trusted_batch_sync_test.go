@@ -1,6 +1,8 @@
 package test_l2_shared
 
 import (
+	"context"
+	"errors"
 	"testing"
 
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
@@ -9,6 +11,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/l2_sync/l2_shared"
 	mock_l2_shared "github.com/0xPolygonHermez/zkevm-node/synchronizer/l2_sync/l2_shared/mocks"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/stretchr/testify/mock"
 	"github.com/stretchr/testify/require"
 )
 
@@ -320,4 +323,17 @@ func TestGetNextStatusUpdateExecutionResult(t *testing.T) {
 	newStatus, err := testData.sut.GetNextStatus(previousStatus, &ProcessResponse, false, "test")
 	require.NoError(t, err)
 	require.Equal(t, common.HexToHash("0x123"), newStatus.LastTrustedBatches[0].StateRoot)
+}
+
+func TestExecuteProcessBatchError(t *testing.T) {
+	testData := newTestDataForProcessorTrustedBatchSync(t)
+
+	data := l2_shared.ProcessData{
+		Mode:              l2_shared.NothingProcessMode,
+		BatchMustBeClosed: true,
+	}
+	returnedError := errors.New("error")
+	testData.mockExecutor.EXPECT().NothingProcess(mock.Anything, mock.Anything, mock.Anything).Return(nil, returnedError)
+	_, err := testData.sut.ExecuteProcessBatch(context.Background(), &data, nil)
+	require.ErrorIs(t, returnedError, err)
 }

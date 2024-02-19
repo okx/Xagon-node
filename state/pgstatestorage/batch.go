@@ -604,7 +604,7 @@ func (p *PostgresStorage) OpenBatchInStorage(ctx context.Context, batchContext s
 
 // OpenWIPBatchInStorage adds a new wip batch into the state storage
 func (p *PostgresStorage) OpenWIPBatchInStorage(ctx context.Context, batch state.Batch, dbTx pgx.Tx) error {
-	const openBatchSQL = "INSERT INTO state.batch (batch_num, global_exit_root, state_root, local_exit_root, timestamp, coinbase, forced_batch_num, raw_txs_data, batch_resources, wip) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE)"
+	const openBatchSQL = "INSERT INTO state.batch (batch_num, global_exit_root, state_root, local_exit_root, timestamp, coinbase, forced_batch_num, raw_txs_data, batch_resources, wip, checked) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, TRUE, FALSE)"
 
 	resourcesData, err := json.Marshal(batch.Resources)
 	if err != nil {
@@ -900,6 +900,25 @@ func (p *PostgresStorage) UpdateWIPBatch(ctx context.Context, receipt state.Proc
 	return err
 }
 
+// updateBatchAsChecked updates the batch to set it as checked (sequencer sanity check was successful)
+func (p *PostgresStorage) UpdateBatchAsChecked(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) error {
+	const updateL2DataSQL = "UPDATE state.batch SET checked = TRUE WHERE batch_num = $1"
+
+	e := p.getExecQuerier(dbTx)
+	_, err := e.Exec(ctx, updateL2DataSQL, batchNumber)
+	return err
+}
+
+// IsBatchChecked indicates if the batch is closed and checked (sequencer sanity check was successful)
+func (p *PostgresStorage) IsBatchChecked(ctx context.Context, batchNum uint64, dbTx pgx.Tx) (bool, error) {
+	const isBatchCheckedSQL = "SELECT not(wip) AND checked FROM state.batch WHERE batch_num = $1"
+
+	q := p.getExecQuerier(dbTx)
+	var isChecked bool
+	err := q.QueryRow(ctx, isBatchCheckedSQL, batchNum).Scan(&isChecked)
+	return isChecked, err
+}
+
 // AddAccumulatedInputHash adds the accumulated input hash
 func (p *PostgresStorage) AddAccumulatedInputHash(ctx context.Context, batchNum uint64, accInputHash common.Hash, dbTx pgx.Tx) error {
 	const addAccInputHashBatchSQL = "UPDATE state.batch SET acc_input_hash = $1 WHERE batch_num = $2"
@@ -1024,4 +1043,32 @@ func (p *PostgresStorage) GetLatestBatchGlobalExitRoot(ctx context.Context, dbTx
 	}
 
 	return common.HexToHash(lastGER), nil
+}
+
+// GetNotCheckedBatches returns the batches that are closed but not checked
+func (p *PostgresStorage) GetNotCheckedBatches(ctx context.Context, dbTx pgx.Tx) ([]*state.Batch, error) {
+	const getBatchesNotCheckedSQL = `
+		SELECT batch_num, global_exit_root, local_exit_root, acc_input_hash, state_root, timestamp, coinbase, raw_txs_data, forced_batch_num, batch_resources, wip 
+		from state.batch WHERE wip IS FALSE AND checked IS FALSE ORDER BY batch_num ASC`
+
+	e := p.getExecQuerier(dbTx)
+	rows, err := e.Query(ctx, getBatchesNotCheckedSQL)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, state.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	batches := make([]*state.Batch, 0, len(rows.RawValues()))
+
+	for rows.Next() {
+		batch, err := scanBatch(rows)
+		if err != nil {
+			return nil, err
+		}
+		batches = append(batches, &batch)
+	}
+
+	return batches, nil
 }

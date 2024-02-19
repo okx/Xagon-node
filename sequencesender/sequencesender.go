@@ -18,8 +18,10 @@ import (
 )
 
 const (
-	ethTxManagerOwner = "sequencer"
-	monitoredIDFormat = "sequence-from-%v-to-%v"
+	ethTxManagerOwner    = "sequencer"
+	monitoredIDFormat    = "sequence-from-%v-to-%v"
+	retriesSanityCheck   = 8
+	waitRetrySanityCheck = 15 * time.Second
 )
 
 var (
@@ -27,6 +29,10 @@ var (
 	// than some meaningful limit a user might use. This is not a consensus error
 	// making the transaction invalid, rather a DOS protection.
 	ErrOversizedData = errors.New("oversized data")
+	// ErrSyncVirtualGreaterSequenced is returned by the isSynced function when the last virtual batch is greater that the last SC sequenced batch
+	ErrSyncVirtualGreaterSequenced = errors.New("last virtual batch is greater than last SC sequenced batch")
+	// ErrSyncVirtualGreaterTrusted is returned by the isSynced function when the last virtual batch is greater that the last trusted batch closed
+	ErrSyncVirtualGreaterTrusted = errors.New("last virtual batch is greater than last trusted batch closed")
 )
 
 // SequenceSender represents a sequence sender
@@ -101,7 +107,11 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 	}
 
 	// Check if synchronizer is up to date
-	if !s.isSynced(ctx) {
+	synced, err := s.isSynced(ctx, retriesSanityCheck, waitRetrySanityCheck)
+	if err != nil {
+		s.halt(ctx, err)
+	}
+	if !synced {
 		log.Info("wait virtual state to be synced...")
 		time.Sleep(5 * time.Second) // nolint:gomnd
 		return
@@ -217,7 +227,7 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 func (s *SequenceSender) getSequencesToSend(ctx context.Context) ([]types.Sequence, error) {
 	lastVirtualBatchNum, err := s.state.GetLastVirtualBatchNum(ctx, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get last virtual batch num, err: %w", err)
+		return nil, fmt.Errorf("failed to get last virtual batch num, err: %v", err)
 	}
 	log.Debugf("last virtual batch number: %d", lastVirtualBatchNum)
 
@@ -243,19 +253,19 @@ func (s *SequenceSender) getSequencesToSend(ctx context.Context) ([]types.Sequen
 			if err == state.ErrNotFound {
 				break
 			}
-			log.Debugf("failed to get batch by number %d, err: %w", currentBatchNumToSequence, err)
+			log.Debugf("failed to get batch by number %d, err: %v", currentBatchNumToSequence, err)
 			return nil, err
 		}
 
-		// Check if batch is closed
-		isClosed, err := s.state.IsBatchClosed(ctx, currentBatchNumToSequence, nil)
+		// Check if batch is closed and checked (sequencer sanity check was successful)
+		isChecked, err := s.state.IsBatchChecked(ctx, currentBatchNumToSequence, nil)
 		if err != nil {
-			log.Debugf("failed to check if batch %d is closed, err: %w", currentBatchNumToSequence, err)
+			log.Debugf("failed to check if batch %d is closed and checked, err: %v", currentBatchNumToSequence, err)
 			return nil, err
 		}
 
-		if !isClosed {
-			// Reached current (WIP) batch
+		if !isChecked {
+			// Batch is not closed and checked
 			break
 		}
 
@@ -406,39 +416,54 @@ func isDataForEthTxTooBig(err error) bool {
 		errors.Is(err, ethman.ErrContentLengthTooLarge)
 }
 
-func (s *SequenceSender) isSynced(ctx context.Context) bool {
+func (s *SequenceSender) isSynced(ctx context.Context, retries int, waitRetry time.Duration) (bool, error) {
 	lastVirtualBatchNum, err := s.state.GetLastVirtualBatchNum(ctx, nil)
 	if err != nil && err != state.ErrNotFound {
 		log.Warnf("failed to get last virtual batch number, err: %v", err)
-		return false
+		return false, nil
 	}
 
 	lastTrustedBatchClosed, err := s.state.GetLastClosedBatch(ctx, nil)
 	if err != nil && err != state.ErrNotFound {
 		log.Warnf("failed to get last trusted batch closed, err: %v", err)
-		return false
+		return false, nil
 	}
 
 	lastSCBatchNum, err := s.etherman.GetLatestBatchNumber()
 	if err != nil {
 		log.Warnf("failed to get from the SC last sequenced batch number, err: %v", err)
-		return false
+		return false, nil
 	}
 
 	if lastVirtualBatchNum < lastSCBatchNum {
 		log.Infof("waiting for the state to be synced, last virtual batch: %d, last SC sequenced batch: %d", lastVirtualBatchNum, lastSCBatchNum)
-		return false
+		return false, nil
 	} else if lastVirtualBatchNum > lastSCBatchNum { // Sanity check: virtual batch number cannot be greater than last batch sequenced in the SC
-		s.halt(ctx, fmt.Errorf("last virtual batch %d is greater than last SC sequenced batch %d", lastVirtualBatchNum, lastSCBatchNum))
-		return false
+		// we will retry some times to check that really the last sequenced batch in the SC is lower that the las virtual batch
+		log.Warnf("last virtual batch %d is greater than last SC sequenced batch %d, retrying...", lastVirtualBatchNum, lastSCBatchNum)
+		for i := 0; i < retries; i++ {
+			time.Sleep(waitRetry)
+			lastSCBatchNum, err = s.etherman.GetLatestBatchNumber()
+			if err != nil {
+				log.Warnf("failed to get from the SC last sequenced batch number, err: %v", err)
+				return false, nil
+			}
+			if lastVirtualBatchNum == lastSCBatchNum { // last virtual batch is equals to last sequenced batch in the SC, everything is ok we continue
+				break
+			} else if i == retries-1 { // it's the last retry, we halt sequence-sender
+				log.Errorf("last virtual batch %d is greater than last SC sequenced batch %d", lastVirtualBatchNum, lastSCBatchNum)
+				return false, ErrSyncVirtualGreaterSequenced
+			}
+		}
+		log.Infof("last virtual batch %d is equal to last SC sequenced batch %d, continuing...", lastVirtualBatchNum, lastSCBatchNum)
 	}
 
 	// At this point lastVirtualBatchNum = lastEthBatchNum. Check trusted batches
 	if lastTrustedBatchClosed.BatchNumber >= lastVirtualBatchNum {
-		return true
+		return true, nil
 	} else { // Sanity check: virtual batch number cannot be greater than last trusted batch closed
-		s.halt(ctx, fmt.Errorf("last virtual batch %d is greater than last trusted batch closed %d", lastVirtualBatchNum, lastTrustedBatchClosed.BatchNumber))
-		return false
+		log.Errorf("last virtual batch %d is greater than last trusted batch closed %d", lastVirtualBatchNum, lastTrustedBatchClosed.BatchNumber)
+		return false, ErrSyncVirtualGreaterTrusted
 	}
 }
 

@@ -12,19 +12,6 @@ Outputs = ["stderr"]
 	Port = "5432"
 	EnableLog = false	
 	MaxConns = 200
-	[State.Batch]
-		[State.Batch.Constraints]
-		MaxTxsPerBatch = 300
-		MaxBatchBytesSize = 120000
-		MaxCumulativeGasUsed = 9223372036854775807
-		MaxKeccakHashes = 2145
-		MaxPoseidonHashes = 252357
-		MaxPoseidonPaddings = 135191
-		MaxMemAligns = 236585
-		MaxArithmetics = 236585
-		MaxBinaries = 473170
-		MaxSteps = 7570538
-		MaxSHA256Hashes = 1596
 
 [Pool]
 MaxTxBytesSize=100132
@@ -66,7 +53,6 @@ EnableL2SuggestedGasPricePolling = false
 SyncInterval = "2s"
 SyncChunkSize = 100
 TrustedSequencerURL = "" # If it is empty or not specified, then the value is read from the smc
-L1SynchronizationMode = "sequential"
 
 [MTClient]
 URI = "zkevm-prover:50061"

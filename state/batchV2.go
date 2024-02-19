@@ -250,7 +250,11 @@ func (s *State) processBatchV2(ctx context.Context, processingCtx *ProcessingCon
 	if processingCtx.L1InfoRoot != (common.Hash{}) {
 		processBatchRequest.L1InfoRoot = processingCtx.L1InfoRoot.Bytes()
 	} else {
-		currentl1InfoRoot := s.GetCurrentL1InfoRoot()
+		currentl1InfoRoot, err := s.GetCurrentL1InfoRoot(ctx, dbTx)
+		if err != nil {
+			log.Errorf("error getting current L1InfoRoot: %v", err)
+			return nil, err
+		}
 		processBatchRequest.L1InfoRoot = currentl1InfoRoot.Bytes()
 	}
 

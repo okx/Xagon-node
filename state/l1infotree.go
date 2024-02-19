@@ -3,6 +3,7 @@ package state
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/0xPolygonHermez/zkevm-node/l1infotree"
 	"github.com/0xPolygonHermez/zkevm-node/log"
@@ -29,6 +30,29 @@ func (l *L1InfoTreeLeaf) Hash() common.Hash {
 	return l1infotree.HashLeafData(l.GlobalExitRoot.GlobalExitRoot, l.PreviousBlockHash, timestamp)
 }
 
+func (s *State) buildL1InfoTreeCacheIfNeed(ctx context.Context, dbTx pgx.Tx) error {
+	if s.l1InfoTree != nil {
+		return nil
+	}
+	log.Debugf("Building L1InfoTree cache")
+	allLeaves, err := s.storage.GetAllL1InfoRootEntries(ctx, dbTx)
+	if err != nil {
+		log.Error("error getting all leaves. Error: ", err)
+		return fmt.Errorf("error getting all leaves. Error: %w", err)
+	}
+	var leaves [][32]byte
+	for _, leaf := range allLeaves {
+		leaves = append(leaves, leaf.Hash())
+	}
+	mt, err := l1infotree.NewL1InfoTree(uint8(32), leaves) //nolint:gomnd
+	if err != nil {
+		log.Error("error creating L1InfoTree. Error: ", err)
+		return fmt.Errorf("error creating L1InfoTree. Error: %w", err)
+	}
+	s.l1InfoTree = mt
+	return nil
+}
+
 // AddL1InfoTreeLeaf adds a new leaf to the L1InfoTree and returns the entry and error
 func (s *State) AddL1InfoTreeLeaf(ctx context.Context, l1InfoTreeLeaf *L1InfoTreeLeaf, dbTx pgx.Tx) (*L1InfoTreeExitRootStorageEntry, error) {
 	var newIndex uint32
@@ -38,6 +62,11 @@ func (s *State) AddL1InfoTreeLeaf(ctx context.Context, l1InfoTreeLeaf *L1InfoTre
 		return nil, err
 	} else if err == nil {
 		newIndex = gerIndex + 1
+	}
+	err = s.buildL1InfoTreeCacheIfNeed(ctx, dbTx)
+	if err != nil {
+		log.Error("error building L1InfoTree cache. Error: ", err)
+		return nil, err
 	}
 	log.Debug("latestIndex: ", gerIndex)
 	root, err := s.l1InfoTree.AddLeaf(newIndex, l1InfoTreeLeaf.Hash())
@@ -59,7 +88,12 @@ func (s *State) AddL1InfoTreeLeaf(ctx context.Context, l1InfoTreeLeaf *L1InfoTre
 }
 
 // GetCurrentL1InfoRoot Return current L1InfoRoot
-func (s *State) GetCurrentL1InfoRoot() common.Hash {
+func (s *State) GetCurrentL1InfoRoot(ctx context.Context, dbTx pgx.Tx) (common.Hash, error) {
+	err := s.buildL1InfoTreeCacheIfNeed(ctx, dbTx)
+	if err != nil {
+		log.Error("error building L1InfoTree cache. Error: ", err)
+		return ZeroHash, err
+	}
 	root, _, _ := s.l1InfoTree.GetCurrentRootCountAndSiblings()
-	return root
+	return root, nil
 }

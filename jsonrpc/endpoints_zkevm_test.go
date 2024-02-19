@@ -777,7 +777,7 @@ func TestGetBatchByNumber(t *testing.T) {
 						Once()
 					m.State.
 						On("GetL2TxHashByTxHash", context.Background(), tx.Hash(), m.DbTx).
-						Return(tx.Hash(), nil).
+						Return(state.Ptr(tx.Hash()), nil).
 						Once()
 				}
 				m.State.
@@ -1063,7 +1063,7 @@ func TestGetBatchByNumber(t *testing.T) {
 
 					m.State.
 						On("GetL2TxHashByTxHash", context.Background(), tx.Hash(), m.DbTx).
-						Return(tx.Hash(), nil).
+						Return(state.Ptr(tx.Hash()), nil).
 						Once()
 				}
 
@@ -1980,7 +1980,7 @@ func TestGetTransactionByL2Hash(t *testing.T) {
 
 				m.State.
 					On("GetL2TxHashByTxHash", context.Background(), signedTx.Hash(), m.DbTx).
-					Return(l2Hash, nil).
+					Return(&l2Hash, nil).
 					Once()
 			},
 		},
@@ -2296,7 +2296,7 @@ func TestGetTransactionReceiptByL2Hash(t *testing.T) {
 
 				m.State.
 					On("GetL2TxHashByTxHash", context.Background(), signedTx.Hash(), m.DbTx).
-					Return(l2Hash, nil).
+					Return(&l2Hash, nil).
 					Once()
 			},
 		},
@@ -2426,7 +2426,7 @@ func TestGetTransactionReceiptByL2Hash(t *testing.T) {
 
 				m.State.
 					On("GetL2TxHashByTxHash", context.Background(), tx.Hash(), m.DbTx).
-					Return(l2Hash, nil).
+					Return(&l2Hash, nil).
 					Once()
 			},
 		},

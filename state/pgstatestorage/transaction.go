@@ -15,6 +15,67 @@ import (
 
 const maxTopics = 4
 
+// GetTxsOlderThanNL1BlocksUntilTxHash get txs hashes to delete from tx pool from the oldest processed transaction to the latest
+// txn that has been virtualized.
+// Works like GetTxsOlderThanNL1Blocks but pulls hashes until earliestTxHash
+func (p *PostgresStorage) GetTxsOlderThanNL1BlocksUntilTxHash(ctx context.Context, nL1Blocks uint64, earliestTxHash common.Hash, dbTx pgx.Tx) ([]common.Hash, error) {
+	var earliestBatchNum, latestBatchNum, blockNum uint64
+	const getLatestBatchNumByBlockNumFromVirtualBatch = "SELECT batch_num FROM state.virtual_batch WHERE block_num <= $1 ORDER BY batch_num DESC LIMIT 1"
+	const getTxsHashesBeforeBatchNum = "SELECT hash FROM state.transaction JOIN state.l2block ON state.transaction.l2_block_num = state.l2block.block_num AND state.l2block.batch_num >= $1 AND state.l2block.batch_num <= $2"
+
+	// Get lower bound batch_num which is the batch num from the oldest tx in txpool
+	const getEarliestBatchNumByTxHashFromVirtualBatch = `SELECT batch_num
+	FROM state.transaction
+	JOIN state.l2block ON
+		state.transaction.l2_block_num = state.l2block.block_num AND state.transaction.hash = $1`
+
+	e := p.getExecQuerier(dbTx)
+
+	err := e.QueryRow(ctx, getLastBlockNumSQL).Scan(&blockNum)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, state.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	blockNum = blockNum - nL1Blocks
+	if blockNum <= 0 {
+		return nil, errors.New("blockNumDiff is too big, there are no txs to delete")
+	}
+
+	err = e.QueryRow(ctx, getEarliestBatchNumByTxHashFromVirtualBatch, earliestTxHash.String()).Scan(&earliestBatchNum)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, state.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	err = e.QueryRow(ctx, getLatestBatchNumByBlockNumFromVirtualBatch, blockNum).Scan(&latestBatchNum)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, state.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	rows, err := e.Query(ctx, getTxsHashesBeforeBatchNum, earliestBatchNum, latestBatchNum)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, state.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+	hashes := make([]common.Hash, 0, len(rows.RawValues()))
+	for rows.Next() {
+		var hash string
+		err := rows.Scan(&hash)
+		if err != nil {
+			return nil, err
+		}
+		hashes = append(hashes, common.HexToHash(hash))
+	}
+
+	return hashes, nil
+}
+
 // GetTxsOlderThanNL1Blocks get txs hashes to delete from tx pool
 func (p *PostgresStorage) GetTxsOlderThanNL1Blocks(ctx context.Context, nL1Blocks uint64, dbTx pgx.Tx) ([]common.Hash, error) {
 	var batchNum, blockNum uint64
@@ -562,19 +623,23 @@ func (p *PostgresStorage) GetTransactionEGPLogByHash(ctx context.Context, transa
 }
 
 // GetL2TxHashByTxHash gets the L2 Hash from the tx found by the provided tx hash
-func (p *PostgresStorage) GetL2TxHashByTxHash(ctx context.Context, hash common.Hash, dbTx pgx.Tx) (common.Hash, error) {
+func (p *PostgresStorage) GetL2TxHashByTxHash(ctx context.Context, hash common.Hash, dbTx pgx.Tx) (*common.Hash, error) {
 	const getTransactionByHashSQL = "SELECT transaction.l2_hash FROM state.transaction WHERE hash = $1"
 
-	var l2HashHex string
+	var l2HashHex *string
 	q := p.getExecQuerier(dbTx)
 	err := q.QueryRow(ctx, getTransactionByHashSQL, hash.String()).Scan(&l2HashHex)
 
 	if errors.Is(err, pgx.ErrNoRows) {
-		return common.Hash{}, state.ErrNotFound
+		return nil, state.ErrNotFound
 	} else if err != nil {
-		return common.Hash{}, err
+		return nil, err
 	}
 
-	l2Hash := common.HexToHash(l2HashHex)
-	return l2Hash, nil
+	if l2HashHex == nil {
+		return nil, nil
+	}
+
+	l2Hash := common.HexToHash(*l2HashHex)
+	return &l2Hash, nil
 }

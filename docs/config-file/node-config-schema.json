@@ -1484,7 +1484,7 @@
 								},
 								"MaxCumulativeGasUsed": {
 									"type": "integer",
-									"default": 9223372036854775807
+									"default": 1125899906842624
 								},
 								"MaxKeccakHashes": {
 									"type": "integer",

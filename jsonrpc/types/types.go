@@ -329,7 +329,7 @@ func NewBlock(ctx context.Context, st StateInterface, hash *common.Hash, b *stat
 				if err != nil {
 					return nil, err
 				}
-				l2Hash = &l2h
+				l2Hash = l2h
 			}
 
 			rpcTx, err := NewTransaction(*tx, receiptPtr, includeReceipts, l2Hash)
@@ -422,7 +422,7 @@ func NewBatch(ctx context.Context, st StateInterface, batch *state.Batch, virtua
 			if err != nil {
 				return nil, err
 			}
-			rpcTx, err := NewTransaction(tx, receiptPtr, includeReceipts, &l2Hash)
+			rpcTx, err := NewTransaction(tx, receiptPtr, includeReceipts, l2Hash)
 			if err != nil {
 				return nil, err
 			}

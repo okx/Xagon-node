@@ -750,7 +750,7 @@ install-mockery: ## Installs mockery with the correct version to generate the mo
 	go install github.com/vektra/mockery/v2@v2.39.0
 
 .PHONY: generate-mocks
-generate-mocks: generate-mocks-jsonrpc generate-mocks-sequencer generate-mocks-synchronizer generate-mocks-etherman generate-mocks-aggregator generate-mocks-state ## Generates mocks for the tests, using mockery tool
+generate-mocks: generate-mocks-jsonrpc generate-mocks-sequencer generate-mocks-sequencesender generate-mocks-synchronizer generate-mocks-etherman generate-mocks-aggregator generate-mocks-state ## Generates mocks for the tests, using mockery tool
 
 .PHONY: generate-mocks-jsonrpc
 generate-mocks-jsonrpc: ## Generates mocks for jsonrpc , using mockery tool
@@ -767,6 +767,13 @@ generate-mocks-sequencer: ## Generates mocks for sequencer , using mockery tool
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=txPool --dir=../sequencer --output=../sequencer --outpkg=sequencer --inpackage  --structname=PoolMock --filename=mock_pool.go
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../sequencer --outpkg=sequencer --structname=DbTxMock --filename=mock_dbtx.go
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=etherman --dir=../sequencer --output=../sequencer --outpkg=sequencer --inpackage --structname=EthermanMock --filename=mock_etherman.go
+
+.PHONY: generate-mocks-sequencesender
+generate-mocks-sequencesender: ## Generates mocks for sequencesender , using mockery tool
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=stateInterface --dir=../sequencesender --output=../sequencesender --outpkg=sequencesender --inpackage --structname=StateMock --filename=mock_state.go
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=etherman --dir=../sequencesender --output=../sequencesender --outpkg=sequencesender --inpackage --structname=EthermanMock --filename=mock_etherman.go
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=ethTxManager --dir=../sequencesender --output=../sequencesender --outpkg=sequencesender --inpackage --structname=EthTxManagerMock --filename=mock_ethtxmanager.go
+
 
 SYNC_L1_PARALLEL_FOLDER="../synchronizer/l1_parallel_sync"
 SYNC_L1_PARALLEL_MOCKS_FOLDER="../synchronizer/l1_parallel_sync/mocks"

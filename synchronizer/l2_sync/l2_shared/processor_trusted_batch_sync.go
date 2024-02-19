@@ -218,7 +218,7 @@ func (s *ProcessorTrustedBatchSync) ExecuteProcessBatch(ctx context.Context, pro
 		log.Debugf("%s is partially synchronized but we don't have intermediate stateRoot so it needs to be fully reprocessed", processMode.DebugPrefix)
 		processBatchResp, err = s.Steps.ReProcess(ctx, processMode, dbTx)
 	}
-	if processMode.BatchMustBeClosed {
+	if processBatchResp != nil && err == nil && processMode.BatchMustBeClosed {
 		err = checkProcessBatchResultMatchExpected(processMode, processBatchResp.ProcessBatchResponse)
 		if err != nil {
 			log.Error("%s error verifying batch result!  Error: ", processMode.DebugPrefix, err)

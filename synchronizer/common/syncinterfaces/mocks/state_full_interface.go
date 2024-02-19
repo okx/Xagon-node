@@ -821,53 +821,6 @@ func (_c *StateFullInterface_GetBatchByNumber_Call) RunAndReturn(run func(contex
 	return _c
 }
 
-// GetCurrentL1InfoRoot provides a mock function with given fields:
-func (_m *StateFullInterface) GetCurrentL1InfoRoot() common.Hash {
-	ret := _m.Called()
-
-	if len(ret) == 0 {
-		panic("no return value specified for GetCurrentL1InfoRoot")
-	}
-
-	var r0 common.Hash
-	if rf, ok := ret.Get(0).(func() common.Hash); ok {
-		r0 = rf()
-	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(common.Hash)
-		}
-	}
-
-	return r0
-}
-
-// StateFullInterface_GetCurrentL1InfoRoot_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetCurrentL1InfoRoot'
-type StateFullInterface_GetCurrentL1InfoRoot_Call struct {
-	*mock.Call
-}
-
-// GetCurrentL1InfoRoot is a helper method to define mock.On call
-func (_e *StateFullInterface_Expecter) GetCurrentL1InfoRoot() *StateFullInterface_GetCurrentL1InfoRoot_Call {
-	return &StateFullInterface_GetCurrentL1InfoRoot_Call{Call: _e.mock.On("GetCurrentL1InfoRoot")}
-}
-
-func (_c *StateFullInterface_GetCurrentL1InfoRoot_Call) Run(run func()) *StateFullInterface_GetCurrentL1InfoRoot_Call {
-	_c.Call.Run(func(args mock.Arguments) {
-		run()
-	})
-	return _c
-}
-
-func (_c *StateFullInterface_GetCurrentL1InfoRoot_Call) Return(_a0 common.Hash) *StateFullInterface_GetCurrentL1InfoRoot_Call {
-	_c.Call.Return(_a0)
-	return _c
-}
-
-func (_c *StateFullInterface_GetCurrentL1InfoRoot_Call) RunAndReturn(run func() common.Hash) *StateFullInterface_GetCurrentL1InfoRoot_Call {
-	_c.Call.Return(run)
-	return _c
-}
-
 // GetExitRootByGlobalExitRoot provides a mock function with given fields: ctx, ger, dbTx
 func (_m *StateFullInterface) GetExitRootByGlobalExitRoot(ctx context.Context, ger common.Hash, dbTx pgx.Tx) (*state.GlobalExitRoot, error) {
 	ret := _m.Called(ctx, ger, dbTx)

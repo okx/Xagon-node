@@ -19,6 +19,11 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
+const (
+	// MaxL2BlockGasLimit is the gas limit allowed per L2 block in a batch
+	MaxL2BlockGasLimit = uint64(1125899906842624)
+)
+
 var (
 	errL2BlockInvalid = errors.New("A L2 block fails, that invalidate totally the batch")
 )

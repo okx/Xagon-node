@@ -508,23 +508,23 @@ func (_m *StateMock) GetL2BlocksByBatchNumber(ctx context.Context, batchNumber u
 }
 
 // GetL2TxHashByTxHash provides a mock function with given fields: ctx, hash, dbTx
-func (_m *StateMock) GetL2TxHashByTxHash(ctx context.Context, hash common.Hash, dbTx pgx.Tx) (common.Hash, error) {
+func (_m *StateMock) GetL2TxHashByTxHash(ctx context.Context, hash common.Hash, dbTx pgx.Tx) (*common.Hash, error) {
 	ret := _m.Called(ctx, hash, dbTx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetL2TxHashByTxHash")
 	}
 
-	var r0 common.Hash
+	var r0 *common.Hash
 	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, common.Hash, pgx.Tx) (common.Hash, error)); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, common.Hash, pgx.Tx) (*common.Hash, error)); ok {
 		return rf(ctx, hash, dbTx)
 	}
-	if rf, ok := ret.Get(0).(func(context.Context, common.Hash, pgx.Tx) common.Hash); ok {
+	if rf, ok := ret.Get(0).(func(context.Context, common.Hash, pgx.Tx) *common.Hash); ok {
 		r0 = rf(ctx, hash, dbTx)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(common.Hash)
+			r0 = ret.Get(0).(*common.Hash)
 		}
 	}
 

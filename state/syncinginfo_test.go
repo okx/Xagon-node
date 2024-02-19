@@ -88,7 +88,7 @@ func TestGetSyncingInfoOk(t *testing.T) {
 	require.Equal(t, state.SyncingInfo{
 		InitialSyncingBlock:   uint64(123),
 		CurrentBlockNumber:    uint64(567),
-		EstimatedHighestBlock: ^uint64(0),
+		EstimatedHighestBlock: uint64(597),
 		IsSynchronizing:       true,
 	}, res)
 }

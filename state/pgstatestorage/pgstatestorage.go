@@ -34,8 +34,8 @@ func (p *PostgresStorage) getExecQuerier(dbTx pgx.Tx) ExecQuerier {
 	return p
 }
 
-// Reset resets the state to a block for the given DB tx
-func (p *PostgresStorage) Reset(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) error {
+// ResetToL1BlockNumber resets the state to a block for the given DB tx
+func (p *PostgresStorage) ResetToL1BlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) error {
 	e := p.getExecQuerier(dbTx)
 	const resetSQL = "DELETE FROM state.block WHERE block_num > $1"
 	if _, err := e.Exec(ctx, resetSQL, blockNumber); err != nil {

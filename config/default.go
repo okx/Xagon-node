@@ -24,7 +24,7 @@ Outputs = ["stderr"]
 		[State.Batch.Constraints]
 		MaxTxsPerBatch = 300
 		MaxBatchBytesSize = 120000
-		MaxCumulativeGasUsed = 9223372036854775807
+		MaxCumulativeGasUsed = 1125899906842624
 		MaxKeccakHashes = 2145
 		MaxPoseidonHashes = 252357
 		MaxPoseidonPaddings = 135191

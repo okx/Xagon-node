@@ -329,7 +329,7 @@ func (z *ZKEVMEndpoints) GetTransactionByL2Hash(hash types.ArgHash) (interface{}
 				return RPCErrorResponse(types.DefaultErrorCode, "failed to get l2 transaction hash", err, true)
 			}
 
-			res, err := types.NewTransaction(*tx, receipt, false, &l2Hash)
+			res, err := types.NewTransaction(*tx, receipt, false, l2Hash)
 			if err != nil {
 				return RPCErrorResponse(types.DefaultErrorCode, "failed to build transaction response", err, true)
 			}
@@ -381,7 +381,7 @@ func (z *ZKEVMEndpoints) GetTransactionReceiptByL2Hash(hash types.ArgHash) (inte
 			return RPCErrorResponse(types.DefaultErrorCode, "failed to get l2 transaction hash", err, true)
 		}
 
-		receipt, err := types.NewReceipt(*tx, r, &l2Hash)
+		receipt, err := types.NewReceipt(*tx, r, l2Hash)
 		if err != nil {
 			return RPCErrorResponse(types.DefaultErrorCode, "failed to build the receipt response", err, true)
 		}

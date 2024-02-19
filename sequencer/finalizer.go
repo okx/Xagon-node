@@ -144,6 +144,9 @@ func (f *finalizer) Start(ctx context.Context) {
 		mockL1InfoRoot[i] = byte(i)
 	}
 
+	// Do sanity check for batches closed but pending to be checked
+	f.processBatchesPendingtoCheck(ctx)
+
 	// Update L1InfoRoot
 	go f.checkL1InfoTreeUpdate(ctx)
 
@@ -404,14 +407,13 @@ func (f *finalizer) processTransaction(ctx context.Context, tx *TxTracker, first
 
 			// If EffectiveGasPrice >= txGasPrice, we process the tx with tx.GasPrice
 			if tx.EffectiveGasPrice.Cmp(txGasPrice) >= 0 {
-				tx.EffectiveGasPrice.Set(txGasPrice)
-
 				loss := new(big.Int).Sub(tx.EffectiveGasPrice, txGasPrice)
 				// If loss > 0 the warning message indicating we loss fee for thix tx
 				if loss.Cmp(new(big.Int).SetUint64(0)) == 1 {
 					log.Warnf("egp-loss: gasPrice: %d, effectiveGasPrice1: %d, loss: %d, tx: %s", txGasPrice, tx.EffectiveGasPrice, loss, tx.HashStr)
 				}
 
+				tx.EffectiveGasPrice.Set(txGasPrice)
 				tx.IsLastExecution = true
 			}
 		}
@@ -452,7 +454,7 @@ func (f *finalizer) processTransaction(ctx context.Context, tx *TxTracker, first
 		return nil, err
 	} else if err == nil && !batchResponse.IsRomLevelError && len(batchResponse.BlockResponses) == 0 {
 		err = fmt.Errorf("executor returned no errors and no responses for tx %s", tx.HashStr)
-		f.Halt(ctx, err)
+		f.Halt(ctx, err, false)
 	} else if batchResponse.IsExecutorLevelError {
 		log.Errorf("error received from executor, error: %v", err)
 		// Delete tx from the worker
@@ -735,7 +737,7 @@ func (f *finalizer) logZKCounters(counters state.ZKCounters) string {
 }
 
 // Halt halts the finalizer
-func (f *finalizer) Halt(ctx context.Context, err error) {
+func (f *finalizer) Halt(ctx context.Context, err error, isFatal bool) {
 	f.haltFinalizer.Store(true)
 
 	event := &event.Event{
@@ -752,8 +754,12 @@ func (f *finalizer) Halt(ctx context.Context, err error) {
 		log.Errorf("error storing finalizer halt event, error: %v", eventErr)
 	}
 
-	for {
-		log.Errorf("halting finalizer, fatal error: %v", err)
-		time.Sleep(5 * time.Second) //nolint:gomnd
+	if isFatal {
+		log.Fatalf("fatal error on finalizer, error: %v", err)
+	} else {
+		for {
+			log.Errorf("halting finalizer, error: %v", err)
+			time.Sleep(5 * time.Second) //nolint:gomnd
+		}
 	}
 }

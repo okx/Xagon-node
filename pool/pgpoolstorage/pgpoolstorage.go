@@ -790,3 +790,23 @@ func (p *PostgresPoolStorage) GetAllAddressesBlocked(ctx context.Context) ([]com
 
 	return addrs, nil
 }
+
+// GetEarliestProcessedTx gets the earliest processed tx from the pool. Mainly used for cleanup
+func (p *PostgresPoolStorage) GetEarliestProcessedTx(ctx context.Context) (common.Hash, error) {
+	const getEarliestProcessedTxnFromTxnPool = `SELECT hash
+	FROM pool.transaction
+	WHERE
+		status = 'selected'
+	ORDER BY received_at ASC
+	LIMIT 1`
+
+	var txnHash string
+	err := p.db.QueryRow(ctx, getEarliestProcessedTxnFromTxnPool).Scan(&txnHash)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return common.Hash{}, nil
+	} else if err != nil {
+		return common.Hash{}, err
+	}
+
+	return common.HexToHash(txnHash), nil
+}
