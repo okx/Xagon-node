@@ -104,8 +104,8 @@ func newSimulatedDacman(t *testing.T, auth *bind.TransactOpts) (
 			Balance: balance,
 		},
 	}
-	blockGasLimit := uint64(999999999999999999) //nolint:gomnd
-	client := backends.NewSimulatedBackend(genesisAlloc, blockGasLimit)
+	// blockGasLimit := uint64(999999999999999999) //nolint:gomnd
+	client := backends.NewSimulatedBackend(genesisAlloc, uint64(999999999999999999)) //nolint:staticcheck,gomnd
 
 	// DAC Setup
 	_, _, da, err = polygondatacommittee.DeployPolygondatacommittee(auth, client)

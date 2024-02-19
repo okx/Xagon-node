@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"context"
+
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jackc/pgx/v4"

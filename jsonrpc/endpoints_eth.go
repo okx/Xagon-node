@@ -947,7 +947,7 @@ func (e *EthEndpoints) newPendingTransactionFilter(wsConn *concurrentWsConn) (in
 	//X1 handle
 	return e.newPendingTransactionFilterX1(wsConn)
 
-	return nil, types.NewRPCError(types.DefaultErrorCode, "not supported yet")
+	// return nil, types.NewRPCError(types.DefaultErrorCode, "not supported yet")
 	// id, err := e.storage.NewPendingTransactionFilter(wsConn)
 	// if err != nil {
 	// 	return rpcErrorResponse(types.DefaultErrorCode, "failed to create new pending transaction filter", err)

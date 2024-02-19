@@ -34,13 +34,13 @@ func createSequenceSenderX1(cfg config.Config, pool *pool.Pool, etmStorage *etht
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Infof("from pk %s, from sender %s", crypto.PubkeyToAddress(privKey.PublicKey), cfg.SequenceSender.SenderAddress.String())
 	if cfg.SequenceSender.SenderAddress.Cmp(common.Address{}) == 0 {
 		log.Fatal("Sequence sender address not found")
 	}
-	if privKey == nil {
+	if privKey == nil { //nolint:staticcheck
 		log.Fatal("DA permit api private key not found")
 	}
+	log.Infof("from pk %s, from sender %s", crypto.PubkeyToAddress(privKey.PublicKey), cfg.SequenceSender.SenderAddress.String()) //nolint:staticcheck
 
 	cfg.SequenceSender.ForkUpgradeBatchNumber = cfg.ForkUpgradeBatchNumber
 

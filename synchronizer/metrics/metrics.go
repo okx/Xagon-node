@@ -94,6 +94,7 @@ func Register() {
 
 	// x1 handler
 	metrics.RegisterCounters(counters...)
+	metrics.RegisterGauges(gauge...)
 }
 
 // LastSyncedBatchNumber observes latest synced batch number

@@ -1866,6 +1866,7 @@ func (etherMan *Client) GetDAProtocolName() (string, error) {
 	return etherMan.DAProtocol.GetProcotolName(&bind.CallOpts{Pending: false})
 }
 
+// SetDataProvider sets the data provider
 func (etherMan *Client) SetDataProvider(da dataavailability.BatchDataProvider) {
 	log.Infof("setting data provider")
 	etherMan.da = da

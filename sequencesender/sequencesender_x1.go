@@ -258,6 +258,7 @@ func (s *SequenceSender) getSequencesToSendX1(ctx context.Context) ([]types.Sequ
 	return nil, nil
 }
 
+// SetDataProvider sets the data provider
 func (s *SequenceSender) SetDataProvider(da dataAbilitier) {
 	s.da = da
 }

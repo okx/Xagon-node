@@ -3,10 +3,10 @@
 package mock_syncinterfaces
 
 import (
-	etherman "github.com/0xPolygonHermez/zkevm-node/etherman"
+	"github.com/0xPolygonHermez/zkevm-node/dataavailability/datacommittee"
 )
 
-func (_m *EthermanFullInterface) GetCurrentDataCommittee() (*etherman.DataCommittee, error) {
+func (_m *EthermanFullInterface) GetCurrentDataCommittee() (*datacommittee.DataCommittee, error) {
 	//TODO implement me
 	panic("implement me")
 }

@@ -1,6 +1,6 @@
 package sequencer
 
-var countinterval = 10
+//var countinterval = 10
 
 // TODO
 //func (d *dbManager) countPendingTx() {

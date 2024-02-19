@@ -65,12 +65,12 @@ func newL1SyncMessageControlWProducerIsFullySynced(lastBlock uint64) *L1SyncMess
 }
 
 func newL1SyncMessageData(result *rollupInfoByBlockRangeResult) *L1SyncMessage {
-	if result == nil {
+	if result == nil { //nolint:staticcheck
 		log.Fatal("newL1PackageDataFromResult: result is nil, the idea of this func is create packages with data")
 	}
 	return &L1SyncMessage{
 		dataIsValid: true,
-		data:        *result,
+		data:        *result, //nolint:staticcheck
 		ctrlIsValid: false,
 	}
 }

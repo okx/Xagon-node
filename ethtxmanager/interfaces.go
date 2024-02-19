@@ -22,7 +22,6 @@ type ethermanInterface interface {
 	CheckTxWasMined(ctx context.Context, txHash common.Hash) (bool, *types.Receipt, error)
 	SignTx(ctx context.Context, sender common.Address, tx *types.Transaction) (*types.Transaction, error)
 	GetRevertMessage(ctx context.Context, tx *types.Transaction) (string, error)
-	
 	GetZkEVMAddressAndL1ChainID() (common.Address, uint64, error)
 }
 

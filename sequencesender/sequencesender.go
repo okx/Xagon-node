@@ -91,6 +91,7 @@ func (s *SequenceSender) marginTimeElapsed(ctx context.Context, l2BlockTimestamp
 	}
 }
 
+// nolint:unused
 func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 	retry := false
 	// process monitored sequences before starting a next cycle
@@ -224,6 +225,7 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 // getSequencesToSend generates an array of sequences to be send to L1.
 // If the array is empty, it doesn't necessarily mean that there are no sequences to be sent,
 // it could be that it's not worth it to do so yet.
+// nolint:unused
 func (s *SequenceSender) getSequencesToSend(ctx context.Context) ([]types.Sequence, error) {
 	lastVirtualBatchNum, err := s.state.GetLastVirtualBatchNum(ctx, nil)
 	if err != nil {
@@ -348,6 +350,7 @@ func (s *SequenceSender) getSequencesToSend(ctx context.Context) ([]types.Sequen
 // nil, error: impossible to handle gracefully
 // sequence, nil: handled gracefully. Potentially manipulating the sequences
 // nil, nil: a situation that requires waiting
+// nolint:unused
 func (s *SequenceSender) handleEstimateGasSendSequenceErr(
 	ctx context.Context,
 	sequences []types.Sequence,
@@ -410,6 +413,7 @@ func (s *SequenceSender) handleEstimateGasSendSequenceErr(
 	return sequences, nil
 }
 
+// nolint:unused
 func isDataForEthTxTooBig(err error) bool {
 	return errors.Is(err, ethman.ErrGasRequiredExceedsAllowance) ||
 		errors.Is(err, ErrOversizedData) ||
