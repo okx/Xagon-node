@@ -65,8 +65,8 @@ type Config struct {
 
 	// ZKCountersLimits defines the ZK Counter limits
 	ZKCountersLimits ZKCountersLimits
-	
-	// X1 config
+
+	// XLayer config
 	// EnablePendingTransactionFilter enables pending transaction filter that can support query L2 pending transaction
 	EnablePendingTransactionFilter bool `mapstructure:"EnablePendingTransactionFilter"`
 

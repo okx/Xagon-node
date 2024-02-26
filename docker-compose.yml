@@ -1,19 +1,19 @@
 version: "3.5"
 networks:
   default:
-    name: x1
+    name: xlayer
 services:
-  x1-rpc:
-    container_name: x1-rpc
+  xlayer-rpc:
+    container_name: xlayer-rpc
     restart: unless-stopped
     depends_on:
-      x1-pool-db:
+      xlayer-pool-db:
         condition: service_healthy
-      x1-state-db:
+      xlayer-state-db:
         condition: service_healthy
-      x1-sync:
+      xlayer-sync:
         condition: service_started
-    image: x1-node
+    image: xlayer-node
     deploy:
       resources:
         limits:
@@ -30,15 +30,15 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/x1-node run --network ${ZKEVM_NETWORK} --cfg /app/config.toml --components rpc"
+      - "/app/xlayer-node run --network ${ZKEVM_NETWORK} --cfg /app/config.toml --components rpc"
 
-  x1-sync:
-    container_name: x1-sync
+  xlayer-sync:
+    container_name: xlayer-sync
     restart: unless-stopped
     depends_on:
-      x1-state-db:
+      xlayer-state-db:
         condition: service_healthy
-    image: x1-node
+    image: xlayer-node
     ports:
       - 9092:9091 # needed if metrics enabled
     deploy:
@@ -54,10 +54,10 @@ services:
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/x1-node run --network ${ZKEVM_NETWORK} --cfg /app/config.toml --components synchronizer"
+      - "/app/xlayer-node run --network ${ZKEVM_NETWORK} --cfg /app/config.toml --components synchronizer"
 
-  x1-state-db:
-    container_name: x1-state-db
+  xlayer-state-db:
+    container_name: xlayer-state-db
     restart: unless-stopped
     image: postgres:15
     healthcheck:
@@ -82,8 +82,8 @@ services:
       - "-c"
       - "config_file=/etc/postgresql.conf"
 
-  x1-pool-db:
-    container_name: x1-pool-db
+  xlayer-pool-db:
+    container_name: xlayer-pool-db
     restart: unless-stopped
     image: postgres:15
     healthcheck:
@@ -104,12 +104,12 @@ services:
       - "-N"
       - "500"
 
-  x1-prover:
-    container_name: x1-prover
+  xlayer-prover:
+    container_name: xlayer-prover
     restart: unless-stopped
     image: hermeznetwork/zkevm-prover:v4.0.14
     depends_on:
-      x1-state-db:
+      xlayer-state-db:
         condition: service_healthy
     ports:
       - 50061:50061 # MT

@@ -1,27 +1,27 @@
 # Component: Sequencer
 
-## X1 Sequencer:
+## XLayer Sequencer:
 
-The X1 Sequencer is an optional but ancillary module that proposes new batches using transactions stored in the Pool Database.
+The XLayer Sequencer is an optional but ancillary module that proposes new batches using transactions stored in the Pool Database.
 
 ## Running:
 
-The preferred way to run the X1 Sequencer component is via Docker and Docker Compose.
+The preferred way to run the XLayer Sequencer component is via Docker and Docker Compose.
 
 ```bash
-docker pull okx/x1-node
+docker pull okx/xlayer-node
 ```
 
-To orchestrate multiple deployments of the different X1 Node components, a `docker-compose.yaml` file for Docker Compose can be used:
+To orchestrate multiple deployments of the different XLayer Node components, a `docker-compose.yaml` file for Docker Compose can be used:
 
 ```yaml
-  x1-sequencer:
-    container_name: x1-sequencer
-    image: x1-node
+  xlayer-sequencer:
+    container_name: xlayer-sequencer
+    image: xlayer-node
     command:
         - "/bin/sh"
         - "-c"
-        - "/app/x1-node run --genesis /app/genesis.json --cfg /app/config.toml --components sequencer"
+        - "/app/xlayer-node run --genesis /app/genesis.json --cfg /app/config.toml --components sequencer"
 ```
 
 The container alone needs some parameters configured, access to certain configuration files and the appropriate ports exposed.

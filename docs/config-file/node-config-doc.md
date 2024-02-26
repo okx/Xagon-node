@@ -703,7 +703,7 @@ SecretKey=""
 | - [GlobalQueue](#Pool_GlobalQueue )                                             | No      | integer         | No         | -          | GlobalQueue represents the maximum number of non-executable transaction slots for all accounts       |
 | - [EffectiveGasPrice](#Pool_EffectiveGasPrice )                                 | No      | object          | No         | -          | EffectiveGasPrice is the config for the effective gas price calculation                              |
 | - [ForkID](#Pool_ForkID )                                                       | No      | integer         | No         | -          | ForkID is the current fork ID of the chain                                                           |
-| - [FreeGasAddress](#Pool_FreeGasAddress )                                       | No      | array of string | No         | -          | X1 config<br />FreeGasAddress is the default free gas address                                        |
+| - [FreeGasAddress](#Pool_FreeGasAddress )                                       | No      | array of string | No         | -          | XLayer config<br />FreeGasAddress is the default free gas address                                        |
 | - [FreeClaimGasLimit](#Pool_FreeClaimGasLimit )                                 | No      | integer         | No         | -          | FreeClaimGasLimit is the max gas allowed use to do a free claim                                      |
 
 ### <a name="Pool_IntervalToRefreshBlockedAddresses"></a>7.1. `Pool.IntervalToRefreshBlockedAddresses`
@@ -848,14 +848,14 @@ Password="pool_password"
 
 **Type:** : `string`
 
-**Default:** `"x1-pool-db"`
+**Default:** `"xlayer-pool-db"`
 
 **Description:** Host address of database
 
-**Example setting the default value** ("x1-pool-db"):
+**Example setting the default value** ("xlayer-pool-db"):
 ```
 [Pool.DB]
-Host="x1-pool-db"
+Host="xlayer-pool-db"
 ```
 
 #### <a name="Pool_DB_Port"></a>7.5.5. `Pool.DB.Port`
@@ -1175,7 +1175,7 @@ ForkID=0
 
 **Default:** `["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]`
 
-**Description:** X1 config
+**Description:** XLayer config
 FreeGasAddress is the default free gas address
 
 **Example setting the default value** (["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]):
@@ -1222,7 +1222,7 @@ FreeClaimGasLimit=150000
 | - [MaxNativeBlockHashBlockRange](#RPC_MaxNativeBlockHashBlockRange )         | No      | integer          | No         | -          | MaxNativeBlockHashBlockRange is a configuration to set the max range for block number when querying<br />native block hashes in a single call to the state, if zero it means no limit                                                                                                                                                              |
 | - [EnableHttpLog](#RPC_EnableHttpLog )                                       | No      | boolean          | No         | -          | EnableHttpLog allows the user to enable or disable the logs related to the HTTP<br />requests to be captured by the server.                                                                                                                                                                                                                        |
 | - [ZKCountersLimits](#RPC_ZKCountersLimits )                                 | No      | object           | No         | -          | ZKCountersLimits defines the ZK Counter limits                                                                                                                                                                                                                                                                                                     |
-| - [EnablePendingTransactionFilter](#RPC_EnablePendingTransactionFilter )     | No      | boolean          | No         | -          | X1 config<br />EnablePendingTransactionFilter enables pending transaction filter that can support query L2 pending transaction                                                                                                                                                                                                                     |
+| - [EnablePendingTransactionFilter](#RPC_EnablePendingTransactionFilter )     | No      | boolean          | No         | -          | XLayer config<br />EnablePendingTransactionFilter enables pending transaction filter that can support query L2 pending transaction                                                                                                                                                                                                                     |
 | - [Nacos](#RPC_Nacos )                                                       | No      | object           | No         | -          | Nacos configuration                                                                                                                                                                                                                                                                                                                                |
 | - [NacosWs](#RPC_NacosWs )                                                   | No      | object           | No         | -          | NacosWs configuration                                                                                                                                                                                                                                                                                                                              |
 | - [GasLimitFactor](#RPC_GasLimitFactor )                                     | No      | number           | No         | -          | GasLimitFactor is used to multiply the suggested gas provided by the network<br />in order to allow a enough gas to be set for all the transactions default value is 1.<br /><br />ex:<br />suggested gas limit: 100<br />GasLimitFactor: 1<br />gas limit = 100<br /><br />suggested gas limit: 100<br />GasLimitFactor: 1.1<br />gas limit = 110 |
@@ -1648,7 +1648,7 @@ MaxSHA256Hashes=0
 
 **Default:** `false`
 
-**Description:** X1 config
+**Description:** XLayer config
 EnablePendingTransactionFilter enables pending transaction filter that can support query L2 pending transaction
 
 **Example setting the default value** (false):
@@ -2733,7 +2733,7 @@ SequentialProcessL2Block=true
 
 **Default:** `"0s"`
 
-**Description:** X1 config
+**Description:** XLayer config
 FullBatchSleepDuration is the time the finalizer sleeps between each full batch iteration
 
 **Examples:** 
@@ -2919,7 +2919,7 @@ UpgradeEtrogBatchNumber=0
 | - [PrivateKey](#SequenceSender_PrivateKey )                                                             | No      | object           | No         | -          | PrivateKey defines all the key store files that are going<br />to be read in order to provide the private keys to sign the L1 txs                                                                                                                                                                                                                                                                                             |
 | - [ForkUpgradeBatchNumber](#SequenceSender_ForkUpgradeBatchNumber )                                     | No      | integer          | No         | -          | Batch number where there is a forkid change (fork upgrade)                                                                                                                                                                                                                                                                                                                                                                    |
 | - [GasOffset](#SequenceSender_GasOffset )                                                               | No      | integer          | No         | -          | GasOffset is the amount of gas to be added to the gas estimation in order<br />to provide an amount that is higher than the estimated one. This is used<br />to avoid the TX getting reverted in case something has changed in the network<br />state after the estimation which can cause the TX to require more gas to be<br />executed.<br /><br />ex:<br />gas estimation: 1000<br />gas offset: 100<br />final gas: 1100 |
-| - [MaxBatchesForL1](#SequenceSender_MaxBatchesForL1 )                                                   | No      | integer          | No         | -          | X1 config<br />MaxBatchesForL1 is the maximum amount of batches to be sequenced in a single L1 tx                                                                                                                                                                                                                                                                                                                             |
+| - [MaxBatchesForL1](#SequenceSender_MaxBatchesForL1 )                                                   | No      | integer          | No         | -          | XLayer config<br />MaxBatchesForL1 is the maximum amount of batches to be sequenced in a single L1 tx                                                                                                                                                                                                                                                                                                                             |
 | - [DAPermitApiPrivateKey](#SequenceSender_DAPermitApiPrivateKey )                                       | No      | object           | No         | -          | DAPermitApiPrivateKey defines all the key store files that are going<br />to sign batches for DA service                                                                                                                                                                                                                                                                                                                      |
 
 ### <a name="SequenceSender_WaitPeriodSendSequence"></a>11.1. `SequenceSender.WaitPeriodSendSequence`
@@ -3121,7 +3121,7 @@ GasOffset=80000
 
 **Default:** `10`
 
-**Description:** X1 config
+**Description:** XLayer config
 MaxBatchesForL1 is the maximum amount of batches to be sequenced in a single L1 tx
 
 **Example setting the default value** (10):
@@ -3653,7 +3653,7 @@ BlockNumber=0
 | - [CleanHistoryPeriod](#L2GasPriceSuggester_CleanHistoryPeriod )                           | No      | string  | No         | -          | Duration                                                                                                                                 |
 | - [CleanHistoryTimeRetention](#L2GasPriceSuggester_CleanHistoryTimeRetention )             | No      | string  | No         | -          | Duration                                                                                                                                 |
 | - [Factor](#L2GasPriceSuggester_Factor )                                                   | No      | number  | No         | -          | -                                                                                                                                        |
-| - [KafkaURL](#L2GasPriceSuggester_KafkaURL )                                               | No      | string  | No         | -          | X1 config                                                                                                                                |
+| - [KafkaURL](#L2GasPriceSuggester_KafkaURL )                                               | No      | string  | No         | -          | XLayer config                                                                                                                                |
 | - [Topic](#L2GasPriceSuggester_Topic )                                                     | No      | string  | No         | -          | -                                                                                                                                        |
 | - [GroupID](#L2GasPriceSuggester_GroupID )                                                 | No      | string  | No         | -          | -                                                                                                                                        |
 | - [Username](#L2GasPriceSuggester_Username )                                               | No      | string  | No         | -          | -                                                                                                                                        |
@@ -3828,7 +3828,7 @@ Factor=0.15
 
 **Default:** `""`
 
-**Description:** X1 config
+**Description:** XLayer config
 
 **Example setting the default value** (""):
 ```
@@ -3990,12 +3990,12 @@ EnableFollowerAdjustByL2L1Price=false
 
 **Type:** : `string`
 
-**Default:** `"x1-prover:50071"`
+**Default:** `"xlayer-prover:50071"`
 
-**Example setting the default value** ("x1-prover:50071"):
+**Example setting the default value** ("xlayer-prover:50071"):
 ```
 [Executor]
-URI="x1-prover:50071"
+URI="xlayer-prover:50071"
 ```
 
 ### <a name="Executor_MaxResourceExhaustedAttempts"></a>15.2. `Executor.MaxResourceExhaustedAttempts`
@@ -4063,14 +4063,14 @@ MaxGRPCMessageSize=100000000
 
 **Type:** : `string`
 
-**Default:** `"x1-prover:50061"`
+**Default:** `"xlayer-prover:50061"`
 
 **Description:** URI is the server URI.
 
-**Example setting the default value** ("x1-prover:50061"):
+**Example setting the default value** ("xlayer-prover:50061"):
 ```
 [MTClient]
-URI="x1-prover:50061"
+URI="xlayer-prover:50061"
 ```
 
 ## <a name="Metrics"></a>17. `[Metrics]`
@@ -4354,14 +4354,14 @@ Password="prover_pass"
 
 **Type:** : `string`
 
-**Default:** `"x1-state-db"`
+**Default:** `"xlayer-state-db"`
 
 **Description:** Host address of database
 
-**Example setting the default value** ("x1-state-db"):
+**Example setting the default value** ("xlayer-state-db"):
 ```
 [HashDB]
-Host="x1-state-db"
+Host="xlayer-state-db"
 ```
 
 ### <a name="HashDB_Port"></a>19.5. `HashDB.Port`
@@ -4634,14 +4634,14 @@ Password="state_password"
 
 **Type:** : `string`
 
-**Default:** `"x1-state-db"`
+**Default:** `"xlayer-state-db"`
 
 **Description:** Host address of database
 
-**Example setting the default value** ("x1-state-db"):
+**Example setting the default value** ("xlayer-state-db"):
 ```
 [State.DB]
-Host="x1-state-db"
+Host="xlayer-state-db"
 ```
 
 #### <a name="State_DB_Port"></a>20.8.5. `State.DB.Port`

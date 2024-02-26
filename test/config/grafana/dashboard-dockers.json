@@ -573,14 +573,14 @@
         "current": {
           "selected": true,
           "text": [
-            "x1-json-rpc",
-            "x1-pool-db",
-            "x1-sequencer"
+            "xlayer-json-rpc",
+            "xlayer-pool-db",
+            "xlayer-sequencer"
           ],
           "value": [
-            "x1-json-rpc",
-            "x1-pool-db",
-            "x1-sequencer"
+            "xlayer-json-rpc",
+            "xlayer-pool-db",
+            "xlayer-sequencer"
           ]
         },
         "datasource": {

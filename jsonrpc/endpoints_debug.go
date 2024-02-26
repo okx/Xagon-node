@@ -25,7 +25,7 @@ var defaultTraceConfig = &traceConfig{
 	EnableReturnData: false,
 	Tracer:           nil,
 
-	// X1 config
+	// XLayer config
 	Limit: 0,
 }
 
@@ -54,7 +54,7 @@ type traceConfig struct {
 	Tracer           *string         `json:"tracer"`
 	TracerConfig     json.RawMessage `json:"tracerConfig"`
 
-	// X1 config
+	// XLayer config
 	Limit int `json:"limit"`
 }
 
@@ -290,7 +290,7 @@ func (d *DebugEndpoints) buildTraceTransaction(ctx context.Context, hash common.
 		Tracer:           traceCfg.Tracer,
 		TracerConfig:     traceCfg.TracerConfig,
 
-		//X1 config
+		//XLayer config
 		Limit: traceCfg.Limit,
 	}
 	result, err := d.state.DebugTransaction(ctx, hash, stateTraceConfig, dbTx)

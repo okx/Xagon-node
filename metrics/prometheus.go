@@ -21,7 +21,7 @@ var (
 	initialized   bool
 	initOnce      sync.Once
 
-	// X1 config
+	// XLayer config
 	gaugeVecs map[string]*prometheus.GaugeVec
 )
 
@@ -50,7 +50,7 @@ func Init() {
 		summaries = make(map[string]prometheus.Summary)
 		initialized = true
 
-		// X1 handler
+		// XLayer handler
 		gaugeVecs = make(map[string]*prometheus.GaugeVec)
 	})
 }

@@ -13,7 +13,7 @@ const (
 
 func main() {
 	app := cli.NewApp()
-	app.Name = "x1-node-scripts"
+	app.Name = "xlayer-node-scripts"
 	app.Commands = []*cli.Command{
 		{
 			Name:   "updatedeps",

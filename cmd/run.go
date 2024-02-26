@@ -147,7 +147,7 @@ func start(cliCtx *cli.Context) error {
 		go startProfilingHttpServer(c.Metrics)
 	}
 
-	// init for x1
+	// init for xlayer
 	initRunForX1(c, components)
 
 	for _, component := range components {
@@ -310,14 +310,14 @@ func runSynchronizer(cfg config.Config, etherman *etherman.Client, ethTxManagerS
 				log.Fatal(err)
 			}
 
-			// X1 handler
+			// XLayer handler
 			setEthermanDaX1(cfg, st, eth, false)
 
 			etherManForL1 = append(etherManForL1, eth)
 		}
 	}
 
-	// X1 handler
+	// XLayer handler
 	setEthermanDaX1(cfg, st, etherman, false)
 
 	etm := ethtxmanager.New(cfg.EthTxManager, etherman, ethTxManagerStorage, st)

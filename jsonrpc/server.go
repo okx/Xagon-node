@@ -96,7 +96,7 @@ func NewServer(
 func (s *Server) Start() error {
 	metrics.Register()
 
-	// X1 handler
+	// XLayer handler
 	s.registerNacos()
 
 	if s.config.WebSockets.Enabled {
@@ -304,7 +304,7 @@ func (s *Server) handleSingleRequest(httpRequest *http.Request, w http.ResponseW
 		return 0
 	}
 
-	// X1 handler
+	// XLayer handler
 	st := time.Now()
 	if !methodRateLimitAllow(request.Method) {
 		handleInvalidRequest(w, errors.New("server is too busy"), http.StatusTooManyRequests)
@@ -332,7 +332,7 @@ func (s *Server) handleSingleRequest(httpRequest *http.Request, w http.ResponseW
 
 func (s *Server) handleBatchRequest(httpRequest *http.Request, w http.ResponseWriter, data []byte) int {
 	// Checking if batch requests are enabled
-	// X1 handler
+	// XLayer handler
 	batchRequestEnable, batchRequestLimit := s.getBatchReqLimit()
 
 	if !batchRequestEnable {

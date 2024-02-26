@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/oldpolygonzkevm"
-	polygonzkevm "github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonvalidium_x1"
+	polygonzkevm "github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonvalidium_xlayer"
 	"github.com/ethereum/go-ethereum/common"
 )
 

@@ -16,7 +16,7 @@ Outputs = ["stderr"]
 	User = "state_user"
 	Password = "state_password"
 	Name = "state_db"
-	Host = "x1-state-db"
+	Host = "xlayer-state-db"
 	Port = "5432"
 	EnableLog = false	
 	MaxConns = 200
@@ -61,7 +61,7 @@ FreeGasAddress = ["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]
 	User = "pool_user"
 	Password = "pool_password"
 	Name = "pool_db"
-	Host = "x1-pool-db"
+	Host = "xlayer-pool-db"
 	Port = "5432"
 	EnableLog = false
 	MaxConns = 200
@@ -204,10 +204,10 @@ CleanHistoryPeriod = "1h"
 CleanHistoryTimeRetention = "5m"
 
 [MTClient]
-URI = "x1-prover:50061"
+URI = "xlayer-prover:50061"
 
 [Executor]
-URI = "x1-prover:50071"
+URI = "xlayer-prover:50071"
 MaxResourceExhaustedAttempts = 3
 WaitOnResourceExhaustion = "1s"
 MaxGRPCMessageSize = 100000000
@@ -221,7 +221,7 @@ Enabled = false
 User = "prover_user"
 Password = "prover_pass"
 Name = "prover_db"
-Host = "x1-state-db"
+Host = "xlayer-state-db"
 Port = "5432"
 EnableLog = false
 MaxConns = 200

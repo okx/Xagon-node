@@ -1,8 +1,8 @@
 # Component: RPC
 
-## X1 RPC:
+## XLayer RPC:
 
-The X1 RPC relays transactions to the Trusted sequencer.
+The XLayer RPC relays transactions to the Trusted sequencer.
 
 ## Hard dependencies:
 
@@ -13,22 +13,22 @@ The X1 RPC relays transactions to the Trusted sequencer.
 
 ## Running:
 
-The preferred way to run the X1 RPC component is via Docker and Docker Compose.
+The preferred way to run the XLayer RPC component is via Docker and Docker Compose.
 
 ```bash
-docker pull okx/x1-node
+docker pull okx/xlayer-node
 ```
 
-To orchestrate multiple deployments of the different X1 Node components, a `docker-compose.yaml` file for Docker Compose can be used:
+To orchestrate multiple deployments of the different XLayer Node components, a `docker-compose.yaml` file for Docker Compose can be used:
 
 ```yaml
-  x1-rpc:
-    container_name: x1-rpc
-    image: x1-node
+  xlayer-rpc:
+    container_name: xlayer-rpc
+    image: xlayer-node
     command:
         - "/bin/sh"
         - "-c"
-        - "/app/x1-node run --genesis /app/genesis.json --cfg /app/config.toml --components rpc"
+        - "/app/xlayer-node run --genesis /app/genesis.json --cfg /app/config.toml --components rpc"
 ```
 
 The container alone needs some parameters configured, access to certain configuration files and the appropriate ports exposed.

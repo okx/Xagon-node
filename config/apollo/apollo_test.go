@@ -11,7 +11,7 @@ func TestApolloClient_LoadConfig(t *testing.T) {
 	nc := &nodeConfig.Config{
 		Apollo: types.ApolloConfig{
 			IP:            "",
-			AppID:         "x1-devnet",
+			AppID:         "xlayer-devnet",
 			NamespaceName: "jsonrpc-ro.txt,jsonrpc-roHalt.properties",
 			Enable:        true,
 		},

@@ -45,9 +45,9 @@ Additionally, the [`production-setup.md`](./production-setup.md) goes through th
 
 ### Docker services:
 
-- `x1-sync`
-- `x1-prover` (`Merkle Tree`, `Executor`)
-- `x1-rpc`
+- `xlayer-sync`
+- `xlayer-prover` (`Merkle Tree`, `Executor`)
+- `xlayer-rpc`
 - Databases
 
 ## If you want to create Proofs:
@@ -96,7 +96,7 @@ For *only* Prover Config (`only-prover-config.json`):
 
 ### Docker services:
 
-- `x1-sync`
-- `x1-prover` (`Prover`, `Merkle Tree`, `Executor`)
-- `x1-aggregator`
+- `xlayer-sync`
+- `xlayer-prover` (`Prover`, `Merkle Tree`, `Executor`)
+- `xlayer-aggregator`
 - Databases

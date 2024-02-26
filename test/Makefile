@@ -1,30 +1,30 @@
 DOCKERCOMPOSE := docker-compose -f docker-compose.yml
 DOCKERCOMPOSEAPPSEQ := zkevm-sequencer
-DOCKERCOMPOSEAPPSEQSENDER := x1-sequence-sender
-DOCKERCOMPOSEAPPSIGNER := x1-signer
-DOCKERCOMPOSEAPPL2GASP := x1-l2gaspricer
-DOCKERCOMPOSEAPPAGG := x1-aggregator
-DOCKERCOMPOSEAPPRPC := x1-json-rpc
-DOCKERCOMPOSEAPPSYNC := x1-sync
-DOCKERCOMPOSEAPPETHTXMANAGER := x1-eth-tx-manager
-DOCKERCOMPOSESTATEDB := x1-state-db
-DOCKERCOMPOSEPOOLDB := x1-pool-db
-DOCKERCOMPOSEEVENTDB := x1-event-db
-DOCKERCOMPOSEDACDB := x1-data-availability-db
-DOCKERCOMPOSENETWORK := x1-mock-l1-network
-DOCKERCOMPOSEEXPLORERL1 := x1-explorer-l1
-DOCKERCOMPOSEEXPLORERL1DB := x1-explorer-l1-db
-DOCKERCOMPOSEEXPLORERL2 := x1-explorer-l2
-DOCKERCOMPOSEEXPLORERL2DB := x1-explorer-l2-db
-DOCKERCOMPOSEEXPLORERRPC := x1-explorer-json-rpc
-DOCKERCOMPOSEDACNODE := x1-data-availability
-DOCKERCOMPOSEZKPROVER := x1-prover
-DOCKERCOMPOSEPERMISSIONLESSDB := x1-permissionless-db
-DOCKERCOMPOSEPERMISSIONLESSNODE := x1-permissionless-node
-DOCKERCOMPOSEPERMISSIONLESSNODEDAC := x1-permissionless-node-forced-DAC
-DOCKERCOMPOSEPERMISSIONLESSZKPROVER := x1-permissionless-prover
-DOCKERCOMPOSENODEAPPROVE := x1-approve
-DOCKERCOMPOSEMETRICS := x1-metrics
+DOCKERCOMPOSEAPPSEQSENDER := xlayer-sequence-sender
+DOCKERCOMPOSEAPPSIGNER := xlayer-signer
+DOCKERCOMPOSEAPPL2GASP := xlayer-l2gaspricer
+DOCKERCOMPOSEAPPAGG := xlayer-aggregator
+DOCKERCOMPOSEAPPRPC := xlayer-json-rpc
+DOCKERCOMPOSEAPPSYNC := xlayer-sync
+DOCKERCOMPOSEAPPETHTXMANAGER := xlayer-eth-tx-manager
+DOCKERCOMPOSESTATEDB := xlayer-state-db
+DOCKERCOMPOSEPOOLDB := xlayer-pool-db
+DOCKERCOMPOSEEVENTDB := xlayer-event-db
+DOCKERCOMPOSEDACDB := xlayer-data-availability-db
+DOCKERCOMPOSENETWORK := xlayer-mock-l1-network
+DOCKERCOMPOSEEXPLORERL1 := xlayer-explorer-l1
+DOCKERCOMPOSEEXPLORERL1DB := xlayer-explorer-l1-db
+DOCKERCOMPOSEEXPLORERL2 := xlayer-explorer-l2
+DOCKERCOMPOSEEXPLORERL2DB := xlayer-explorer-l2-db
+DOCKERCOMPOSEEXPLORERRPC := xlayer-explorer-json-rpc
+DOCKERCOMPOSEDACNODE := xlayer-data-availability
+DOCKERCOMPOSEZKPROVER := xlayer-prover
+DOCKERCOMPOSEPERMISSIONLESSDB := xlayer-permissionless-db
+DOCKERCOMPOSEPERMISSIONLESSNODE := xlayer-permissionless-node
+DOCKERCOMPOSEPERMISSIONLESSNODEDAC := xlayer-permissionless-node-forced-DAC
+DOCKERCOMPOSEPERMISSIONLESSZKPROVER := xlayer-permissionless-prover
+DOCKERCOMPOSENODEAPPROVE := xlayer-approve
+DOCKERCOMPOSEMETRICS := xlayer-metrics
 DOCKERCOMPOSEAPPSEQV1TOV2 := zkevm-sequencer-v1tov2
 DOCKERCOMPOSEAPPSEQSENDER := zkevm-sequence-sender
 DOCKERCOMPOSEAPPSEQSENDERV1TOV2 := zkevm-sequence-sender-v1tov2
@@ -294,7 +294,7 @@ test-e2e-group-11: stop ## Runs group 11 e2e tests checking race conditions
 	trap '$(STOP)' EXIT; MallocNanoZone=0 go test -count=1 -failfast -race -v -p 1 -timeout 2000s ../ci/e2e-group11/...
 
 .PHONY: test-e2e-e2e-group-dac-1
-test-e2e-group-dac-1: stop ## Runs x1-validium-1 e2e tests checking race conditions
+test-e2e-group-dac-1: stop ## Runs xlayer-validium-1 e2e tests checking race conditions
 	$(RUNSTATEDB)
 	$(RUNPOOLDB)
 	$(RUNEVENTDB)

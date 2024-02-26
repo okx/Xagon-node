@@ -42,7 +42,7 @@ type Config struct {
 	// final gas: 1100
 	GasOffset uint64 `mapstructure:"GasOffset"`
 
-	// X1 config
+	// XLayer config
 	// MaxBatchesForL1 is the maximum amount of batches to be sequenced in a single L1 tx
 	MaxBatchesForL1 uint64 `mapstructure:"MaxBatchesForL1"`
 	// DAPermitApiPrivateKey defines all the key store files that are going

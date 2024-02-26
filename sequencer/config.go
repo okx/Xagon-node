@@ -91,7 +91,7 @@ type FinalizerCfg struct {
 	// in the processPendingL2Blocks go func
 	SequentialProcessL2Block bool `mapstructure:"SequentialProcessL2Block"`
 
-	// X1 config
+	// XLayer config
 	// FullBatchSleepDuration is the time the finalizer sleeps between each full batch iteration
 	FullBatchSleepDuration types.Duration `mapstructure:"FullBatchSleepDuration"`
 }

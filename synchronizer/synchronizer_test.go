@@ -8,7 +8,7 @@ import (
 
 	cfgTypes "github.com/0xPolygonHermez/zkevm-node/config/types"
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
-	polygonzkevm "github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonvalidium_x1"
+	polygonzkevm "github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonvalidium_xlayer"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/state/metrics"

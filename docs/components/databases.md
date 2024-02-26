@@ -12,11 +12,11 @@ Note the `environment` values will change per DB.
 
 The StateDB needs to generate some extra databases and tables (`merkletree`) for use with the MerkleTree/Executor service.
 
-This is done via an sql file: [init_prover_db.sql](https://github.com/okx/x1-node/blob/develop/db/scripts/init_prover_db.sql)
+This is done via an sql file: [init_prover_db.sql](https://github.com/okx/xlayer-node/blob/develop/db/scripts/init_prover_db.sql)
 
 ```yaml
-x1-state-db:
-    container_name: x1-state-db
+xlayer-state-db:
+    container_name: xlayer-state-db
     image: postgres:15
     deploy:
       resources:
@@ -38,8 +38,8 @@ x1-state-db:
 - **Other DBs: Pool/RPC**:
 
 ```yaml
-  x1-pool-db:
-    container_name: x1-pool-db
+  xlayer-pool-db:
+    container_name: xlayer-pool-db
     image: postgres:15
     deploy:
       resources:

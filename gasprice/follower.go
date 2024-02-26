@@ -17,7 +17,7 @@ type FollowerGasPrice struct {
 	ctx  context.Context
 	eth  ethermanInterface
 
-	// X1 config
+	// XLayer config
 	kafkaPrc *KafkaProcessor
 }
 

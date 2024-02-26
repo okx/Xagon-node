@@ -1,10 +1,10 @@
 # Component: Prover
 
-NOTE: The Prover is not considered part of the X1 Node and all issues and suggestions should be sent to the [Prover repo](https://github.com/okx/x1-prover/).
+NOTE: The Prover is not considered part of the XLayer Node and all issues and suggestions should be sent to the [Prover repo](https://github.com/okx/xlayer-prover/).
 
-## X1 Prover:
+## XLayer Prover:
 
-The X1 Prover image hosts different components, *Merkle Tree*, *Executor* and finally the actual *Prover*.
+The XLayer Prover image hosts different components, *Merkle Tree*, *Executor* and finally the actual *Prover*.
 
 ## Hard dependencies:
 
@@ -12,18 +12,18 @@ The X1 Prover image hosts different components, *Merkle Tree*, *Executor* and fi
 
 ## Running:
 
-The preferred way to run the X1 Prover component is via Docker and Docker Compose.
+The preferred way to run the XLayer Prover component is via Docker and Docker Compose.
 
 ```bash
-docker pull hermeznetwork/x1-prover
+docker pull hermeznetwork/xlayer-prover
 ```
 
-To orchestrate multiple deployments of the different X1 Node components, a `docker-compose.yaml` file for Docker Compose can be used:
+To orchestrate multiple deployments of the different XLayer Node components, a `docker-compose.yaml` file for Docker Compose can be used:
 
 ```yaml
-  x1-prover:
-    container_name: x1-prover
-    image: x1-prover
+  xlayer-prover:
+    container_name: xlayer-prover
+    image: xlayer-prover
     volumes:
       - ./prover-config.json:/usr/src/app/config.json
     command: >

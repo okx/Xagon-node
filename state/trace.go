@@ -380,7 +380,7 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 			return nil, fmt.Errorf("failed to create callTracer, err: %v", err)
 		}
 	} else if traceConfig.IsFlatCallTracer() {
-		//x1 handle
+		//xlayer handle
 		tracer, err = native.NewFlatCallTracer(tracerContext, traceConfig.TracerConfig)
 		if err != nil {
 			log.Errorf("debug transaction: failed to create flatCallTracer, err: %v", err)

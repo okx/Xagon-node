@@ -267,7 +267,7 @@ type TraceConfig struct {
 	Tracer           *string
 	TracerConfig     json.RawMessage
 
-	Limit int // x1 config
+	Limit int // xlayer config
 }
 
 // IsDefaultTracer returns true when no custom tracer is set

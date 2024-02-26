@@ -44,7 +44,7 @@ type Config struct {
 	// ForkID is the current fork ID of the chain
 	ForkID uint64 `mapstructure:"ForkID"`
 
-	// X1 config
+	// XLayer config
 	// FreeGasAddress is the default free gas address
 	FreeGasAddress []string `mapstructure:"FreeGasAddress"`
 	// FreeClaimGasLimit is the max gas allowed use to do a free claim

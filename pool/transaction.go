@@ -46,7 +46,7 @@ type Transaction struct {
 	IP                    string
 	FailedReason          *string
 
-	// X1 config
+	// XLayer config
 	IsClaims bool
 }
 
@@ -60,7 +60,7 @@ func NewTransaction(tx types.Transaction, ip string, isWIP bool, p *Pool) *Trans
 		IP:          ip,
 	}
 
-	// X1 handler
+	// XLayer handler
 	poolTx.IsClaims = poolTx.IsClaimTx(p.cfg.FreeClaimGasLimit)
 
 	return &poolTx

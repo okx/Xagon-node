@@ -8,11 +8,11 @@
 
 This documentation will help you running the following components:
 
-- X1 Node Databases
+- XLayer Node Databases
 - Explorer Databases
 - L1 Network
 - Prover
-- X1 Node components
+- XLayer Node components
 - Explorers
 
 ## Requirements
@@ -23,8 +23,8 @@ The current version of the environment requires `go`, `docker` and `docker-compo
 - <https://www.docker.com/get-started>
 - <https://docs.docker.com/compose/install/>
 
-The `x1-node` docker image must be built at least once and every time a change is made to the code.
-If you haven't build the `x1-node` image yet, you must run:
+The `xlayer-node` docker image must be built at least once and every time a change is made to the code.
+If you haven't build the `xlayer-node` image yet, you must run:
 
 ```bash
 make build-docker
@@ -32,7 +32,7 @@ make build-docker
 
 ## A look at how the binary works:
 
-The `x1-node` allows certain commands to interact with smart contracts, run certain components, create encryption files and print out debug information.
+The `xlayer-node` allows certain commands to interact with smart contracts, run certain components, create encryption files and print out debug information.
 
 To interact with the binary program we provide docker compose files, and a Makefile to spin up/down the different services and components, ensuring a smooth deployment locally and better interface in command line for developers.
 
@@ -93,7 +93,7 @@ make run-approve-matic
 ## Accessing the environment
 
 - **Databases**:
-  - X1 Node *State* Database 
+  - XLayer Node *State* Database 
     - `Type:` Postgres DB
     - `User:` state_user
     - `Password:` state_password
@@ -101,7 +101,7 @@ make run-approve-matic
     - `Host:` localhost
     - `Port:` 5432
     - `Url:` <postgres://state_user:srare_password@localhost:5432/state-db>
-  - X1 Node *Pool* Database 
+  - XLayer Node *Pool* Database 
     - `Type:` Postgres DB
     - `User:` pool_user
     - `Password:` pool_password
@@ -109,7 +109,7 @@ make run-approve-matic
     - `Host:` localhost
     - `Port:` 5433
     - `Url:` <postgres://pool_user:pool_password@localhost:5433/pool_db>
-  - X1 Node *JSON-RPC* Database 
+  - XLayer Node *JSON-RPC* Database 
     - `Type:` Postgres DB
     - `User:` rpc_user
     - `Password:` rpc_password
@@ -139,7 +139,7 @@ make run-approve-matic
     - `Host:` localhost
     - `Port:` 8545
     - `Url:` <http://localhost:8545>
-  - X1 Node
+  - XLayer Node
     - `Type:` JSON RPC
     - `Host:` localhost
     - `Port:` 8123
@@ -173,7 +173,7 @@ To configure your Metamask to use your local environment, follow these steps:
 3. On the left menu, click on Networks
 4. Click on `Add Network` button
 5. Fill up the L2 network information
-    1. `Network Name:` X1 - Local
+    1. `Network Name:` XLayer - Local
     2. `New RPC URL:` <http://localhost:8123>
     3. `ChainID:` 1001
     4. `Currency Symbol:` ETH

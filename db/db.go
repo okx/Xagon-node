@@ -14,9 +14,9 @@ import (
 
 const (
 	// StateMigrationName is the name of the migration used by packr to pack the migration file
-	StateMigrationName = "x1-state-db"
+	StateMigrationName = "xlayer-state-db"
 	// PoolMigrationName is the name of the migration used by packr to pack the migration file
-	PoolMigrationName = "x1-pool-db"
+	PoolMigrationName = "xlayer-pool-db"
 )
 
 var packrMigrations = map[string]*packr.Box{

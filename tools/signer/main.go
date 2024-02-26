@@ -13,8 +13,8 @@ import (
 )
 
 const (
-	appName      = "x1-signer" //nolint:gosec
-	appUsage     = "x1 signer tool"
+	appName      = "xlayer-signer" //nolint:gosec
+	appUsage     = "xlayer signer tool"
 	timeout      = 5 * time.Second
 	httpGetPath  = "/priapi/v1/assetonchain/ecology/querySignDataByOrderNo"
 	httpPostPath = "/priapi/v1/assetonchain/ecology/ecologyOperate"

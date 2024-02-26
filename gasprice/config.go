@@ -17,7 +17,7 @@ const (
 	// FollowerType calculate the gas price basing on the L1 gasPrice.
 	FollowerType EstimatorType = "follower"
 
-	// FixedType the gas price from config that the unit is usdt, X1 config
+	// FixedType the gas price from config that the unit is usdt, XLayer config
 	FixedType EstimatorType = "fixed"
 )
 
@@ -39,7 +39,7 @@ type Config struct {
 
 	Factor float64 `mapstructure:"Factor"`
 
-	// X1 config
+	// XLayer config
 	KafkaURL   string `mapstructure:"KafkaURL"`
 	Topic      string `mapstructure:"Topic"`
 	GroupID    string `mapstructure:"GroupID"`

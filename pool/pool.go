@@ -505,7 +505,7 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	}
 
 	// Reject transactions with a gas price lower than the minimum gas price
-	if !contains(p.cfg.FreeGasAddress, from) || !poolTx.IsClaims { // X1 handle
+	if !contains(p.cfg.FreeGasAddress, from) || !poolTx.IsClaims { // XLayer handle
 		p.minSuggestedGasPriceMux.RLock()
 		gasPriceCmp := poolTx.GasPrice().Cmp(p.minSuggestedGasPrice)
 		if gasPriceCmp == -1 {

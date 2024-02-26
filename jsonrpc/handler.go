@@ -150,7 +150,7 @@ func (h *Handler) HandleWs(reqBody []byte, wsConn *concurrentWsConn, httpReq *ht
 		return types.NewResponse(req, nil, types.NewRPCError(types.InvalidRequestErrorCode, "Invalid json request")).Bytes()
 	}
 
-	// X1 handler
+	// XLayer handler
 	st := time.Now()
 	defer metrics.WsRequestMethodCount(req.Method)
 	defer metrics.WsRequestMethodDuration(req.Method, st)

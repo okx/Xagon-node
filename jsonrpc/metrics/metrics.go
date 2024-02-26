@@ -72,7 +72,7 @@ func Register() {
 	metrics.RegisterCounterVecs(counterVecs...)
 	metrics.RegisterHistograms(histograms...)
 
-	// X1 handler
+	// XLayer handler
 	metrics.RegisterCounterVecs(counterVecsX1...)
 	metrics.RegisterHistogramVecs(histogramVecs...)
 }

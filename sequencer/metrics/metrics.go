@@ -106,7 +106,7 @@ func Register() {
 	metrics.RegisterGauges(gauges...)
 	metrics.RegisterHistograms(histograms...)
 
-	// X1 handler
+	// XLayer handler
 	metrics.RegisterCounters(countersX1...)
 	metrics.RegisterGauges(gaugesX1...)
 	metrics.RegisterGaugeVecs(gaugeVecs...)

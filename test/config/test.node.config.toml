@@ -10,7 +10,7 @@ Outputs = ["stderr"]
 	User = "state_user"
 	Password = "state_password"
 	Name = "state_db"
-	Host = "x1-state-db"
+	Host = "xlayer-state-db"
 	Port = "5432"
 	EnableLog = false	
 	MaxConns = 200
@@ -54,13 +54,13 @@ GlobalQueue = 1024
 	User = "pool_user"
 	Password = "pool_password"
 	Name = "pool_db"
-	Host = "x1-pool-db"
+	Host = "xlayer-pool-db"
 	Port = "5432"
 	EnableLog = false
 	MaxConns = 200
 
 [Etherman]
-URL = "http://x1-mock-l1-network:8545"
+URL = "http://xlayer-mock-l1-network:8545"
 ForkIDChunkSize = 20000
 MultiGasProvider = false
 	[Etherscan]
@@ -83,7 +83,7 @@ DisableAPIs = []
 [Synchronizer]
 SyncInterval = "1s"
 SyncChunkSize = 100
-TrustedSequencerURL = "http://x1-json-rpc:8123" # If it is empty or not specified, then the value is read from the smc.
+TrustedSequencerURL = "http://xlayer-json-rpc:8123" # If it is empty or not specified, then the value is read from the smc.
 L1SynchronizationMode = "sequential" # "sequential" or "parallel"
 	[Synchronizer.L1ParallelSynchronization]
 		MaxClients = 10
@@ -136,7 +136,7 @@ SenderAddress = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 L2Coinbase = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 PrivateKey = {Path = "/pk/sequencer.keystore", Password = "testonly"}
 	[SequenceSender.StreamClient]
-		Server = "x1-sequencer:6900"
+		Server = "xlayer-sequencer:6900"
 
 [Aggregator]
 Host = "0.0.0.0"
@@ -167,10 +167,10 @@ DefaultGasPriceWei = 1000000000
 MaxGasPriceWei = 0
 
 [MTClient]
-URI  = "x1-prover:50061"
+URI  = "xlayer-prover:50061"
 
 [Executor]
-URI = "x1-prover:50071"
+URI = "xlayer-prover:50071"
 MaxGRPCMessageSize = 100000000
 
 [Metrics]
@@ -186,7 +186,7 @@ ProfilingEnabled = true
 	User = "event_user"
 	Password = "event_password"
 	Name = "event_db"
-	Host = "x1-event-db"
+	Host = "xlayer-event-db"
 	Port = "5432"
 	EnableLog = false
 	MaxConns = 200
@@ -195,7 +195,7 @@ ProfilingEnabled = true
 User = "prover_user"
 Password = "prover_pass"
 Name = "prover_db"
-Host = "x1-state-db"
+Host = "xlayer-state-db"
 Port = "5432"
 EnableLog = false
 MaxConns = 200

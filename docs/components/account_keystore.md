@@ -3,7 +3,7 @@
 This file contains your Ethereum L1 private key, but it will be encrypted at rest using a password of your choice. The ZKEVM Node - depending on which operating mode it's set up - will use this file in conjunction with the password to authorize L1 transactions.
 
 ```bash
-docker run --rm okx/x1-node:latest sh -c "/app/x1-node encryptKey --pk=[your private key] --pw=[password to encrypt file] --output=./keystore; cat ./keystore/*" > account.keystore
+docker run --rm okx/xlayer-node:latest sh -c "/app/xlayer-node encryptKey --pk=[your private key] --pw=[password to encrypt file] --output=./keystore; cat ./keystore/*" > account.keystore
 ```
 
 **NOTE**:

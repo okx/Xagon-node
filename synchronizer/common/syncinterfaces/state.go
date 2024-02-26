@@ -70,6 +70,6 @@ type StateFullInterface interface {
 	GetExitRootByGlobalExitRoot(ctx context.Context, ger common.Hash, dbTx pgx.Tx) (*state.GlobalExitRoot, error)
 	GetForkIDInMemory(forkId uint64) *state.ForkIDInterval
 
-	// GetBatchL2DataByNumber is X1 method
+	// GetBatchL2DataByNumber is XLayer method
 	GetBatchL2DataByNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) ([]byte, error)
 }

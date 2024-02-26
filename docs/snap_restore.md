@@ -11,10 +11,10 @@ This feature creates a dump of entire database
 
 ```
 NAME:
-   x1-node snapshot - Snapshot the state db
+   xlayer-node snapshot - Snapshot the state db
 
 USAGE:
-   x1-node snapshot [command options] [arguments...]
+   xlayer-node snapshot [command options] [arguments...]
 
 OPTIONS:
    --cfg FILE, -c FILE  Configuration FILE
@@ -27,7 +27,7 @@ OPTIONS:
 User = "prover_user"
 Password = "prover_pass"
 Name = "prover_db"
-Host = "x1-state-db"
+Host = "xlayer-state-db"
 Port = "5432"
 EnableLog = false
 MaxConns = 200
@@ -39,7 +39,7 @@ This generates two files in the current working path:
 
 #### Example of invocation:
 ```
-# cd /tmp/ && /app/x1-node snap -c /app/config.toml
+# cd /tmp/ && /app/xlayer-node snap -c /app/config.toml
 (...)
 # ls -1
 prover_db_1689925019_v0.2.0-RC9-15-gd39e7f1e_d39e7f1e.sql.tar.gz
@@ -56,10 +56,10 @@ It populates state, and hash databases with the previous backup
 
 ```
 NAME:
-   x1-node restore - Restore snapshot of the state db
+   xlayer-node restore - Restore snapshot of the state db
 
 USAGE:
-   x1-node restore [command options] [arguments...]
+   xlayer-node restore [command options] [arguments...]
 
 OPTIONS:
    --inputfilestate value, --is value  Input file stateDB
@@ -70,16 +70,16 @@ OPTIONS:
 
 #### Example of invocation:
 ```
-/app/x1-node restore -c /app/config.toml  --is /tmp/state_db_1689925019_v0.2.0-RC9-15-gd39e7f1e_d39e7f1e.sql.tar.gz  --ih /tmp/prover_db_1689925019_v0.2.0-RC9-15-gd39e7f1e_d39e7f1e.sql.tar
+/app/xlayer-node restore -c /app/config.toml  --is /tmp/state_db_1689925019_v0.2.0-RC9-15-gd39e7f1e_d39e7f1e.sql.tar.gz  --ih /tmp/prover_db_1689925019_v0.2.0-RC9-15-gd39e7f1e_d39e7f1e.sql.tar
 .gz
 ```
 
 # How to test
-You could use `test/docker-compose.yml` to interact with `x1-node`:
+You could use `test/docker-compose.yml` to interact with `xlayer-node`:
 * Run the containers: `make run`
 * Launch a interactive container:
 ```
-docker-compose up -d x1-sh
-docker-compose exec x1-sh /bin/sh
+docker-compose up -d xlayer-sh
+docker-compose exec xlayer-sh /bin/sh
 ```
 * Inside this shell you can execute the examples of invocation

@@ -247,7 +247,7 @@ func (e *EthEndpoints) getGasEstimationWithFactorX1(gasEstimation uint64) uint64
 
 // internal
 func (e *EthEndpoints) newPendingTransactionFilterX1(wsConn *concurrentWsConn) (interface{}, types.Error) {
-	//X1 handle
+	//XLayer handle
 	if e.isDisabled("eth_newPendingTransactionFilter") {
 		return RPCErrorResponse(types.DefaultErrorCode, "not supported yet", nil, true)
 	}

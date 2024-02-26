@@ -1,4 +1,4 @@
-name: Test from x1-prover call
+name: Test from xlayer-prover call
 on:
   workflow_call:
     inputs:
@@ -25,7 +25,7 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@f43a0e5ff2bd294095638e18286ca9a3d1956744 #v3
       with:
-        repository: okx/x1-node
+        repository: okx/xlayer-node
 
     - name: Install Go
       uses: actions/setup-go@v3

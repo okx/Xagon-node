@@ -43,7 +43,7 @@ type SequenceSender struct {
 	etherman     etherman
 	eventLog     *event.EventLog
 
-	// x1 config
+	// xlayer config
 	da dataAbilitier
 }
 
