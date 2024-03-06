@@ -27,4 +27,7 @@ var (
 
 	// ForksIdToIncaberry support all forkIds till incaberry
 	ForksIdToIncaberry = []ForkIdType{1, 2, 3, 4, 5, ForkIDIncaberry}
+
+	// ForksIdEtrogAndIncaberry support only etrog and incaberry forkIds
+	ForksIdEtrogAndIncaberry = []ForkIdType{ForkIDEtrog, ForkIDElderberry}
 )

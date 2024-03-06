@@ -40,7 +40,7 @@ func NewProcessorL1UpdateEtrogSequence(state stateProcessUpdateEtrogSequence,
 	return &ProcessorL1UpdateEtrogSequence{
 		ProcessorBase: actions.ProcessorBase[ProcessorL1UpdateEtrogSequence]{
 			SupportedEvent:    []etherman.EventOrder{etherman.UpdateEtrogSequenceOrder},
-			SupportedForkdIds: &actions.ForksIdOnlyEtrog},
+			SupportedForkdIds: &actions.ForksIdEtrogAndIncaberry},
 		state:        state,
 		sync:         sync,
 		timeProvider: timeProvider,
