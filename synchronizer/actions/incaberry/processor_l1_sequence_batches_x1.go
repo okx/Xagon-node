@@ -6,7 +6,10 @@ import (
 	"fmt"
 	"math/big"
 
+	"github.com/0xPolygonHermez/zkevm-node/etherman"
+	"github.com/0xPolygonHermez/zkevm-node/hex"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
+	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -35,4 +38,20 @@ func (s *ProcessorL1SequenceBatches) getDataFromTrustedSequencer(ctx context.Con
 		)
 	}
 	return b.BatchL2Data, nil
+}
+
+func (g *ProcessorL1SequenceBatches) getValidiumL2Data(ctx context.Context, sbatch etherman.SequencedBatch) ([]byte, error) {
+	var batchL2Data []byte
+	log.Infof("sbatch.Transactions len:%d, txs hash:%s", len(sbatch.PolygonZkEVMBatchData.Transactions), hex.EncodeToString(sbatch.PolygonZkEVMBatchData.Transactions[:]))
+	var err error
+	if len(sbatch.PolygonZkEVMBatchData.Transactions) > 0 || (len(sbatch.PolygonZkEVMBatchData.Transactions) == 0 && isZeroByteArray(sbatch.PolygonZkEVMBatchData.TransactionsHash)) {
+		batchL2Data = sbatch.PolygonZkEVMBatchData.Transactions
+	} else {
+		batchL2Data, err = g.getDataFromTrustedSequencer(ctx, sbatch.BatchNumber, sbatch.PolygonZkEVMBatchData.TransactionsHash)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return batchL2Data, nil
 }

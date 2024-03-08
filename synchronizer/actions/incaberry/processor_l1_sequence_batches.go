@@ -93,20 +93,12 @@ func (g *ProcessorL1SequenceBatches) processSequenceBatches(ctx context.Context,
 		log.Warn("Empty sequencedBatches array detected, ignoring...")
 		return nil
 	}
-
 	for _, sbatch := range sequencedBatches {
-		var batchL2Data []byte
-		log.Infof("sbatch.Transactions len:%d, txs hash:%s", len(sbatch.PolygonZkEVMBatchData.Transactions), hex.EncodeToString(sbatch.PolygonZkEVMBatchData.Transactions[:]))
-		var err error
-		if len(sbatch.PolygonZkEVMBatchData.Transactions) > 0 || (len(sbatch.PolygonZkEVMBatchData.Transactions) == 0 && isZeroByteArray(sbatch.PolygonZkEVMBatchData.TransactionsHash)) {
-			batchL2Data = sbatch.PolygonZkEVMBatchData.Transactions
-		} else {
-			batchL2Data, err = g.getDataFromTrustedSequencer(ctx, sbatch.BatchNumber, sbatch.PolygonZkEVMBatchData.TransactionsHash)
-			if err != nil {
-				return err
-			}
+		batchL2Data, err := g.getValidiumL2Data(ctx, sbatch)
+		if err != nil {
+			log.Errorf("error getting validiumL2Data. BatchNumber: %d, BlockNumber: %d, error: %v", sbatch.BatchNumber, blockNumber, err)
+			return err
 		}
-
 		virtualBatch := state.VirtualBatch{
 			BatchNumber:   sbatch.BatchNumber,
 			TxHash:        sbatch.TxHash,
@@ -114,8 +106,6 @@ func (g *ProcessorL1SequenceBatches) processSequenceBatches(ctx context.Context,
 			BlockNumber:   blockNumber,
 			SequencerAddr: sbatch.SequencerAddr,
 		}
-
-		log.Infof("processSequenceBatches: Processing sequencedBatches. BlockNumber: %d, sbatch:%v", blockNumber, sbatch.BatchNumber)
 		batch := state.Batch{
 			BatchNumber:    sbatch.BatchNumber,
 			GlobalExitRoot: sbatch.PolygonZkEVMBatchData.GlobalExitRoot,
