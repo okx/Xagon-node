@@ -1,18 +1,15 @@
 package incaberry
 
 import (
-	"bytes"
 	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"math/big"
 	"strings"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
 	"github.com/0xPolygonHermez/zkevm-node/event"
-	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/state/metrics"
@@ -22,14 +19,8 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/jackc/pgx/v4"
 )
-
-type zkEVMClientInterface interface {
-	BatchNumber(ctx context.Context) (uint64, error)
-	BatchByNumber(ctx context.Context, number *big.Int) (*types.Batch, error)
-}
 
 type stateProcessSequenceBatches interface {
 	GetNextForcedBatches(ctx context.Context, nextForcedBatches int, dbTx pgx.Tx) ([]state.ForcedBatch, error)
@@ -95,27 +86,6 @@ func (g *ProcessorL1SequenceBatches) Process(ctx context.Context, order etherman
 	}
 	err := g.processSequenceBatches(ctx, l1Block.SequencedBatches[order.Pos], l1Block.BlockNumber, dbTx)
 	return err
-}
-
-func isZeroByteArray(bytesArray [32]byte) bool {
-	var zero = [32]byte{}
-	return bytes.Equal(bytesArray[:], zero[:])
-}
-
-const unexpectedHashTemplate = "missmatch on transaction data for batch num %d. Expected hash %s, actual hash: %s"
-
-func (s *ProcessorL1SequenceBatches) getDataFromTrustedSequencer(ctx context.Context, batchNum uint64, expectedTransactionsHash common.Hash) ([]byte, error) {
-	b, err := s.zkEVMClient.BatchByNumber(ctx, big.NewInt(int64(batchNum)))
-	if err != nil {
-		return nil, fmt.Errorf("failed to get batch num %d from trusted sequencer: %w", batchNum, err)
-	}
-	actualTransactionsHash := crypto.Keccak256Hash(b.BatchL2Data)
-	if expectedTransactionsHash != actualTransactionsHash {
-		return nil, fmt.Errorf(
-			unexpectedHashTemplate, batchNum, expectedTransactionsHash, actualTransactionsHash,
-		)
-	}
-	return b.BatchL2Data, nil
 }
 
 func (g *ProcessorL1SequenceBatches) processSequenceBatches(ctx context.Context, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, dbTx pgx.Tx) error {
