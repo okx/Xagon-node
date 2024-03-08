@@ -1,15 +1,18 @@
 package incaberry
 
 import (
+	"bytes"
 	"context"
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"math/big"
 	"strings"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
 	"github.com/0xPolygonHermez/zkevm-node/event"
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/state/metrics"
@@ -19,8 +22,14 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
 	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/jackc/pgx/v4"
 )
+
+type zkEVMClientInterface interface {
+	BatchNumber(ctx context.Context) (uint64, error)
+	BatchByNumber(ctx context.Context, number *big.Int) (*types.Batch, error)
+}
 
 type stateProcessSequenceBatches interface {
 	GetNextForcedBatches(ctx context.Context, nextForcedBatches int, dbTx pgx.Tx) ([]state.ForcedBatch, error)
@@ -58,11 +67,13 @@ type ProcessorL1SequenceBatches struct {
 	pool     poolProcessSequenceBatchesInterface
 	eventLog syncinterfaces.EventLogInterface
 	sync     syncProcessSequenceBatchesInterface
+
+	zkEVMClient zkEVMClientInterface
 }
 
 // NewProcessorL1SequenceBatches returns instance of a processor for SequenceBatchesOrder
 func NewProcessorL1SequenceBatches(state stateProcessSequenceBatches,
-	etherMan ethermanProcessSequenceBatches, pool poolProcessSequenceBatchesInterface, eventLog syncinterfaces.EventLogInterface, sync syncProcessSequenceBatchesInterface) *ProcessorL1SequenceBatches {
+	etherMan ethermanProcessSequenceBatches, pool poolProcessSequenceBatchesInterface, eventLog syncinterfaces.EventLogInterface, sync syncProcessSequenceBatchesInterface, zkEVMClient zkEVMClientInterface) *ProcessorL1SequenceBatches {
 	return &ProcessorL1SequenceBatches{
 		ProcessorBase: actions.ProcessorBase[ProcessorL1SequenceBatches]{
 			SupportedEvent:    []etherman.EventOrder{etherman.SequenceBatchesOrder},
@@ -72,6 +83,8 @@ func NewProcessorL1SequenceBatches(state stateProcessSequenceBatches,
 		pool:     pool,
 		eventLog: eventLog,
 		sync:     sync,
+
+		zkEVMClient: zkEVMClient,
 	}
 }
 
@@ -84,12 +97,46 @@ func (g *ProcessorL1SequenceBatches) Process(ctx context.Context, order etherman
 	return err
 }
 
+func isZeroByteArray(bytesArray [32]byte) bool {
+	var zero = [32]byte{}
+	return bytes.Equal(bytesArray[:], zero[:])
+}
+
+const unexpectedHashTemplate = "missmatch on transaction data for batch num %d. Expected hash %s, actual hash: %s"
+
+func (s *ProcessorL1SequenceBatches) getDataFromTrustedSequencer(ctx context.Context, batchNum uint64, expectedTransactionsHash common.Hash) ([]byte, error) {
+	b, err := s.zkEVMClient.BatchByNumber(ctx, big.NewInt(int64(batchNum)))
+	if err != nil {
+		return nil, fmt.Errorf("failed to get batch num %d from trusted sequencer: %w", batchNum, err)
+	}
+	actualTransactionsHash := crypto.Keccak256Hash(b.BatchL2Data)
+	if expectedTransactionsHash != actualTransactionsHash {
+		return nil, fmt.Errorf(
+			unexpectedHashTemplate, batchNum, expectedTransactionsHash, actualTransactionsHash,
+		)
+	}
+	return b.BatchL2Data, nil
+}
+
 func (g *ProcessorL1SequenceBatches) processSequenceBatches(ctx context.Context, sequencedBatches []etherman.SequencedBatch, blockNumber uint64, dbTx pgx.Tx) error {
 	if len(sequencedBatches) == 0 {
 		log.Warn("Empty sequencedBatches array detected, ignoring...")
 		return nil
 	}
+
 	for _, sbatch := range sequencedBatches {
+		var batchL2Data []byte
+		log.Infof("sbatch.Transactions len:%d, txs hash:%s", len(sbatch.PolygonZkEVMBatchData.Transactions), hex.EncodeToString(sbatch.PolygonZkEVMBatchData.Transactions[:]))
+		var err error
+		if len(sbatch.PolygonZkEVMBatchData.Transactions) > 0 || (len(sbatch.PolygonZkEVMBatchData.Transactions) == 0 && isZeroByteArray(sbatch.PolygonZkEVMBatchData.TransactionsHash)) {
+			batchL2Data = sbatch.PolygonZkEVMBatchData.Transactions
+		} else {
+			batchL2Data, err = g.getDataFromTrustedSequencer(ctx, sbatch.BatchNumber, sbatch.PolygonZkEVMBatchData.TransactionsHash)
+			if err != nil {
+				return err
+			}
+		}
+
 		virtualBatch := state.VirtualBatch{
 			BatchNumber:   sbatch.BatchNumber,
 			TxHash:        sbatch.TxHash,
@@ -97,12 +144,14 @@ func (g *ProcessorL1SequenceBatches) processSequenceBatches(ctx context.Context,
 			BlockNumber:   blockNumber,
 			SequencerAddr: sbatch.SequencerAddr,
 		}
+
+		log.Infof("processSequenceBatches: Processing sequencedBatches. BlockNumber: %d, sbatch:%v", blockNumber, sbatch.BatchNumber)
 		batch := state.Batch{
 			BatchNumber:    sbatch.BatchNumber,
 			GlobalExitRoot: sbatch.PolygonZkEVMBatchData.GlobalExitRoot,
 			Timestamp:      time.Unix(int64(sbatch.PolygonZkEVMBatchData.Timestamp), 0),
 			Coinbase:       sbatch.Coinbase,
-			BatchL2Data:    sbatch.PolygonZkEVMBatchData.Transactions,
+			BatchL2Data:    batchL2Data,
 		}
 		// ForcedBatch must be processed
 		if sbatch.PolygonZkEVMBatchData.MinForcedTimestamp > 0 { // If this is true means that the batch is forced

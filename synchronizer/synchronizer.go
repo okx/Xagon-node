@@ -130,7 +130,7 @@ func NewSynchronizer(
 			uint64(state.FORKID_ELDERBERRY): syncTrustedStateEtrog,
 		}, res.state)
 	}
-	res.l1EventProcessors = defaultsL1EventProcessors(res)
+	res.l1EventProcessors = defaultsL1EventProcessors(res, zkEVMClient)
 	switch cfg.L1SynchronizationMode {
 	case ParallelMode:
 		log.Info("L1SynchronizationMode is parallel")

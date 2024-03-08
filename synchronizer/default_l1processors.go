@@ -6,12 +6,13 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/actions/incaberry"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/actions/processor_manager"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common"
+	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
 )
 
-func defaultsL1EventProcessors(sync *ClientSynchronizer) *processor_manager.L1EventProcessors {
+func defaultsL1EventProcessors(sync *ClientSynchronizer, zkEVMClient syncinterfaces.ZKEVMClientInterface) *processor_manager.L1EventProcessors {
 	p := processor_manager.NewL1EventProcessorsBuilder()
 	p.Register(incaberry.NewProcessorL1GlobalExitRoot(sync.state))
-	p.Register(incaberry.NewProcessorL1SequenceBatches(sync.state, sync.etherMan, sync.pool, sync.eventLog, sync))
+	p.Register(incaberry.NewProcessorL1SequenceBatches(sync.state, sync.etherMan, sync.pool, sync.eventLog, sync, zkEVMClient))
 	p.Register(incaberry.NewProcessL1ForcedBatches(sync.state))
 	p.Register(incaberry.NewProcessL1SequenceForcedBatches(sync.state, sync))
 	p.Register(incaberry.NewProcessorForkId(sync.state, sync))
