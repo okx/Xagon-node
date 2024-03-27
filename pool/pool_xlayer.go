@@ -28,7 +28,7 @@ func contains(s []string, ele common.Address) bool {
 // the white address and update the in memory blocked addresses
 func (p *Pool) StartRefreshingWhiteAddressesPeriodically() {
 	interval := p.cfg.IntervalToRefreshWhiteAddresses.Duration
-	if interval.Microseconds() == 0 {
+	if interval.Nanoseconds() <= 0 {
 		interval = 5 * time.Minute //nolint:gomnd
 	}
 
