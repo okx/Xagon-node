@@ -3,6 +3,7 @@ package jsonrpc
 import (
 	"context"
 	"errors"
+	"fmt"
 	"math/big"
 	"sort"
 	"sync"
@@ -57,9 +58,10 @@ func (e *EthEndpoints) runDynamicGPSuggester() {
 	ctx := context.Background()
 	// initialization
 	updateTimer := time.NewTimer(DefaultUpdatePeriod)
+	fmt.Printf("##############Dynamic gas price update period is %s/n", e.cfg.DynamicGP.UpdatePeriod.Duration.String())
 	if e.cfg.DynamicGP.UpdatePeriod.Duration.Nanoseconds() > 0 {
 		log.Infof("Dynamic gas price update period is %s", e.cfg.DynamicGP.UpdatePeriod.Duration.String())
-		updateTimer.Reset(e.cfg.DynamicGP.UpdatePeriod.Duration)
+		updateTimer = time.NewTimer(e.cfg.DynamicGP.UpdatePeriod.Duration)
 	}
 	for {
 		select {
