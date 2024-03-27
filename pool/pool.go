@@ -474,7 +474,7 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	if to := poolTx.To(); to != nil {
 		_, blocked = p.blockedAddresses.Load(to.String())
 		if blocked {
-			log.Infof("%v: %v", ErrBlockedReceiver.Error(), from.String())
+			log.Infof("%v: %v", ErrBlockedReceiver.Error(), to.String())
 			return ErrBlockedReceiver
 		}
 	}
