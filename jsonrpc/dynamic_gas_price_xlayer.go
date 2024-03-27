@@ -58,6 +58,7 @@ func (e *EthEndpoints) runDynamicGPSuggester() {
 	// initialization
 	updateTimer := time.NewTimer(DefaultUpdatePeriod)
 	if e.cfg.DynamicGP.UpdatePeriod.Duration.Nanoseconds() > 0 {
+		log.Infof("Dynamic gas price update period is %s", e.cfg.DynamicGP.UpdatePeriod.Duration.String())
 		updateTimer.Reset(e.cfg.DynamicGP.UpdatePeriod.Duration)
 	}
 	for {
@@ -121,7 +122,7 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		return
 	}
 
-	log.Debug("there is congestion for L2")
+	log.Info("there is congestion for L2")
 
 	e.dgpMan.fetchLock.Lock()
 	defer e.dgpMan.fetchLock.Unlock()
