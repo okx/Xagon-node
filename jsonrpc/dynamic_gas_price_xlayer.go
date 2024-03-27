@@ -76,7 +76,7 @@ func (e *EthEndpoints) runDynamicGPSuggester() {
 				log.Warn("Dynamic gas price update period is less than or equal to 0. Set it to DefaultUpdatePeriod.")
 				period = DefaultUpdatePeriod
 			}
-			log.Info("Dynamic gas price update period is ", period.String())
+			log.Infof("Dynamic gas price update period is %s", period.String())
 			updateTimer.Reset(period)
 
 			if e.cfg.DynamicGP.Enabled {
