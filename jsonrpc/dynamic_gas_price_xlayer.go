@@ -78,6 +78,7 @@ func (e *EthEndpoints) runDynamicGPSuggester() {
 				period = DefaultUpdatePeriod
 			}
 			if e.cfg.DynamicGP.Enabled {
+				log.Info("Starting calculate dynamic gas price...")
 				e.calcDynamicGP(ctx)
 			}
 			log.Infof("Dynamic gas price update period is %s", period.String())
@@ -109,6 +110,7 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 	}
 
 	if !isCongested {
+		log.Info("there is no congestion for L2")
 		gasPrices, err := e.pool.GetGasPrices(ctx)
 		if err != nil {
 			log.Errorf("failed to get raw gas prices when it is not congested: ", err)
@@ -121,7 +123,7 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		return
 	}
 
-	log.Info("there is congestion for L2")
+	log.Warn("there is congestion for L2")
 
 	e.dgpMan.fetchLock.Lock()
 	defer e.dgpMan.fetchLock.Unlock()
