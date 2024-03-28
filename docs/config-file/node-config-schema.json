@@ -763,38 +763,38 @@
 						"CongestionTxThreshold": {
 							"type": "integer",
 							"description": "CongestionTxThreshold defines the tx threshold to measure whether there is congestion",
-							"default": 0
+							"default": 100
 						},
 						"CheckBatches": {
 							"type": "integer",
 							"description": "CheckBatches defines the number of recent Batches used to sample gas price",
-							"default": 0
+							"default": 5
 						},
 						"SampleNumber": {
 							"type": "integer",
 							"description": "SampleTxNumer defines the number of sampled gas prices in each batch",
-							"default": 0
+							"default": 3
 						},
 						"Percentile": {
 							"type": "integer",
 							"description": "Percentile defines the sampling weight of all sampled gas prices",
-							"default": 0
+							"default": 70
 						},
 						"MaxPrice": {
 							"type": "integer",
 							"description": "MaxPrice defines the dynamic gas price upper limit",
-							"default": 0
+							"default": 20000000000
 						},
 						"MinPrice": {
 							"type": "integer",
 							"description": "MinPrice defines the dynamic gas price lower limit",
-							"default": 0
+							"default": 2000000000
 						},
 						"UpdatePeriod": {
 							"type": "string",
 							"title": "Duration",
 							"description": "UpdatePeriod defines the time interval for updating dynamic gas price",
-							"default": "0s",
+							"default": "10s",
 							"examples": [
 								"1m",
 								"300ms"
