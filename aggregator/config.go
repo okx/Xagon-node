@@ -103,4 +103,7 @@ type Config struct {
 
 	// SequencerPrivateKey Private key of the trusted sequencer
 	SequencerPrivateKey types.KeystoreFileConfig `mapstructure:"SequencerPrivateKey"`
+
+	// CustodialAssets is the configuration for the custodial assets
+	CustodialAssets CustodialAssetsConfig `mapstructure:"CustodialAssets"`
 }

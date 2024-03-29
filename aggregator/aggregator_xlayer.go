@@ -7,7 +7,7 @@ import (
 	"time"
 
 	agglayerTypes "github.com/0xPolygon/agglayer/rpc/types"
-	"github.com/0xPolygon/agglayer/tx"
+	agglayerTx "github.com/0xPolygon/agglayer/tx"
 	ethmanTypes "github.com/0xPolygonHermez/zkevm-node/etherman/types"
 	"github.com/0xPolygonHermez/zkevm-node/ethtxmanager"
 	"github.com/0xPolygonHermez/zkevm-node/log"
@@ -77,17 +77,23 @@ func (a *Aggregator) settleWithAggLayer(
 ) (success bool) {
 	proofStrNo0x := strings.TrimPrefix(inputs.FinalProof.Proof, "0x")
 	proofBytes := common.Hex2Bytes(proofStrNo0x)
-	tx := tx.Tx{
+	tx := agglayerTx.Tx{
 		LastVerifiedBatch: agglayerTypes.ArgUint64(proof.BatchNumber - 1),
 		NewVerifiedBatch:  agglayerTypes.ArgUint64(proof.BatchNumberFinal),
-		ZKP: tx.ZKP{
+		ZKP: agglayerTx.ZKP{
 			NewStateRoot:     common.BytesToHash(inputs.NewStateRoot),
 			NewLocalExitRoot: common.BytesToHash(inputs.NewLocalExitRoot),
 			Proof:            agglayerTypes.ArgBytes(proofBytes),
 		},
 		RollupID: a.Ethman.GetRollupId(),
 	}
-	signedTx, err := tx.Sign(a.sequencerPrivateKey)
+	var signedTx *agglayerTx.SignedTx
+	var err error
+	if !a.cfg.CustodialAssets.Enable {
+		signedTx, err = tx.Sign(a.sequencerPrivateKey)
+	} else {
+		signedTx, err = a.signTx(ctx, tx)
+	}
 
 	if err != nil {
 		log.Errorf("failed to sign tx: %v", err)
