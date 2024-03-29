@@ -79,3 +79,25 @@ func TestClientPostSignRequestAndWaitResultTxSigner(t *testing.T) {
 	t.Log(myTx.Signature)
 	t.Log(err)
 }
+
+func TestTxHash(t *testing.T) {
+	newStateRoot := common.BigToHash(big.NewInt(10000000))
+	t.Log(newStateRoot.Hex())
+	newLocalExitRoot := common.BigToHash(big.NewInt(500000000))
+	t.Log(newLocalExitRoot.Hex())
+	proof := agglayerTypes.ArgBytes([]byte("sampleProof"))
+
+	t.Log(proof.Hex())
+
+	tnx := tx.Tx{
+		LastVerifiedBatch: agglayerTypes.ArgUint64(20000000),
+		NewVerifiedBatch:  *agglayerTypes.ArgUint64Ptr(300000000),
+		ZKP: tx.ZKP{
+			NewStateRoot:     newStateRoot,
+			NewLocalExitRoot: newLocalExitRoot,
+			Proof:            proof,
+		},
+		RollupID: 2,
+	}
+	t.Log(tnx.Hash())
+}
