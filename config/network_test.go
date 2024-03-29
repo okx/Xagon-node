@@ -37,7 +37,8 @@ func TestLoadCustomNetworkConfig(t *testing.T) {
 			description: "happy path",
 			inputConfigStr: `{
 				"root": "0xBEEF",
-				"genesisBlockNumber": 69,
+				"rollupCreationBlockNumber": 69,
+				"rollupManagerCreationBlockNumber": 60,
 				"l1Config" : {
 					"chainId": 420,
 					"polygonZkEVMAddress": "0xc949254d682d8c9ad5682521675b8f43b102aec4",
@@ -90,8 +91,9 @@ func TestLoadCustomNetworkConfig(t *testing.T) {
 				},
 				L2BridgeAddr: common.HexToAddress("0x9D98DeAbC42dd696Deb9e40b4f1CAB7dDBF55988"),
 				Genesis: state.Genesis{
-					Root:        common.HexToHash("0xBEEF"),
-					BlockNumber: 69,
+					Root:                     common.HexToHash("0xBEEF"),
+					RollupBlockNumber:        69,
+					RollupManagerBlockNumber: 60,
 					Actions: []*state.GenesisAction{
 						{
 							Address: "0xc949254d682d8c9ad5682521675b8f43b102aec4",

@@ -38,8 +38,10 @@ const custom network = "custom"
 type GenesisFromJSON struct {
 	// L1: root hash of the genesis block
 	Root string `json:"root"`
-	// L1: block number of the genesis block
-	GenesisBlockNum uint64 `json:"genesisBlockNumber"`
+	// L1: block number in which the rollup was created
+	RollupCreationBlockNum uint64 `json:"rollupCreationBlockNumber"`
+	// L1: block number in which the rollup manager was created
+	RollupManagerCreationBlockNum uint64 `json:"rollupManagerCreationBlockNumber"`
 	// L2:  List of states contracts used to populate merkle tree at initial state
 	Genesis []genesisAccountFromJSON `json:"genesis"`
 	// L1: configuration of the network
@@ -126,9 +128,10 @@ func LoadGenesisFromJSONString(jsonStr string) (NetworkConfig, error) {
 
 	cfg.L1Config = cfgJSON.L1Config
 	cfg.Genesis = state.Genesis{
-		BlockNumber: cfgJSON.GenesisBlockNum,
-		Root:        common.HexToHash(cfgJSON.Root),
-		Actions:     []*state.GenesisAction{},
+		RollupBlockNumber:        cfgJSON.RollupCreationBlockNum,
+		RollupManagerBlockNumber: cfgJSON.RollupManagerCreationBlockNum,
+		Root:                     common.HexToHash(cfgJSON.Root),
+		Actions:                  []*state.GenesisAction{},
 	}
 
 	checkAndSetBridgeAddress(&cfg, cfgJSON.Genesis)

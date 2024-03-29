@@ -196,7 +196,7 @@ func setInitialState(t *testing.T, opsman *operations.Manager) {
 	require.NoError(t, err)
 	genesisConfig, err := config.LoadGenesisFromJSONString(genesisFileAsStr)
 	require.NoError(t, err)
-	require.NoError(t, opsman.SetForkID(genesisConfig.Genesis.BlockNumber, forkID6))
+	require.NoError(t, opsman.SetForkID(genesisConfig.Genesis.RollupBlockNumber, forkID6))
 	err = opsman.Setup()
 	require.NoError(t, err)
 	time.Sleep(5 * time.Second)

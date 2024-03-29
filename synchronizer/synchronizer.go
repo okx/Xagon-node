@@ -234,7 +234,7 @@ func (s *ClientSynchronizer) Sync() error {
 	if err != nil {
 		if errors.Is(err, state.ErrStateNotSynchronized) {
 			log.Info("State is empty, verifying genesis block")
-			valid, err := s.etherMan.VerifyGenBlockNumber(s.ctx, s.genesis.BlockNumber)
+			valid, err := s.etherMan.VerifyGenBlockNumber(s.ctx, s.genesis.RollupBlockNumber)
 			if err != nil {
 				log.Error("error checking genesis block number. Error: ", err)
 				return rollback(s.ctx, dbTx, err)
@@ -242,12 +242,42 @@ func (s *ClientSynchronizer) Sync() error {
 				log.Error("genesis Block number configured is not valid. It is required the block number where the PolygonZkEVM smc was deployed")
 				return rollback(s.ctx, dbTx, fmt.Errorf("genesis Block number configured is not valid. It is required the block number where the PolygonZkEVM smc was deployed"))
 			}
-			log.Info("Setting genesis block")
-			header, err := s.etherMan.HeaderByNumber(s.ctx, big.NewInt(0).SetUint64(s.genesis.BlockNumber))
+
+			// Sync events from RollupManager that happen before rollup creation
+			log.Info("synchronizing events from RollupManager that happen before rollup creation")
+			for i := s.genesis.RollupManagerBlockNumber; true; i += s.cfg.SyncChunkSize {
+				toBlock := min(i+s.cfg.SyncChunkSize-1, s.genesis.RollupBlockNumber-1)
+				blocks, order, err := s.etherMan.GetRollupInfoByBlockRange(s.ctx, i, &toBlock)
+				if err != nil {
+					log.Error("error getting rollupInfoByBlockRange before rollup genesis: ", err)
+					rollbackErr := dbTx.Rollback(s.ctx)
+					if rollbackErr != nil {
+						log.Errorf("error rolling back state. RollbackErr: %v, err: %s", rollbackErr, err.Error())
+						return rollbackErr
+					}
+					return err
+				}
+				err = s.ProcessBlockRange(blocks, order)
+				if err != nil {
+					log.Error("error processing blocks before the genesis: ", err)
+					rollbackErr := dbTx.Rollback(s.ctx)
+					if rollbackErr != nil {
+						log.Errorf("error rolling back state. RollbackErr: %v, err: %s", rollbackErr, err.Error())
+						return rollbackErr
+					}
+					return err
+				}
+				if toBlock == s.genesis.RollupBlockNumber-1 {
+					break
+				}
+			}
+
+			header, err := s.etherMan.HeaderByNumber(s.ctx, big.NewInt(0).SetUint64(s.genesis.RollupBlockNumber))
 			if err != nil {
-				log.Errorf("error getting l1 block header for block %d. Error: %v", s.genesis.BlockNumber, err)
+				log.Errorf("error getting l1 block header for block %d. Error: %v", s.genesis.RollupBlockNumber, err)
 				return rollback(s.ctx, dbTx, err)
 			}
+			log.Info("synchronizing rollup creation block")
 			lastEthBlockSynced = &state.Block{
 				BlockNumber: header.Number.Uint64(),
 				BlockHash:   header.Hash(),
@@ -738,7 +768,7 @@ func (s *ClientSynchronizer) checkReorg(latestBlock *state.Block) (*state.Block,
 			return nil, err
 		}
 		// Compare hashes
-		if (block.Hash() != latestBlock.BlockHash || block.ParentHash() != latestBlock.ParentHash) && latestBlock.BlockNumber > s.genesis.BlockNumber {
+		if (block.Hash() != latestBlock.BlockHash || block.ParentHash() != latestBlock.ParentHash) && latestBlock.BlockNumber > s.genesis.RollupBlockNumber {
 			log.Infof("checkReorg: Bad block %d hashOk %t parentHashOk %t", latestBlock.BlockNumber, block.Hash() == latestBlock.BlockHash, block.ParentHash() == latestBlock.ParentHash)
 			log.Debug("[checkReorg function] => latestBlockNumber: ", latestBlock.BlockNumber)
 			log.Debug("[checkReorg function] => latestBlockHash: ", latestBlock.BlockHash)

@@ -529,7 +529,7 @@ func newState(ctx context.Context, c *config.Config, etherman *etherman.Client, 
 	}
 	log.Infof("Starting L1InfoRoot: %v", l1inforoot.String())
 
-	forkIDIntervals, err := forkIDIntervals(ctx, st, etherman, c.NetworkConfig.Genesis.BlockNumber)
+	forkIDIntervals, err := forkIDIntervals(ctx, st, etherman, c.NetworkConfig.Genesis.RollupBlockNumber)
 	if err != nil {
 		log.Fatal("error getting forkIDs. Error: ", err)
 	}
