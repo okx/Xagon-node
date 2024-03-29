@@ -8,6 +8,7 @@ import (
 	"time"
 
 	agglayertx "github.com/0xPolygon/agglayer/tx"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 type contextKey string
@@ -37,20 +38,22 @@ type httpAggregatorZKP struct {
 	Proof            string `json:"proof"`
 }
 type httpAggregator struct {
-	LastVirtualBatch string            `json:"lastVirtualBatch"`
-	NewVirtualBatch  string            `json:"newVirtualBatch"`
-	ZKP              httpAggregatorZKP `json:"ZKP"`
+	LastVerifiedBatch string            `json:"lastVerifiedBatch"`
+	NewVerifiedBatch  string            `json:"newVerifiedBatch"`
+	ZKP               httpAggregatorZKP `json:"ZKP"`
+	ContractAddress   common.Address    `json:"contractAddress"`
 }
 
 func (a *Aggregator) signTx(ctx context.Context, tx agglayertx.Tx) (*agglayertx.SignedTx, error) {
-	lastVirtualBatch := tx.LastVerifiedBatch.Hex()
-	newVirtualBatch := tx.NewVerifiedBatch.Hex()
+	lastVerifiedBatch := tx.LastVerifiedBatch.Hex()
+	newVerifiedBatch := tx.NewVerifiedBatch.Hex()
 	newStateRoot := tx.ZKP.NewStateRoot.Hex()
 	newLocalExitRoot := tx.ZKP.NewLocalExitRoot.Hex()
 	proof := tx.ZKP.Proof.Hex()
+
 	httpPayload := httpAggregator{
-		LastVirtualBatch: lastVirtualBatch,
-		NewVirtualBatch:  newVirtualBatch,
+		LastVerifiedBatch: lastVerifiedBatch,
+		NewVerifiedBatch:  newVerifiedBatch,
 		ZKP: httpAggregatorZKP{
 			NewStateRoot:     newStateRoot,
 			NewLocalExitRoot: newLocalExitRoot,

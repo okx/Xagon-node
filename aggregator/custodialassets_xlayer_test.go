@@ -9,19 +9,22 @@ import (
 	agglayerTypes "github.com/0xPolygon/agglayer/rpc/types"
 	"github.com/0xPolygon/agglayer/tx"
 	zktypes "github.com/0xPolygonHermez/zkevm-node/config/types"
+	"github.com/0xPolygonHermez/zkevm-node/hex"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/google/uuid"
 )
 
 const (
-	domain                 = "http://asset-onchain.base-defi.svc.test.local:7001"
-	seqAddr                = "1a13bddcc02d363366e04d4aa588d3c125b0ff6f"
-	aggAddr                = "66e39a1e507af777e8c385e2d91559e20e306303"
-	contractAddr           = "8947dc90862f386968966b22dfe5edf96435bc2f"
-	contractAddrAgg        = "1d5298ee11f7cd56fb842b7894346bfb2e47a95f"
+	domain = "http://asset-onchain.base-defi.svc.test.local:7001"
+	//	seqAddr                = "1a13bddcc02d363366e04d4aa588d3c125b0ff6f"
+	//	aggAddr                = "66e39a1e507af777e8c385e2d91559e20e306303"
+	seqAddr                = "66e39a1e507af777e8c385e2d91559e20e306303"
+	aggAddr                = "1a13bddcc02d363366e04d4aa588d3c125b0ff6f"
+	contractAddr           = "837bf712c91949da16e0201045ecabc669eaf4ba"
+	contractAddrAgg        = "837bf712c91949da16e0201045ecabc669eaf4ba"
 	l1ChainID       uint64 = 11155111
-	AccessKey              = ""
-	SecretKey              = ""
+	AccessKey              = "74w82q40cz"
+	SecretKey              = "3v2c07o12j9760ag"
 	// domain       = "http://127.0.0.1:7001"
 	// seqAddr      = "f39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 	// aggAddr      = "70997970C51812dc3A010C7d01b50e0d17dc79C8"
@@ -52,7 +55,7 @@ func TestClientPostSignRequestAndWaitResultTxSigner(t *testing.T) {
 	agg := &Aggregator{
 		cfg: Config{
 			CustodialAssets: CustodialAssetsConfig{
-				Enable:            false,
+				Enable:            true,
 				URL:               domain,
 				Symbol:            2882,
 				SequencerAddr:     common.HexToAddress(seqAddr),
@@ -75,9 +78,12 @@ func TestClientPostSignRequestAndWaitResultTxSigner(t *testing.T) {
 	ctx := context.WithValue(context.Background(), traceID, uuid.New().String())
 
 	myTx, err := agg.signTx(ctx, tnx)
-	t.Log(myTx.Tx)
-	t.Log(myTx.Signature)
-	t.Log(err)
+	if err == nil {
+		t.Log(myTx.Tx)
+		t.Log(myTx.Signature)
+	} else {
+		t.Log(err)
+	}
 }
 
 func TestTxHash(t *testing.T) {
@@ -89,9 +95,12 @@ func TestTxHash(t *testing.T) {
 
 	t.Log(proof.Hex())
 
+	t.Log(agglayerTypes.ArgUint64(20000000).Hex())
+	t.Log(hex.EncodeToString([]byte(agglayerTypes.ArgUint64(20000000).Hex())))
+
 	tnx := tx.Tx{
 		LastVerifiedBatch: agglayerTypes.ArgUint64(20000000),
-		NewVerifiedBatch:  *agglayerTypes.ArgUint64Ptr(300000000),
+		NewVerifiedBatch:  agglayerTypes.ArgUint64(300000000),
 		ZKP: tx.ZKP{
 			NewStateRoot:     newStateRoot,
 			NewLocalExitRoot: newLocalExitRoot,
