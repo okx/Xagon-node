@@ -191,7 +191,7 @@ func TestSendFinalProof(t *testing.T) {
 			stateMock := mocks.NewStateMock(t)
 			ethTxManager := mocks.NewEthTxManager(t)
 			etherman := mocks.NewEtherman(t)
-			a, err := New(cfg, stateMock, ethTxManager, etherman)
+			a, err := New(cfg, stateMock, ethTxManager, etherman, nil, nil)
 			require.NoError(err)
 			a.ctx, a.exit = context.WithCancel(context.Background())
 			m := mox{
@@ -686,7 +686,7 @@ func TestTryAggregateProofs(t *testing.T) {
 			ethTxManager := mocks.NewEthTxManager(t)
 			etherman := mocks.NewEtherman(t)
 			proverMock := mocks.NewProverMock(t)
-			a, err := New(cfg, stateMock, ethTxManager, etherman)
+			a, err := New(cfg, stateMock, ethTxManager, etherman, nil, nil)
 			require.NoError(err)
 			aggregatorCtx := context.WithValue(context.Background(), "owner", "aggregator") //nolint:staticcheck
 			a.ctx, a.exit = context.WithCancel(aggregatorCtx)
@@ -1029,7 +1029,7 @@ func TestTryGenerateBatchProof(t *testing.T) {
 			ethTxManager := mocks.NewEthTxManager(t)
 			etherman := mocks.NewEtherman(t)
 			proverMock := mocks.NewProverMock(t)
-			a, err := New(cfg, stateMock, ethTxManager, etherman)
+			a, err := New(cfg, stateMock, ethTxManager, etherman, nil, nil)
 			require.NoError(err)
 			aggregatorCtx := context.WithValue(context.Background(), "owner", "aggregator") //nolint:staticcheck
 			a.ctx, a.exit = context.WithCancel(aggregatorCtx)
@@ -1306,7 +1306,7 @@ func TestTryBuildFinalProof(t *testing.T) {
 			ethTxManager := mocks.NewEthTxManager(t)
 			etherman := mocks.NewEtherman(t)
 			proverMock := mocks.NewProverMock(t)
-			a, err := New(cfg, stateMock, ethTxManager, etherman)
+			a, err := New(cfg, stateMock, ethTxManager, etherman, nil, nil)
 			require.NoError(err)
 			aggregatorCtx := context.WithValue(context.Background(), "owner", "aggregator") //nolint:staticcheck
 			a.ctx, a.exit = context.WithCancel(aggregatorCtx)
@@ -1436,7 +1436,7 @@ func TestIsSynced(t *testing.T) {
 			ethTxManager := mocks.NewEthTxManager(t)
 			etherman := mocks.NewEtherman(t)
 			proverMock := mocks.NewProverMock(t)
-			a, err := New(cfg, stateMock, ethTxManager, etherman)
+			a, err := New(cfg, stateMock, ethTxManager, etherman, nil, nil)
 			require.NoError(err)
 			aggregatorCtx := context.WithValue(context.Background(), "owner", "aggregator") //nolint:staticcheck
 			a.ctx, a.exit = context.WithCancel(aggregatorCtx)

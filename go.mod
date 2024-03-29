@@ -46,7 +46,7 @@ require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.61.18 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/beorn7/perks v1.0.1 // indirect
-	github.com/bits-and-blooms/bitset v1.10.0 // indirect
+	github.com/bits-and-blooms/bitset v1.12.0 // indirect
 	github.com/btcsuite/btcd/btcec/v2 v2.3.2 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
@@ -64,7 +64,7 @@ require (
 	github.com/cyphar/filepath-securejoin v0.2.4 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.2.0 // indirect
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
@@ -178,10 +178,10 @@ require (
 )
 
 require (
-	github.com/0xPolygon/cdk-data-availability v0.0.4-0.20240117132610-c0301289110e
+	github.com/0xPolygon/agglayer v0.0.1
+	github.com/0xPolygon/cdk-data-availability v0.0.5
 	github.com/apolloconfig/agollo/v4 v4.0.9
 	github.com/fatih/color v1.16.0
-	github.com/joho/godotenv v1.5.1
 	github.com/nacos-group/nacos-sdk-go v1.1.4
 	github.com/prometheus/client_golang v1.18.0
 	github.com/segmentio/kafka-go v0.4.47

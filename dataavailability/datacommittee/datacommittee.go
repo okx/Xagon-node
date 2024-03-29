@@ -39,7 +39,7 @@ type DataCommittee struct {
 type DataCommitteeBackend struct {
 	dataCommitteeContract      *polygondatacommittee.PolygondatacommitteeXlayer
 	privKey                    *ecdsa.PrivateKey
-	dataCommitteeClientFactory client.IClientFactory
+	dataCommitteeClientFactory client.Factory
 
 	committeeMembers        []DataCommitteeMember
 	selectedCommitteeMember int
@@ -51,7 +51,7 @@ func New(
 	l1RPCURL string,
 	dataCommitteeAddr common.Address,
 	privKey *ecdsa.PrivateKey,
-	dataCommitteeClientFactory client.IClientFactory,
+	dataCommitteeClientFactory client.Factory,
 ) (*DataCommitteeBackend, error) {
 	ethClient, err := ethclient.Dial(l1RPCURL)
 	if err != nil {

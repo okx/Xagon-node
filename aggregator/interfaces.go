@@ -38,6 +38,7 @@ type ethTxManager interface {
 
 // etherman contains the methods required to interact with ethereum
 type etherman interface {
+	GetRollupId() uint32
 	GetLatestVerifiedBatchNum() (uint64, error)
 	BuildTrustedVerifyBatchesTxData(lastVerifiedBatch, newVerifiedBatch uint64, inputs *ethmanTypes.FinalProofInputs, beneficiary common.Address) (to *common.Address, data []byte, err error)
 	GetLatestBlockHeader(ctx context.Context) (*types.Header, error)

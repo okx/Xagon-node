@@ -1487,6 +1487,43 @@
 					"type": "integer",
 					"description": "BatchProofL1BlockConfirmations is number of L1 blocks to consider we can generate the proof for a virtual batch",
 					"default": 2
+				},
+				"SettlementBackend": {
+					"type": "string",
+					"description": "SettlementBackend configuration defines how a final ZKP should be settled. Directly to L1 or over the Beethoven service.",
+					"default": "l1"
+				},
+				"AggLayerTxTimeout": {
+					"type": "string",
+					"title": "Duration",
+					"description": "AggLayerTxTimeout is the interval time to wait for a tx to be mined from the agglayer",
+					"default": "5m0s",
+					"examples": [
+						"1m",
+						"300ms"
+					]
+				},
+				"AggLayerURL": {
+					"type": "string",
+					"description": "AggLayerURL url of the agglayer service",
+					"default": ""
+				},
+				"SequencerPrivateKey": {
+					"properties": {
+						"Path": {
+							"type": "string",
+							"description": "Path is the file path for the key store file",
+							"default": ""
+						},
+						"Password": {
+							"type": "string",
+							"description": "Password is the password to decrypt the key store file",
+							"default": ""
+						}
+					},
+					"additionalProperties": false,
+					"type": "object",
+					"description": "SequencerPrivateKey Private key of the trusted sequencer"
 				}
 			},
 			"additionalProperties": false,

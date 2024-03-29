@@ -204,6 +204,10 @@ GeneratingProofCleanupThreshold = "10m"
 GasOffset = 0
 UpgradeEtrogBatchNumber = 0
 BatchProofL1BlockConfirmations = 2
+SettlementBackend = "l1"
+AggLayerTxTimeout = "5m"
+AggLayerURL = ""
+SequencerPrivateKey = {}
 
 [L2GasPriceSuggester]
 Type = "follower"

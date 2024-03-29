@@ -2085,6 +2085,21 @@ func (etherMan *Client) SetDataProvider(da dataavailability.BatchDataProvider) {
 	etherMan.da = da
 }
 
+// SetDataAvailabilityProtocol sets the address for the new data availability protocol
+func (etherMan *Client) SetDataAvailabilityProtocol(from, daAddress common.Address) (*types.Transaction, error) {
+	auth, err := etherMan.getAuthByAddress(from)
+	if err != nil {
+		return nil, err
+	}
+
+	return etherMan.ZkEVM.SetDataAvailabilityProtocol(&auth, daAddress)
+}
+
+// GetRollupId returns the rollup id
+func (etherMan *Client) GetRollupId() uint32 {
+	return etherMan.RollupID
+}
+
 // EstimateGasSequenceBatches estimates gas for sending batches
 func (etherMan *Client) EstimateGasSequenceBatches(sender common.Address, sequences []ethmanTypes.Sequence, maxSequenceTimestamp uint64, lastSequencedBatchNumber uint64, l2Coinbase common.Address) (*types.Transaction, error) {
 	opts, err := etherMan.getAuthByAddress(sender)

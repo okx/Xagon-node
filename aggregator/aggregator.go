@@ -2,6 +2,7 @@ package aggregator
 
 import (
 	"context"
+	"crypto/ecdsa"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"time"
 	"unicode"
 
+	"github.com/0xPolygon/agglayer/client"
 	"github.com/0xPolygonHermez/zkevm-node/aggregator/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/aggregator/prover"
 	"github.com/0xPolygonHermez/zkevm-node/config/types"
@@ -67,6 +69,9 @@ type Aggregator struct {
 	srv  *grpc.Server
 	ctx  context.Context
 	exit context.CancelFunc
+
+	AggLayerClient      client.ClientInterface
+	sequencerPrivateKey *ecdsa.PrivateKey
 }
 
 // New creates a new aggregator.
@@ -75,6 +80,8 @@ func New(
 	stateInterface stateInterface,
 	ethTxManager ethTxManager,
 	etherman etherman,
+	agglayerClient client.ClientInterface,
+	sequencerPrivateKey *ecdsa.PrivateKey,
 ) (Aggregator, error) {
 	var profitabilityChecker aggregatorTxProfitabilityChecker
 	switch cfg.TxProfitabilityCheckerType {
@@ -96,6 +103,9 @@ func New(
 		TimeCleanupLockedProofs: cfg.CleanupLockedProofsInterval,
 
 		finalProof: make(chan finalProofMsg),
+
+		AggLayerClient:      agglayerClient,
+		sequencerPrivateKey: sequencerPrivateKey,
 	}
 
 	return a, nil
@@ -269,28 +279,16 @@ func (a *Aggregator) sendFinalProof() {
 
 			log.Infof("Final proof inputs: NewLocalExitRoot [%#x], NewStateRoot [%#x]", inputs.NewLocalExitRoot, inputs.NewStateRoot)
 
-			// add batch verification to be monitored
-			sender := common.HexToAddress(a.cfg.SenderAddress)
-			to, data, err := a.Ethman.BuildTrustedVerifyBatchesTxData(proof.BatchNumber-1, proof.BatchNumberFinal, &inputs, sender)
-			if err != nil {
-				log.Errorf("Error estimating batch verification to add to eth tx manager: %v", err)
-				a.handleFailureToAddVerifyBatchToBeMonitored(ctx, proof)
-				continue
+			switch a.cfg.SettlementBackend {
+			case AggLayer:
+				if success := a.settleWithAggLayer(ctx, proof, inputs); !success {
+					continue
+				}
+			default:
+				if success := a.settleDirect(ctx, proof, inputs); !success {
+					continue
+				}
 			}
-			monitoredTxID := buildMonitoredTxID(proof.BatchNumber, proof.BatchNumberFinal)
-			err = a.EthTxManager.Add(ctx, ethTxManagerOwner, monitoredTxID, sender, to, nil, data, a.cfg.GasOffset, nil)
-			if err != nil {
-				mTxLogger := ethtxmanager.CreateLogger(ethTxManagerOwner, monitoredTxID, sender, to)
-				mTxLogger.Errorf("Error to add batch verification tx to eth tx manager: %v", err)
-				a.handleFailureToAddVerifyBatchToBeMonitored(ctx, proof)
-				continue
-			}
-
-			// process monitored batch verifications before starting a next cycle
-			a.EthTxManager.ProcessPendingMonitoredTxs(ctx, ethTxManagerOwner, func(result ethtxmanager.MonitoredTxResult, dbTx pgx.Tx) {
-				a.handleMonitoredTxResult(result)
-			}, nil)
-
 			a.resetVerifyProofTime()
 			a.endProofVerification()
 		}

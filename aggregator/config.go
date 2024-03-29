@@ -91,4 +91,16 @@ type Config struct {
 
 	// BatchProofL1BlockConfirmations is number of L1 blocks to consider we can generate the proof for a virtual batch
 	BatchProofL1BlockConfirmations uint64 `mapstructure:"BatchProofL1BlockConfirmations"`
+
+	// SettlementBackend configuration defines how a final ZKP should be settled. Directly to L1 or over the Beethoven service.
+	SettlementBackend SettlementBackend `mapstructure:"SettlementBackend"`
+
+	// AggLayerTxTimeout is the interval time to wait for a tx to be mined from the agglayer
+	AggLayerTxTimeout types.Duration `mapstructure:"AggLayerTxTimeout"`
+
+	// AggLayerURL url of the agglayer service
+	AggLayerURL string `mapstructure:"AggLayerURL"`
+
+	// SequencerPrivateKey Private key of the trusted sequencer
+	SequencerPrivateKey types.KeystoreFileConfig `mapstructure:"SequencerPrivateKey"`
 }
