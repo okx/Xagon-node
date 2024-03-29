@@ -1591,9 +1591,14 @@
 				},
 				"Genesis": {
 					"properties": {
-						"BlockNumber": {
+						"RollupBlockNumber": {
 							"type": "integer",
-							"description": "BlockNumber is the block number where the polygonZKEVM smc was deployed on L1",
+							"description": "RollupBlockNumber is the block number where the polygonZKEVM smc was deployed on L1",
+							"default": 0
+						},
+						"RollupManagerBlockNumber": {
+							"type": "integer",
+							"description": "RollupManagerBlockNumber is the block number where the RollupManager smc was deployed on L1",
 							"default": 0
 						},
 						"Root": {

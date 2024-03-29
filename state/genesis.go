@@ -19,8 +19,10 @@ import (
 
 // Genesis contains the information to populate state on creation
 type Genesis struct {
-	// BlockNumber is the block number where the polygonZKEVM smc was deployed on L1
-	BlockNumber uint64
+	// RollupBlockNumber is the block number where the polygonZKEVM smc was deployed on L1
+	RollupBlockNumber uint64
+	// RollupManagerBlockNumber is the block number where the RollupManager smc was deployed on L1
+	RollupManagerBlockNumber uint64
 	// Root hash of the genesis block
 	Root common.Hash
 	// Actions is the data to populate into the state trie
