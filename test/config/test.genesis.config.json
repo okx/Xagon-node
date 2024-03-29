@@ -7,6 +7,8 @@
         "polygonZkEVMGlobalExitRootAddress": "0x6Ae5b0863dBF3477335c0102DBF432aFf04ceb22"
     },
     "genesisBlockNumber": 199,
+	"rollupCreationBlockNumber": 199,
+	"rollupManagerCreationBlockNumber": 199,
     "root": "0xe6ae9579cda5787ab533bf97a8a5aa4ca1e0d40c8890b01f2d714fce71a5873c",
     "genesis": [
 	    {
