@@ -108,12 +108,12 @@ func TestDataCommittee(t *testing.T) {
 	// Spin up M DAC nodes
 	dacNodeConfig := config.Config{
 		L1: config.L1Config{
-			RpcURL:               "http://zkevm-mock-l1-network:8545",
-			WsURL:                "ws://zkevm-mock-l1-network:8546",
-			CDKValidiumAddress:   operations.DefaultL1ZkEVMSmartContract,
-			DataCommitteeAddress: operations.DefaultL1DataCommitteeContract,
-			Timeout:              cTypes.Duration{Duration: time.Second},
-			RetryPeriod:          cTypes.Duration{Duration: time.Second},
+			RpcURL:                 "http://zkevm-mock-l1-network:8545",
+			WsURL:                  "ws://zkevm-mock-l1-network:8546",
+			PolygonValidiumAddress: operations.DefaultL1ZkEVMSmartContract,
+			DataCommitteeAddress:   operations.DefaultL1DataCommitteeContract,
+			Timeout:                cTypes.Duration{Duration: time.Second},
+			RetryPeriod:            cTypes.Duration{Duration: time.Second},
 		},
 		PrivateKey: cTypes.KeystoreFileConfig{
 			Path:     ksFile,
