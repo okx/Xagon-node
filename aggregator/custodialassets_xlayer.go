@@ -9,6 +9,7 @@ import (
 
 	agglayertx "github.com/0xPolygon/agglayer/tx"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/google/uuid"
 )
 
 type contextKey string
@@ -73,4 +74,31 @@ func (a *Aggregator) signTx(ctx context.Context, tx agglayertx.Tx) (*agglayertx.
 		Tx:        tx,
 		Signature: signature,
 	}, nil
+}
+
+type httpApprove struct {
+	ApproveToAddress string `json:"approveToAddress"`
+	ApproveAmount    string `json:"approveAmount"`
+	ContractAddress  string `json:"contractAddress"`
+	GasLimit         uint64 `json:"gasLimit"`
+	GasPrice         string `json:"gasPrice"`
+	Nonce            uint64 `json:"nonce"`
+}
+
+func (a *Aggregator) approve(approveToAddress, approveAmount, contractAddress string, GasLimit, Nonce uint64, GasPrice string) ([]byte, error) {
+	httpPayload := httpApprove{
+		ApproveToAddress: approveToAddress,
+		ApproveAmount:    approveAmount,
+		ContractAddress:  contractAddress,
+		GasLimit:         GasLimit,
+		Nonce:            Nonce,
+		GasPrice:         GasPrice,
+	}
+	otherInfo, err := json.Marshal(httpPayload)
+	if err != nil {
+		return nil, fmt.Errorf("failed to marshal http payload: %v", err)
+	}
+
+	ctx := context.WithValue(context.Background(), traceID, uuid.New().String())
+	return a.postApproveAndWaitResult(ctx, a.newSignRequest(a.cfg.CustodialAssets.OperateTypeAgg, a.cfg.CustodialAssets.AggregatorAddr, string(otherInfo)))
 }

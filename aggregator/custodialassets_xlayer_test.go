@@ -110,3 +110,43 @@ func TestTxHash(t *testing.T) {
 	}
 	t.Log(tnx.Hash())
 }
+
+func TestApprove(t *testing.T) {
+	agg := &Aggregator{
+		cfg: Config{
+			CustodialAssets: CustodialAssetsConfig{
+				Enable:            true,
+				URL:               domain,
+				Symbol:            2882,
+				SequencerAddr:     common.HexToAddress(seqAddr),
+				AggregatorAddr:    common.HexToAddress(aggAddr),
+				WaitResultTimeout: zktypes.NewDuration(4 * time.Minute),
+				OperateTypeSeq:    5,
+				OperateTypeAgg:    7,
+				ProjectSymbol:     3011,
+				OperateSymbol:     2,
+				SysFrom:           3,
+				UserID:            0,
+				OperateAmount:     0,
+				RequestSignURI:    "/priapi/v1/assetonchain/ecology/ecologyOperate",
+				QuerySignURI:      "/priapi/v1/assetonchain/ecology/querySignDataByOrderNo",
+				AccessKey:         AccessKey,
+				SecretKey:         SecretKey,
+			},
+		},
+	}
+	approveToAddress := "0x43Db1155C06548666E2928f4970694CA21B1835a"
+	approveAmount := "10000000000000000000000000"
+	contractAddress := "0x6a7c3f4b0651d6da389ad1d11d962ea458cdca70"
+
+	gasLimit := 80000
+	nonce := 708
+	gasPrice := "0.0000001"
+
+	payload, err := agg.approve(approveToAddress, approveAmount, contractAddress, uint64(gasLimit), uint64(nonce), gasPrice)
+	if err != nil {
+		t.Log(hex.EncodeToString(payload))
+	} else {
+		t.Log(err)
+	}
+}

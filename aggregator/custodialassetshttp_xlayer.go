@@ -247,3 +247,21 @@ func (a *Aggregator) postSignRequestAndWaitResult(ctx context.Context, request *
 
 	return hex.DecodeHex(result.Data)
 }
+
+func (a *Aggregator) postApproveAndWaitResult(ctx context.Context, request *signRequest) ([]byte, error) {
+	if a == nil || !a.cfg.CustodialAssets.Enable {
+		return nil, errCustodialAssetsNotEnabled
+	}
+	mLog := log.WithFields(getTraceID(ctx))
+	if err := a.postCustodialAssets(ctx, request); err != nil {
+		return nil, fmt.Errorf("error post custodial assets: %w", err)
+	}
+	mLog.Infof("post custodial assets success")
+	result, err := a.waitResult(ctx, a.newSignResultRequest(request.RefOrderID))
+	if err != nil {
+		return nil, fmt.Errorf("error wait result: %w", err)
+	}
+	mLog.Infof("wait result success: %v", result)
+
+	return hex.DecodeHex(result.Data)
+}
