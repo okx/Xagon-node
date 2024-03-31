@@ -446,6 +446,23 @@ func NewBatch(ctx context.Context, st StateInterface, batch *state.Batch, virtua
 	return res, nil
 }
 
+// BatchFilter is a list of batch numbers to retrieve
+type BatchFilter struct {
+	Numbers []BatchNumber `json:"numbers"`
+}
+
+// BatchData is an abbreviated structure that only contains the number and L2 batch data
+type BatchData struct {
+	Number      ArgUint64 `json:"number"`
+	BatchL2Data ArgBytes  `json:"batchL2Data,omitempty"`
+	Empty       bool      `json:"empty"`
+}
+
+// BatchDataResult is a list of BatchData for a BatchFilter
+type BatchDataResult struct {
+	Data []*BatchData `json:"data"`
+}
+
 // TransactionOrHash for union type of transaction and types.Hash
 type TransactionOrHash struct {
 	Hash *common.Hash

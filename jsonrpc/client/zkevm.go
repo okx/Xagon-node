@@ -74,7 +74,9 @@ func (c *Client) BatchesByNumbers(_ context.Context, numbers []*big.Int) ([]*typ
 		batchNumbers = append(batchNumbers, n.StringOrHex())
 	}
 
-	response, err := JSONRPCCall(c.url, "zkevm_getBatchDataByNumbers", batchNumbers, true)
+	foo := make(map[string][]string, 0)
+	foo["numbers"] = batchNumbers
+	response, err := JSONRPCCall(c.url, "zkevm_getBatchDataByNumbers", foo)
 	if err != nil {
 		return nil, err
 	}
