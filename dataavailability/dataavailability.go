@@ -70,6 +70,7 @@ func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []comm
 	}
 
 	if !d.isTrustedSequencer {
+		log.Infof("Try to get data from trusted sequencer for batches %v", batchNums)
 		data, err = d.trustedSequencerData(batchNums, batchHashes)
 		if err != nil {
 			log.Warnf("trusted sequencer failed to return data for batches %v: %s", batchNums, err.Error())
@@ -77,7 +78,7 @@ func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []comm
 			return data, nil
 		}
 	}
-
+	log.Infof("Try to get data from DA backend for batches %v", batchNums)
 	return d.backend.GetSequence(d.ctx, batchHashes, dataAvailabilityMessage)
 }
 
