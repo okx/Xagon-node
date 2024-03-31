@@ -53,21 +53,24 @@ type DynamicGPManager struct {
 func (e *EthEndpoints) runDynamicGPSuggester() {
 	ctx := context.Background()
 	// initialization
-	updateTimer := time.NewTimer(10 * time.Second) //nolint:gomnd
+	constPeriod := 10 * time.Second //nolint:gomnd
+	updateTimer := time.NewTimer(constPeriod)
 	for {
 		select {
 		case <-ctx.Done():
 			log.Info("Finishing dynamic gas price suggester...")
 			return
 		case <-updateTimer.C:
+			newPeriod := constPeriod
 			if getApolloConfig().Enable() {
 				getApolloConfig().RLock()
 				e.cfg.DynamicGP = getApolloConfig().DynamicGP
 				getApolloConfig().RUnlock()
+				newPeriod = e.cfg.DynamicGP.UpdatePeriod.Duration
 			}
-			log.Info("Dynamic gas price update period is ", e.cfg.DynamicGP.UpdatePeriod.Duration.String())
+			log.Info("Dynamic gas price period is ", e.cfg.DynamicGP.UpdatePeriod.Duration.String())
 			e.calcDynamicGP(ctx)
-			updateTimer.Reset(e.cfg.DynamicGP.UpdatePeriod.Duration)
+			updateTimer.Reset(newPeriod)
 		}
 	}
 }
