@@ -75,7 +75,7 @@ func (c *Client) BatchesByNumbers(_ context.Context, numbers []*big.Int) ([]*typ
 	}
 
 	foo := make(map[string][]string, 0)
-	foo["numbers"] = batchNumbers
+	foo["numbers"] = batchNumbers // nolint: gosec
 	response, err := JSONRPCCall(c.url, "zkevm_getBatchDataByNumbers", foo)
 	if err != nil {
 		return nil, err
