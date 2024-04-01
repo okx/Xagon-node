@@ -29,6 +29,7 @@ func (c *ApolloConfig) Enable() bool {
 // UpdateConfig updates the apollo config
 func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().Lock()
+	getApolloConfig().EnableApollo = true
 	getApolloConfig().conf = apolloConfig
 	getApolloConfig().Unlock()
 }
