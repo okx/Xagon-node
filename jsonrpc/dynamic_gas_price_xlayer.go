@@ -2,7 +2,6 @@ package jsonrpc
 
 import (
 	"context"
-	"errors"
 	"math/big"
 	"sort"
 	"sync"
@@ -176,40 +175,12 @@ func (e *EthEndpoints) getL2BatchTxsTips(ctx context.Context, l2BlockNumber uint
 	sort.Sort(sorter)
 
 	var prices []*big.Int
-	var lowPrices []*big.Int
-	var highPrices []*big.Int
 	for _, tx := range sorter.txs {
 		tip := tx.GasTipCap()
-
-		lowPrices = append(lowPrices, tip)
-		if len(lowPrices) >= limit {
+		prices = append(prices, tip)
+		if len(prices) >= limit {
 			break
 		}
-	}
-
-	sorter.Reverse()
-	for _, tx := range sorter.txs {
-		tip := tx.GasTipCap()
-
-		highPrices = append(highPrices, tip)
-		if len(highPrices) >= limit {
-			break
-		}
-	}
-
-	if len(highPrices) != len(lowPrices) {
-		err := errors.New("len(highPrices) != len(lowPrices)")
-		log.Errorf("getL2BlockTxsTips err: %v", err)
-		select {
-		case result <- results{nil, err}:
-		case <-quit:
-		}
-		return
-	}
-
-	for i := 0; i < len(lowPrices); i++ {
-		price := getAvgPrice(lowPrices[i], highPrices[i])
-		prices = append(prices, price)
 	}
 
 	select {
@@ -252,13 +223,6 @@ func (s *txSorter) Less(i, j int) bool {
 	tip1 := s.txs[i].GasTipCap()
 	tip2 := s.txs[j].GasTipCap()
 	return tip1.Cmp(tip2) < 0
-}
-
-func (s *txSorter) Reverse() {
-	for i := 0; i < len(s.txs)/2; i++ {
-		j := len(s.txs) - i - 1
-		s.txs[i], s.txs[j] = s.txs[j], s.txs[i]
-	}
 }
 
 type bigIntArray []*big.Int
