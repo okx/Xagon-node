@@ -908,6 +908,11 @@
 					"additionalProperties": false,
 					"type": "object",
 					"description": "StreamServerCfg is the config for the stream server"
+				},
+				"LoadPendingTxsLimit": {
+					"type": "integer",
+					"description": "LoadPendingTxsLimit is used to limit amount txs from the db",
+					"default": 0
 				}
 			},
 			"additionalProperties": false,

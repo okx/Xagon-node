@@ -20,7 +20,7 @@ type txPool interface {
 	DeleteFailedTransactionsOlderThan(ctx context.Context, date time.Time) error
 	DeleteTransactionByHash(ctx context.Context, hash common.Hash) error
 	MarkWIPTxsAsPending(ctx context.Context) error
-	GetNonWIPPendingTxs(ctx context.Context) ([]pool.Transaction, error)
+	GetNonWIPPendingTxs(ctx context.Context, limit uint64) ([]pool.Transaction, error)
 	UpdateTxStatus(ctx context.Context, hash common.Hash, newStatus pool.TxStatus, isWIP bool, failedReason *string) error
 	GetTxZkCountersByHash(ctx context.Context, hash common.Hash) (*state.ZKCounters, *state.ZKCounters, error)
 	UpdateTxWIPStatus(ctx context.Context, hash common.Hash, isWIP bool) error

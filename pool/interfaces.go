@@ -21,7 +21,7 @@ type storage interface {
 	GetPendingTxHashesSince(ctx context.Context, since time.Time) ([]common.Hash, error)
 	GetTxsByFromAndNonce(ctx context.Context, from common.Address, nonce uint64) ([]Transaction, error)
 	GetTxsByStatus(ctx context.Context, state TxStatus, limit uint64) ([]Transaction, error)
-	GetNonWIPPendingTxs(ctx context.Context) ([]Transaction, error)
+	GetNonWIPPendingTxs(ctx context.Context, limit uint64) ([]Transaction, error)
 	IsTxPending(ctx context.Context, hash common.Hash) (bool, error)
 	SetGasPrices(ctx context.Context, l2GasPrice uint64, l1GasPrice uint64) error
 	DeleteGasPricesHistoryOlderThan(ctx context.Context, date time.Time) error

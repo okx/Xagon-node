@@ -180,7 +180,7 @@ func (_m *PoolMock) GetL1AndL2GasPrice() (uint64, uint64) {
 }
 
 // GetNonWIPPendingTxs provides a mock function with given fields: ctx
-func (_m *PoolMock) GetNonWIPPendingTxs(ctx context.Context) ([]pool.Transaction, error) {
+func (_m *PoolMock) GetNonWIPPendingTxs(ctx context.Context, limit uint64) ([]pool.Transaction, error) {
 	ret := _m.Called(ctx)
 
 	if len(ret) == 0 {

@@ -30,6 +30,9 @@ type Config struct {
 
 	// StreamServerCfg is the config for the stream server
 	StreamServer StreamServerCfg `mapstructure:"StreamServer"`
+
+	// LoadPendingTxsLimit is used to limit amount txs from the db
+	LoadPendingTxsLimit uint64 `mapstructure:"LoadPendingTxsLimit"`
 }
 
 // StreamServerCfg contains the data streamer's configuration properties

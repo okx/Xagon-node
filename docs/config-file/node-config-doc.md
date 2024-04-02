@@ -1778,6 +1778,7 @@ CheckLastL2BlockHashOnCloseBatch=true
 | - [StateConsistencyCheckInterval](#Sequencer_StateConsistencyCheckInterval )         | No      | string  | No         | -          | Duration                                                                                         |
 | - [Finalizer](#Sequencer_Finalizer )                                                 | No      | object  | No         | -          | Finalizer's specific config properties                                                           |
 | - [StreamServer](#Sequencer_StreamServer )                                           | No      | object  | No         | -          | StreamServerCfg is the config for the stream server                                              |
+| - [LoadPendingTxsLimit](#Sequencer_LoadPendingTxsLimit )                             | No      | integer | No         | -          | LoadPendingTxsLimit is used to limit amount txs from the db                                      |
 
 ### <a name="Sequencer_DeletePoolTxsL1BlockConfirmations"></a>10.1. `Sequencer.DeletePoolTxsL1BlockConfirmations`
 
@@ -2386,6 +2387,20 @@ Must be one of:
 ```
 [Sequencer.StreamServer]
 UpgradeEtrogBatchNumber=0
+```
+
+### <a name="Sequencer_LoadPendingTxsLimit"></a>10.9. `Sequencer.LoadPendingTxsLimit`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Description:** LoadPendingTxsLimit is used to limit amount txs from the db
+
+**Example setting the default value** (0):
+```
+[Sequencer]
+LoadPendingTxsLimit=0
 ```
 
 ## <a name="SequenceSender"></a>11. `[SequenceSender]`
