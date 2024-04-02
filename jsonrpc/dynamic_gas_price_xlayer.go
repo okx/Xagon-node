@@ -86,28 +86,6 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		return
 	}
 
-	// judge if there is congestion
-	isCongested, err := e.isCongested(ctx)
-	if err != nil {
-		log.Errorf("failed to count pool txs by status pending while judging if the pool is congested: ", err)
-		return
-	}
-
-	if !isCongested {
-		gasPrices, err := e.pool.GetGasPrices(ctx)
-		if err != nil {
-			log.Errorf("failed to get raw gas prices when it is not congested: ", err)
-			return
-		}
-		e.dgpMan.cacheLock.Lock()
-		e.dgpMan.lastPrice = new(big.Int).SetUint64(gasPrices.L2GasPrice)
-		e.dgpMan.lastL2BatchNumber = l2BatchNumber
-		e.dgpMan.cacheLock.Unlock()
-		return
-	}
-
-	log.Debug("there is congestion for L2")
-
 	e.dgpMan.fetchLock.Lock()
 	defer e.dgpMan.fetchLock.Unlock()
 
@@ -156,6 +134,28 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		price = maxGasPrice
 	}
 
+	// judge if there is congestion
+	isCongested, err := e.isCongested(ctx)
+	if err != nil {
+		log.Errorf("failed to count pool txs by status pending while judging if the pool is congested: ", err)
+		return
+	}
+
+	if !isCongested {
+		gasPrices, err := e.pool.GetGasPrices(ctx)
+		if err != nil {
+			log.Errorf("failed to get raw gas prices when it is not congested: ", err)
+			return
+		}
+		rawGasPrice := new(big.Int).SetUint64(gasPrices.L2GasPrice)
+		e.dgpMan.cacheLock.Lock()
+		e.dgpMan.lastPrice = getAvgPrice(rawGasPrice, price)
+		e.dgpMan.lastL2BatchNumber = l2BatchNumber
+		e.dgpMan.cacheLock.Unlock()
+		return
+	}
+
+	log.Debug("there is congestion for L2")
 	e.dgpMan.cacheLock.Lock()
 	e.dgpMan.lastPrice = price
 	e.dgpMan.lastL2BatchNumber = l2BatchNumber
