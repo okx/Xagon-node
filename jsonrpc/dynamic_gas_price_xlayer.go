@@ -13,6 +13,9 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
+// DefaultUpdatePeriod defines default value of UpdatePeriod
+const DefaultUpdatePeriod = 10 * time.Second //nolint:gomnd
+
 // DynamicGPConfig represents the configuration of the dynamic gas price
 type DynamicGPConfig struct {
 
@@ -53,24 +56,33 @@ type DynamicGPManager struct {
 func (e *EthEndpoints) runDynamicGPSuggester() {
 	ctx := context.Background()
 	// initialization
-	constPeriod := 10 * time.Second //nolint:gomnd
-	updateTimer := time.NewTimer(constPeriod)
+	updateTimer := time.NewTimer(DefaultUpdatePeriod)
+	if e.cfg.DynamicGP.UpdatePeriod.Duration.Nanoseconds() > 0 {
+		log.Infof("Dynamic gas price update period is %s", e.cfg.DynamicGP.UpdatePeriod.Duration.String())
+		updateTimer = time.NewTimer(e.cfg.DynamicGP.UpdatePeriod.Duration)
+	}
 	for {
 		select {
 		case <-ctx.Done():
 			log.Info("Finishing dynamic gas price suggester...")
 			return
 		case <-updateTimer.C:
-			newPeriod := constPeriod
 			if getApolloConfig().Enable() {
 				getApolloConfig().RLock()
 				e.cfg.DynamicGP = getApolloConfig().DynamicGP
 				getApolloConfig().RUnlock()
-				newPeriod = e.cfg.DynamicGP.UpdatePeriod.Duration
 			}
-			log.Info("Dynamic gas price period is ", e.cfg.DynamicGP.UpdatePeriod.Duration.String())
-			e.calcDynamicGP(ctx)
-			updateTimer.Reset(newPeriod)
+			period := e.cfg.DynamicGP.UpdatePeriod.Duration
+			if period.Nanoseconds() <= 0 {
+				log.Warn("Dynamic gas price update period is less than or equal to 0. Set it to DefaultUpdatePeriod.")
+				period = DefaultUpdatePeriod
+			}
+			if e.cfg.DynamicGP.Enabled {
+				log.Info("Starting calculate dynamic gas price...")
+				e.calcDynamicGP(ctx)
+			}
+			log.Infof("Dynamic gas price update period is %s", period.String())
+			updateTimer.Reset(period)
 		}
 	}
 }
@@ -98,6 +110,7 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 	}
 
 	if !isCongested {
+		log.Info("there is no congestion for L2")
 		gasPrices, err := e.pool.GetGasPrices(ctx)
 		if err != nil {
 			log.Errorf("failed to get raw gas prices when it is not congested: ", err)
@@ -110,7 +123,7 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		return
 	}
 
-	log.Debug("there is congestion for L2")
+	log.Warn("there is congestion for L2")
 
 	e.dgpMan.fetchLock.Lock()
 	defer e.dgpMan.fetchLock.Unlock()
