@@ -360,7 +360,7 @@ func (e *EthEndpoints) GetBlockInternalTransactionsByIndexAndLimit(hash types.Ar
 	return ret, nil
 }
 
-func (e *EthEndpoints) MinGasPrice(hash types.ArgHash, index, limit types.Index) (interface{}, types.Error) {
+func (e *EthEndpoints) MinGasPrice() (interface{}, types.Error) {
 	if e.isDisabled("eth_minGasPrice") {
 		return RPCErrorResponse(types.DefaultErrorCode, "not supported yet", nil, true)
 	}
