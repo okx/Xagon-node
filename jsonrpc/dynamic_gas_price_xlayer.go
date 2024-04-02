@@ -241,13 +241,6 @@ func (s *txSorter) Less(i, j int) bool {
 	return tip1.Cmp(tip2) < 0
 }
 
-func (s *txSorter) Reverse() {
-	for i := 0; i < len(s.txs)/2; i++ {
-		j := len(s.txs) - i - 1
-		s.txs[i], s.txs[j] = s.txs[j], s.txs[i]
-	}
-}
-
 type bigIntArray []*big.Int
 
 func (s bigIntArray) Len() int           { return len(s) }
