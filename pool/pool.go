@@ -118,7 +118,7 @@ func (p *Pool) refreshGasPrices() {
 func (p *Pool) StartRefreshingBlockedAddressesPeriodically() {
 	interval := p.cfg.IntervalToRefreshBlockedAddresses.Duration
 	if interval.Nanoseconds() <= 0 {
-		interval = 5 * time.Minute //nolint:gomnd
+		interval = 20 * time.Second //nolint:gomnd
 	}
 
 	p.refreshBlockedAddresses()

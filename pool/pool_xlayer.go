@@ -29,7 +29,7 @@ func contains(s []string, ele common.Address) bool {
 func (p *Pool) StartRefreshingWhiteAddressesPeriodically() {
 	interval := p.cfg.IntervalToRefreshWhiteAddresses.Duration
 	if interval.Nanoseconds() <= 0 {
-		interval = 5 * time.Minute //nolint:gomnd
+		interval = 20 * time.Second //nolint:gomnd
 	}
 
 	p.refreshWhitelistedAddresses()
