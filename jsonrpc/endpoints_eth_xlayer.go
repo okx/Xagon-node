@@ -360,6 +360,7 @@ func (e *EthEndpoints) GetBlockInternalTransactionsByIndexAndLimit(hash types.Ar
 	return ret, nil
 }
 
+// MinGasPrice returns the minimum gas price
 func (e *EthEndpoints) MinGasPrice() (interface{}, types.Error) {
 	if e.isDisabled("eth_minGasPrice") {
 		return RPCErrorResponse(types.DefaultErrorCode, "not supported yet", nil, true)
