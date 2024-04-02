@@ -2032,84 +2032,84 @@ Enabled=false
 
 **Type:** : `integer`
 
-**Default:** `0`
+**Default:** `100`
 
 **Description:** CongestionTxThreshold defines the tx threshold to measure whether there is congestion
 
-**Example setting the default value** (0):
+**Example setting the default value** (100):
 ```
 [RPC.DynamicGP]
-CongestionTxThreshold=0
+CongestionTxThreshold=100
 ```
 
 #### <a name="RPC_DynamicGP_CheckBatches"></a>8.24.3. `RPC.DynamicGP.CheckBatches`
 
 **Type:** : `integer`
 
-**Default:** `0`
+**Default:** `5`
 
 **Description:** CheckBatches defines the number of recent Batches used to sample gas price
 
-**Example setting the default value** (0):
+**Example setting the default value** (5):
 ```
 [RPC.DynamicGP]
-CheckBatches=0
+CheckBatches=5
 ```
 
 #### <a name="RPC_DynamicGP_SampleNumber"></a>8.24.4. `RPC.DynamicGP.SampleNumber`
 
 **Type:** : `integer`
 
-**Default:** `0`
+**Default:** `3`
 
 **Description:** SampleTxNumer defines the number of sampled gas prices in each batch
 
-**Example setting the default value** (0):
+**Example setting the default value** (3):
 ```
 [RPC.DynamicGP]
-SampleNumber=0
+SampleNumber=3
 ```
 
 #### <a name="RPC_DynamicGP_Percentile"></a>8.24.5. `RPC.DynamicGP.Percentile`
 
 **Type:** : `integer`
 
-**Default:** `0`
+**Default:** `70`
 
 **Description:** Percentile defines the sampling weight of all sampled gas prices
 
-**Example setting the default value** (0):
+**Example setting the default value** (70):
 ```
 [RPC.DynamicGP]
-Percentile=0
+Percentile=70
 ```
 
 #### <a name="RPC_DynamicGP_MaxPrice"></a>8.24.6. `RPC.DynamicGP.MaxPrice`
 
 **Type:** : `integer`
 
-**Default:** `0`
+**Default:** `20000000000`
 
 **Description:** MaxPrice defines the dynamic gas price upper limit
 
-**Example setting the default value** (0):
+**Example setting the default value** (20000000000):
 ```
 [RPC.DynamicGP]
-MaxPrice=0
+MaxPrice=20000000000
 ```
 
 #### <a name="RPC_DynamicGP_MinPrice"></a>8.24.7. `RPC.DynamicGP.MinPrice`
 
 **Type:** : `integer`
 
-**Default:** `0`
+**Default:** `2000000000`
 
 **Description:** MinPrice defines the dynamic gas price lower limit
 
-**Example setting the default value** (0):
+**Example setting the default value** (2000000000):
 ```
 [RPC.DynamicGP]
-MinPrice=0
+MinPrice=2000000000
 ```
 
 #### <a name="RPC_DynamicGP_UpdatePeriod"></a>8.24.8. `RPC.DynamicGP.UpdatePeriod`
@@ -2118,7 +2118,7 @@ MinPrice=0
 
 **Type:** : `string`
 
-**Default:** `"0s"`
+**Default:** `"10s"`
 
 **Description:** UpdatePeriod defines the time interval for updating dynamic gas price
 
@@ -2132,10 +2132,10 @@ MinPrice=0
 "300ms"
 ```
 
-**Example setting the default value** ("0s"):
+**Example setting the default value** ("10s"):
 ```
 [RPC.DynamicGP]
-UpdatePeriod="0s"
+UpdatePeriod="10s"
 ```
 
 ### <a name="RPC_EnableInnerTxCacheDB"></a>8.25. `RPC.EnableInnerTxCacheDB`

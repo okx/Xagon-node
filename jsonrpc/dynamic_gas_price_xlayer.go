@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"context"
+	"errors"
 	"math/big"
 	"sort"
 	"sync"
@@ -11,6 +12,9 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/core/types"
 )
+
+// DefaultUpdatePeriod defines default value of UpdatePeriod
+const DefaultUpdatePeriod = 10 * time.Second //nolint:gomnd
 
 // DynamicGPConfig represents the configuration of the dynamic gas price
 type DynamicGPConfig struct {
@@ -52,7 +56,11 @@ type DynamicGPManager struct {
 func (e *EthEndpoints) runDynamicGPSuggester() {
 	ctx := context.Background()
 	// initialization
-	updateTimer := time.NewTimer(10 * time.Second) //nolint:gomnd
+	updateTimer := time.NewTimer(DefaultUpdatePeriod)
+	if e.cfg.DynamicGP.UpdatePeriod.Duration.Nanoseconds() > 0 {
+		log.Infof("Dynamic gas price update period is %s", e.cfg.DynamicGP.UpdatePeriod.Duration.String())
+		updateTimer = time.NewTimer(e.cfg.DynamicGP.UpdatePeriod.Duration)
+	}
 	for {
 		select {
 		case <-ctx.Done():
@@ -64,9 +72,17 @@ func (e *EthEndpoints) runDynamicGPSuggester() {
 				e.cfg.DynamicGP = getApolloConfig().DynamicGP
 				getApolloConfig().RUnlock()
 			}
-			log.Info("Dynamic gas price update period is ", e.cfg.DynamicGP.UpdatePeriod.Duration.String())
-			e.calcDynamicGP(ctx)
-			updateTimer.Reset(e.cfg.DynamicGP.UpdatePeriod.Duration)
+			period := e.cfg.DynamicGP.UpdatePeriod.Duration
+			if period.Nanoseconds() <= 0 {
+				log.Warn("Dynamic gas price update period is less than or equal to 0. Set it to DefaultUpdatePeriod.")
+				period = DefaultUpdatePeriod
+			}
+			if e.cfg.DynamicGP.Enabled {
+				log.Info("Starting calculate dynamic gas price...")
+				e.calcDynamicGP(ctx)
+			}
+			log.Infof("Dynamic gas price update period is %s", period.String())
+			updateTimer.Reset(period)
 		}
 	}
 }
@@ -85,6 +101,29 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		log.Debug("Batch is still the same, no need to update the gas price at the moment, lastL2BatchNumber: ", lastL2BatchNumber)
 		return
 	}
+
+	// judge if there is congestion
+	isCongested, err := e.isCongested(ctx)
+	if err != nil {
+		log.Errorf("failed to count pool txs by status pending while judging if the pool is congested: ", err)
+		return
+	}
+
+	if !isCongested {
+		log.Info("there is no congestion for L2")
+		gasPrices, err := e.pool.GetGasPrices(ctx)
+		if err != nil {
+			log.Errorf("failed to get raw gas prices when it is not congested: ", err)
+			return
+		}
+		e.dgpMan.cacheLock.Lock()
+		e.dgpMan.lastPrice = new(big.Int).SetUint64(gasPrices.L2GasPrice)
+		e.dgpMan.lastL2BatchNumber = l2BatchNumber
+		e.dgpMan.cacheLock.Unlock()
+		return
+	}
+
+	log.Warn("there is congestion for L2")
 
 	e.dgpMan.fetchLock.Lock()
 	defer e.dgpMan.fetchLock.Unlock()
@@ -134,28 +173,6 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		price = maxGasPrice
 	}
 
-	// judge if there is congestion
-	isCongested, err := e.isCongested(ctx)
-	if err != nil {
-		log.Errorf("failed to count pool txs by status pending while judging if the pool is congested: ", err)
-		return
-	}
-
-	if !isCongested {
-		gasPrices, err := e.pool.GetGasPrices(ctx)
-		if err != nil {
-			log.Errorf("failed to get raw gas prices when it is not congested: ", err)
-			return
-		}
-		rawGasPrice := new(big.Int).SetUint64(gasPrices.L2GasPrice)
-		e.dgpMan.cacheLock.Lock()
-		e.dgpMan.lastPrice = getAvgPrice(rawGasPrice, price)
-		e.dgpMan.lastL2BatchNumber = l2BatchNumber
-		e.dgpMan.cacheLock.Unlock()
-		return
-	}
-
-	log.Debug("there is congestion for L2")
 	e.dgpMan.cacheLock.Lock()
 	e.dgpMan.lastPrice = price
 	e.dgpMan.lastL2BatchNumber = l2BatchNumber
@@ -175,12 +192,40 @@ func (e *EthEndpoints) getL2BatchTxsTips(ctx context.Context, l2BlockNumber uint
 	sort.Sort(sorter)
 
 	var prices []*big.Int
+	var lowPrices []*big.Int
+	var highPrices []*big.Int
 	for _, tx := range sorter.txs {
 		tip := tx.GasTipCap()
-		prices = append(prices, tip)
-		if len(prices) >= limit {
+
+		lowPrices = append(lowPrices, tip)
+		if len(lowPrices) >= limit {
 			break
 		}
+	}
+
+	sorter.Reverse()
+	for _, tx := range sorter.txs {
+		tip := tx.GasTipCap()
+
+		highPrices = append(highPrices, tip)
+		if len(highPrices) >= limit {
+			break
+		}
+	}
+
+	if len(highPrices) != len(lowPrices) {
+		err := errors.New("len(highPrices) != len(lowPrices)")
+		log.Errorf("getL2BlockTxsTips err: %v", err)
+		select {
+		case result <- results{nil, err}:
+		case <-quit:
+		}
+		return
+	}
+
+	for i := 0; i < len(lowPrices); i++ {
+		price := getAvgPrice(lowPrices[i], highPrices[i])
+		prices = append(prices, price)
 	}
 
 	select {
@@ -223,6 +268,13 @@ func (s *txSorter) Less(i, j int) bool {
 	tip1 := s.txs[i].GasTipCap()
 	tip2 := s.txs[j].GasTipCap()
 	return tip1.Cmp(tip2) < 0
+}
+
+func (s *txSorter) Reverse() {
+	for i := 0; i < len(s.txs)/2; i++ {
+		j := len(s.txs) - i - 1
+		s.txs[i], s.txs[j] = s.txs[j], s.txs[i]
+	}
 }
 
 type bigIntArray []*big.Int

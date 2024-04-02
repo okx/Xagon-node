@@ -125,6 +125,15 @@ DisableAPIs = []
 		Host = "0.0.0.0"
 		Port = 8546
 		ReadLimit = 104857600
+	[RPC.DynamicGP]
+        Enabled = false
+        CongestionTxThreshold = 100
+        CheckBatches = 5
+        SampleNumber = 3
+        Percentile = 70
+        MaxPrice = 20000000000
+        MinPrice = 2000000000
+        UpdatePeriod = "10s"
 
 [Synchronizer]
 SyncInterval = "1s"
