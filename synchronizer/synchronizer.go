@@ -376,6 +376,7 @@ func (s *ClientSynchronizer) Sync() error {
 				continue
 			}
 			log.Infof("latestSequencedBatchNumber: %d, latestSyncedBatch: %d, lastVerifiedBatchNumber: %d", latestSequencedBatchNumber, latestSyncedBatch, lastVerifiedBatchNumber)
+			metrics.TrustBatchNum(latestSequencedBatchNumber)
 			metrics.VirtualBatchNum(latestSyncedBatch)
 			metrics.VerifiedBatchNum(lastVerifiedBatchNumber)
 			// Sync trusted state

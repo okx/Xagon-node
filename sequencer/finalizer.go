@@ -384,7 +384,6 @@ func (f *finalizer) finalizeBatches(ctx context.Context) {
 			seqMetrics.BatchExecuteTime(seqMetrics.BatchFinalizeTypeLabel(strings.ToLower(strings.ReplaceAll(string(closeReason), " ", "_"))), seqMetrics.GetLogStatistics().GetStatistics(seqMetrics.ProcessingTxCommit))
 			seqMetrics.GetLogStatistics().ResetStatistics()
 			seqMetrics.GetLogStatistics().UpdateTimestamp(seqMetrics.NewRound, time.Now())
-			seqMetrics.TrustBatchNum(f.wipBatch.batchNumber - 1)
 		}
 
 		if err := ctx.Err(); err != nil {

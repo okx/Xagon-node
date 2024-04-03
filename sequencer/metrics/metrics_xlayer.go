@@ -10,8 +10,6 @@ var (
 	PendingTxCountName = Prefix + "pending_tx_count"
 	// BatchExecuteTimeName is the name of the metric that shows the batch execution time.
 	BatchExecuteTimeName = Prefix + "batch_execute_time"
-	// TrustBatchNumName is the name of the metric that shows the trust batch num
-	TrustBatchNumName = Prefix + "trust_batch_num"
 	// BatchFinalizeTypeLabelName is the name of the label for the batch finalize type.
 	BatchFinalizeTypeLabelName = "batch_type"
 	// HaltCountName is the name of the metric that counts the halt count.
@@ -31,10 +29,6 @@ var (
 		{
 			Name: PendingTxCountName,
 			Help: "[SEQUENCER] number of pending transactions",
-		},
-		{
-			Name: TrustBatchNumName,
-			Help: "[SEQUENCER] trust batch num",
 		},
 	}
 	countersXLayer = []prometheus.CounterOpts{
@@ -63,11 +57,6 @@ func PendingTxCount(count int) {
 // BatchExecuteTime sets the gauge vector to the given batch type and time.
 func BatchExecuteTime(batchType BatchFinalizeTypeLabel, time int64) {
 	metrics.GaugeVecSet(BatchExecuteTimeName, string(batchType), float64(time))
-}
-
-// TrustBatchNum set the gauge to the given trust batch num
-func TrustBatchNum(batchNum uint64) {
-	metrics.GaugeSet(TrustBatchNumName, float64(batchNum))
 }
 
 // HaltCount increases the counter for the sequencer halt count.
