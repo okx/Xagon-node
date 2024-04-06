@@ -2,6 +2,7 @@ package mocks
 
 import (
 	"context"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -47,6 +48,36 @@ func (_m *PoolMock) GetInnerTx(ctx context.Context, txHash common.Hash) (string,
 
 	if rf, ok := ret.Get(1).(func(context.Context, common.Hash) error); ok {
 		r1 = rf(ctx, txHash)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetMinSuggestedGasPriceWithDelta provides a mock function with given fields: ctx, delta
+func (_m *PoolMock) GetMinSuggestedGasPriceWithDelta(ctx context.Context, delta time.Duration) (uint64, error) {
+	ret := _m.Called(ctx, delta)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetMinSuggestedGasPriceWithDelta")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, time.Duration) (uint64, error)); ok {
+		return rf(ctx, delta)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, time.Duration) uint64); ok {
+		r0 = rf(ctx, delta)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(uint64)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, time.Duration) error); ok {
+		r1 = rf(ctx, delta)
 	} else {
 		r1 = ret.Error(1)
 	}

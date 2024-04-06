@@ -28,6 +28,7 @@ type PoolInterface interface {
 	EffectiveGasPriceEnabled() bool
 	AddInnerTx(ctx context.Context, txHash common.Hash, innerTx []byte) error
 	GetInnerTx(ctx context.Context, txHash common.Hash) (string, error)
+	GetMinSuggestedGasPriceWithDelta(ctx context.Context, delta time.Duration) (uint64, error)
 }
 
 // StateInterface gathers the methods required to interact with the state.
@@ -66,6 +67,7 @@ type StateInterface interface {
 	GetLastVerifiedBatch(ctx context.Context, dbTx pgx.Tx) (*state.VerifiedBatch, error)
 	GetLastBatchNumber(ctx context.Context, dbTx pgx.Tx) (uint64, error)
 	GetBatchByNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*state.Batch, error)
+	GetBatchL2DataByNumbers(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error)
 	GetTransactionsByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (txs []types.Transaction, effectivePercentages []uint8, err error)
 	GetVirtualBatch(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*state.VirtualBatch, error)
 	GetVerifiedBatch(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*state.VerifiedBatch, error)

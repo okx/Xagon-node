@@ -66,3 +66,14 @@ func (p *Pool) refreshWhitelistedAddresses() {
 		p.whitelistedAddresses.Delete(nonWhitelistedAddress)
 	}
 }
+
+// GetMinSuggestedGasPriceWithDelta gets the min suggested gas price
+func (p *Pool) GetMinSuggestedGasPriceWithDelta(ctx context.Context, delta time.Duration) (uint64, error) {
+	fromTimestamp := time.Now().UTC().Add(-p.cfg.MinAllowedGasPriceInterval.Duration)
+	fromTimestamp = fromTimestamp.Add(delta)
+	if fromTimestamp.Before(p.startTimestamp) {
+		fromTimestamp = p.startTimestamp
+	}
+
+	return p.storage.MinL2GasPriceSince(ctx, fromTimestamp)
+}

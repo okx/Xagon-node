@@ -20,7 +20,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-const unexpectedHashTemplate = "missmatch on transaction data for batch num %d. Expected hash %s, actual hash: %s"
+const unexpectedHashTemplate = "missmatch on transaction data. Expected hash %s, actual hash: %s"
 
 // DataCommitteeMember represents a member of the Data Committee
 type DataCommitteeMember struct {
@@ -87,8 +87,22 @@ func (d *DataCommitteeBackend) Init() error {
 	return nil
 }
 
+// GetSequence gets backend data one hash at a time. This should be optimized on the DAC side to get them all at once.
+func (d *DataCommitteeBackend) GetSequence(ctx context.Context, hashes []common.Hash, dataAvailabilityMessage []byte) ([][]byte, error) {
+	// TODO: optimize this on the DAC side by implementing a multi batch retrieve api
+	var batchData [][]byte
+	for _, h := range hashes {
+		data, err := d.GetBatchL2Data(h)
+		if err != nil {
+			return nil, err
+		}
+		batchData = append(batchData, data)
+	}
+	return batchData, nil
+}
+
 // GetBatchL2Data returns the data from the DAC. It checks that it matches with the expected hash
-func (d *DataCommitteeBackend) GetBatchL2Data(batchNum uint64, hash common.Hash) ([]byte, error) {
+func (d *DataCommitteeBackend) GetBatchL2Data(hash common.Hash) ([]byte, error) {
 	intialMember := d.selectedCommitteeMember
 	found := false
 	for !found && intialMember != -1 {
@@ -110,7 +124,7 @@ func (d *DataCommitteeBackend) GetBatchL2Data(batchNum uint64, hash common.Hash)
 		actualTransactionsHash := crypto.Keccak256Hash(data)
 		if actualTransactionsHash != hash {
 			unexpectedHash := fmt.Errorf(
-				unexpectedHashTemplate, batchNum, hash, actualTransactionsHash,
+				unexpectedHashTemplate, hash, actualTransactionsHash,
 			)
 			log.Warnf(
 				"error getting data from DAC node %s at %s: %s",

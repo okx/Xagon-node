@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/0xPolygonHermez/zkevm-node/hex"
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/client"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
@@ -356,4 +358,42 @@ func (e *EthEndpoints) GetBlockInternalTransactionsByIndexAndLimit(hash types.Ar
 	}
 
 	return ret, nil
+}
+
+// MinGasPrice returns the minimum gas price
+func (e *EthEndpoints) MinGasPrice() (interface{}, types.Error) {
+	if e.isDisabled("eth_minGasPrice") {
+		return RPCErrorResponse(types.DefaultErrorCode, "not supported yet", nil, true)
+	}
+	ctx := context.Background()
+	if e.cfg.SequencerNodeURI != "" {
+		return e.getMinPriceFromSequencerNode()
+	}
+	delta := 30 * time.Second // nolint:gomnd
+	gasPrice, err := e.pool.GetMinSuggestedGasPriceWithDelta(ctx, delta)
+	if err != nil {
+		return e.GasPrice()
+	}
+
+	result := new(big.Int).SetUint64(gasPrice)
+
+	return hex.EncodeUint64(result.Uint64()), nil
+}
+
+func (e *EthEndpoints) getMinPriceFromSequencerNode() (interface{}, types.Error) {
+	res, err := client.JSONRPCCall(e.cfg.SequencerNodeURI, "eth_minGasPrice")
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, "failed to get min gas price from sequencer node", err, true)
+	}
+
+	if res.Error != nil {
+		return RPCErrorResponse(res.Error.Code, res.Error.Message, nil, false)
+	}
+
+	var gasPrice types.ArgUint64
+	err = json.Unmarshal(res.Result, &gasPrice)
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, "failed to read min gas price from sequencer node", err, true)
+	}
+	return gasPrice, nil
 }

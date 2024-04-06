@@ -167,6 +167,18 @@
       ]
     },
     {
+      "name": "zkevm_getBatchDataByNumbers",
+      "summary": "Gets batch data for a given list of batch numbers",
+      "params": [
+        {
+          "$ref": "#/components/contentDescriptors/BatchFilter"
+        }
+      ],
+      "result": {
+        "$ref": "#/components/contentDescriptors/BatchDataResult"
+      }
+    },
+    {
       "name": "zkevm_getBatchByNumber",
       "summary": "Gets a batch for a given number",
       "params": [
@@ -510,6 +522,27 @@
         "required": true,
         "schema": {
           "$ref": "#/components/schemas/Batch"
+        }
+      },
+      "BatchFilter": {
+        "name": "filter",
+        "description": "batch filter",
+        "schema": {
+          "$ref": "#/components/schemas/BatchFilter"
+        }
+      },
+      "BatchData": {
+        "name": "batchData",
+        "description": "batch data",
+        "schema": {
+          "$ref": "#/components/schemas/BatchData"
+        }
+      },
+      "BatchDataResult": {
+        "name": "batchDataResult",
+        "description": "batch data result",
+        "schema": {
+          "$ref": "#/components/schemas/BatchDataResult"
         }
       },
       "Block": {

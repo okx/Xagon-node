@@ -7,12 +7,11 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
-	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-const unexpectedHashTemplate = "missmatch on transaction data for batch num %d. Expected hash %s, actual hash: %s"
+const unexpectedHashTemplate = "mismatch on transaction data for batch num %d. Expected hash %s, actual hash: %s"
 
 // DataAvailability implements an abstract data availability integration
 type DataAvailability struct {
@@ -60,57 +59,82 @@ func (d *DataAvailability) PostSequence(ctx context.Context, sequences []types.S
 // 1. From local DB
 // 2. From Sequencer
 // 3. From DA backend
-func (d *DataAvailability) GetBatchL2Data(batchNum uint64, expectedTransactionsHash common.Hash) ([]byte, error) {
-	found := true
-	transactionsData, err := d.state.GetBatchL2DataByNumber(d.ctx, batchNum, nil)
-	if err != nil {
-		if err == state.ErrNotFound {
-			found = false
-		} else {
-			return nil, fmt.Errorf("failed to get batch data from state for batch num %d: %w", batchNum, err)
-		}
+func (d *DataAvailability) GetBatchL2Data(batchNums []uint64, batchHashes []common.Hash, dataAvailabilityMessage []byte) ([][]byte, error) {
+	if len(batchNums) != len(batchHashes) {
+		return nil, fmt.Errorf("invalid L2 batch data retrieval arguments, %d != %d", len(batchNums), len(batchHashes))
 	}
-	actualTransactionsHash := crypto.Keccak256Hash(transactionsData)
-	if !found || expectedTransactionsHash != actualTransactionsHash {
-		if found {
-			log.Warnf(unexpectedHashTemplate, batchNum, expectedTransactionsHash, actualTransactionsHash)
-		}
 
-		if !d.isTrustedSequencer {
-			log.Info("trying to get data from trusted sequencer")
-			data, err := d.getDataFromTrustedSequencer(batchNum, expectedTransactionsHash)
-			if err != nil {
-				log.Warn("failed to get data from trusted sequencer: %w", err)
-			} else {
-				return data, nil
-			}
-		}
-
-		log.Info("trying to get data from the data availability backend")
-		data, err := d.backend.GetBatchL2Data(batchNum, expectedTransactionsHash)
-		if err != nil {
-			log.Error("failed to get data from the data availability backend: %w", err)
-			if d.isTrustedSequencer {
-				return nil, fmt.Errorf("data not found on the local DB nor on any data committee member")
-			} else {
-				return nil, fmt.Errorf("data not found on the local DB, nor from the trusted sequencer nor on any data committee member")
-			}
-		}
+	data, err := d.localData(batchNums, batchHashes)
+	if err == nil {
 		return data, nil
 	}
-	return transactionsData, nil
+
+	if !d.isTrustedSequencer {
+		log.Infof("Try to get data from trusted sequencer for batches %v", batchNums)
+		data, err = d.trustedSequencerData(batchNums, batchHashes)
+		if err != nil {
+			log.Warnf("trusted sequencer failed to return data for batches %v: %s", batchNums, err.Error())
+		} else {
+			return data, nil
+		}
+	}
+	log.Infof("Try to get data from DA backend for batches %v", batchNums)
+	return d.backend.GetSequence(d.ctx, batchHashes, dataAvailabilityMessage)
 }
 
-func (d *DataAvailability) getDataFromTrustedSequencer(batchNum uint64, expectedTransactionsHash common.Hash) ([]byte, error) {
-	b, err := d.zkEVMClient.BatchByNumber(d.ctx, new(big.Int).SetUint64(batchNum))
+// localData retrieves batches from local database and returns an error unless all are found
+func (d *DataAvailability) localData(numbers []uint64, hashes []common.Hash) ([][]byte, error) {
+	data, err := d.state.GetBatchL2DataByNumbers(d.ctx, numbers, nil)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get batch num %d from trusted sequencer: %w", batchNum, err)
+		return nil, err
 	}
-	actualTransactionsHash := crypto.Keccak256Hash(b.BatchL2Data)
-	if expectedTransactionsHash != actualTransactionsHash {
-		return nil, fmt.Errorf(
-			unexpectedHashTemplate, batchNum, expectedTransactionsHash, actualTransactionsHash,
-		)
+	var batches [][]byte
+	for i := 0; i < len(numbers); i++ {
+		batchNumber := numbers[i]
+		expectedHash := hashes[i]
+		batchData, ok := data[batchNumber]
+		if !ok {
+			return nil, fmt.Errorf("missing batch %v", batchNumber)
+		}
+		actualHash := crypto.Keccak256Hash(batchData)
+		if actualHash != expectedHash {
+			err = fmt.Errorf(unexpectedHashTemplate, batchNumber, expectedHash, actualHash)
+			log.Warnf("wrong local data for hash: %s", err.Error())
+			return nil, err
+		} else {
+			batches = append(batches, batchData)
+		}
 	}
-	return b.BatchL2Data, nil
+	return batches, nil
+}
+
+// trustedSequencerData retrieved batch data from the trusted sequencer and returns an error unless all are found
+func (d *DataAvailability) trustedSequencerData(batchNums []uint64, expectedHashes []common.Hash) ([][]byte, error) {
+	if len(batchNums) != len(expectedHashes) {
+		return nil, fmt.Errorf("invalid arguments, len of batch numbers does not equal length of expected hashes: %d != %d",
+			len(batchNums), len(expectedHashes))
+	}
+	var nums []*big.Int
+	for _, n := range batchNums {
+		nums = append(nums, new(big.Int).SetUint64(n))
+	}
+	batchData, err := d.zkEVMClient.BatchesByNumbers(d.ctx, nums)
+	if err != nil {
+		return nil, err
+	}
+	if len(batchData) != len(batchNums) {
+		return nil, fmt.Errorf("missing batch data, expected %d, got %d", len(batchNums), len(batchData))
+	}
+	var result [][]byte
+	for i := 0; i < len(batchNums); i++ {
+		number := batchNums[i]
+		batch := batchData[i]
+		expectedTransactionsHash := expectedHashes[i]
+		actualTransactionsHash := crypto.Keccak256Hash(batch.BatchL2Data)
+		if expectedTransactionsHash != actualTransactionsHash {
+			return nil, fmt.Errorf(unexpectedHashTemplate, number, expectedTransactionsHash, actualTransactionsHash)
+		}
+		result = append(result, batch.BatchL2Data)
+	}
+	return result, nil
 }
