@@ -93,90 +93,140 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		log.Errorf("no batch %d. Error: %v", i, err)
 		return batch2, nil, err
 	}
-	leafs, l1InfoRoot, _, err := r.st.GetL1InfoTreeDataFromBatchL2Data(context.Background(), batch2.BatchL2Data, dbTx)
-	if err != nil {
-		//log.Errorf("%s error getting GetL1InfoTreeDataFromBatchL2Data: %v. Error:%w", data.DebugPrefix, l1InfoRoot, err)
-		return nil, nil, err
-	}
-	log.Infof("l1InfoRoot:%s", l1InfoRoot)
-	log.Infof("leafs:%d", len(leafs))
-	request := state.ProcessRequest{
-		BatchNumber:       batch2.BatchNumber,
-		OldStateRoot:      oldStateRoot,
-		OldAccInputHash:   oldAccInputHash,
-		Coinbase:          batch2.Coinbase,
-		Timestamp_V1:      batch2.Timestamp,
-		TimestampLimit_V2: uint64(batch2.Timestamp.Unix()),
-		L1InfoRoot_V2:     l1InfoRoot,
-		L1InfoTreeData_V2: leafs,
-
-		GlobalExitRoot_V1: batch2.GlobalExitRoot,
-		Transactions:      batch2.BatchL2Data,
-	}
-	log.Debugf("Processing batch %d: ntx:%d StateRoot:%s", batch2.BatchNumber, len(batch2.BatchL2Data), batch2.StateRoot)
 	forkID := r.st.GetForkIDByBatchNumber(batch2.BatchNumber)
-	fmt.Printf("fork id: %d\n", forkID)
-	request.ForkID = forkID
-	batchV2, err := state.DecodeBatchV2(batch2.BatchL2Data)
-	var syncedTxs []types.Transaction
-	for _, block := range batchV2.Blocks {
-		for _, transaction := range block.Transactions {
-			syncedTxs = append(syncedTxs, transaction.Tx)
-		}
-	}
-	//syncedTxs, _, _, err := state.DecodeTxs(v2.Blocks, forkID)
-	//if err != nil {
-	//	log.Errorf("error decoding synced txs from trustedstate. Error: %v, TrustedBatchL2Data: %s", err, batch2.BatchL2Data)
-	//	return batch2, nil, err
-	//} else {
-	r.output.numOfTransactionsInBatch(len(syncedTxs))
-	//}
-	var response *state.ProcessBatchResponse
-
-	log.Infof("id:%d len_trs:%d oldStateRoot:%s", batch2.BatchNumber, len(syncedTxs), request.OldStateRoot)
-	response, err = r.st.ProcessBatchV2(r.ctx, request, r.updateHasbDB)
-	for _, blockResponse := range response.BlockResponses {
-		for tx_i, txresponse := range blockResponse.TransactionResponses {
-			if txresponse.RomError != nil {
-				r.output.addTransactionError(tx_i, txresponse.RomError)
-				log.Errorf("error processing batch %d. tx:%d Error: %v stateroot:%s", i, tx_i, txresponse.RomError, response.NewStateRoot)
-				//return txresponse.RomError
-			}
-		}
-	}
-
+	l1data, l1hash, _, err := r.st.GetL1InfoTreeDataFromBatchL2Data(context.Background(), batch2.BatchL2Data, dbTx)
 	if err != nil {
-		r.output.isWrittenOnHashDB(false, response.FlushID)
-		if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
-			return batch2, response, fmt.Errorf(
-				"failed to rollback dbTx: %s. Rollback err: %w",
-				rollbackErr.Error(), err,
-			)
-		}
-		log.Errorf("error processing batch %d. Error: %v", i, err)
-		return batch2, response, err
-	} else {
-		r.output.isWrittenOnHashDB(r.updateHasbDB, response.FlushID)
+		log.Errorf("error getting L1InfoTreeData from batch. Error: %v", err)
+		return batch2, nil, err
 	}
-	if response.NewStateRoot != batch2.StateRoot {
-		if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
-			return batch2, response, fmt.Errorf(
-				"failed to rollback dbTx: %s. Rollback err: %w",
-				rollbackErr.Error(), err,
-			)
+
+	l2data, err := state.DecodeBatchV2(batch2.BatchL2Data)
+	for _, block := range l2data.Blocks {
+
+		batchL2Data := []byte{}
+
+		// Add changeL2Block to batchL2Data
+		changeL2BlockBytes := r.st.BuildChangeL2Block(block.DeltaTimestamp, block.IndexL1InfoTree)
+		batchL2Data = append(batchL2Data, changeL2BlockBytes...)
+
+		// Add transactions data to batchL2Data
+		var txs []types.Transaction
+		var epg []uint8
+		for _, tx := range block.Transactions {
+			txs = append(txs, tx.Tx)
+			epg = append(epg, tx.EfficiencyPercentage)
 		}
-		log.Errorf("error processing batch %d. Error: state root differs: calculated: %s  != expected: %s", i, response.NewStateRoot, batch2.StateRoot)
-		return batch2, response, fmt.Errorf("missmatch state root calculated: %s  != expected: %s", response.NewStateRoot, batch2.StateRoot)
+		transactions, err := state.EncodeTransactions(txs, epg, forkID)
+		if err != nil {
+			log.Errorf("error encoding transactions. Error: %v", err)
+			return batch2, nil, err
+		}
+		r.output.numOfTransactionsInBatch(len(transactions))
+
+		request := state.ProcessRequest{
+			BatchNumber:       batch2.BatchNumber,
+			OldStateRoot:      oldStateRoot,
+			OldAccInputHash:   oldAccInputHash,
+			Coinbase:          batch2.Coinbase,
+			Timestamp_V1:      batch2.Timestamp,
+			TimestampLimit_V2: uint64(batch2.Timestamp.Unix()),
+			L1InfoRoot_V2:     state.GetMockL1InfoRoot(),
+			L1InfoTreeData_V2: map[uint32]state.L1DataV2{},
+
+			GlobalExitRoot_V1:       batch2.GlobalExitRoot,
+			Transactions:            transactions,
+			SkipVerifyL1InfoRoot_V2: true,
+		}
+		//request.L1InfoTreeData_V2[block.IndexL1InfoTree] = state.L1DataV2{
+		//	GlobalExitRoot: batch2.GlobalExitRoot,
+		//	BlockHashL1:    common.Hash{},
+		//	MinTimestamp:   0,
+		//}
+		request.L1InfoTreeData_V2 = l1data
+		request.L1InfoRoot_V2 = l1hash
+
+		batchResponse, err := r.st.ProcessBatchV2(context.Background(), request, false)
+		if err != nil {
+			log.Errorf("error processing batch %d. Error: %v", i, err)
+			return batch2, nil, err
+		}
+		log.Infof("batch response: %v", batchResponse)
 	}
+
+	//
+	//request := state.ProcessRequest{
+	//	BatchNumber:       batch2.BatchNumber,
+	//	OldStateRoot:      oldStateRoot,
+	//	OldAccInputHash:   oldAccInputHash,
+	//	Coinbase:          batch2.Coinbase,
+	//	Timestamp_V1:      batch2.Timestamp,
+	//	TimestampLimit_V2: uint64(batch2.Timestamp.Unix()),
+	//	L1InfoRoot_V2:     state.GetMockL1InfoRoot(),
+	//	L1InfoTreeData_V2: map[uint32]state.L1DataV2{},
+	//
+	//	GlobalExitRoot_V1: batch2.GlobalExitRoot,
+	//	Transactions:      batch2.BatchL2Data,
+	//}
+	//
+	//
+	//log.Debugf("Processing batch %d: ntx:%d StateRoot:%s", batch2.BatchNumber, len(batch2.BatchL2Data), batch2.StateRoot)
+	//
+	//fmt.Printf("fork id: %d\n", forkID)
+	//request.ForkID = forkID
+	//
+	////syncedTxs, _, _, err := state.DecodeTxs(v2.Blocks, forkID)
+	////if err != nil {
+	////	log.Errorf("error decoding synced txs from trustedstate. Error: %v, TrustedBatchL2Data: %s", err, batch2.BatchL2Data)
+	////	return batch2, nil, err
+	////} else {
+	//
+	////}
+	//var response *state.ProcessBatchResponse
+	//
+	//log.Infof("id:%d len_trs:%d oldStateRoot:%s", batch2.BatchNumber, len(syncedTxs), request.OldStateRoot)
+	//response, err = r.st.ProcessBatchV2(r.ctx, request, r.updateHasbDB)
+	//for _, blockResponse := range response.BlockResponses {
+	//	for tx_i, txresponse := range blockResponse.TransactionResponses {
+	//		if txresponse.RomError != nil {
+	//			r.output.addTransactionError(tx_i, txresponse.RomError)
+	//			log.Errorf("error processing batch %d. tx:%d Error: %v stateroot:%s", i, tx_i, txresponse.RomError, response.NewStateRoot)
+	//			//return txresponse.RomError
+	//		}
+	//	}
+	//}
+	//
+	//if err != nil {
+	//	r.output.isWrittenOnHashDB(false, response.FlushID)
+	//	if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
+	//		return batch2, response, fmt.Errorf(
+	//			"failed to rollback dbTx: %s. Rollback err: %w",
+	//			rollbackErr.Error(), err,
+	//		)
+	//	}
+	//	log.Errorf("error processing batch %d. Error: %v", i, err)
+	//	return batch2, response, err
+	//} else {
+	//	r.output.isWrittenOnHashDB(r.updateHasbDB, response.FlushID)
+	//}
+	//if response.NewStateRoot != batch2.StateRoot {
+	//	if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
+	//		return batch2, response, fmt.Errorf(
+	//			"failed to rollback dbTx: %s. Rollback err: %w",
+	//			rollbackErr.Error(), err,
+	//		)
+	//	}
+	//	log.Errorf("error processing batch %d. Error: state root differs: calculated: %s  != expected: %s", i, response.NewStateRoot, batch2.StateRoot)
+	//	return batch2, response, fmt.Errorf("missmatch state root calculated: %s  != expected: %s", response.NewStateRoot, batch2.StateRoot)
+	//}
 
 	if commitErr := dbTx.Commit(r.ctx); commitErr != nil {
-		return batch2, response, fmt.Errorf(
+		return batch2, nil, fmt.Errorf(
 			"failed to commit dbTx: %s. Commit err: %w",
 			commitErr.Error(), err,
 		)
 	}
 
-	log.Infof("Verified batch %d: ntx:%d StateRoot:%s", i, len(syncedTxs), batch2.StateRoot)
+	//log.Infof("Verified batch %d: ntx:%d StateRoot:%s", i, len(syncedTxs), batch2.StateRoot)
 
-	return batch2, response, nil
+	return batch2, nil, nil
 }
