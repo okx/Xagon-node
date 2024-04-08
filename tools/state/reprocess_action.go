@@ -180,7 +180,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 			block.IndexL1InfoTree: {
 				GlobalExitRoot: index.GlobalExitRoot.GlobalExitRoot,
 				BlockHashL1:    index.PreviousBlockHash,
-				MinTimestamp:   uint64(index.GlobalExitRoot.Timestamp.Unix() * 2),
+				MinTimestamp:   uint64(index.L1InfoTreeLeaf.Timestamp.Unix()),
 			},
 		}
 		log.Infof("deltatimestamp: %d, minTimestamp:%d, current: %d", block.DeltaTimestamp, index.GlobalExitRoot.Timestamp.Unix(), time.Now().Unix())
