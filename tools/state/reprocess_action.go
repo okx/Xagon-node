@@ -161,7 +161,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 			OldStateRoot:              oldStateRoot,
 			Coinbase:                  batch2.Coinbase,
 			L1InfoRoot_V2:             state.GetMockL1InfoRoot(),
-			TimestampLimit_V2:         uint64(time.Now().Unix()),
+			TimestampLimit_V2:         l2block.Time(),
 			Transactions:              batchL2Data,
 			SkipFirstChangeL2Block_V2: false,
 			SkipWriteBlockInfoRoot_V2: false,
@@ -180,7 +180,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 			block.IndexL1InfoTree: {
 				GlobalExitRoot: index.GlobalExitRoot.GlobalExitRoot,
 				BlockHashL1:    index.PreviousBlockHash,
-				MinTimestamp:   uint64(index.GlobalExitRoot.Timestamp.Unix()),
+				MinTimestamp:   uint64(index.GlobalExitRoot.Timestamp.Unix() * 2),
 			},
 		}
 		log.Infof("deltatimestamp: %d, minTimestamp:%d, current: %d", block.DeltaTimestamp, index.GlobalExitRoot.Timestamp.Unix(), time.Now().Unix())
