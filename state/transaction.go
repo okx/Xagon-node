@@ -117,6 +117,8 @@ func (s *State) StoreTransactions(ctx context.Context, batchNumber uint64, proce
 		return ErrBatchAlreadyClosed
 	}
 
+	forkID := s.GetForkIDByBatchNumber(batchNumber)
+
 	for _, processedBlock := range processedBlocks {
 		processedTxs := processedBlock.TransactionResponses
 		// check existing txs vs parameter txs
@@ -167,11 +169,12 @@ func (s *State) StoreTransactions(ctx context.Context, batchNumber uint64, proce
 			header.BlockInfoRoot = processedBlock.BlockInfoRoot
 			transactions := []*types.Transaction{&processedTx.Tx}
 
-			receipt := GenerateReceipt(header.Number, processedTx, uint(i))
+			receipt := GenerateReceipt(header.Number, processedTx, uint(i), forkID)
 			if !CheckLogOrder(receipt.Logs) {
 				return fmt.Errorf("error: logs received from executor are not in order")
 			}
 			receipts := []*types.Receipt{receipt}
+			imStateRoots := []common.Hash{processedTx.StateRoot}
 
 			// Create l2Block to be able to calculate its hash
 			st := trie.NewStackTrie(nil)
@@ -187,7 +190,7 @@ func (s *State) StoreTransactions(ctx context.Context, batchNumber uint64, proce
 			txsL2Hash := []common.Hash{processedTx.TxHashL2_V2}
 
 			// Store L2 block and its transaction
-			if err := s.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, dbTx); err != nil {
+			if err := s.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, imStateRoots, dbTx); err != nil {
 				return err
 			}
 		}
@@ -209,8 +212,11 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 		return err
 	}
 
+	forkID := s.GetForkIDByBatchNumber(batchNumber)
+
 	gasLimit := l2Block.GasLimit
-	if gasLimit > MaxL2BlockGasLimit {
+	// We check/set the maximum value of gasLimit for batches <= to ETROG fork. For batches >= to ELDERBERRY fork we use always the value returned by the executor
+	if forkID <= FORKID_ETROG && gasLimit > MaxL2BlockGasLimit {
 		gasLimit = MaxL2BlockGasLimit
 	}
 
@@ -234,6 +240,8 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 	storeTxsEGPData := make([]StoreTxEGPData, 0, numTxs)
 	receipts := make([]*types.Receipt, 0, numTxs)
 	txsL2Hash := make([]common.Hash, 0, numTxs)
+	imStateRoots := make([]common.Hash, 0, numTxs)
+	var receipt *types.Receipt
 
 	for i, txResponse := range l2Block.TransactionResponses {
 		// if the transaction has an intrinsic invalid tx error it means
@@ -244,11 +252,9 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 		if executor.IsInvalidL2Block(executor.RomErrorCode(txResponse.RomError)) {
 			continue
 		}
-
 		txResp := *txResponse
 		transactions = append(transactions, &txResp.Tx)
 		txsL2Hash = append(txsL2Hash, txResp.TxHashL2_V2)
-
 		storeTxEGPData := StoreTxEGPData{EGPLog: nil, EffectivePercentage: uint8(txResponse.EffectivePercentage)}
 		if txsEGPLog != nil {
 			storeTxEGPData.EGPLog = txsEGPLog[i]
@@ -256,8 +262,9 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 
 		storeTxsEGPData = append(storeTxsEGPData, storeTxEGPData)
 
-		receipt := GenerateReceipt(header.Number, txResponse, uint(i))
+		receipt = GenerateReceipt(header.Number, txResponse, uint(i), forkID)
 		receipts = append(receipts, receipt)
+		imStateRoots = append(imStateRoots, txResp.StateRoot)
 	}
 
 	// Create block to be able to calculate its hash
@@ -270,7 +277,7 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 	}
 
 	// Store L2 block and its transactions
-	if err := s.AddL2Block(ctx, batchNumber, block, receipts, txsL2Hash, storeTxsEGPData, dbTx); err != nil {
+	if err := s.AddL2Block(ctx, batchNumber, block, receipts, txsL2Hash, storeTxsEGPData, imStateRoots, dbTx); err != nil {
 		return err
 	}
 
@@ -642,6 +649,8 @@ func (s *State) StoreTransaction(ctx context.Context, batchNumber uint64, proces
 		return nil, err
 	}
 
+	forkID := s.GetForkIDByBatchNumber(batchNumber)
+
 	header := NewL2Header(&types.Header{
 		Number:     new(big.Int).SetUint64(lastL2Block.Number().Uint64() + 1),
 		ParentHash: lastL2Block.Hash(),
@@ -655,8 +664,9 @@ func (s *State) StoreTransaction(ctx context.Context, batchNumber uint64, proces
 	header.BlockInfoRoot = blockInfoRoot
 	transactions := []*types.Transaction{&processedTx.Tx}
 
-	receipt := GenerateReceipt(header.Number, processedTx, 0)
+	receipt := GenerateReceipt(header.Number, processedTx, 0, forkID)
 	receipts := []*types.Receipt{receipt}
+	imStateRoots := []common.Hash{processedTx.StateRoot}
 
 	// Create l2Block to be able to calculate its hash
 	st := trie.NewStackTrie(nil)
@@ -669,7 +679,7 @@ func (s *State) StoreTransaction(ctx context.Context, batchNumber uint64, proces
 	txsL2Hash := []common.Hash{processedTx.TxHashL2_V2}
 
 	// Store L2 block and its transaction
-	if err := s.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, dbTx); err != nil {
+	if err := s.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, imStateRoots, dbTx); err != nil {
 		return nil, err
 	}
 
@@ -1034,7 +1044,6 @@ func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batc
 	}
 	if processBatchResponseV2.ErrorRom != executor.RomError_ROM_ERROR_NO_ERROR {
 		err = executor.RomErr(processBatchResponseV2.ErrorRom)
-		s.eventLog.LogExecutorErrorV2(ctx, processBatchResponseV2.Error, processBatchRequestV2)
 		return false, false, gasUsed, nil, err
 	}
 

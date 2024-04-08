@@ -169,8 +169,8 @@ func (p *PostgresStorage) GetL2BlockTransactionCountByNumber(ctx context.Context
 }
 
 // AddL2Block adds a new L2 block to the State Store
-func (p *PostgresStorage) AddL2Block(ctx context.Context, batchNumber uint64, l2Block *state.L2Block, receipts []*types.Receipt, txsL2Hash []common.Hash, txsEGPData []state.StoreTxEGPData, dbTx pgx.Tx) error {
-	//TODO: Optmize this function using only one SQL (with several values) to insert all the txs, receips and logs
+func (p *PostgresStorage) AddL2Block(ctx context.Context, batchNumber uint64, l2Block *state.L2Block, receipts []*types.Receipt, txsL2Hash []common.Hash, txsEGPData []state.StoreTxEGPData, imStateRoots []common.Hash, dbTx pgx.Tx) error {
+	// TODO: Optimize this function using only one SQL (with several values) to insert all the txs, receipts and logs
 	log.Debugf("[AddL2Block] adding L2 block %d", l2Block.NumberU64())
 	start := time.Now()
 
@@ -255,7 +255,7 @@ func (p *PostgresStorage) AddL2Block(ctx context.Context, batchNumber uint64, l2
 	}
 
 	if len(receipts) > 0 {
-		p.AddReceipts(ctx, receipts, dbTx)
+		p.AddReceipts(ctx, receipts, imStateRoots, dbTx)
 
 		var logs []*types.Log
 		for _, receipt := range receipts {

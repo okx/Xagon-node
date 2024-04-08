@@ -279,19 +279,23 @@ func DecodeTx(encodedTx string) (*types.Transaction, error) {
 }
 
 // GenerateReceipt generates a receipt from a processed transaction
-func GenerateReceipt(blockNumber *big.Int, processedTx *ProcessTransactionResponse, txIndex uint) *types.Receipt {
+func GenerateReceipt(blockNumber *big.Int, processedTx *ProcessTransactionResponse, txIndex uint, forkID uint64) *types.Receipt {
 	receipt := &types.Receipt{
-		Type:              uint8(processedTx.Type),
-		PostState:         processedTx.StateRoot.Bytes(),
-		CumulativeGasUsed: processedTx.GasUsed,
-		BlockNumber:       blockNumber,
-		GasUsed:           processedTx.GasUsed,
-		TxHash:            processedTx.Tx.Hash(),
-		TransactionIndex:  txIndex,
-		ContractAddress:   processedTx.CreateAddress,
-		Logs:              processedTx.Logs,
+		Type:             uint8(processedTx.Type),
+		BlockNumber:      blockNumber,
+		GasUsed:          processedTx.GasUsed,
+		TxHash:           processedTx.Tx.Hash(),
+		TransactionIndex: txIndex,
+		ContractAddress:  processedTx.CreateAddress,
+		Logs:             processedTx.Logs,
 	}
-
+	if forkID <= FORKID_ETROG {
+		receipt.PostState = processedTx.StateRoot.Bytes()
+		receipt.CumulativeGasUsed = processedTx.GasUsed
+	} else {
+		receipt.PostState = []byte{}
+		receipt.CumulativeGasUsed = processedTx.CumulativeGasUsed
+	}
 	if processedTx.EffectiveGasPrice != "" {
 		effectiveGasPrice, ok := big.NewInt(0).SetString(processedTx.EffectiveGasPrice, 0)
 		if !ok {
@@ -309,10 +313,14 @@ func GenerateReceipt(blockNumber *big.Int, processedTx *ProcessTransactionRespon
 	for i := 0; i < len(receipt.Logs); i++ {
 		receipt.Logs[i].TxHash = processedTx.Tx.Hash()
 	}
-	if processedTx.RomError == nil {
-		receipt.Status = types.ReceiptStatusSuccessful
+	if forkID <= FORKID_ETROG {
+		if processedTx.RomError == nil {
+			receipt.Status = types.ReceiptStatusSuccessful
+		} else {
+			receipt.Status = types.ReceiptStatusFailed
+		}
 	} else {
-		receipt.Status = types.ReceiptStatusFailed
+		receipt.Status = uint64(processedTx.Status)
 	}
 
 	return receipt

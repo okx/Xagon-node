@@ -837,6 +837,16 @@
 					"description": "TrustedSequencerURL is the rpc url to connect and sync the trusted state",
 					"default": ""
 				},
+				"L1SyncCheckL2BlockHash": {
+					"type": "boolean",
+					"description": "L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)",
+					"default": true
+				},
+				"L1SyncCheckL2BlockNumberhModulus": {
+					"type": "integer",
+					"description": "L1SyncCheckL2BlockNumberhModulus is the modulus used to choose the l2block to check\na modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)",
+					"default": 30
+				},
 				"L1SynchronizationMode": {
 					"type": "string",
 					"enum": [

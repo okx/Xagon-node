@@ -188,6 +188,7 @@ func TestGetBatchByL2BlockNumber(t *testing.T) {
 	transactions := []*types.Transaction{tx}
 
 	receipts := []*types.Receipt{receipt}
+	imStateRoots := []common.Hash{state.ZeroHash}
 
 	// Create block to be able to calculate its hash
 	st := trie.NewStackTrie(nil)
@@ -202,7 +203,7 @@ func TestGetBatchByL2BlockNumber(t *testing.T) {
 		txsL2Hash[i] = common.HexToHash(fmt.Sprintf("0x%d", i))
 	}
 
-	err = pgStateStorage.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, dbTx)
+	err = pgStateStorage.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, imStateRoots, dbTx)
 	require.NoError(t, err)
 	result, err := pgStateStorage.BatchNumberByL2BlockNumber(ctx, l2Block.Number().Uint64(), dbTx)
 	require.NoError(t, err)
@@ -657,7 +658,7 @@ func TestForkIDs(t *testing.T) {
 		require.Equal(t, forks[i].Version, forkId.Version)
 	}
 	forkID3.ToBatchNumber = 18446744073709551615
-	err = testState.UpdateForkID(ctx, forkID3, dbTx)
+	err = testState.UpdateForkIDToBatchNumber(ctx, forkID3, dbTx)
 	require.NoError(t, err)
 
 	forkIDs, err = testState.GetForkIDs(ctx, dbTx)
@@ -724,7 +725,7 @@ func TestGetLastVerifiedL2BlockNumberUntilL1Block(t *testing.T) {
 			txsL2Hash[i] = common.HexToHash(fmt.Sprintf("0x%d", i))
 		}
 
-		err = testState.AddL2Block(ctx, batchNumber, l2Block, []*types.Receipt{}, txsL2Hash, storeTxsEGPData, dbTx)
+		err = testState.AddL2Block(ctx, batchNumber, l2Block, []*types.Receipt{}, txsL2Hash, storeTxsEGPData, []common.Hash{}, dbTx)
 		require.NoError(t, err)
 
 		virtualBatch := state.VirtualBatch{BlockNumber: blockNumber, BatchNumber: batchNumber, Coinbase: addr, SequencerAddr: addr, TxHash: hash}
@@ -923,6 +924,7 @@ func TestGetLogs(t *testing.T) {
 
 		transactions := []*types.Transaction{tx}
 		receipts := []*types.Receipt{receipt}
+		stateRoots := []common.Hash{state.ZeroHash}
 
 		header := state.NewL2Header(&types.Header{
 			Number:     big.NewInt(int64(i) + 1),
@@ -948,7 +950,7 @@ func TestGetLogs(t *testing.T) {
 			txsL2Hash[i] = common.HexToHash(fmt.Sprintf("0x%d", i))
 		}
 
-		err = testState.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, dbTx)
+		err = testState.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, stateRoots, dbTx)
 		require.NoError(t, err)
 	}
 
@@ -1054,6 +1056,7 @@ func TestGetNativeBlockHashesInRange(t *testing.T) {
 
 		transactions := []*types.Transaction{tx}
 		receipts := []*types.Receipt{receipt}
+		stateRoots := []common.Hash{state.ZeroHash}
 
 		header := state.NewL2Header(&types.Header{
 			Number:     big.NewInt(int64(i) + 1),
@@ -1079,7 +1082,7 @@ func TestGetNativeBlockHashesInRange(t *testing.T) {
 			txsL2Hash[i] = common.HexToHash(fmt.Sprintf("0x%d", i))
 		}
 
-		err = testState.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, dbTx)
+		err = testState.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, stateRoots, dbTx)
 		require.NoError(t, err)
 
 		nativeBlockHashes = append(nativeBlockHashes, l2Block.Header().Root)

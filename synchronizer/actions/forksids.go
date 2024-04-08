@@ -12,6 +12,8 @@ const (
 	ForkIDEtrog = ForkIdType(7) //nolint:gomnd
 	// ForkIDElderberry is the forkId for Elderberry
 	ForkIDElderberry = ForkIdType(8) //nolint:gomnd
+	// ForkID9 is the forkId for 9
+	ForkID9 = ForkIdType(9) //nolint:gomnd
 )
 
 var (
@@ -20,7 +22,7 @@ var (
 	ForksIdAll = []ForkIdType{WildcardForkId}
 
 	// ForksIdOnlyElderberry support only elderberry forkId
-	ForksIdOnlyElderberry = []ForkIdType{ForkIDElderberry}
+	ForksIdOnlyElderberry = []ForkIdType{ForkIDElderberry, ForkID9}
 
 	// ForksIdOnlyEtrog support only etrog forkId
 	ForksIdOnlyEtrog = []ForkIdType{ForkIDEtrog}

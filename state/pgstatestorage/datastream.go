@@ -91,7 +91,7 @@ func scanL2Block(row pgx.Row) (*state.DSL2Block, error) {
 
 // GetDSL2Transactions returns the L2 transactions
 func (p *PostgresStorage) GetDSL2Transactions(ctx context.Context, firstL2Block, lastL2Block uint64, dbTx pgx.Tx) ([]*state.DSL2Transaction, error) {
-	const l2TxSQL = `SELECT l2_block_num, t.effective_percentage, t.encoded, r.post_state
+	const l2TxSQL = `SELECT l2_block_num, t.effective_percentage, t.encoded, r.post_state, r.im_state_root
 					 FROM state.transaction t, state.receipt r
 					 WHERE l2_block_num BETWEEN $1 AND $2 AND r.tx_hash = t.hash
 					 ORDER BY t.l2_block_num ASC, r.tx_index ASC`
@@ -120,11 +120,13 @@ func scanDSL2Transaction(row pgx.Row) (*state.DSL2Transaction, error) {
 	l2Transaction := state.DSL2Transaction{}
 	encoded := []byte{}
 	postState := []byte{}
+	imStateRoot := []byte{}
 	if err := row.Scan(
 		&l2Transaction.L2BlockNumber,
 		&l2Transaction.EffectiveGasPricePercentage,
 		&encoded,
 		&postState,
+		&imStateRoot,
 	); err != nil {
 		return nil, err
 	}
@@ -142,6 +144,7 @@ func scanDSL2Transaction(row pgx.Row) (*state.DSL2Transaction, error) {
 	l2Transaction.EncodedLength = uint32(len(l2Transaction.Encoded))
 	l2Transaction.IsValid = 1
 	l2Transaction.StateRoot = common.BytesToHash(postState)
+	l2Transaction.ImStateRoot = common.BytesToHash(imStateRoot)
 	return &l2Transaction, nil
 }
 

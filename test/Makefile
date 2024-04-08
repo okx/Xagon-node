@@ -806,7 +806,7 @@ generate-mocks-synchronizer: ## Generates mocks for synchronizer , using mockery
 	
 	
 
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../synchronizer/mocks --structname=DbTxMock --filename=mock_dbtx.go
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../synchronizer/mocks --structname=DbTxMock --filename=mock_dbtx.go ${COMMON_MOCKERY_PARAMS}
 	
 .PHONY: generate-mocks-etherman	
 generate-mocks-etherman: ## Generates mocks for etherman , using mockery tool

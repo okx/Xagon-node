@@ -19,7 +19,12 @@ type ZKEVMClientGlobalExitRootGetter interface {
 	ExitRootsByGER(ctx context.Context, globalExitRoot common.Hash) (*types.ExitRoots, error)
 }
 
+type ZKEVMClientGetL2BlockByNumber interface {
+	BlockByNumber(ctx context.Context, number *big.Int) (*types.Block, error)
+}
+
 type ZKEVMClientInterface interface {
 	ZKEVMClientTrustedBatchesGetter
 	ZKEVMClientGlobalExitRootGetter
+	ZKEVMClientGetL2BlockByNumber
 }

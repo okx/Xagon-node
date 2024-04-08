@@ -14,6 +14,12 @@ type Config struct {
 	// TrustedSequencerURL is the rpc url to connect and sync the trusted state
 	TrustedSequencerURL string `mapstructure:"TrustedSequencerURL"`
 
+	// L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)
+	L1SyncCheckL2BlockHash bool `mapstructure:"L1SyncCheckL2BlockHash"`
+	// L1SyncCheckL2BlockNumberhModulus is the modulus used to choose the l2block to check
+	// a modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)
+	L1SyncCheckL2BlockNumberhModulus uint64 `mapstructure:"L1SyncCheckL2BlockNumberhModulus"`
+
 	// L1SynchronizationMode define how to synchronize with L1:
 	// - parallel: Request data to L1 in parallel, and process sequentially. The advantage is that executor is not blocked waiting for L1 data
 	// - sequential: Request data to L1 and execute

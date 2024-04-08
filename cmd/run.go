@@ -301,7 +301,6 @@ func runSynchronizer(cfg config.Config, etherman *etherman.Client, ethTxManagerS
 		log.Info("trustedSequencerURL ", trustedSequencerURL)
 	}
 	zkEVMClient := client.NewClient(trustedSequencerURL)
-
 	etherManForL1 := []syncinterfaces.EthermanFullInterface{}
 	// If synchronizer are using sequential mode, we only need one etherman client
 	if cfg.Synchronizer.L1SynchronizationMode == synchronizer.ParallelMode {

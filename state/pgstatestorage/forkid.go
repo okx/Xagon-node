@@ -51,11 +51,30 @@ func (p *PostgresStorage) GetForkIDs(ctx context.Context, dbTx pgx.Tx) ([]state.
 }
 
 // UpdateForkID updates the forkID stored in db
-func (p *PostgresStorage) UpdateForkID(ctx context.Context, forkID state.ForkIDInterval, dbTx pgx.Tx) error {
+func (p *PostgresStorage) UpdateForkIDToBatchNumber(ctx context.Context, forkID state.ForkIDInterval, dbTx pgx.Tx) error {
 	const updateForkIDSQL = "UPDATE state.fork_id SET to_batch_num = $1 WHERE fork_id = $2"
 	e := p.getExecQuerier(dbTx)
 	if _, err := e.Exec(ctx, updateForkIDSQL, forkID.ToBatchNumber, forkID.ForkId); err != nil {
 		return err
+	}
+	return nil
+}
+
+// UpdateForkID updates the forkID stored in db
+func (p *PostgresStorage) UpdateForkIDBlockNumber(ctx context.Context, forkdID uint64, newBlockNumber uint64, updateMemCache bool, dbTx pgx.Tx) error {
+	const sql = "UPDATE state.fork_id SET block_num = $1 WHERE fork_id = $2"
+	e := p.getExecQuerier(dbTx)
+	if _, err := e.Exec(ctx, sql, forkdID, newBlockNumber); err != nil {
+		return err
+	}
+	if updateMemCache {
+		log.Debugf("Updating forkID %d in memory", forkdID)
+		forkIDs, err := p.GetForkIDs(ctx, dbTx)
+		if err != nil {
+			log.Error("error getting oldForkIDs. Error: ", err)
+			return err
+		}
+		p.UpdateForkIDIntervalsInMemory(forkIDs)
 	}
 	return nil
 }
@@ -88,7 +107,7 @@ func (p *PostgresStorage) AddForkIDInterval(ctx context.Context, newForkID state
 			return err
 		}
 		forkIDs[len(forkIDs)-1].ToBatchNumber = newForkID.FromBatchNumber - 1
-		err := p.UpdateForkID(ctx, forkIDs[len(forkIDs)-1], dbTx)
+		err := p.UpdateForkIDToBatchNumber(ctx, forkIDs[len(forkIDs)-1], dbTx)
 		if err != nil {
 			log.Errorf("error updating forkID: %d. Error: %v", forkIDs[len(forkIDs)-1].ForkId, err)
 			return err

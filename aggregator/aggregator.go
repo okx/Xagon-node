@@ -35,6 +35,8 @@ const (
 
 	ethTxManagerOwner = "aggregator"
 	monitoredIDFormat = "proof-from-%v-to-%v"
+
+	forkId9 = uint64(9)
 )
 
 type finalProofMsg struct {
@@ -182,8 +184,9 @@ func (a *Aggregator) Channel(stream prover.AggregatorService_ChannelServer) erro
 	log.Info("Establishing stream connection with prover")
 
 	// Check if prover supports the required Fork ID
-	if !prover.SupportsForkID(a.cfg.ForkId) {
-		err := fmt.Errorf(fmt.Sprintf("prover does not support required fork ID %d", a.cfg.ForkId))
+
+	if !prover.SupportsForkID(forkId9) {
+		err := errors.New("prover does not support required fork ID")
 		log.Warn(FirstToUpper(err.Error()))
 		return err
 	}
@@ -1032,9 +1035,13 @@ func (a *Aggregator) buildInputProver(ctx context.Context, batchToVerify *state.
 		for _, l2blockRaw := range batchRawData.Blocks {
 			_, contained := l1InfoTreeData[l2blockRaw.IndexL1InfoTree]
 			if !contained && l2blockRaw.IndexL1InfoTree != 0 {
-				l1InfoTreeExitRootStorageEntry, err := a.State.GetL1InfoRootLeafByIndex(ctx, l2blockRaw.IndexL1InfoTree, nil)
-				if err != nil {
-					return nil, err
+				l1InfoTreeExitRootStorageEntry := state.L1InfoTreeExitRootStorageEntry{}
+				l1InfoTreeExitRootStorageEntry.Timestamp = time.Unix(0, 0)
+				if l2blockRaw.IndexL1InfoTree <= leaves[len(leaves)-1].L1InfoTreeIndex {
+					l1InfoTreeExitRootStorageEntry, err = a.State.GetL1InfoRootLeafByIndex(ctx, l2blockRaw.IndexL1InfoTree, nil)
+					if err != nil {
+						return nil, err
+					}
 				}
 
 				// Calculate smt proof
@@ -1087,7 +1094,7 @@ func (a *Aggregator) buildInputProver(ctx context.Context, batchToVerify *state.
 			OldAccInputHash:   previousBatch.AccInputHash.Bytes(),
 			OldBatchNum:       previousBatch.BatchNumber,
 			ChainId:           a.cfg.ChainID,
-			ForkId:            a.cfg.ForkId,
+			ForkId:            forkId9,
 			BatchL2Data:       batchToVerify.BatchL2Data,
 			L1InfoRoot:        l1InfoRoot.Bytes(),
 			TimestampLimit:    uint64(batchToVerify.Timestamp.Unix()),

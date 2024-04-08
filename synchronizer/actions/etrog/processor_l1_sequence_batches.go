@@ -381,6 +381,11 @@ func (p *ProcessorL1SequenceBatchesEtrog) checkTrustedState(ctx context.Context,
 		log.Warnf(errMsg)
 		reorgReasons.WriteString(errMsg)
 	}
+	if tBatch.WIP {
+		errMsg := batchNumStr + "Trusted batch is WIP\n"
+		log.Warnf(errMsg)
+		reorgReasons.WriteString(errMsg)
+	}
 
 	if reorgReasons.Len() > 0 {
 		reason := reorgReasons.String()

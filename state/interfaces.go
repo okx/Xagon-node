@@ -72,7 +72,7 @@ type storage interface {
 	GetL2BlockTransactionCountByHash(ctx context.Context, blockHash common.Hash, dbTx pgx.Tx) (uint64, error)
 	GetL2BlockTransactionCountByNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (uint64, error)
 	GetTransactionEGPLogByHash(ctx context.Context, transactionHash common.Hash, dbTx pgx.Tx) (*EffectiveGasPriceLog, error)
-	AddL2Block(ctx context.Context, batchNumber uint64, l2Block *L2Block, receipts []*types.Receipt, txsL2Hash []common.Hash, txsEGPData []StoreTxEGPData, dbTx pgx.Tx) error
+	AddL2Block(ctx context.Context, batchNumber uint64, l2Block *L2Block, receipts []*types.Receipt, txsL2Hash []common.Hash, txsEGPData []StoreTxEGPData, imStateRoots []common.Hash, dbTx pgx.Tx) error
 	GetLastVirtualizedL2BlockNumber(ctx context.Context, dbTx pgx.Tx) (uint64, error)
 	GetLastConsolidatedL2BlockNumber(ctx context.Context, dbTx pgx.Tx) (uint64, error)
 	GetLastVerifiedL2BlockNumberUntilL1Block(ctx context.Context, l1FinalizedBlockNumber uint64, dbTx pgx.Tx) (uint64, error)
@@ -93,7 +93,7 @@ type storage interface {
 	IsL2BlockConsolidated(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (bool, error)
 	IsL2BlockVirtualized(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (bool, error)
 	GetLogs(ctx context.Context, fromBlock uint64, toBlock uint64, addresses []common.Address, topics [][]common.Hash, blockHash *common.Hash, since *time.Time, dbTx pgx.Tx) ([]*types.Log, error)
-	AddReceipt(ctx context.Context, receipt *types.Receipt, dbTx pgx.Tx) error
+	AddReceipt(ctx context.Context, receipt *types.Receipt, imStateRoot common.Hash, dbTx pgx.Tx) error
 	AddLog(ctx context.Context, l *types.Log, dbTx pgx.Tx) error
 	GetExitRootByGlobalExitRoot(ctx context.Context, ger common.Hash, dbTx pgx.Tx) (*GlobalExitRoot, error)
 	AddSequence(ctx context.Context, sequence Sequence, dbTx pgx.Tx) error
@@ -121,7 +121,8 @@ type storage interface {
 	GetBatchByForcedBatchNum(ctx context.Context, forcedBatchNumber uint64, dbTx pgx.Tx) (*Batch, error)
 	AddForkID(ctx context.Context, forkID ForkIDInterval, dbTx pgx.Tx) error
 	GetForkIDs(ctx context.Context, dbTx pgx.Tx) ([]ForkIDInterval, error)
-	UpdateForkID(ctx context.Context, forkID ForkIDInterval, dbTx pgx.Tx) error
+	UpdateForkIDToBatchNumber(ctx context.Context, forkID ForkIDInterval, dbTx pgx.Tx) error
+	UpdateForkIDBlockNumber(ctx context.Context, forkdID uint64, newBlockNumber uint64, updateMemCache bool, dbTx pgx.Tx) error
 	GetNativeBlockHashesInRange(ctx context.Context, fromBlock, toBlock uint64, dbTx pgx.Tx) ([]common.Hash, error)
 	GetDSGenesisBlock(ctx context.Context, dbTx pgx.Tx) (*DSL2Block, error)
 	GetDSBatches(ctx context.Context, firstBatchNumber, lastBatchNumber uint64, readWIPBatch bool, dbTx pgx.Tx) ([]*DSBatch, error)

@@ -872,4 +872,6 @@ enum ExecutorError {
     EXECUTOR_ERROR_INVALID_DATA_STREAM = 115;
     // EXECUTOR_ERROR_INVALID_UPDATE_MERKLE_TREE indicates that the provided update merkle tree is invalid, e.g. because the executor is configured not to write to database
     EXECUTOR_ERROR_INVALID_UPDATE_MERKLE_TREE = 116;
+    // EXECUTOR_ERROR_SM_MAIN_INVALID_TX_STATUS_ERROR indicates that a TX has an invalid status-error combination
+    EXECUTOR_ERROR_SM_MAIN_INVALID_TX_STATUS_ERROR = 117;
 }

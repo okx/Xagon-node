@@ -616,6 +616,7 @@ services:
       - "-c"
       - "/app/xlayer-node run --network custom --custom-network-file /app/genesis.json --cfg /app/config.toml --components \"rpc,synchronizer\""
 
+<<<<<<< HEAD
 
   xlayer-permissionless-node-forced-DAC:
     container_name: xlayer-permissionless-node-forced-DAC
@@ -649,6 +650,11 @@ services:
   xlayer-permissionless-prover:
     container_name: xlayer-permissionless-prover
     image: hermeznetwork/zkevm-prover:v5.0.3
+=======
+  zkevm-permissionless-prover:
+    container_name: zkevm-permissionless-prover
+    image: hermeznetwork/zkevm-prover:v6.0.0
+>>>>>>> zkevm/v0.6.4
     ports:
       # - 50058:50058 # Prover
       - 50059:50052 # Mock prover

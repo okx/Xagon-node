@@ -1216,6 +1216,66 @@ func (_c *StateFullInterface_GetL1InfoTreeDataFromBatchL2Data_Call) RunAndReturn
 	return _c
 }
 
+// GetL2BlockByNumber provides a mock function with given fields: ctx, blockNumber, dbTx
+func (_m *StateFullInterface) GetL2BlockByNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*state.L2Block, error) {
+	ret := _m.Called(ctx, blockNumber, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetL2BlockByNumber")
+	}
+
+	var r0 *state.L2Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) (*state.L2Block, error)); ok {
+		return rf(ctx, blockNumber, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) *state.L2Block); ok {
+		r0 = rf(ctx, blockNumber, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*state.L2Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, pgx.Tx) error); ok {
+		r1 = rf(ctx, blockNumber, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StateFullInterface_GetL2BlockByNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetL2BlockByNumber'
+type StateFullInterface_GetL2BlockByNumber_Call struct {
+	*mock.Call
+}
+
+// GetL2BlockByNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - blockNumber uint64
+//   - dbTx pgx.Tx
+func (_e *StateFullInterface_Expecter) GetL2BlockByNumber(ctx interface{}, blockNumber interface{}, dbTx interface{}) *StateFullInterface_GetL2BlockByNumber_Call {
+	return &StateFullInterface_GetL2BlockByNumber_Call{Call: _e.mock.On("GetL2BlockByNumber", ctx, blockNumber, dbTx)}
+}
+
+func (_c *StateFullInterface_GetL2BlockByNumber_Call) Run(run func(ctx context.Context, blockNumber uint64, dbTx pgx.Tx)) *StateFullInterface_GetL2BlockByNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StateFullInterface_GetL2BlockByNumber_Call) Return(_a0 *state.L2Block, _a1 error) *StateFullInterface_GetL2BlockByNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StateFullInterface_GetL2BlockByNumber_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) (*state.L2Block, error)) *StateFullInterface_GetL2BlockByNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetLastBatchNumber provides a mock function with given fields: ctx, dbTx
 func (_m *StateFullInterface) GetLastBatchNumber(ctx context.Context, dbTx pgx.Tx) (uint64, error) {
 	ret := _m.Called(ctx, dbTx)
@@ -1388,6 +1448,63 @@ func (_c *StateFullInterface_GetLastL2BlockByBatchNumber_Call) Return(_a0 *state
 }
 
 func (_c *StateFullInterface_GetLastL2BlockByBatchNumber_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) (*state.L2Block, error)) *StateFullInterface_GetLastL2BlockByBatchNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetLastL2BlockNumber provides a mock function with given fields: ctx, dbTx
+func (_m *StateFullInterface) GetLastL2BlockNumber(ctx context.Context, dbTx pgx.Tx) (uint64, error) {
+	ret := _m.Called(ctx, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLastL2BlockNumber")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, pgx.Tx) (uint64, error)); ok {
+		return rf(ctx, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, pgx.Tx) uint64); ok {
+		r0 = rf(ctx, dbTx)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, pgx.Tx) error); ok {
+		r1 = rf(ctx, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StateFullInterface_GetLastL2BlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLastL2BlockNumber'
+type StateFullInterface_GetLastL2BlockNumber_Call struct {
+	*mock.Call
+}
+
+// GetLastL2BlockNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - dbTx pgx.Tx
+func (_e *StateFullInterface_Expecter) GetLastL2BlockNumber(ctx interface{}, dbTx interface{}) *StateFullInterface_GetLastL2BlockNumber_Call {
+	return &StateFullInterface_GetLastL2BlockNumber_Call{Call: _e.mock.On("GetLastL2BlockNumber", ctx, dbTx)}
+}
+
+func (_c *StateFullInterface_GetLastL2BlockNumber_Call) Run(run func(ctx context.Context, dbTx pgx.Tx)) *StateFullInterface_GetLastL2BlockNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StateFullInterface_GetLastL2BlockNumber_Call) Return(_a0 uint64, _a1 error) *StateFullInterface_GetLastL2BlockNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StateFullInterface_GetLastL2BlockNumber_Call) RunAndReturn(run func(context.Context, pgx.Tx) (uint64, error)) *StateFullInterface_GetLastL2BlockNumber_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -2594,6 +2711,56 @@ func (_c *StateFullInterface_UpdateBatchL2Data_Call) Return(_a0 error) *StateFul
 }
 
 func (_c *StateFullInterface_UpdateBatchL2Data_Call) RunAndReturn(run func(context.Context, uint64, []byte, pgx.Tx) error) *StateFullInterface_UpdateBatchL2Data_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateForkIDBlockNumber provides a mock function with given fields: ctx, forkdID, newBlockNumber, updateMemCache, dbTx
+func (_m *StateFullInterface) UpdateForkIDBlockNumber(ctx context.Context, forkdID uint64, newBlockNumber uint64, updateMemCache bool, dbTx pgx.Tx) error {
+	ret := _m.Called(ctx, forkdID, newBlockNumber, updateMemCache, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateForkIDBlockNumber")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, bool, pgx.Tx) error); ok {
+		r0 = rf(ctx, forkdID, newBlockNumber, updateMemCache, dbTx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// StateFullInterface_UpdateForkIDBlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateForkIDBlockNumber'
+type StateFullInterface_UpdateForkIDBlockNumber_Call struct {
+	*mock.Call
+}
+
+// UpdateForkIDBlockNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - forkdID uint64
+//   - newBlockNumber uint64
+//   - updateMemCache bool
+//   - dbTx pgx.Tx
+func (_e *StateFullInterface_Expecter) UpdateForkIDBlockNumber(ctx interface{}, forkdID interface{}, newBlockNumber interface{}, updateMemCache interface{}, dbTx interface{}) *StateFullInterface_UpdateForkIDBlockNumber_Call {
+	return &StateFullInterface_UpdateForkIDBlockNumber_Call{Call: _e.mock.On("UpdateForkIDBlockNumber", ctx, forkdID, newBlockNumber, updateMemCache, dbTx)}
+}
+
+func (_c *StateFullInterface_UpdateForkIDBlockNumber_Call) Run(run func(ctx context.Context, forkdID uint64, newBlockNumber uint64, updateMemCache bool, dbTx pgx.Tx)) *StateFullInterface_UpdateForkIDBlockNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(uint64), args[3].(bool), args[4].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StateFullInterface_UpdateForkIDBlockNumber_Call) Return(_a0 error) *StateFullInterface_UpdateForkIDBlockNumber_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *StateFullInterface_UpdateForkIDBlockNumber_Call) RunAndReturn(run func(context.Context, uint64, uint64, bool, pgx.Tx) error) *StateFullInterface_UpdateForkIDBlockNumber_Call {
 	_c.Call.Return(run)
 	return _c
 }
