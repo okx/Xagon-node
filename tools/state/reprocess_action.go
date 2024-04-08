@@ -92,20 +92,29 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		log.Errorf("no batch %d. Error: %v", i, err)
 		return batch2, nil, err
 	}
+	leafs, l1InfoRoot, _, err := r.st.GetL1InfoTreeDataFromBatchL2Data(context.Background(), batch2.BatchL2Data, dbTx)
+	if err != nil {
+		//log.Errorf("%s error getting GetL1InfoTreeDataFromBatchL2Data: %v. Error:%w", data.DebugPrefix, l1InfoRoot, err)
+		return nil, nil, err
+	}
 
 	request := state.ProcessRequest{
-		BatchNumber:     batch2.BatchNumber,
-		OldStateRoot:    oldStateRoot,
-		OldAccInputHash: oldAccInputHash,
-		Coinbase:        batch2.Coinbase,
-		Timestamp_V1:    batch2.Timestamp,
+		BatchNumber:       batch2.BatchNumber,
+		OldStateRoot:      oldStateRoot,
+		OldAccInputHash:   oldAccInputHash,
+		Coinbase:          batch2.Coinbase,
+		Timestamp_V1:      batch2.Timestamp,
+		TimestampLimit_V2: uint64(batch2.Timestamp.Unix()),
+		L1InfoRoot_V2:     l1InfoRoot,
+		L1InfoTreeData_V2: leafs,
 
 		GlobalExitRoot_V1: batch2.GlobalExitRoot,
 		Transactions:      batch2.BatchL2Data,
 	}
 	log.Debugf("Processing batch %d: ntx:%d StateRoot:%s", batch2.BatchNumber, len(batch2.BatchL2Data), batch2.StateRoot)
 	forkID := r.st.GetForkIDByBatchNumber(batch2.BatchNumber)
-	fmt.Printf("")
+	fmt.Printf("fork id: %d\n", forkID)
+	request.ForkID = forkID
 	batchV2, err := state.DecodeBatchV2(batch2.BatchL2Data)
 	var syncedTxs []types.Transaction
 	for _, block := range batchV2.Blocks {
