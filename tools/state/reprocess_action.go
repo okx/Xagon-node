@@ -121,7 +121,8 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 			log.Errorf("error encoding transactions. Error: %v", err)
 			return batch2, nil, err
 		}
-		r.output.numOfTransactionsInBatch(len(transactions))
+		batchL2Data = append(batchL2Data, transactions...)
+		//r.output.numOfTransactionsInBatch(len(transactions))
 
 		request := state.ProcessRequest{
 			BatchNumber:       batch2.BatchNumber,
@@ -135,7 +136,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 			ForkID:            forkID,
 
 			GlobalExitRoot_V1:       batch2.GlobalExitRoot,
-			Transactions:            transactions,
+			Transactions:            batchL2Data,
 			SkipVerifyL1InfoRoot_V2: true,
 		}
 		//request.L1InfoTreeData_V2[block.IndexL1InfoTree] = state.L1DataV2{
@@ -160,7 +161,6 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 				}
 			}
 		}
-
 		if err != nil {
 			r.output.isWrittenOnHashDB(false, response.FlushID)
 			if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
