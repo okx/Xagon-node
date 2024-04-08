@@ -181,6 +181,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 				MinTimestamp:   uint64(index.GlobalExitRoot.Timestamp.Unix()),
 			},
 		}
+		log.Infof("deltatimestamp: %d, minTimestamp:%d", block.DeltaTimestamp, index.GlobalExitRoot.Timestamp.Unix())
 		//request.L1InfoRoot_V2 = l1hash
 
 		response, err := r.st.ProcessBatchV2(context.Background(), request, false)
