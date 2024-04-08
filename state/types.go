@@ -100,6 +100,8 @@ type ProcessTransactionResponse struct {
 	GasLeft uint64
 	// GasUsed is the total gas used as result of execution or gas estimation
 	GasUsed uint64
+	// CumulativeGasUsed is the accumulated gas used (sum of tx GasUsed and CumulativeGasUsed of the previous tx in the L2 block)
+	CumulativeGasUsed uint64
 	// GasRefunded is the total gas refunded as result of execution
 	GasRefunded uint64
 	// RomError represents any error encountered during the execution

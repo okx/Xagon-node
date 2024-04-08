@@ -418,17 +418,17 @@ func (_c *StorageMock_AddL1InfoRootToExitRoot_Call) RunAndReturn(run func(contex
 	return _c
 }
 
-// AddL2Block provides a mock function with given fields: ctx, batchNumber, l2Block, receipts, txsL2Hash, txsEGPData, dbTx
-func (_m *StorageMock) AddL2Block(ctx context.Context, batchNumber uint64, l2Block *state.L2Block, receipts []*types.Receipt, txsL2Hash []common.Hash, txsEGPData []state.StoreTxEGPData, dbTx pgx.Tx) error {
-	ret := _m.Called(ctx, batchNumber, l2Block, receipts, txsL2Hash, txsEGPData, dbTx)
+// AddL2Block provides a mock function with given fields: ctx, batchNumber, l2Block, receipts, txsL2Hash, txsEGPData, imStateRoots, dbTx
+func (_m *StorageMock) AddL2Block(ctx context.Context, batchNumber uint64, l2Block *state.L2Block, receipts []*types.Receipt, txsL2Hash []common.Hash, txsEGPData []state.StoreTxEGPData, imStateRoots []common.Hash, dbTx pgx.Tx) error {
+	ret := _m.Called(ctx, batchNumber, l2Block, receipts, txsL2Hash, txsEGPData, imStateRoots, dbTx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddL2Block")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, *state.L2Block, []*types.Receipt, []common.Hash, []state.StoreTxEGPData, pgx.Tx) error); ok {
-		r0 = rf(ctx, batchNumber, l2Block, receipts, txsL2Hash, txsEGPData, dbTx)
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *state.L2Block, []*types.Receipt, []common.Hash, []state.StoreTxEGPData, []common.Hash, pgx.Tx) error); ok {
+		r0 = rf(ctx, batchNumber, l2Block, receipts, txsL2Hash, txsEGPData, imStateRoots, dbTx)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -448,14 +448,15 @@ type StorageMock_AddL2Block_Call struct {
 //   - receipts []*types.Receipt
 //   - txsL2Hash []common.Hash
 //   - txsEGPData []state.StoreTxEGPData
+//   - imStateRoots []common.Hash
 //   - dbTx pgx.Tx
-func (_e *StorageMock_Expecter) AddL2Block(ctx interface{}, batchNumber interface{}, l2Block interface{}, receipts interface{}, txsL2Hash interface{}, txsEGPData interface{}, dbTx interface{}) *StorageMock_AddL2Block_Call {
-	return &StorageMock_AddL2Block_Call{Call: _e.mock.On("AddL2Block", ctx, batchNumber, l2Block, receipts, txsL2Hash, txsEGPData, dbTx)}
+func (_e *StorageMock_Expecter) AddL2Block(ctx interface{}, batchNumber interface{}, l2Block interface{}, receipts interface{}, txsL2Hash interface{}, txsEGPData interface{}, imStateRoots interface{}, dbTx interface{}) *StorageMock_AddL2Block_Call {
+	return &StorageMock_AddL2Block_Call{Call: _e.mock.On("AddL2Block", ctx, batchNumber, l2Block, receipts, txsL2Hash, txsEGPData, imStateRoots, dbTx)}
 }
 
-func (_c *StorageMock_AddL2Block_Call) Run(run func(ctx context.Context, batchNumber uint64, l2Block *state.L2Block, receipts []*types.Receipt, txsL2Hash []common.Hash, txsEGPData []state.StoreTxEGPData, dbTx pgx.Tx)) *StorageMock_AddL2Block_Call {
+func (_c *StorageMock_AddL2Block_Call) Run(run func(ctx context.Context, batchNumber uint64, l2Block *state.L2Block, receipts []*types.Receipt, txsL2Hash []common.Hash, txsEGPData []state.StoreTxEGPData, imStateRoots []common.Hash, dbTx pgx.Tx)) *StorageMock_AddL2Block_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(uint64), args[2].(*state.L2Block), args[3].([]*types.Receipt), args[4].([]common.Hash), args[5].([]state.StoreTxEGPData), args[6].(pgx.Tx))
+		run(args[0].(context.Context), args[1].(uint64), args[2].(*state.L2Block), args[3].([]*types.Receipt), args[4].([]common.Hash), args[5].([]state.StoreTxEGPData), args[6].([]common.Hash), args[7].(pgx.Tx))
 	})
 	return _c
 }
@@ -465,7 +466,7 @@ func (_c *StorageMock_AddL2Block_Call) Return(_a0 error) *StorageMock_AddL2Block
 	return _c
 }
 
-func (_c *StorageMock_AddL2Block_Call) RunAndReturn(run func(context.Context, uint64, *state.L2Block, []*types.Receipt, []common.Hash, []state.StoreTxEGPData, pgx.Tx) error) *StorageMock_AddL2Block_Call {
+func (_c *StorageMock_AddL2Block_Call) RunAndReturn(run func(context.Context, uint64, *state.L2Block, []*types.Receipt, []common.Hash, []state.StoreTxEGPData, []common.Hash, pgx.Tx) error) *StorageMock_AddL2Block_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -518,17 +519,17 @@ func (_c *StorageMock_AddLog_Call) RunAndReturn(run func(context.Context, *types
 	return _c
 }
 
-// AddReceipt provides a mock function with given fields: ctx, receipt, dbTx
-func (_m *StorageMock) AddReceipt(ctx context.Context, receipt *types.Receipt, dbTx pgx.Tx) error {
-	ret := _m.Called(ctx, receipt, dbTx)
+// AddReceipt provides a mock function with given fields: ctx, receipt, imStateRoot, dbTx
+func (_m *StorageMock) AddReceipt(ctx context.Context, receipt *types.Receipt, imStateRoot common.Hash, dbTx pgx.Tx) error {
+	ret := _m.Called(ctx, receipt, imStateRoot, dbTx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for AddReceipt")
 	}
 
 	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, *types.Receipt, pgx.Tx) error); ok {
-		r0 = rf(ctx, receipt, dbTx)
+	if rf, ok := ret.Get(0).(func(context.Context, *types.Receipt, common.Hash, pgx.Tx) error); ok {
+		r0 = rf(ctx, receipt, imStateRoot, dbTx)
 	} else {
 		r0 = ret.Error(0)
 	}
@@ -544,14 +545,15 @@ type StorageMock_AddReceipt_Call struct {
 // AddReceipt is a helper method to define mock.On call
 //   - ctx context.Context
 //   - receipt *types.Receipt
+//   - imStateRoot common.Hash
 //   - dbTx pgx.Tx
-func (_e *StorageMock_Expecter) AddReceipt(ctx interface{}, receipt interface{}, dbTx interface{}) *StorageMock_AddReceipt_Call {
-	return &StorageMock_AddReceipt_Call{Call: _e.mock.On("AddReceipt", ctx, receipt, dbTx)}
+func (_e *StorageMock_Expecter) AddReceipt(ctx interface{}, receipt interface{}, imStateRoot interface{}, dbTx interface{}) *StorageMock_AddReceipt_Call {
+	return &StorageMock_AddReceipt_Call{Call: _e.mock.On("AddReceipt", ctx, receipt, imStateRoot, dbTx)}
 }
 
-func (_c *StorageMock_AddReceipt_Call) Run(run func(ctx context.Context, receipt *types.Receipt, dbTx pgx.Tx)) *StorageMock_AddReceipt_Call {
+func (_c *StorageMock_AddReceipt_Call) Run(run func(ctx context.Context, receipt *types.Receipt, imStateRoot common.Hash, dbTx pgx.Tx)) *StorageMock_AddReceipt_Call {
 	_c.Call.Run(func(args mock.Arguments) {
-		run(args[0].(context.Context), args[1].(*types.Receipt), args[2].(pgx.Tx))
+		run(args[0].(context.Context), args[1].(*types.Receipt), args[2].(common.Hash), args[3].(pgx.Tx))
 	})
 	return _c
 }
@@ -561,7 +563,7 @@ func (_c *StorageMock_AddReceipt_Call) Return(_a0 error) *StorageMock_AddReceipt
 	return _c
 }
 
-func (_c *StorageMock_AddReceipt_Call) RunAndReturn(run func(context.Context, *types.Receipt, pgx.Tx) error) *StorageMock_AddReceipt_Call {
+func (_c *StorageMock_AddReceipt_Call) RunAndReturn(run func(context.Context, *types.Receipt, common.Hash, pgx.Tx) error) *StorageMock_AddReceipt_Call {
 	_c.Call.Return(run)
 	return _c
 }

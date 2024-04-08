@@ -515,7 +515,7 @@ services:
 
   xlayer-prover:
     container_name: xlayer-prover
-    image: hermeznetwork/zkevm-prover:v5.0.3
+    image: hermeznetwork/zkevm-prover:v5.0.6
     ports:
       # - 50051:50051 # Prover
       - 50052:50052 # Mock prover
@@ -648,7 +648,7 @@ services:
 
   xlayer-permissionless-prover:
     container_name: xlayer-permissionless-prover
-    image: hermeznetwork/zkevm-prover:v5.0.3
+    image: hermeznetwork/zkevm-prover:v5.0.6
     ports:
       # - 50058:50058 # Prover
       - 50059:50052 # Mock prover

@@ -45,7 +45,7 @@ Port = 8545
 ReadTimeout = "60s"
 WriteTimeout = "60s"
 MaxRequestsPerIPAndSecond = 5000
-SequencerNodeURI = "https://rpc.devnet.zkevm-rpc.com"
+SequencerNodeURI = ""
 EnableL2SuggestedGasPricePolling = false
 	[RPC.WebSockets]
 		Enabled = true

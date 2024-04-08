@@ -118,6 +118,7 @@ func (b DSL2BlockStart) Decode(data []byte) DSL2BlockStart {
 // DSL2Transaction represents a data stream L2 transaction
 type DSL2Transaction struct {
 	L2BlockNumber               uint64      // Not included in the encoded data
+	ImStateRoot                 common.Hash // Not included in the encoded data
 	EffectiveGasPricePercentage uint8       // 1 byte
 	IsValid                     uint8       // 1 byte
 	StateRoot                   common.Hash // 32 bytes
@@ -553,6 +554,9 @@ func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.St
 					}
 
 					for _, tx := range l2Block.Txs {
+						// < ETROG => IM State root is retrieved from the system SC (using cache is available)
+						// = ETROG => IM State root is retrieved from the receipt.post_state => Do nothing
+						// > ETROG => IM State root is retrieved from the receipt.im_state_root
 						if l2Block.ForkID < FORKID_ETROG {
 							// Populate intermediate state root with information from the system SC (or cache if available)
 							if imStateRoots == nil || (*imStateRoots)[blockStart.L2BlockNumber] == nil {
@@ -565,6 +569,8 @@ func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.St
 							} else {
 								tx.StateRoot = common.BytesToHash((*imStateRoots)[blockStart.L2BlockNumber])
 							}
+						} else if l2Block.ForkID > FORKID_ETROG {
+							tx.StateRoot = tx.ImStateRoot
 						}
 
 						_, err = streamServer.AddStreamEntry(EntryTypeL2Tx, tx.Encode())

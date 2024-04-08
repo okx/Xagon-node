@@ -107,7 +107,7 @@ services:
   xlayer-prover:
     container_name: xlayer-prover
     restart: unless-stopped
-    image: hermeznetwork/zkevm-prover:v5.0.3
+    image: hermeznetwork/zkevm-prover:v5.0.6
     depends_on:
       xlayer-state-db:
         condition: service_healthy

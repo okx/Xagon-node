@@ -204,7 +204,7 @@ func (s *State) SetGenesis(ctx context.Context, block Block, genesis Genesis, m 
 	storeTxsEGPData := []StoreTxEGPData{}
 	txsL2Hash := []common.Hash{}
 
-	err = s.AddL2Block(ctx, batch.BatchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, dbTx)
+	err = s.AddL2Block(ctx, batch.BatchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, []common.Hash{}, dbTx)
 	if err != nil {
 		return common.Hash{}, err
 	}

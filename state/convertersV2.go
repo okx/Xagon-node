@@ -127,6 +127,7 @@ func (s *State) convertToProcessTransactionResponseV2(responses []*executor.Proc
 		result.ReturnValue = response.ReturnValue
 		result.GasLeft = response.GasLeft
 		result.GasUsed = response.GasUsed
+		result.CumulativeGasUsed = response.CumulativeGasUsed
 		result.GasRefunded = response.GasRefunded
 		result.RomError = executor.RomErr(response.Error)
 		result.CreateAddress = common.HexToAddress(response.CreateAddress)

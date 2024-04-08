@@ -454,6 +454,8 @@ func ExecutorErr(errorCode ExecutorError) error {
 		return runtime.ErrExecutorErrorInvalidDataStream
 	case ExecutorError_EXECUTOR_ERROR_INVALID_UPDATE_MERKLE_TREE:
 		return runtime.ErrExecutorErrorInvalidUpdateMerkleTree
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_INVALID_TX_STATUS_ERROR:
+		return runtime.ErrExecutorErrorSMMainInvalidTxStatusError
 	}
 	return ErrExecutorUnknown
 }
@@ -694,6 +696,8 @@ func ExecutorErrorCode(err error) ExecutorError {
 		return ExecutorError_EXECUTOR_ERROR_INVALID_DATA_STREAM
 	case runtime.ErrExecutorErrorInvalidUpdateMerkleTree:
 		return ExecutorError_EXECUTOR_ERROR_INVALID_UPDATE_MERKLE_TREE
+	case runtime.ErrExecutorErrorSMMainInvalidTxStatusError:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_INVALID_TX_STATUS_ERROR
 	}
 
 	return ErrCodeExecutorUnknown

@@ -601,7 +601,7 @@ func NewTransaction(
 
 // Receipt structure
 type Receipt struct {
-	Root              common.Hash     `json:"root"`
+	Root              *common.Hash    `json:"root,omitempty"`
 	CumulativeGasUsed ArgUint64       `json:"cumulativeGasUsed"`
 	LogsBloom         types.Bloom     `json:"logsBloom"`
 	Logs              []*types.Log    `json:"logs"`
@@ -643,7 +643,6 @@ func NewReceipt(tx types.Transaction, r *types.Receipt, l2Hash *common.Hash) (Re
 		return Receipt{}, err
 	}
 	receipt := Receipt{
-		Root:              common.BytesToHash(r.PostState),
 		CumulativeGasUsed: ArgUint64(r.CumulativeGasUsed),
 		LogsBloom:         r.Bloom,
 		Logs:              logs,
@@ -659,6 +658,11 @@ func NewReceipt(tx types.Transaction, r *types.Receipt, l2Hash *common.Hash) (Re
 		Type:              ArgUint64(r.Type),
 		TxL2Hash:          l2Hash,
 	}
+	if len(r.PostState) > 0 {
+		root := common.BytesToHash(r.PostState)
+		receipt.Root = &root
+	}
+
 	if r.EffectiveGasPrice != nil {
 		egp := ArgBig(*r.EffectiveGasPrice)
 		receipt.EffectiveGasPrice = &egp
