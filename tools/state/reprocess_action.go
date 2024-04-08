@@ -94,11 +94,11 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		return batch2, nil, err
 	}
 	forkID := r.st.GetForkIDByBatchNumber(batch2.BatchNumber)
-	l1data, l1hash, _, err := r.st.GetL1InfoTreeDataFromBatchL2Data(context.Background(), batch2.BatchL2Data, dbTx)
-	if err != nil {
-		log.Errorf("error getting L1InfoTreeData from batch. Error: %v", err)
-		return batch2, nil, err
-	}
+	//l1data, l1hash, _, err := r.st.GetL1InfoTreeDataFromBatchL2Data(context.Background(), batch2.BatchL2Data, dbTx)
+	//if err != nil {
+	//	log.Errorf("error getting L1InfoTreeData from batch. Error: %v", err)
+	//	return batch2, nil, err
+	//}
 
 	l2data, err := state.DecodeBatchV2(batch2.BatchL2Data)
 	for _, block := range l2data.Blocks {
