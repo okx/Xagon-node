@@ -23,5 +23,5 @@ func (s *State) Reset(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) erro
 	// is going to be a commit or a rollback. So is going to be rebuild on the next
 	// request that needs it.
 	s.l1InfoTree = nil
-	return err
+	return nil
 }
