@@ -99,10 +99,19 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 	//	log.Errorf("error getting L1InfoTreeData from batch. Error: %v", err)
 	//	return batch2, nil, err
 	//}
+	l2blocks, err := r.st.GetL2BlocksByBatchNumber(context.Background(), batch2.BatchNumber, dbTx)
+	if err != nil {
+		log.Errorf("error getting L2BlocksByBatchNumber. Error: %v", err)
+		return batch2, nil, err
+	}
+	//for _, block := range l2blocks {
+	//	log.Infof("L2Block %d: %s", block.BlockInfoRoot(), block.DeltaTimestamp)
+	//}
 
 	l2data, err := state.DecodeBatchV2(batch2.BatchL2Data)
-	for _, block := range l2data.Blocks {
+	for ii, block := range l2data.Blocks {
 
+		l2block := l2blocks[ii]
 		batchL2Data := []byte{}
 
 		// Add changeL2Block to batchL2Data
@@ -122,6 +131,12 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 			return batch2, nil, err
 		}
 		batchL2Data = append(batchL2Data, transactions...)
+
+		index, err := r.st.GetL1InfoRootLeafByIndex(context.Background(), block.IndexL1InfoTree, dbTx)
+		if err != nil {
+			log.Errorf("error getting L1InfoRootLeafByIndex. Error: %v", err)
+			return batch2, nil, err
+		}
 		//r.output.numOfTransactionsInBatch(len(transactions))
 
 		request := state.ProcessRequest{
@@ -129,8 +144,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 			OldStateRoot:      oldStateRoot,
 			OldAccInputHash:   oldAccInputHash,
 			Coinbase:          batch2.Coinbase,
-			Timestamp_V1:      batch2.Timestamp,
-			TimestampLimit_V2: uint64(batch2.Timestamp.Unix()),
+			TimestampLimit_V2: l2block.Time(),
 			L1InfoRoot_V2:     state.GetMockL1InfoRoot(),
 			L1InfoTreeData_V2: map[uint32]state.L1DataV2{},
 			ForkID:            forkID,
@@ -144,7 +158,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		//	BlockHashL1:    common.Hash{},
 		//	MinTimestamp:   0,
 		//}
-		index, err := r.st.GetL1InfoRootLeafByIndex(context.Background(), block.IndexL1InfoTree, dbTx)
+
 		request.L1InfoTreeData_V2 = map[uint32]state.L1DataV2{
 			block.IndexL1InfoTree: {
 				GlobalExitRoot: index.GlobalExitRoot.GlobalExitRoot,
