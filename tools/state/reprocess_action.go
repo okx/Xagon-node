@@ -7,6 +7,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
 )
 
 type reprocessAction struct {
@@ -104,17 +105,25 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 	}
 	log.Debugf("Processing batch %d: ntx:%d StateRoot:%s", batch2.BatchNumber, len(batch2.BatchL2Data), batch2.StateRoot)
 	forkID := r.st.GetForkIDByBatchNumber(batch2.BatchNumber)
-	syncedTxs, _, _, err := state.DecodeTxs(batch2.BatchL2Data, forkID)
-	if err != nil {
-		log.Errorf("error decoding synced txs from trustedstate. Error: %v, TrustedBatchL2Data: %s", err, batch2.BatchL2Data)
-		return batch2, nil, err
-	} else {
-		r.output.numOfTransactionsInBatch(len(syncedTxs))
+	fmt.Printf("")
+	batchV2, err := state.DecodeBatchV2(batch2.BatchL2Data)
+	var syncedTxs []types.Transaction
+	for _, block := range batchV2.Blocks {
+		for _, transaction := range block.Transactions {
+			syncedTxs = append(syncedTxs, transaction.Tx)
+		}
 	}
+	//syncedTxs, _, _, err := state.DecodeTxs(v2.Blocks, forkID)
+	//if err != nil {
+	//	log.Errorf("error decoding synced txs from trustedstate. Error: %v, TrustedBatchL2Data: %s", err, batch2.BatchL2Data)
+	//	return batch2, nil, err
+	//} else {
+	r.output.numOfTransactionsInBatch(len(syncedTxs))
+	//}
 	var response *state.ProcessBatchResponse
 
 	log.Infof("id:%d len_trs:%d oldStateRoot:%s", batch2.BatchNumber, len(syncedTxs), request.OldStateRoot)
-	response, err = r.st.ProcessBatch(r.ctx, request, r.updateHasbDB)
+	response, err = r.st.ProcessBatchV2(r.ctx, request, r.updateHasbDB)
 	for _, blockResponse := range response.BlockResponses {
 		for tx_i, txresponse := range blockResponse.TransactionResponses {
 			if txresponse.RomError != nil {
