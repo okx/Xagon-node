@@ -4947,12 +4947,12 @@ func (_c *StorageMock_GetLatestVirtualBatchTimestamp_Call) RunAndReturn(run func
 	return _c
 }
 
-// GetLeafsByL1InfoRoot provides a mock function with given fields: ctx, l1InfoRoot, dbTx
-func (_m *StorageMock) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error) {
+// GetLeavesByL1InfoRoot provides a mock function with given fields: ctx, l1InfoRoot, dbTx
+func (_m *StorageMock) GetLeavesByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error) {
 	ret := _m.Called(ctx, l1InfoRoot, dbTx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetLeafsByL1InfoRoot")
+		panic("no return value specified for GetLeavesByL1InfoRoot")
 	}
 
 	var r0 []state.L1InfoTreeExitRootStorageEntry
@@ -4967,13 +4967,11 @@ func (_m *StorageMock) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot comm
 			r0 = ret.Get(0).([]state.L1InfoTreeExitRootStorageEntry)
 		}
 	}
-
 	if rf, ok := ret.Get(1).(func(context.Context, common.Hash, pgx.Tx) error); ok {
 		r1 = rf(ctx, l1InfoRoot, dbTx)
 	} else {
 		r1 = ret.Error(1)
 	}
-
 	return r0, r1
 }
 

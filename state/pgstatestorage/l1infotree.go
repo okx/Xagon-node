@@ -112,7 +112,7 @@ func (p *PostgresStorage) GetL1InfoRootLeafByIndex(ctx context.Context, l1InfoTr
 	return entry, nil
 }
 
-func (p *PostgresStorage) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error) {
+func (p *PostgresStorage) GetLeavesByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error) {
 	// TODO: Optimize this query
 	const getLeafsByL1InfoRootSQL = `SELECT block_num, timestamp, mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, l1_info_tree_index
 		FROM state.exit_root 

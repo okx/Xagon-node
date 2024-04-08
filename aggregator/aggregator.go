@@ -1019,7 +1019,7 @@ func (a *Aggregator) buildInputProver(ctx context.Context, batchToVerify *state.
 		if err != nil {
 			return nil, err
 		}
-		leaves, err := a.State.GetLeafsByL1InfoRoot(ctx, *l1InfoRoot, nil)
+		leaves, err := a.State.GetLeavesByL1InfoRoot(ctx, *l1InfoRoot, nil)
 		if err != nil {
 			return nil, err
 		}

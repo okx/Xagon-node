@@ -26,12 +26,31 @@ func NewL1InfoTree(height uint8, initialLeaves [][32]byte) (*L1InfoTree, error) 
 	var err error
 	mt.siblings, mt.currentRoot, err = mt.initSiblings(initialLeaves)
 	if err != nil {
-		log.Error("error initializing si siblings. Error: ", err)
+		log.Error("error initializing siblings. Error: ", err)
 		return nil, err
 	}
 	log.Debug("Initial count: ", mt.count)
 	log.Debug("Initial root: ", mt.currentRoot)
 	return mt, nil
+}
+
+// ResetL1InfoTree resets the L1InfoTree.
+func (mt *L1InfoTree) ResetL1InfoTree(initialLeaves [][32]byte) (*L1InfoTree, error) {
+	log.Info("Resetting L1InfoTree...")
+	newMT := &L1InfoTree{
+		zeroHashes: generateZeroHashes(32), // nolint:gomnd
+		height:     32,                     // nolint:gomnd
+		count:      uint32(len(initialLeaves)),
+	}
+	var err error
+	newMT.siblings, newMT.currentRoot, err = newMT.initSiblings(initialLeaves)
+	if err != nil {
+		log.Error("error initializing siblings. Error: ", err)
+		return nil, err
+	}
+	log.Debug("Reset initial count: ", newMT.count)
+	log.Debug("Reset initial root: ", newMT.currentRoot)
+	return newMT, nil
 }
 
 func buildIntermediate(leaves [][32]byte) ([][][]byte, [][32]byte) {

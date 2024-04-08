@@ -136,13 +136,13 @@ func (b *SyncTrustedBatchExecutorForEtrog) FullProcess(ctx context.Context, data
 		return nil, err
 	}
 
-	leafs, l1InfoRoot, _, err := b.state.GetL1InfoTreeDataFromBatchL2Data(ctx, data.TrustedBatch.BatchL2Data, dbTx)
+	leaves, l1InfoRoot, _, err := b.state.GetL1InfoTreeDataFromBatchL2Data(ctx, data.TrustedBatch.BatchL2Data, dbTx)
 	if err != nil {
 		log.Errorf("%s error getting GetL1InfoTreeDataFromBatchL2Data: %v. Error:%w", data.DebugPrefix, l1InfoRoot, err)
 		return nil, err
 	}
 	debugStr := data.DebugPrefix
-	processBatchResp, err := b.processAndStoreTxs(ctx, b.getProcessRequest(data, leafs, l1InfoRoot), dbTx, debugStr)
+	processBatchResp, err := b.processAndStoreTxs(ctx, b.getProcessRequest(data, leaves, l1InfoRoot), dbTx, debugStr)
 	if err != nil {
 		log.Error("%s error procesingAndStoringTxs. Error: ", debugStr, err)
 		return nil, err
@@ -197,7 +197,7 @@ func (b *SyncTrustedBatchExecutorForEtrog) IncrementalProcess(ctx context.Contex
 		return nil, err
 	}
 
-	leafs, l1InfoRoot, _, err := b.state.GetL1InfoTreeDataFromBatchL2Data(ctx, PartialBatchL2Data, dbTx)
+	leaves, l1InfoRoot, _, err := b.state.GetL1InfoTreeDataFromBatchL2Data(ctx, PartialBatchL2Data, dbTx)
 	if err != nil {
 		log.Errorf("%s error getting GetL1InfoTreeDataFromBatchL2Data: %v. Error:%w", data.DebugPrefix, l1InfoRoot, err)
 		// TODO: Need to refine, depending of the response of GetL1InfoTreeDataFromBatchL2Data
@@ -205,7 +205,7 @@ func (b *SyncTrustedBatchExecutorForEtrog) IncrementalProcess(ctx context.Contex
 		return nil, syncinterfaces.ErrMissingSyncFromL1
 	}
 	debugStr := fmt.Sprintf("%s: Batch %d:", data.Mode, uint64(data.TrustedBatch.Number))
-	processReq := b.getProcessRequest(data, leafs, l1InfoRoot)
+	processReq := b.getProcessRequest(data, leaves, l1InfoRoot)
 	processReq.Transactions = PartialBatchL2Data
 	processBatchResp, err := b.processAndStoreTxs(ctx, processReq, dbTx, debugStr)
 	if err != nil {
