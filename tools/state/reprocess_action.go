@@ -132,6 +132,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 			TimestampLimit_V2: uint64(batch2.Timestamp.Unix()),
 			L1InfoRoot_V2:     state.GetMockL1InfoRoot(),
 			L1InfoTreeData_V2: map[uint32]state.L1DataV2{},
+			ForkID:            forkID,
 
 			GlobalExitRoot_V1:       batch2.GlobalExitRoot,
 			Transactions:            transactions,
@@ -145,12 +146,35 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		request.L1InfoTreeData_V2 = l1data
 		request.L1InfoRoot_V2 = l1hash
 
-		batchResponse, err := r.st.ProcessBatchV2(context.Background(), request, false)
+		response, err := r.st.ProcessBatchV2(context.Background(), request, false)
 		if err != nil {
 			log.Errorf("error processing batch %d. Error: %v", i, err)
 			return batch2, nil, err
 		}
-		log.Infof("batch response: %v", batchResponse)
+		for _, blockResponse := range response.BlockResponses {
+			for tx_i, txresponse := range blockResponse.TransactionResponses {
+				if txresponse.RomError != nil {
+					r.output.addTransactionError(tx_i, txresponse.RomError)
+					log.Errorf("error processing batch %d. tx:%d Error: %v stateroot:%s", i, tx_i, txresponse.RomError, response.NewStateRoot)
+					//return txresponse.RomError
+				}
+			}
+		}
+
+		if err != nil {
+			r.output.isWrittenOnHashDB(false, response.FlushID)
+			if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
+				return batch2, response, fmt.Errorf(
+					"failed to rollback dbTx: %s. Rollback err: %w",
+					rollbackErr.Error(), err,
+				)
+			}
+			log.Errorf("error processing batch %d. Error: %v", i, err)
+			return batch2, response, err
+		} else {
+			r.output.isWrittenOnHashDB(r.updateHasbDB, response.FlushID)
+		}
+		log.Infof("Verified batch %d: ntx:%d StateRoot:%s", i, len(transactions), response.NewStateRoot)
 	}
 
 	//
@@ -185,29 +209,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 	//
 	//log.Infof("id:%d len_trs:%d oldStateRoot:%s", batch2.BatchNumber, len(syncedTxs), request.OldStateRoot)
 	//response, err = r.st.ProcessBatchV2(r.ctx, request, r.updateHasbDB)
-	//for _, blockResponse := range response.BlockResponses {
-	//	for tx_i, txresponse := range blockResponse.TransactionResponses {
-	//		if txresponse.RomError != nil {
-	//			r.output.addTransactionError(tx_i, txresponse.RomError)
-	//			log.Errorf("error processing batch %d. tx:%d Error: %v stateroot:%s", i, tx_i, txresponse.RomError, response.NewStateRoot)
-	//			//return txresponse.RomError
-	//		}
-	//	}
-	//}
-	//
-	//if err != nil {
-	//	r.output.isWrittenOnHashDB(false, response.FlushID)
-	//	if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
-	//		return batch2, response, fmt.Errorf(
-	//			"failed to rollback dbTx: %s. Rollback err: %w",
-	//			rollbackErr.Error(), err,
-	//		)
-	//	}
-	//	log.Errorf("error processing batch %d. Error: %v", i, err)
-	//	return batch2, response, err
-	//} else {
-	//	r.output.isWrittenOnHashDB(r.updateHasbDB, response.FlushID)
-	//}
+
 	//if response.NewStateRoot != batch2.StateRoot {
 	//	if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
 	//		return batch2, response, fmt.Errorf(
