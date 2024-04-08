@@ -88,16 +88,18 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 	}
 
 	batch2, err := r.st.GetBatchByNumber(r.ctx, i, dbTx)
+
 	if err != nil {
 		log.Errorf("no batch %d. Error: %v", i, err)
 		return batch2, nil, err
 	}
-	//leafs, l1InfoRoot, _, err := r.st.GetL1InfoTreeDataFromBatchL2Data(context.Background(), batch2.BatchL2Data, dbTx)
-	//if err != nil {
-	//	//log.Errorf("%s error getting GetL1InfoTreeDataFromBatchL2Data: %v. Error:%w", data.DebugPrefix, l1InfoRoot, err)
-	//	return nil, nil, err
-	//}
-
+	leafs, l1InfoRoot, _, err := r.st.GetL1InfoTreeDataFromBatchL2Data(context.Background(), batch2.BatchL2Data, dbTx)
+	if err != nil {
+		//log.Errorf("%s error getting GetL1InfoTreeDataFromBatchL2Data: %v. Error:%w", data.DebugPrefix, l1InfoRoot, err)
+		return nil, nil, err
+	}
+	log.Infof("l1InfoRoot:%s", l1InfoRoot)
+	log.Infof("leafs:%d", len(leafs))
 	request := state.ProcessRequest{
 		BatchNumber:       batch2.BatchNumber,
 		OldStateRoot:      oldStateRoot,
@@ -105,8 +107,8 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		Coinbase:          batch2.Coinbase,
 		Timestamp_V1:      batch2.Timestamp,
 		TimestampLimit_V2: uint64(batch2.Timestamp.Unix()),
-		L1InfoRoot_V2:     state.GetMockL1InfoRoot(),
-		L1InfoTreeData_V2: map[uint32]state.L1DataV2{},
+		L1InfoRoot_V2:     l1InfoRoot,
+		L1InfoTreeData_V2: leafs,
 
 		GlobalExitRoot_V1: batch2.GlobalExitRoot,
 		Transactions:      batch2.BatchL2Data,
