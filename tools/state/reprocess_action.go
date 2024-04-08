@@ -114,6 +114,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 	for ii, block := range l2data.Blocks {
 
 		l2block := l2blocks[ii]
+		log.Infof("L2Block %d", l2block.BlockInfoRoot())
 		batchL2Data := []byte{}
 
 		// Add changeL2Block to batchL2Data
