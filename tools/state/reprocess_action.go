@@ -6,6 +6,7 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
+	stateMetrics "github.com/0xPolygonHermez/zkevm-node/state/metrics"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -139,19 +140,33 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		}
 		//r.output.numOfTransactionsInBatch(len(transactions))
 
+		//request := state.ProcessRequest{
+		//	BatchNumber:       batch2.BatchNumber,
+		//	OldStateRoot:      oldStateRoot,
+		//	OldAccInputHash:   oldAccInputHash,
+		//	Coinbase:          batch2.Coinbase,
+		//	TimestampLimit_V2: l2block.Time(),
+		//	L1InfoRoot_V2:     state.GetMockL1InfoRoot(),
+		//	L1InfoTreeData_V2: map[uint32]state.L1DataV2{},
+		//	ForkID:            forkID,
+		//
+		//	GlobalExitRoot_V1:       batch2.GlobalExitRoot,
+		//	Transactions:            batchL2Data,
+		//	SkipVerifyL1InfoRoot_V2: true,
+		//}
 		request := state.ProcessRequest{
-			BatchNumber:       batch2.BatchNumber,
-			OldStateRoot:      oldStateRoot,
-			OldAccInputHash:   oldAccInputHash,
-			Coinbase:          batch2.Coinbase,
-			TimestampLimit_V2: l2block.Time(),
-			L1InfoRoot_V2:     state.GetMockL1InfoRoot(),
-			L1InfoTreeData_V2: map[uint32]state.L1DataV2{},
-			ForkID:            forkID,
-
-			GlobalExitRoot_V1:       batch2.GlobalExitRoot,
-			Transactions:            batchL2Data,
-			SkipVerifyL1InfoRoot_V2: true,
+			BatchNumber:               batch2.BatchNumber,
+			OldStateRoot:              oldStateRoot,
+			Coinbase:                  batch2.Coinbase,
+			L1InfoRoot_V2:             state.GetMockL1InfoRoot(),
+			TimestampLimit_V2:         l2block.Time(),
+			Transactions:              batchL2Data,
+			SkipFirstChangeL2Block_V2: false,
+			SkipWriteBlockInfoRoot_V2: false,
+			Caller:                    stateMetrics.DiscardCallerLabel,
+			ForkID:                    forkID,
+			SkipVerifyL1InfoRoot_V2:   true,
+			L1InfoTreeData_V2:         map[uint32]state.L1DataV2{},
 		}
 		//request.L1InfoTreeData_V2[block.IndexL1InfoTree] = state.L1DataV2{
 		//	GlobalExitRoot: batch2.GlobalExitRoot,
