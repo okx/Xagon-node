@@ -212,7 +212,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		} else {
 			r.output.isWrittenOnHashDB(r.updateHasbDB, response.FlushID)
 		}
-		log.Infof("Verified batch %d: ntx:%d StateRoot:%s", i, len(transactions), response.NewStateRoot)
+		//log.Infof("Verified batch %d: ntx:%d StateRoot:%s", i, len(transactions), response.NewStateRoot)
 	}
 
 	//
