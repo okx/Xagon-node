@@ -144,8 +144,15 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		//	BlockHashL1:    common.Hash{},
 		//	MinTimestamp:   0,
 		//}
-		request.L1InfoTreeData_V2 = l1data
-		request.L1InfoRoot_V2 = l1hash
+		index, err := r.st.GetL1InfoRootLeafByIndex(context.Background(), block.IndexL1InfoTree, dbTx)
+		request.L1InfoTreeData_V2 = map[uint32]state.L1DataV2{
+			block.IndexL1InfoTree: {
+				GlobalExitRoot: index.GlobalExitRoot.GlobalExitRoot,
+				BlockHashL1:    index.PreviousBlockHash,
+				MinTimestamp:   uint64(index.GlobalExitRoot.Timestamp.Unix()),
+			},
+		}
+		//request.L1InfoRoot_V2 = l1hash
 
 		response, err := r.st.ProcessBatchV2(context.Background(), request, false)
 		if err != nil {
