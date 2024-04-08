@@ -160,7 +160,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 			OldStateRoot:              oldStateRoot,
 			Coinbase:                  batch2.Coinbase,
 			L1InfoRoot_V2:             state.GetMockL1InfoRoot(),
-			TimestampLimit_V2:         l2block.Time(),
+			TimestampLimit_V2:         uint64(time.Now().Unix()),
 			Transactions:              batchL2Data,
 			SkipFirstChangeL2Block_V2: false,
 			SkipWriteBlockInfoRoot_V2: false,
