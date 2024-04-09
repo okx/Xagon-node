@@ -128,7 +128,7 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		exp--
 
 		if len(res.values) == 0 {
-			res.values = []*big.Int{lastPrice}
+			res.values = []*big.Int{big.NewInt(0).SetUint64(e.cfg.DynamicGP.MinPrice)}
 		}
 		results = append(results, res.values...)
 	}
@@ -193,6 +193,9 @@ func (e *EthEndpoints) getL2BatchTxsTips(ctx context.Context, l2BlockNumber uint
 	var prices []*big.Int
 	for _, tx := range sorter.txs {
 		tip := tx.GasTipCap()
+		if tip.Cmp(big.NewInt(0).SetUint64(e.cfg.DynamicGP.MinPrice)) == -1 {
+			continue
+		}
 		prices = append(prices, tip)
 		if len(prices) >= limit {
 			break
