@@ -707,6 +707,7 @@ SecretKey=""
 | - [ForkID](#Pool_ForkID )                                                       | No      | integer         | No         | -          | ForkID is the current fork ID of the chain                                                           |
 | - [FreeGasAddress](#Pool_FreeGasAddress )                                       | No      | array of string | No         | -          | XLayer config<br />FreeGasAddress is the default free gas address                                    |
 | - [FreeClaimGasLimit](#Pool_FreeClaimGasLimit )                                 | No      | integer         | No         | -          | FreeClaimGasLimit is the max gas allowed use to do a free claim                                      |
+| - [BridgeClaimMethodSigs](#Pool_BridgeClaimMethodSigs )                         | No      | array of string | No         | -          | BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method                            |
 
 ### <a name="Pool_IntervalToRefreshBlockedAddresses"></a>7.1. `Pool.IntervalToRefreshBlockedAddresses`
 
@@ -1240,6 +1241,11 @@ FreeGasAddress=["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]
 [Pool]
 FreeClaimGasLimit=150000
 ```
+
+### <a name="Pool_BridgeClaimMethodSigs"></a>7.17. `Pool.BridgeClaimMethodSigs`
+
+**Type:** : `array of string`
+**Description:** BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method
 
 ## <a name="RPC"></a>8. `[RPC]`
 
