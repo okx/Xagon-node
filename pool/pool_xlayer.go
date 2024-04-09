@@ -2,11 +2,11 @@ package pool
 
 import (
 	"context"
-	"github.com/ethereum/go-ethereum/common"
 	"sync"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/log"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 const (
