@@ -41,7 +41,7 @@ func (s *Server) getBatchReqLimit() (bool, uint) {
 }
 
 func (s *Server) handleWsMessage(httpRequest *http.Request, wsConn *concurrentWsConn, data []byte) ([]byte, error) {
-	if s.validateRequest(data) != nil {
+	if validateWsRequest(data) != nil {
 		return types.NewResponse(types.Request{}, nil, types.NewRPCError(types.InvalidRequestErrorCode, "Invalid json request")).Bytes()
 	}
 	single, err := s.isSingleRequest(data)
@@ -92,7 +92,7 @@ func (s *Server) handleWsBatch(httpRequest *http.Request, wsConn *concurrentWsCo
 	return json.Marshal(responses)
 }
 
-func (s *Server) validateRequest(data []byte) error {
+func validateWsRequest(data []byte) error {
 	if len(data) > maxRequestContentLength {
 		return fmt.Errorf("content length too large (%d>%d)", len(data), maxRequestContentLength)
 	}
