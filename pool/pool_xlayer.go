@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	// BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method
+	// BridgeClaimMethodSignature and BridgeClaimUSDCMethodSignature for tracking BridgeClaimMethodSignature method
 	BridgeClaimMethodSignature     = "0xccaa2d11"
 	BridgeClaimUSDCMethodSignature = "0xf5efcd79"
 )
