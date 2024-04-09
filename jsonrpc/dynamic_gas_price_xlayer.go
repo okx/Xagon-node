@@ -193,7 +193,7 @@ func (e *EthEndpoints) getL2BatchTxsTips(ctx context.Context, l2BlockNumber uint
 	var prices []*big.Int
 	for _, tx := range sorter.txs {
 		tip := tx.GasTipCap()
-		if tip.Cmp(big.NewInt(0).SetUint64(e.cfg.DynamicGP.MinPrice)) == -1 {
+		if tip.Cmp(big.NewInt(0)) <= 0 {
 			continue
 		}
 		prices = append(prices, tip)
