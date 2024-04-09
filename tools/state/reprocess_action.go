@@ -232,8 +232,8 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 				rollbackErr.Error(), err,
 			)
 		}
-		log.Errorf("error processing batch %d. Error: state root differs: calculated: %s  != expected: %s", i, response.NewStateRoot, batch2.StateRoot)
-		return batch2, resp, fmt.Errorf("missmatch state root calculated: %s  != expected: %s", response.NewStateRoot, batch2.StateRoot)
+		log.Errorf("error processing batch %d. Error: state root differs: calculated: %s  != expected: %s", i, resp.NewStateRoot, batch2.StateRoot)
+		return batch2, resp, fmt.Errorf("missmatch state root calculated: %s  != expected: %s", resp.NewStateRoot, batch2.StateRoot)
 	}
 
 	if commitErr := dbTx.Commit(r.ctx); commitErr != nil {
