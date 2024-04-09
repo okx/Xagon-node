@@ -110,6 +110,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 	//}
 	var resp *state.ProcessBatchResponse
 	l2data, err := state.DecodeBatchV2(batch2.BatchL2Data)
+	stateroot := oldStateRoot
 	for _, block := range l2data.Blocks {
 
 		//log.Infof("L2Block %d", l2block.BlockInfoRoot())
@@ -142,7 +143,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 
 		request := state.ProcessRequest{
 			BatchNumber:               batch2.BatchNumber,
-			OldStateRoot:              oldStateRoot,
+			OldStateRoot:              stateroot,
 			Coinbase:                  batch2.Coinbase,
 			L1InfoRoot_V2:             state.GetMockL1InfoRoot(),
 			TimestampLimit_V2:         uint64(batch2.Timestamp.Unix()),
@@ -189,6 +190,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		} else {
 			r.output.isWrittenOnHashDB(r.updateHasbDB, response.FlushID)
 		}
+		stateroot = response.NewStateRoot
 		//log.Infof("Verified batch %d: ntx:%d StateRoot:%s", i, len(transactions), response.NewStateRoot)
 	}
 
