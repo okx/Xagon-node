@@ -77,7 +77,7 @@ func getClaimMethod(localBridgeClaimMethods []string) []string {
 		methods = localBridgeClaimMethods
 	}
 	if len(methods) == 0 {
-		methods = append(methods, BridgeClaimMethodSignature)
+		methods = append(methods, BridgeClaimMethodSignature, BridgeClaimUSDCMethodSignature)
 	}
 
 	return methods
