@@ -227,11 +227,30 @@ func (f *finalizer) updateFlushIDs(newPendingFlushID, newStoredFlushID uint64) {
 
 func (f *finalizer) checkL1InfoTreeUpdate(ctx context.Context) {
 	firstL1InfoRootUpdate := true
+	skipFirstSleep := true
+
+	if f.cfg.L1InfoTreeCheckInterval.Duration.Seconds() == 999999 { //nolint:gomnd
+		if !f.lastL1InfoTreeValid {
+			f.lastL1InfoTreeCond.L.Lock()
+			f.lastL1InfoTreeValid = true
+			f.lastL1InfoTreeCond.Broadcast()
+			f.lastL1InfoTreeCond.L.Unlock()
+		}
+
+		return
+	}
 
 	for {
+		if skipFirstSleep {
+			skipFirstSleep = false
+		} else {
+			time.Sleep(f.cfg.L1InfoTreeCheckInterval.Duration)
+		}
+
 		lastL1BlockNumber, err := f.etherman.GetLatestBlockNumber(ctx)
 		if err != nil {
 			log.Errorf("error getting latest L1 block number, error: %v", err)
+			continue
 		}
 
 		maxBlockNumber := uint64(0)
@@ -251,9 +270,32 @@ func (f *finalizer) checkL1InfoTreeUpdate(ctx context.Context) {
 		}
 
 		if firstL1InfoRootUpdate || l1InfoRoot.L1InfoTreeIndex > f.lastL1InfoTree.L1InfoTreeIndex {
-			firstL1InfoRootUpdate = false
+			log.Infof("received new L1InfoRoot, l1InfoTreeIndex: %d, l1InfoTreeRoot: %s, l1Block: %d",
+				l1InfoRoot.L1InfoTreeIndex, l1InfoRoot.L1InfoTreeRoot, l1InfoRoot.BlockNumber)
 
-			log.Debugf("received new L1InfoRoot. L1InfoTreeIndex: %d", l1InfoRoot.L1InfoTreeIndex)
+			// Sanity check l1BlockState (l1InfoRoot.BlockNumber) blockhash matches blockhash on ethereum. We skip it if l1InfoRoot.BlockNumber == 0 (empty tree)
+			if l1InfoRoot.BlockNumber > 0 {
+				l1BlockState, err := f.stateIntf.GetBlockByNumber(ctx, l1InfoRoot.BlockNumber, nil)
+				if err != nil {
+					log.Errorf("error getting L1 block %d from the state, error: %v", l1InfoRoot.BlockNumber, err)
+					continue
+				}
+
+				l1BlockEth, err := f.etherman.HeaderByNumber(ctx, new(big.Int).SetUint64(l1InfoRoot.BlockNumber))
+				if err != nil {
+					log.Errorf("error getting L1 block %d from ethereum, error: %v", l1InfoRoot.BlockNumber, err)
+					continue
+				}
+				if l1BlockState.BlockHash != l1BlockEth.Hash() {
+					warnmsg := fmt.Sprintf("invalid l1InfoTreeIndex %d, L1 block %d blockhash %s doesn't match blockhash on ethereum %s (L1 reorg?). Stopping syncing l1IntroTreeIndex",
+						l1InfoRoot.L1InfoTreeIndex, l1InfoRoot.BlockNumber, l1BlockState.BlockHash, l1BlockEth.Hash())
+					log.Warn(warnmsg)
+					f.LogEvent(ctx, event.Level_Critical, event.EventID_InvalidInfoRoot, warnmsg, nil)
+					return
+				}
+			}
+
+			firstL1InfoRootUpdate = false
 
 			f.lastL1InfoTreeMux.Lock()
 			f.lastL1InfoTree = l1InfoRoot
