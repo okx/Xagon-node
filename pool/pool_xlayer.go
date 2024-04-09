@@ -11,7 +11,8 @@ import (
 
 const (
 	// BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method
-	BridgeClaimMethodSignature = "0xccaa2d11"
+	BridgeClaimMethodSignature     = "0xccaa2d11"
+	BridgeClaimUSDCMethodSignature = "0xf5efcd79"
 )
 
 func contains(s []string, ele common.Address) bool {

@@ -30,7 +30,8 @@ func (tx *Transaction) IsClaimTx(freeClaimGasLimit uint64) bool {
 		return false
 	}
 
-	if !strings.HasPrefix("0x"+common.Bytes2Hex(tx.Data()), BridgeClaimMethodSignature) {
+	if !strings.HasPrefix("0x"+common.Bytes2Hex(tx.Data()), BridgeClaimMethodSignature) &&
+		!strings.HasPrefix("0x"+common.Bytes2Hex(tx.Data()), BridgeClaimUSDCMethodSignature) {
 		return false
 	}
 
