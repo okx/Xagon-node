@@ -100,19 +100,18 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 	//	log.Errorf("error getting L1InfoTreeData from batch. Error: %v", err)
 	//	return batch2, nil, err
 	//}
-	l2blocks, err := r.st.GetL2BlocksByBatchNumber(context.Background(), batch2.BatchNumber, dbTx)
-	if err != nil {
-		log.Errorf("error getting L2BlocksByBatchNumber. Error: %v", err)
-		return batch2, nil, err
-	}
+	//l2blocks, err := r.st.GetL2BlocksByBatchNumber(context.Background(), batch2.BatchNumber, dbTx)
+	//if err != nil {
+	//	log.Errorf("error getting L2BlocksByBatchNumber. Error: %v", err)
+	//	return batch2, nil, err
+	//}
 	//for _, block := range l2blocks {
 	//	log.Infof("L2Block %d: %s", block.BlockInfoRoot(), block.DeltaTimestamp)
 	//}
-
+	var resp *state.ProcessBatchResponse
 	l2data, err := state.DecodeBatchV2(batch2.BatchL2Data)
-	for ii, block := range l2data.Blocks {
+	for _, block := range l2data.Blocks {
 
-		l2block := l2blocks[ii]
 		//log.Infof("L2Block %d", l2block.BlockInfoRoot())
 		batchL2Data := []byte{}
 
@@ -141,26 +140,12 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		}
 		//r.output.numOfTransactionsInBatch(len(transactions))
 
-		//request := state.ProcessRequest{
-		//	BatchNumber:       batch2.BatchNumber,
-		//	OldStateRoot:      oldStateRoot,
-		//	OldAccInputHash:   oldAccInputHash,
-		//	Coinbase:          batch2.Coinbase,
-		//	TimestampLimit_V2: l2block.Time(),
-		//	L1InfoRoot_V2:     state.GetMockL1InfoRoot(),
-		//	L1InfoTreeData_V2: map[uint32]state.L1DataV2{},
-		//	ForkID:            forkID,
-		//
-		//	GlobalExitRoot_V1:       batch2.GlobalExitRoot,
-		//	Transactions:            batchL2Data,
-		//	SkipVerifyL1InfoRoot_V2: true,
-		//}
 		request := state.ProcessRequest{
 			BatchNumber:               batch2.BatchNumber,
 			OldStateRoot:              oldStateRoot,
 			Coinbase:                  batch2.Coinbase,
 			L1InfoRoot_V2:             state.GetMockL1InfoRoot(),
-			TimestampLimit_V2:         l2block.Time(),
+			TimestampLimit_V2:         uint64(batch2.Timestamp.Unix()),
 			Transactions:              batchL2Data,
 			SkipFirstChangeL2Block_V2: false,
 			SkipWriteBlockInfoRoot_V2: false,
@@ -169,12 +154,6 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 			SkipVerifyL1InfoRoot_V2:   true,
 			L1InfoTreeData_V2:         map[uint32]state.L1DataV2{},
 		}
-		//request.L1InfoTreeData_V2[block.IndexL1InfoTree] = state.L1DataV2{
-		//	GlobalExitRoot: batch2.GlobalExitRoot,
-		//	BlockHashL1:    common.Hash{},
-		//	MinTimestamp:   0,
-		//}
-
 		request.L1InfoTreeData_V2 = map[uint32]state.L1DataV2{
 			block.IndexL1InfoTree: {
 				GlobalExitRoot: index.GlobalExitRoot.GlobalExitRoot,
@@ -182,14 +161,12 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 				MinTimestamp:   0,
 			},
 		}
-		//log.Infof("deltatimestamp: %d, minTimestamp:%d, current: %d", block.DeltaTimestamp, index.GlobalExitRoot.Timestamp.Unix(), time.Now().Unix())
-		//request.L1InfoRoot_V2 = l1hash
-
 		response, err := r.st.ProcessBatchV2(context.Background(), request, false)
 		if err != nil {
 			log.Errorf("error processing batch %d. Error: %v", i, err)
 			return batch2, nil, err
 		}
+		resp = response
 		for _, blockResponse := range response.BlockResponses {
 			for tx_i, txresponse := range blockResponse.TransactionResponses {
 				if txresponse.RomError != nil {
@@ -248,16 +225,16 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 	//log.Infof("id:%d len_trs:%d oldStateRoot:%s", batch2.BatchNumber, len(syncedTxs), request.OldStateRoot)
 	//response, err = r.st.ProcessBatchV2(r.ctx, request, r.updateHasbDB)
 
-	//if response.NewStateRoot != batch2.StateRoot {
-	//	if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
-	//		return batch2, response, fmt.Errorf(
-	//			"failed to rollback dbTx: %s. Rollback err: %w",
-	//			rollbackErr.Error(), err,
-	//		)
-	//	}
-	//	log.Errorf("error processing batch %d. Error: state root differs: calculated: %s  != expected: %s", i, response.NewStateRoot, batch2.StateRoot)
-	//	return batch2, response, fmt.Errorf("missmatch state root calculated: %s  != expected: %s", response.NewStateRoot, batch2.StateRoot)
-	//}
+	if resp.NewStateRoot != batch2.StateRoot {
+		if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
+			return batch2, resp, fmt.Errorf(
+				"failed to rollback dbTx: %s. Rollback err: %w",
+				rollbackErr.Error(), err,
+			)
+		}
+		log.Errorf("error processing batch %d. Error: state root differs: calculated: %s  != expected: %s", i, response.NewStateRoot, batch2.StateRoot)
+		return batch2, resp, fmt.Errorf("missmatch state root calculated: %s  != expected: %s", response.NewStateRoot, batch2.StateRoot)
+	}
 
 	if commitErr := dbTx.Commit(r.ctx); commitErr != nil {
 		return batch2, nil, fmt.Errorf(
@@ -268,5 +245,5 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 
 	//log.Infof("Verified batch %d: ntx:%d StateRoot:%s", i, len(syncedTxs), batch2.StateRoot)
 
-	return batch2, nil, nil
+	return batch2, resp, nil
 }
