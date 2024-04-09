@@ -2,18 +2,16 @@ package pool
 
 import (
 	"context"
+	"github.com/ethereum/go-ethereum/common"
 	"sync"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/log"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 const (
 	// BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method
 	BridgeClaimMethodSignature = "0xccaa2d11"
-	// BridgeClaimUSDCMethodSignature for tracking BridgeClaimMethodSignature method
-	BridgeClaimUSDCMethodSignature = "0xf5efcd79"
 )
 
 func contains(s []string, ele common.Address) bool {

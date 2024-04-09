@@ -62,7 +62,7 @@ func NewTransaction(tx types.Transaction, ip string, isWIP bool, p *Pool) *Trans
 	}
 
 	// XLayer handler
-	poolTx.IsClaims = poolTx.IsClaimTx(p.cfg.FreeClaimGasLimit)
+	poolTx.IsClaims = poolTx.IsClaimTx(p.cfg.FreeClaimGasLimit, p.cfg.BridgeClaimMethodSigs)
 
 	return &poolTx
 }
