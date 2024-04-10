@@ -95,19 +95,6 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		return batch2, nil, err
 	}
 	forkID := r.st.GetForkIDByBatchNumber(batch2.BatchNumber)
-	//l1data, l1hash, _, err := r.st.GetL1InfoTreeDataFromBatchL2Data(context.Background(), batch2.BatchL2Data, dbTx)
-	//if err != nil {
-	//	log.Errorf("error getting L1InfoTreeData from batch. Error: %v", err)
-	//	return batch2, nil, err
-	//}
-	//l2blocks, err := r.st.GetL2BlocksByBatchNumber(context.Background(), batch2.BatchNumber, dbTx)
-	//if err != nil {
-	//	log.Errorf("error getting L2BlocksByBatchNumber. Error: %v", err)
-	//	return batch2, nil, err
-	//}
-	//for _, block := range l2blocks {
-	//	log.Infof("L2Block %d: %s", block.BlockInfoRoot(), block.DeltaTimestamp)
-	//}
 	var resp *state.ProcessBatchResponse
 	l2data, err := state.DecodeBatchV2(batch2.BatchL2Data)
 	stateroot := oldStateRoot
@@ -194,39 +181,6 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		//log.Infof("Verified batch %d: ntx:%d StateRoot:%s", i, len(transactions), response.NewStateRoot)
 	}
 
-	//
-	//request := state.ProcessRequest{
-	//	BatchNumber:       batch2.BatchNumber,
-	//	OldStateRoot:      oldStateRoot,
-	//	OldAccInputHash:   oldAccInputHash,
-	//	Coinbase:          batch2.Coinbase,
-	//	Timestamp_V1:      batch2.Timestamp,
-	//	TimestampLimit_V2: uint64(batch2.Timestamp.Unix()),
-	//	L1InfoRoot_V2:     state.GetMockL1InfoRoot(),
-	//	L1InfoTreeData_V2: map[uint32]state.L1DataV2{},
-	//
-	//	GlobalExitRoot_V1: batch2.GlobalExitRoot,
-	//	Transactions:      batch2.BatchL2Data,
-	//}
-	//
-	//
-	//log.Debugf("Processing batch %d: ntx:%d StateRoot:%s", batch2.BatchNumber, len(batch2.BatchL2Data), batch2.StateRoot)
-	//
-	//fmt.Printf("fork id: %d\n", forkID)
-	//request.ForkID = forkID
-	//
-	////syncedTxs, _, _, err := state.DecodeTxs(v2.Blocks, forkID)
-	////if err != nil {
-	////	log.Errorf("error decoding synced txs from trustedstate. Error: %v, TrustedBatchL2Data: %s", err, batch2.BatchL2Data)
-	////	return batch2, nil, err
-	////} else {
-	//
-	////}
-	//var response *state.ProcessBatchResponse
-	//
-	//log.Infof("id:%d len_trs:%d oldStateRoot:%s", batch2.BatchNumber, len(syncedTxs), request.OldStateRoot)
-	//response, err = r.st.ProcessBatchV2(r.ctx, request, r.updateHasbDB)
-
 	if resp.NewStateRoot != batch2.StateRoot {
 		if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
 			return batch2, resp, fmt.Errorf(
@@ -244,8 +198,6 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 			commitErr.Error(), err,
 		)
 	}
-
-	//log.Infof("Verified batch %d: ntx:%d StateRoot:%s", i, len(syncedTxs), batch2.StateRoot)
 
 	return batch2, resp, nil
 }
