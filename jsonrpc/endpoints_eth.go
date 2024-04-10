@@ -46,8 +46,8 @@ func NewEthEndpoints(cfg Config, chainID uint64, p types.PoolInterface, s types.
 	e := &EthEndpoints{cfg: cfg, chainID: chainID, pool: p, state: s, etherman: etherman, storage: storage}
 	e.dgpMan = DynamicGPManager{
 		lastL2BatchNumber: 0,
-		// initialize default lastPrice to 1 GWei
-		lastPrice: new(big.Int).SetUint64(1000000000), //nolint:gomnd
+		// initialize default lastPrice to 1 Wei
+		lastPrice: new(big.Int).SetUint64(1), //nolint:gomnd
 	}
 	go e.runDynamicGPSuggester()
 	s.RegisterNewL2BlockEventHandler(e.onNewL2Block)

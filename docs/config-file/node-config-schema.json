@@ -464,6 +464,13 @@
 					"type": "integer",
 					"description": "FreeClaimGasLimit is the max gas allowed use to do a free claim",
 					"default": 150000
+				},
+				"BridgeClaimMethodSigs": {
+					"items": {
+						"type": "string"
+					},
+					"type": "array",
+					"description": "BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method"
 				}
 			},
 			"additionalProperties": false,

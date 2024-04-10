@@ -30,6 +30,9 @@ var (
 	// ErrBlockedSender is returned if the transaction is sent by a blocked account.
 	ErrBlockedSender = errors.New("blocked sender")
 
+	// ErrBlockedReceiver is returned if the transaction is received by a blocked account.
+	ErrBlockedReceiver = errors.New("blocked receiver")
+
 	// ErrNoWhitelistedSender is returned if the transaction is sent by a no whitelisted account.
 	ErrNoWhitelistedSender = errors.New("You are not allowed to send transactions on the X Layer as we are under the phase 1, X layer will be open to the public soon")
 

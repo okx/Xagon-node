@@ -8,11 +8,12 @@ import (
 
 // apolloConfig is the apollo pool dynamic config
 type apolloConfig struct {
-	EnableApollo     bool
-	FreeGasAddresses []string
-	GlobalQueue      uint64
-	AccountQueue     uint64
-	EnableWhitelist  bool
+	EnableApollo       bool
+	FreeGasAddresses   []string
+	GlobalQueue        uint64
+	AccountQueue       uint64
+	EnableWhitelist    bool
+	BridgeClaimMethods []string
 
 	sync.RWMutex
 }
@@ -42,6 +43,14 @@ func (c *apolloConfig) setFreeGasAddresses(freeGasAddrs []string) {
 	copy(c.FreeGasAddresses, freeGasAddrs)
 }
 
+func (c *apolloConfig) setBridgeClaimMethods(bridgeClaimMethods []string) {
+	if c == nil || !c.EnableApollo {
+		return
+	}
+	c.BridgeClaimMethods = make([]string, len(bridgeClaimMethods))
+	copy(c.BridgeClaimMethods, bridgeClaimMethods)
+}
+
 // UpdateConfig updates the apollo config
 // GlobalQueue
 // AccountQueue
@@ -54,7 +63,24 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().AccountQueue = apolloConfig.AccountQueue
 	getApolloConfig().setFreeGasAddresses(apolloConfig.FreeGasAddress)
 	getApolloConfig().EnableWhitelist = apolloConfig.EnableWhitelist
+	getApolloConfig().setBridgeClaimMethods(apolloConfig.BridgeClaimMethodSigs)
 	getApolloConfig().Unlock()
+}
+
+func getClaimMethod(localBridgeClaimMethods []string) []string {
+	var methods []string
+	if getApolloConfig().enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		methods = getApolloConfig().BridgeClaimMethods
+	} else {
+		methods = localBridgeClaimMethods
+	}
+	if len(methods) == 0 {
+		methods = append(methods, BridgeClaimMethodSignature, BridgeClaimMessageMethodSignature)
+	}
+
+	return methods
 }
 
 func isFreeGasAddress(localFreeGasAddrs []string, address common.Address) bool {

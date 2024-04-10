@@ -55,6 +55,8 @@ type Config struct {
 	FreeGasAddress []string `mapstructure:"FreeGasAddress"`
 	// FreeClaimGasLimit is the max gas allowed use to do a free claim
 	FreeClaimGasLimit uint64 `mapstructure:"FreeClaimGasLimit"`
+	// BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method
+	BridgeClaimMethodSigs []string `mapstructure:"BridgeClaimMethodSigs"`
 }
 
 // EffectiveGasPriceCfg contains the configuration properties for the effective gas price

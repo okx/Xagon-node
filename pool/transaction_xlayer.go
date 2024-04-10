@@ -16,7 +16,7 @@ func SetL2BridgeAddr(value common.Address) {
 }
 
 // IsClaimTx checks, if tx is a claim tx
-func (tx *Transaction) IsClaimTx(freeClaimGasLimit uint64) bool {
+func (tx *Transaction) IsClaimTx(freeClaimGasLimit uint64, bridgeClaimMethods []string) bool {
 	if tx.To() == nil {
 		return false
 	}
@@ -30,11 +30,13 @@ func (tx *Transaction) IsClaimTx(freeClaimGasLimit uint64) bool {
 		return false
 	}
 
-	if !strings.HasPrefix("0x"+common.Bytes2Hex(tx.Data()), BridgeClaimMethodSignature) {
-		return false
+	methods := getClaimMethod(bridgeClaimMethods)
+	for _, method := range methods {
+		if strings.HasPrefix("0x"+common.Bytes2Hex(tx.Data()), method) {
+			log.Infof("Transaction %s is a claim tx", tx.Hash().String())
+			return true
+		}
 	}
 
-	log.Infof("Transaction %s is a claim tx", tx.Hash().String())
-
-	return true
+	return false
 }
