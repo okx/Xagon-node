@@ -48,6 +48,8 @@ const (
 	EventID_UsedZKCountersOverflow EventID = "USED ZKCOUNTERS OVERFLOW"
 	// EventID_ReservedZKCountersOverflow is triggered when reserved ZK counters exceeds remaining batch ZK counters
 	EventID_ReservedZKCountersOverflow EventID = "RESERVED ZKCOUNTERS OVERFLOW"
+	// EventID_InvalidInfoRoot is triggered when an invalid l1InfoRoot was synced
+	EventID_InvalidInfoRoot EventID = "INVALID INFOROOT"
 	// Source_Node is the source of the event
 	Source_Node Source = "node"
 

@@ -2,7 +2,6 @@ package jsonrpc
 
 import (
 	"context"
-	"errors"
 	"math/big"
 	"sort"
 	"sync"
@@ -102,29 +101,6 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		return
 	}
 
-	// judge if there is congestion
-	isCongested, err := e.isCongested(ctx)
-	if err != nil {
-		log.Errorf("failed to count pool txs by status pending while judging if the pool is congested: ", err)
-		return
-	}
-
-	if !isCongested {
-		log.Info("there is no congestion for L2")
-		gasPrices, err := e.pool.GetGasPrices(ctx)
-		if err != nil {
-			log.Errorf("failed to get raw gas prices when it is not congested: ", err)
-			return
-		}
-		e.dgpMan.cacheLock.Lock()
-		e.dgpMan.lastPrice = new(big.Int).SetUint64(gasPrices.L2GasPrice)
-		e.dgpMan.lastL2BatchNumber = l2BatchNumber
-		e.dgpMan.cacheLock.Unlock()
-		return
-	}
-
-	log.Warn("there is congestion for L2")
-
 	e.dgpMan.fetchLock.Lock()
 	defer e.dgpMan.fetchLock.Unlock()
 
@@ -152,7 +128,7 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		exp--
 
 		if len(res.values) == 0 {
-			res.values = []*big.Int{lastPrice}
+			res.values = []*big.Int{big.NewInt(0).SetUint64(e.cfg.DynamicGP.MinPrice)}
 		}
 		results = append(results, res.values...)
 	}
@@ -171,6 +147,29 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 	maxGasPrice := new(big.Int).SetUint64(e.cfg.DynamicGP.MaxPrice)
 	if e.cfg.DynamicGP.MaxPrice > 0 && price.Cmp(maxGasPrice) == 1 {
 		price = maxGasPrice
+	}
+
+	// judge if there is congestion
+	isCongested, err := e.isCongested(ctx)
+	if err != nil {
+		log.Errorf("failed to count pool txs by status pending while judging if the pool is congested: ", err)
+		return
+	}
+
+	if !isCongested {
+		log.Debug("there is no congestion for L2")
+		gasPrices, err := e.pool.GetGasPrices(ctx)
+		if err != nil {
+			log.Errorf("failed to get raw gas prices when it is not congested: ", err)
+			return
+		}
+
+		rawGP := new(big.Int).SetUint64(gasPrices.L2GasPrice)
+		e.dgpMan.cacheLock.Lock()
+		e.dgpMan.lastPrice = getAvgPrice(rawGP, price)
+		e.dgpMan.lastL2BatchNumber = l2BatchNumber
+		e.dgpMan.cacheLock.Unlock()
+		return
 	}
 
 	e.dgpMan.cacheLock.Lock()
@@ -192,40 +191,15 @@ func (e *EthEndpoints) getL2BatchTxsTips(ctx context.Context, l2BlockNumber uint
 	sort.Sort(sorter)
 
 	var prices []*big.Int
-	var lowPrices []*big.Int
-	var highPrices []*big.Int
 	for _, tx := range sorter.txs {
 		tip := tx.GasTipCap()
-
-		lowPrices = append(lowPrices, tip)
-		if len(lowPrices) >= limit {
+		if tip.Cmp(big.NewInt(0)) <= 0 {
+			continue
+		}
+		prices = append(prices, tip)
+		if len(prices) >= limit {
 			break
 		}
-	}
-
-	sorter.Reverse()
-	for _, tx := range sorter.txs {
-		tip := tx.GasTipCap()
-
-		highPrices = append(highPrices, tip)
-		if len(highPrices) >= limit {
-			break
-		}
-	}
-
-	if len(highPrices) != len(lowPrices) {
-		err := errors.New("len(highPrices) != len(lowPrices)")
-		log.Errorf("getL2BlockTxsTips err: %v", err)
-		select {
-		case result <- results{nil, err}:
-		case <-quit:
-		}
-		return
-	}
-
-	for i := 0; i < len(lowPrices); i++ {
-		price := getAvgPrice(lowPrices[i], highPrices[i])
-		prices = append(prices, price)
 	}
 
 	select {
@@ -268,13 +242,6 @@ func (s *txSorter) Less(i, j int) bool {
 	tip1 := s.txs[i].GasTipCap()
 	tip2 := s.txs[j].GasTipCap()
 	return tip1.Cmp(tip2) < 0
-}
-
-func (s *txSorter) Reverse() {
-	for i := 0; i < len(s.txs)/2; i++ {
-		j := len(s.txs) - i - 1
-		s.txs[i], s.txs[j] = s.txs[j], s.txs[i]
-	}
 }
 
 type bigIntArray []*big.Int

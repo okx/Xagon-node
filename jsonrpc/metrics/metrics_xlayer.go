@@ -82,13 +82,13 @@ var (
 // WsRequestMethodDuration observes (histogram) the duration of a ws request from the
 // provided starting time.
 func WsRequestMethodDuration(method string, start time.Time) {
-	metrics.HistogramVecObserve(requestMethodDurationName, method, time.Since(start).Seconds())
+	metrics.HistogramVecObserve(requestWsMethodDurationName, method, time.Since(start).Seconds())
 }
 
 // WsRequestMethodCount increments the ws requests handled counter vector by one for
 // the given method.
 func WsRequestMethodCount(method string) {
-	metrics.CounterVecInc(requestMethodName, method)
+	metrics.CounterVecInc(requestWsMethodName, method)
 }
 
 // RequestMethodDuration observes (histogram) the duration of a request from the

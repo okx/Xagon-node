@@ -29,10 +29,15 @@ func contains(s []string, ele common.Address) bool {
 // to check periodically(accordingly to the configuration) for updates regarding
 // the white address and update the in memory blocked addresses
 func (p *Pool) StartRefreshingWhiteAddressesPeriodically() {
+	interval := p.cfg.IntervalToRefreshWhiteAddresses.Duration
+	if interval.Nanoseconds() <= 0 {
+		interval = 20 * time.Second //nolint:gomnd
+	}
+
 	p.refreshWhitelistedAddresses()
 	go func(p *Pool) {
 		for {
-			time.Sleep(p.cfg.IntervalToRefreshWhiteAddresses.Duration)
+			time.Sleep(interval)
 			p.refreshWhitelistedAddresses()
 		}
 	}(p)

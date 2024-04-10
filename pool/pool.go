@@ -116,10 +116,15 @@ func (p *Pool) refreshGasPrices() {
 // to check periodically(accordingly to the configuration) for updates regarding
 // the blocked address and update the in memory blocked addresses
 func (p *Pool) StartRefreshingBlockedAddressesPeriodically() {
+	interval := p.cfg.IntervalToRefreshBlockedAddresses.Duration
+	if interval.Nanoseconds() <= 0 {
+		interval = 20 * time.Second //nolint:gomnd
+	}
+
 	p.refreshBlockedAddresses()
 	go func(p *Pool) {
 		for {
-			time.Sleep(p.cfg.IntervalToRefreshBlockedAddresses.Duration)
+			time.Sleep(interval)
 			p.refreshBlockedAddresses()
 		}
 	}(p)
@@ -463,6 +468,15 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	if blocked {
 		log.Infof("%v: %v", ErrBlockedSender.Error(), from.String())
 		return ErrBlockedSender
+	}
+
+	// check if receiver is blocked
+	if to := poolTx.To(); to != nil {
+		_, blocked = p.blockedAddresses.Load(to.String())
+		if blocked {
+			log.Infof("%v: %v", ErrBlockedReceiver.Error(), to.String())
+			return ErrBlockedReceiver
+		}
 	}
 
 	// check if sender is whitelisted

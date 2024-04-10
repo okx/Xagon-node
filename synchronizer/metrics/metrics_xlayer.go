@@ -6,6 +6,9 @@ import (
 )
 
 var (
+	// TrustBatchNumName is the name of the metric trust batch number
+	TrustBatchNumName = Prefix + "trust_batch_num"
+
 	// VirtualBatchNumName is the name of the metric virtual batch number
 	VirtualBatchNumName = Prefix + "virtual_batch_num"
 
@@ -16,6 +19,10 @@ var (
 	HaltCountName = Prefix + "halt_count"
 
 	gauge = []prometheus.GaugeOpts{
+		{
+			Name: TrustBatchNumName,
+			Help: "[SYNCHRONIZER] trust batch num",
+		},
 		{
 			Name: VirtualBatchNumName,
 			Help: "[SYNCHRONIZER] virtual batch num",
@@ -32,6 +39,11 @@ var (
 		},
 	}
 )
+
+// TrustBatchNum set the gauge to the given trust batch num
+func TrustBatchNum(batchNum uint64) {
+	metrics.GaugeSet(TrustBatchNumName, float64(batchNum))
+}
 
 // VirtualBatchNum set the gauge to the given virtual batch num
 func VirtualBatchNum(batchNum uint64) {
