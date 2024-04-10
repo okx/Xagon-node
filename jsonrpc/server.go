@@ -450,7 +450,7 @@ func (s *Server) handleWs(w http.ResponseWriter, req *http.Request) {
 		}
 
 		if msgType == websocket.TextMessage || msgType == websocket.BinaryMessage {
-			resp, err := s.handler.HandleWs(message, wsConn, req)
+			resp, err := s.handleWsMessage(req, wsConn, message)
 			if err != nil {
 				log.Error(fmt.Sprintf("Unable to handle WS request, %s", err.Error()))
 				_ = wsConn.WriteMessage(msgType, []byte(fmt.Sprintf("WS Handle error: %s", err.Error())))
