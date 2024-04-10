@@ -9,6 +9,7 @@ import (
 	stateMetrics "github.com/0xPolygonHermez/zkevm-node/state/metrics"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/jackc/pgx/v4"
 )
 
 type reprocessAction struct {
@@ -89,20 +90,50 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 	}
 
 	batch2, err := r.st.GetBatchByNumber(r.ctx, i, dbTx)
-
 	if err != nil {
 		log.Errorf("no batch %d. Error: %v", i, err)
 		return batch2, nil, err
 	}
 	forkID := r.st.GetForkIDByBatchNumber(batch2.BatchNumber)
 	var resp *state.ProcessBatchResponse
+	if forkID < state.FORKID_ETROG {
+		resp, err = r.processBatchV1(batch2, oldStateRoot, oldAccInputHash, dbTx)
+	} else {
+		resp, err = r.processBatchV2(batch2, oldStateRoot, oldAccInputHash, dbTx)
+	}
+	if resp.NewStateRoot != batch2.StateRoot {
+		if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
+			return batch2, resp, fmt.Errorf(
+				"failed to rollback dbTx: %s. Rollback err: %w",
+				rollbackErr.Error(), err,
+			)
+		}
+		log.Errorf("error processing batch %d. Error: state root differs: calculated: %s  != expected: %s", i, resp.NewStateRoot, batch2.StateRoot)
+		return batch2, resp, fmt.Errorf("missmatch state root calculated: %s  != expected: %s", resp.NewStateRoot, batch2.StateRoot)
+	}
+
+	if commitErr := dbTx.Commit(r.ctx); commitErr != nil {
+		return batch2, nil, fmt.Errorf(
+			"failed to commit dbTx: %s. Commit err: %w",
+			commitErr.Error(), err,
+		)
+	}
+
+	return batch2, resp, nil
+}
+
+func (r *reprocessAction) processBatchV2(batch2 *state.Batch, oldStateRoot common.Hash, oldAccInputHash common.Hash, dbTx pgx.Tx) (*state.ProcessBatchResponse, error) {
+	forkID := r.st.GetForkIDByBatchNumber(batch2.BatchNumber)
+	var resp *state.ProcessBatchResponse
 	l2data, err := state.DecodeBatchV2(batch2.BatchL2Data)
+	if err != nil {
+		log.Errorf("error decoding batch %d. Error: %v", batch2.BatchNumber, err)
+		return nil, err
+	}
 	stateroot := oldStateRoot
 	for _, block := range l2data.Blocks {
 
-		//log.Infof("L2Block %d", l2block.BlockInfoRoot())
 		batchL2Data := []byte{}
-
 		// Add changeL2Block to batchL2Data
 		changeL2BlockBytes := r.st.BuildChangeL2Block(block.DeltaTimestamp, block.IndexL1InfoTree)
 		batchL2Data = append(batchL2Data, changeL2BlockBytes...)
@@ -117,16 +148,15 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		transactions, err := state.EncodeTransactions(txs, epg, forkID)
 		if err != nil {
 			log.Errorf("error encoding transactions. Error: %v", err)
-			return batch2, nil, err
+			return nil, err
 		}
 		batchL2Data = append(batchL2Data, transactions...)
 
 		index, err := r.st.GetL1InfoRootLeafByIndex(context.Background(), block.IndexL1InfoTree, dbTx)
 		if err != nil {
 			log.Errorf("error getting L1InfoRootLeafByIndex. Error: %v", err)
-			return batch2, nil, err
+			return nil, err
 		}
-		//r.output.numOfTransactionsInBatch(len(transactions))
 
 		request := state.ProcessRequest{
 			BatchNumber:               batch2.BatchNumber,
@@ -152,7 +182,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		response, err := r.st.ProcessBatchV2(context.Background(), request, false)
 		if err != nil {
 			log.Errorf("error processing batch %d. Error: %v", i, err)
-			return batch2, nil, err
+			return nil, err
 		}
 		resp = response
 		for _, blockResponse := range response.BlockResponses {
@@ -167,37 +197,67 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 		if err != nil {
 			r.output.isWrittenOnHashDB(false, response.FlushID)
 			if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
-				return batch2, response, fmt.Errorf(
+				return response, fmt.Errorf(
 					"failed to rollback dbTx: %s. Rollback err: %w",
 					rollbackErr.Error(), err,
 				)
 			}
 			log.Errorf("error processing batch %d. Error: %v", i, err)
-			return batch2, response, err
+			return response, err
 		} else {
 			r.output.isWrittenOnHashDB(r.updateHasbDB, response.FlushID)
 		}
 		stateroot = response.NewStateRoot
-		//log.Infof("Verified batch %d: ntx:%d StateRoot:%s", i, len(transactions), response.NewStateRoot)
+	}
+	return resp, nil
+}
+
+func (r *reprocessAction) processBatchV1(batch2 *state.Batch, oldStateRoot common.Hash, oldAccInputHash common.Hash, dbTx pgx.Tx) (*state.ProcessBatchResponse, error) {
+	request := state.ProcessRequest{
+		BatchNumber:     batch2.BatchNumber,
+		OldStateRoot:    oldStateRoot,
+		OldAccInputHash: oldAccInputHash,
+		Coinbase:        batch2.Coinbase,
+		Timestamp_V1:    batch2.Timestamp,
+
+		GlobalExitRoot_V1: batch2.GlobalExitRoot,
+		Transactions:      batch2.BatchL2Data,
+	}
+	log.Debugf("Processing batch %d: ntx:%d StateRoot:%s", batch2.BatchNumber, len(batch2.BatchL2Data), batch2.StateRoot)
+	forkID := r.st.GetForkIDByBatchNumber(batch2.BatchNumber)
+	syncedTxs, _, _, err := state.DecodeTxs(batch2.BatchL2Data, forkID)
+	if err != nil {
+		log.Errorf("error decoding synced txs from trustedstate. Error: %v, TrustedBatchL2Data: %s", err, batch2.BatchL2Data)
+		return nil, err
+	} else {
+		r.output.numOfTransactionsInBatch(len(syncedTxs))
+	}
+	var response *state.ProcessBatchResponse
+
+	log.Infof("id:%d len_trs:%d oldStateRoot:%s", batch2.BatchNumber, len(syncedTxs), request.OldStateRoot)
+	response, err = r.st.ProcessBatch(r.ctx, request, r.updateHasbDB)
+	for _, blockResponse := range response.BlockResponses {
+		for tx_i, txresponse := range blockResponse.TransactionResponses {
+			if txresponse.RomError != nil {
+				r.output.addTransactionError(tx_i, txresponse.RomError)
+				log.Errorf("error processing batch %d. tx:%d Error: %v stateroot:%s", i, tx_i, txresponse.RomError, response.NewStateRoot)
+				//return txresponse.RomError
+			}
+		}
 	}
 
-	if resp.NewStateRoot != batch2.StateRoot {
+	if err != nil {
+		r.output.isWrittenOnHashDB(false, response.FlushID)
 		if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
-			return batch2, resp, fmt.Errorf(
+			return response, fmt.Errorf(
 				"failed to rollback dbTx: %s. Rollback err: %w",
 				rollbackErr.Error(), err,
 			)
 		}
-		log.Errorf("error processing batch %d. Error: state root differs: calculated: %s  != expected: %s", i, resp.NewStateRoot, batch2.StateRoot)
-		return batch2, resp, fmt.Errorf("missmatch state root calculated: %s  != expected: %s", resp.NewStateRoot, batch2.StateRoot)
+		log.Errorf("error processing batch %d. Error: %v", i, err)
+		return response, err
+	} else {
+		r.output.isWrittenOnHashDB(r.updateHasbDB, response.FlushID)
 	}
-
-	if commitErr := dbTx.Commit(r.ctx); commitErr != nil {
-		return batch2, nil, fmt.Errorf(
-			"failed to commit dbTx: %s. Commit err: %w",
-			commitErr.Error(), err,
-		)
-	}
-
-	return batch2, resp, nil
+	return response, nil
 }
