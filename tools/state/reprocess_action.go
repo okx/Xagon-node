@@ -97,9 +97,9 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 	forkID := r.st.GetForkIDByBatchNumber(batch2.BatchNumber)
 	var resp *state.ProcessBatchResponse
 	if forkID < state.FORKID_ETROG {
-		resp, err = r.processBatchV1(batch2, oldStateRoot, oldAccInputHash, dbTx)
+		resp, err = r.processBatchV1(batch2, oldStateRoot, oldAccInputHash, i, dbTx)
 	} else {
-		resp, err = r.processBatchV2(batch2, oldStateRoot, oldAccInputHash, dbTx)
+		resp, err = r.processBatchV2(batch2, oldStateRoot, i, dbTx)
 	}
 	if resp.NewStateRoot != batch2.StateRoot {
 		if rollbackErr := dbTx.Rollback(r.ctx); rollbackErr != nil {
@@ -122,7 +122,7 @@ func (r *reprocessAction) step(i uint64, oldStateRoot common.Hash, oldAccInputHa
 	return batch2, resp, nil
 }
 
-func (r *reprocessAction) processBatchV2(batch2 *state.Batch, oldStateRoot common.Hash, oldAccInputHash common.Hash, dbTx pgx.Tx) (*state.ProcessBatchResponse, error) {
+func (r *reprocessAction) processBatchV2(batch2 *state.Batch, oldStateRoot common.Hash, batch uint64, dbTx pgx.Tx) (*state.ProcessBatchResponse, error) {
 	forkID := r.st.GetForkIDByBatchNumber(batch2.BatchNumber)
 	var resp *state.ProcessBatchResponse
 	l2data, err := state.DecodeBatchV2(batch2.BatchL2Data)
@@ -181,7 +181,7 @@ func (r *reprocessAction) processBatchV2(batch2 *state.Batch, oldStateRoot commo
 		}
 		response, err := r.st.ProcessBatchV2(context.Background(), request, false)
 		if err != nil {
-			log.Errorf("error processing batch %d. Error: %v", i, err)
+			log.Errorf("error processing batch %d. Error: %v", batch, err)
 			return nil, err
 		}
 		resp = response
@@ -189,7 +189,7 @@ func (r *reprocessAction) processBatchV2(batch2 *state.Batch, oldStateRoot commo
 			for tx_i, txresponse := range blockResponse.TransactionResponses {
 				if txresponse.RomError != nil {
 					r.output.addTransactionError(tx_i, txresponse.RomError)
-					log.Errorf("error processing batch %d. tx:%d Error: %v stateroot:%s", i, tx_i, txresponse.RomError, response.NewStateRoot)
+					log.Errorf("error processing batch %d. tx:%d Error: %v stateroot:%s", batch, tx_i, txresponse.RomError, response.NewStateRoot)
 					//return txresponse.RomError
 				}
 			}
@@ -202,7 +202,7 @@ func (r *reprocessAction) processBatchV2(batch2 *state.Batch, oldStateRoot commo
 					rollbackErr.Error(), err,
 				)
 			}
-			log.Errorf("error processing batch %d. Error: %v", i, err)
+			log.Errorf("error processing batch %d. Error: %v", batch, err)
 			return response, err
 		} else {
 			r.output.isWrittenOnHashDB(r.updateHasbDB, response.FlushID)
@@ -212,7 +212,7 @@ func (r *reprocessAction) processBatchV2(batch2 *state.Batch, oldStateRoot commo
 	return resp, nil
 }
 
-func (r *reprocessAction) processBatchV1(batch2 *state.Batch, oldStateRoot common.Hash, oldAccInputHash common.Hash, dbTx pgx.Tx) (*state.ProcessBatchResponse, error) {
+func (r *reprocessAction) processBatchV1(batch2 *state.Batch, oldStateRoot common.Hash, oldAccInputHash common.Hash, batch uint64, dbTx pgx.Tx) (*state.ProcessBatchResponse, error) {
 	request := state.ProcessRequest{
 		BatchNumber:     batch2.BatchNumber,
 		OldStateRoot:    oldStateRoot,
@@ -240,7 +240,7 @@ func (r *reprocessAction) processBatchV1(batch2 *state.Batch, oldStateRoot commo
 		for tx_i, txresponse := range blockResponse.TransactionResponses {
 			if txresponse.RomError != nil {
 				r.output.addTransactionError(tx_i, txresponse.RomError)
-				log.Errorf("error processing batch %d. tx:%d Error: %v stateroot:%s", i, tx_i, txresponse.RomError, response.NewStateRoot)
+				log.Errorf("error processing batch %d. tx:%d Error: %v stateroot:%s", batch, tx_i, txresponse.RomError, response.NewStateRoot)
 				//return txresponse.RomError
 			}
 		}
@@ -254,7 +254,7 @@ func (r *reprocessAction) processBatchV1(batch2 *state.Batch, oldStateRoot commo
 				rollbackErr.Error(), err,
 			)
 		}
-		log.Errorf("error processing batch %d. Error: %v", i, err)
+		log.Errorf("error processing batch %d. Error: %v", batch, err)
 		return response, err
 	} else {
 		r.output.isWrittenOnHashDB(r.updateHasbDB, response.FlushID)
