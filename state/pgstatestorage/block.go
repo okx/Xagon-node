@@ -16,10 +16,10 @@ const (
 
 // AddBlock adds a new block to the State Store
 func (p *PostgresStorage) AddBlock(ctx context.Context, block *state.Block, dbTx pgx.Tx) error {
-	const addBlockSQL = "INSERT INTO state.block (block_num, block_hash, parent_hash, received_at) VALUES ($1, $2, $3, $4)"
+	const addBlockSQL = "INSERT INTO state.block (block_num, block_hash, parent_hash, received_at, checked) VALUES ($1, $2, $3, $4, $5)"
 
 	e := p.getExecQuerier(dbTx)
-	_, err := e.Exec(ctx, addBlockSQL, block.BlockNumber, block.BlockHash.String(), block.ParentHash.String(), block.ReceivedAt)
+	_, err := e.Exec(ctx, addBlockSQL, block.BlockNumber, block.BlockHash.String(), block.ParentHash.String(), block.ReceivedAt, block.Checked)
 	return err
 }
 
@@ -30,13 +30,33 @@ func (p *PostgresStorage) GetLastBlock(ctx context.Context, dbTx pgx.Tx) (*state
 		parentHash string
 		block      state.Block
 	)
-	const getLastBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at FROM state.block ORDER BY block_num DESC LIMIT 1"
+	const getLastBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at, checked FROM state.block ORDER BY block_num DESC LIMIT 1"
 
 	q := p.getExecQuerier(dbTx)
 
-	err := q.QueryRow(ctx, getLastBlockSQL).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt)
+	err := q.QueryRow(ctx, getLastBlockSQL).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt, &block.Checked)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, state.ErrStateNotSynchronized
+	}
+	block.BlockHash = common.HexToHash(blockHash)
+	block.ParentHash = common.HexToHash(parentHash)
+	return &block, err
+}
+
+// GetFirstUncheckedBlock returns the first L1 block that has not been checked from a given block number.
+func (p *PostgresStorage) GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx) (*state.Block, error) {
+	var (
+		blockHash  string
+		parentHash string
+		block      state.Block
+	)
+	const getLastBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at, checked FROM state.block  WHERE block_num>=$1 AND  checked=false ORDER BY block_num LIMIT 1"
+
+	q := p.getExecQuerier(dbTx)
+
+	err := q.QueryRow(ctx, getLastBlockSQL, fromBlockNumber).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt, &block.Checked)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, state.ErrNotFound
 	}
 	block.BlockHash = common.HexToHash(blockHash)
 	block.ParentHash = common.HexToHash(parentHash)
@@ -50,11 +70,11 @@ func (p *PostgresStorage) GetPreviousBlock(ctx context.Context, offset uint64, d
 		parentHash string
 		block      state.Block
 	)
-	const getPreviousBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at FROM state.block ORDER BY block_num DESC LIMIT 1 OFFSET $1"
+	const getPreviousBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at,checked FROM state.block ORDER BY block_num DESC LIMIT 1 OFFSET $1"
 
 	q := p.getExecQuerier(dbTx)
 
-	err := q.QueryRow(ctx, getPreviousBlockSQL, offset).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt)
+	err := q.QueryRow(ctx, getPreviousBlockSQL, offset).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt, &block.Checked)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, state.ErrNotFound
 	}
@@ -70,15 +90,26 @@ func (p *PostgresStorage) GetBlockByNumber(ctx context.Context, blockNumber uint
 		parentHash string
 		block      state.Block
 	)
-	const getBlockByNumberSQL = "SELECT block_num, block_hash, parent_hash, received_at FROM state.block WHERE block_num = $1"
+	const getBlockByNumberSQL = "SELECT block_num, block_hash, parent_hash, received_at,checked FROM state.block WHERE block_num = $1"
 
 	q := p.getExecQuerier(dbTx)
 
-	err := q.QueryRow(ctx, getBlockByNumberSQL, blockNumber).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt)
+	err := q.QueryRow(ctx, getBlockByNumberSQL, blockNumber).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt, &block.Checked)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, state.ErrNotFound
 	}
 	block.BlockHash = common.HexToHash(blockHash)
 	block.ParentHash = common.HexToHash(parentHash)
 	return &block, err
+}
+
+// UpdateCheckedBlockByNumber update checked flag for a block
+func (p *PostgresStorage) UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx pgx.Tx) error {
+	const query = `
+    UPDATE state.block
+       SET checked = $1 WHERE block_num = $2`
+
+	e := p.getExecQuerier(dbTx)
+	_, err := e.Exec(ctx, query, newCheckedStatus, blockNumber)
+	return err
 }

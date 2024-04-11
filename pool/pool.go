@@ -715,7 +715,7 @@ func (p *Pool) CalculateEffectiveGasPrice(rawTx []byte, txGasPrice *big.Int, txG
 
 // CalculateEffectiveGasPricePercentage calculates the gas price's effective percentage
 func (p *Pool) CalculateEffectiveGasPricePercentage(gasPrice *big.Int, effectiveGasPrice *big.Int) (uint8, error) {
-	return p.effectiveGasPrice.CalculateEffectiveGasPricePercentage(gasPrice, effectiveGasPrice)
+	return state.CalculateEffectiveGasPricePercentage(gasPrice, effectiveGasPrice)
 }
 
 // EffectiveGasPriceEnabled returns if effective gas price calculation is enabled or not

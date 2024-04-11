@@ -29,6 +29,8 @@ type StateFullInterface interface {
 	AddBlock(ctx context.Context, block *state.Block, dbTx pgx.Tx) error
 	Reset(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) error
 	GetPreviousBlock(ctx context.Context, offset uint64, dbTx pgx.Tx) (*state.Block, error)
+	GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx) (*state.Block, error)
+	UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx pgx.Tx) error
 	GetLastBatchNumber(ctx context.Context, dbTx pgx.Tx) (uint64, error)
 	GetBatchByNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*state.Batch, error)
 	ResetTrustedState(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) error

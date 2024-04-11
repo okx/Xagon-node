@@ -552,7 +552,7 @@ func (z *ZKEVMEndpoints) internalEstimateGasPriceAndFee(ctx context.Context, arg
 
 		if txEGP.Cmp(txGasPrice) == -1 { // txEGP < txGasPrice
 			// We need to "round" the final effectiveGasPrice to a 256 fraction of the txGasPrice
-			txEGPPct, err = z.pool.CalculateEffectiveGasPricePercentage(txGasPrice, txEGP)
+			txEGPPct, err = state.CalculateEffectiveGasPricePercentage(txGasPrice, txEGP)
 			if err != nil {
 				return nil, nil, types.NewRPCError(types.DefaultErrorCode, "failed to calculate effective gas price percentage", err, false)
 			}

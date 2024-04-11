@@ -2380,6 +2380,66 @@ func (_c *StorageMock_GetFirstL2BlockNumberForBatchNumber_Call) RunAndReturn(run
 	return _c
 }
 
+// GetFirstUncheckedBlock provides a mock function with given fields: ctx, fromBlockNumber, dbTx
+func (_m *StorageMock) GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx) (*state.Block, error) {
+	ret := _m.Called(ctx, fromBlockNumber, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetFirstUncheckedBlock")
+	}
+
+	var r0 *state.Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) (*state.Block, error)); ok {
+		return rf(ctx, fromBlockNumber, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) *state.Block); ok {
+		r0 = rf(ctx, fromBlockNumber, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*state.Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, pgx.Tx) error); ok {
+		r1 = rf(ctx, fromBlockNumber, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StorageMock_GetFirstUncheckedBlock_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetFirstUncheckedBlock'
+type StorageMock_GetFirstUncheckedBlock_Call struct {
+	*mock.Call
+}
+
+// GetFirstUncheckedBlock is a helper method to define mock.On call
+//   - ctx context.Context
+//   - fromBlockNumber uint64
+//   - dbTx pgx.Tx
+func (_e *StorageMock_Expecter) GetFirstUncheckedBlock(ctx interface{}, fromBlockNumber interface{}, dbTx interface{}) *StorageMock_GetFirstUncheckedBlock_Call {
+	return &StorageMock_GetFirstUncheckedBlock_Call{Call: _e.mock.On("GetFirstUncheckedBlock", ctx, fromBlockNumber, dbTx)}
+}
+
+func (_c *StorageMock_GetFirstUncheckedBlock_Call) Run(run func(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx)) *StorageMock_GetFirstUncheckedBlock_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StorageMock_GetFirstUncheckedBlock_Call) Return(_a0 *state.Block, _a1 error) *StorageMock_GetFirstUncheckedBlock_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StorageMock_GetFirstUncheckedBlock_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) (*state.Block, error)) *StorageMock_GetFirstUncheckedBlock_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetForcedBatch provides a mock function with given fields: ctx, forcedBatchNumber, dbTx
 func (_m *StorageMock) GetForcedBatch(ctx context.Context, forcedBatchNumber uint64, dbTx pgx.Tx) (*state.ForcedBatch, error) {
 	ret := _m.Called(ctx, forcedBatchNumber, dbTx)
@@ -4947,12 +5007,12 @@ func (_c *StorageMock_GetLatestVirtualBatchTimestamp_Call) RunAndReturn(run func
 	return _c
 }
 
-// GetLeafsByL1InfoRoot provides a mock function with given fields: ctx, l1InfoRoot, dbTx
-func (_m *StorageMock) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error) {
+// GetLeavesByL1InfoRoot provides a mock function with given fields: ctx, l1InfoRoot, dbTx
+func (_m *StorageMock) GetLeavesByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error) {
 	ret := _m.Called(ctx, l1InfoRoot, dbTx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetLeafsByL1InfoRoot")
+		panic("no return value specified for GetLeavesByL1InfoRoot")
 	}
 
 	var r0 []state.L1InfoTreeExitRootStorageEntry
@@ -4977,32 +5037,32 @@ func (_m *StorageMock) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot comm
 	return r0, r1
 }
 
-// StorageMock_GetLeafsByL1InfoRoot_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLeafsByL1InfoRoot'
-type StorageMock_GetLeafsByL1InfoRoot_Call struct {
+// StorageMock_GetLeavesByL1InfoRoot_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetLeavesByL1InfoRoot'
+type StorageMock_GetLeavesByL1InfoRoot_Call struct {
 	*mock.Call
 }
 
-// GetLeafsByL1InfoRoot is a helper method to define mock.On call
+// GetLeavesByL1InfoRoot is a helper method to define mock.On call
 //   - ctx context.Context
 //   - l1InfoRoot common.Hash
 //   - dbTx pgx.Tx
-func (_e *StorageMock_Expecter) GetLeafsByL1InfoRoot(ctx interface{}, l1InfoRoot interface{}, dbTx interface{}) *StorageMock_GetLeafsByL1InfoRoot_Call {
-	return &StorageMock_GetLeafsByL1InfoRoot_Call{Call: _e.mock.On("GetLeafsByL1InfoRoot", ctx, l1InfoRoot, dbTx)}
+func (_e *StorageMock_Expecter) GetLeavesByL1InfoRoot(ctx interface{}, l1InfoRoot interface{}, dbTx interface{}) *StorageMock_GetLeavesByL1InfoRoot_Call {
+	return &StorageMock_GetLeavesByL1InfoRoot_Call{Call: _e.mock.On("GetLeavesByL1InfoRoot", ctx, l1InfoRoot, dbTx)}
 }
 
-func (_c *StorageMock_GetLeafsByL1InfoRoot_Call) Run(run func(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx)) *StorageMock_GetLeafsByL1InfoRoot_Call {
+func (_c *StorageMock_GetLeavesByL1InfoRoot_Call) Run(run func(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx)) *StorageMock_GetLeavesByL1InfoRoot_Call {
 	_c.Call.Run(func(args mock.Arguments) {
 		run(args[0].(context.Context), args[1].(common.Hash), args[2].(pgx.Tx))
 	})
 	return _c
 }
 
-func (_c *StorageMock_GetLeafsByL1InfoRoot_Call) Return(_a0 []state.L1InfoTreeExitRootStorageEntry, _a1 error) *StorageMock_GetLeafsByL1InfoRoot_Call {
+func (_c *StorageMock_GetLeavesByL1InfoRoot_Call) Return(_a0 []state.L1InfoTreeExitRootStorageEntry, _a1 error) *StorageMock_GetLeavesByL1InfoRoot_Call {
 	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *StorageMock_GetLeafsByL1InfoRoot_Call) RunAndReturn(run func(context.Context, common.Hash, pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error)) *StorageMock_GetLeafsByL1InfoRoot_Call {
+func (_c *StorageMock_GetLeavesByL1InfoRoot_Call) RunAndReturn(run func(context.Context, common.Hash, pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error)) *StorageMock_GetLeavesByL1InfoRoot_Call {
 	_c.Call.Return(run)
 	return _c
 }
@@ -8148,6 +8208,55 @@ func (_c *StorageMock_UpdateBatchL2Data_Call) Return(_a0 error) *StorageMock_Upd
 }
 
 func (_c *StorageMock_UpdateBatchL2Data_Call) RunAndReturn(run func(context.Context, uint64, []byte, pgx.Tx) error) *StorageMock_UpdateBatchL2Data_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// UpdateCheckedBlockByNumber provides a mock function with given fields: ctx, blockNumber, newCheckedStatus, dbTx
+func (_m *StorageMock) UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx pgx.Tx) error {
+	ret := _m.Called(ctx, blockNumber, newCheckedStatus, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for UpdateCheckedBlockByNumber")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, bool, pgx.Tx) error); ok {
+		r0 = rf(ctx, blockNumber, newCheckedStatus, dbTx)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
+// StorageMock_UpdateCheckedBlockByNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'UpdateCheckedBlockByNumber'
+type StorageMock_UpdateCheckedBlockByNumber_Call struct {
+	*mock.Call
+}
+
+// UpdateCheckedBlockByNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - blockNumber uint64
+//   - newCheckedStatus bool
+//   - dbTx pgx.Tx
+func (_e *StorageMock_Expecter) UpdateCheckedBlockByNumber(ctx interface{}, blockNumber interface{}, newCheckedStatus interface{}, dbTx interface{}) *StorageMock_UpdateCheckedBlockByNumber_Call {
+	return &StorageMock_UpdateCheckedBlockByNumber_Call{Call: _e.mock.On("UpdateCheckedBlockByNumber", ctx, blockNumber, newCheckedStatus, dbTx)}
+}
+
+func (_c *StorageMock_UpdateCheckedBlockByNumber_Call) Run(run func(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx pgx.Tx)) *StorageMock_UpdateCheckedBlockByNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(bool), args[3].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StorageMock_UpdateCheckedBlockByNumber_Call) Return(_a0 error) *StorageMock_UpdateCheckedBlockByNumber_Call {
+	_c.Call.Return(_a0)
+	return _c
+}
+
+func (_c *StorageMock_UpdateCheckedBlockByNumber_Call) RunAndReturn(run func(context.Context, uint64, bool, pgx.Tx) error) *StorageMock_UpdateCheckedBlockByNumber_Call {
 	_c.Call.Return(run)
 	return _c
 }

@@ -16,32 +16,32 @@ type GenesisAccountTest struct {
 
 // GenesisTest2Actions change format from testvector to the used internaly
 func GenesisTest2Actions(accounts []GenesisAccountTest) []*state.GenesisAction {
-	leafs := make([]*state.GenesisAction, 0)
+	leaves := make([]*state.GenesisAction, 0)
 
 	for _, acc := range accounts {
 		if len(acc.Balance) != 0 && acc.Balance != "0" {
-			leafs = append(leafs, &state.GenesisAction{
+			leaves = append(leaves, &state.GenesisAction{
 				Address: acc.Address,
 				Type:    int(merkletree.LeafTypeBalance),
 				Value:   acc.Balance,
 			})
 		}
 		if len(acc.Nonce) != 0 && acc.Nonce != "0" {
-			leafs = append(leafs, &state.GenesisAction{
+			leaves = append(leaves, &state.GenesisAction{
 				Address: acc.Address,
 				Type:    int(merkletree.LeafTypeNonce),
 				Value:   acc.Nonce,
 			})
 		}
 		if len(acc.Bytecode) != 0 {
-			leafs = append(leafs, &state.GenesisAction{
+			leaves = append(leaves, &state.GenesisAction{
 				Address:  acc.Address,
 				Type:     int(merkletree.LeafTypeCode),
 				Bytecode: acc.Bytecode,
 			})
 		}
 		for key, value := range acc.Storage {
-			leafs = append(leafs, &state.GenesisAction{
+			leaves = append(leaves, &state.GenesisAction{
 				Address:         acc.Address,
 				Type:            int(merkletree.LeafTypeStorage),
 				StoragePosition: key,
@@ -49,5 +49,5 @@ func GenesisTest2Actions(accounts []GenesisAccountTest) []*state.GenesisAction {
 			})
 		}
 	}
-	return leafs
+	return leaves
 }

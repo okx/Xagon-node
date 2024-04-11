@@ -86,6 +86,7 @@ DisableAPIs = []
 SyncInterval = "1s"
 SyncChunkSize = 100
 TrustedSequencerURL = "" # If it is empty or not specified, then the value is read from the smc.
+SyncBlockProtection = "latest" # latest, finalized, safe
 L1SynchronizationMode = "sequential"
 	[Synchronizer.L1ParallelSynchronization]
 		MaxClients = 10

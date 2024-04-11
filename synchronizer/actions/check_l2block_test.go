@@ -5,7 +5,6 @@ import (
 	"math/big"
 	"testing"
 
-	rpctypes "github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/actions"
 	mock_syncinterfaces "github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces/mocks"
@@ -19,7 +18,7 @@ import (
 type CheckL2BlocksTestData struct {
 	sut         *actions.CheckL2BlockHash
 	mockState   *mock_syncinterfaces.StateFullInterface
-	zKEVMClient *mock_syncinterfaces.ZKEVMClientInterface
+	zKEVMClient *mock_syncinterfaces.ZKEVMClientEthereumCompatibleInterface
 }
 
 func TestCheckL2BlockHash_GetMinimumL2BlockToCheck(t *testing.T) {
@@ -57,7 +56,7 @@ func TestCheckL2BlockHashNotEnoughBlocksToCheck(t *testing.T) {
 func newCheckL2BlocksTestData(t *testing.T, initialL2Block, modulus uint64) CheckL2BlocksTestData {
 	res := CheckL2BlocksTestData{
 		mockState:   mock_syncinterfaces.NewStateFullInterface(t),
-		zKEVMClient: mock_syncinterfaces.NewZKEVMClientInterface(t),
+		zKEVMClient: mock_syncinterfaces.NewZKEVMClientEthereumCompatibleInterface(t),
 	}
 	res.sut = actions.NewCheckL2BlockHash(res.mockState, res.zKEVMClient, initialL2Block, modulus)
 	return res
@@ -97,18 +96,23 @@ func TestCheckL2BlockHashMatch(t *testing.T) {
 
 	data.mockState.EXPECT().GetLastL2BlockNumber(mock.Anything, mock.Anything).Return(lastL2Block, nil)
 	data.mockState.EXPECT().GetL2BlockByNumber(mock.Anything, lastL2Block, mock.Anything).Return(stateBlock, nil)
-	l2blockHash := stateBlock.Hash()
-	rpcL2Block := rpctypes.Block{
-		Hash:   &l2blockHash,
-		Number: rpctypes.ArgUint64(lastL2Block),
-	}
+	//l2blockHash := stateBlock.Hash()
+	// rpcL2Block := rpctypes.Block{
+	// 	Hash:   &l2blockHash,
+	// 	Number: rpctypes.ArgUint64(lastL2Block),
+	// }
+	// create a types.Block object
 
-	data.zKEVMClient.EXPECT().BlockByNumber(mock.Anything, lastL2BlockBigInt).Return(&rpcL2Block, nil)
+	rpcL2Block := types.NewBlock(&types.Header{
+		Number: big.NewInt(int64(lastL2Block)),
+	}, nil, nil, nil, nil)
+
+	data.zKEVMClient.EXPECT().BlockByNumber(mock.Anything, lastL2BlockBigInt).Return(rpcL2Block, nil)
 	err := data.sut.CheckL2Block(context.Background(), nil)
 	require.NoError(t, err)
 }
 
-func TestCheckL2BlockHashMissmatch(t *testing.T) {
+func TestCheckL2BlockHashMismatch(t *testing.T) {
 	data := newCheckL2BlocksTestData(t, 1, 10)
 	lastL2Block := uint64(14)
 	lastL2BlockBigInt := big.NewInt(int64(lastL2Block))
@@ -119,13 +123,14 @@ func TestCheckL2BlockHashMissmatch(t *testing.T) {
 
 	data.mockState.EXPECT().GetLastL2BlockNumber(mock.Anything, mock.Anything).Return(lastL2Block, nil)
 	data.mockState.EXPECT().GetL2BlockByNumber(mock.Anything, lastL2Block, mock.Anything).Return(stateBlock, nil)
-	l2blockHash := common.HexToHash("0x1234")
-	rpcL2Block := rpctypes.Block{
-		Hash:   &l2blockHash,
-		Number: rpctypes.ArgUint64(lastL2Block),
-	}
+	//l2blockHash := common.HexToHash("0x1234")
 
-	data.zKEVMClient.EXPECT().BlockByNumber(mock.Anything, lastL2BlockBigInt).Return(&rpcL2Block, nil)
+	rpcL2Block := types.NewBlock(&types.Header{
+		Number:     big.NewInt(int64(lastL2Block)),
+		ParentHash: common.HexToHash("0x1234"),
+	}, nil, nil, nil, nil)
+
+	data.zKEVMClient.EXPECT().BlockByNumber(mock.Anything, lastL2BlockBigInt).Return(rpcL2Block, nil)
 	err := data.sut.CheckL2Block(context.Background(), nil)
 	require.Error(t, err)
 }

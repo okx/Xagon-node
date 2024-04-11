@@ -479,7 +479,7 @@ func (f *finalizer) processTransaction(ctx context.Context, tx *TxTracker, first
 		}
 	}
 
-	egpPercentage, err := f.effectiveGasPrice.CalculateEffectiveGasPricePercentage(txGasPrice, tx.EffectiveGasPrice)
+	egpPercentage, err := state.CalculateEffectiveGasPricePercentage(txGasPrice, tx.EffectiveGasPrice)
 	if err != nil {
 		if f.effectiveGasPrice.IsEnabled() {
 			return nil, err
@@ -600,7 +600,7 @@ func (f *finalizer) handleProcessTransactionResponse(ctx context.Context, tx *Tx
 
 			// If EffectiveGasPrice is disabled we will calculate the percentage and save it for later logging
 			if !egpEnabled {
-				effectivePercentage, err := f.effectiveGasPrice.CalculateEffectiveGasPricePercentage(txGasPrice, tx.EffectiveGasPrice)
+				effectivePercentage, err := state.CalculateEffectiveGasPricePercentage(txGasPrice, tx.EffectiveGasPrice)
 				if err != nil {
 					log.Warnf("effectiveGasPrice is disabled, but failed to calculate effective gas price percentage (#2), error: %v", err)
 					tx.EGPLog.Error = fmt.Sprintf("%s, CalculateEffectiveGasPricePercentage#2: %s", tx.EGPLog.Error, err)

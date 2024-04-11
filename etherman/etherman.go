@@ -1188,7 +1188,6 @@ func (etherMan *Client) forcedBatchEvent(ctx context.Context, vLog types.Log, bl
 
 func (etherMan *Client) sequencedBatchesEvent(ctx context.Context, vLog types.Log, blocks *[]Block, blocksOrder *map[common.Hash][]Order) error {
 	log.Debugf("SequenceBatches event detected: txHash: %s", common.Bytes2Hex(vLog.TxHash[:]))
-	//tx,isPending, err:=etherMan.EthClient.TransactionByHash(ctx, vLog.TxHash)
 
 	sb, err := etherMan.ZkEVM.ParseSequenceBatches(vLog)
 	if err != nil {

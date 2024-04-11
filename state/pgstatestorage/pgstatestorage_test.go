@@ -872,7 +872,7 @@ func TestGetLogs(t *testing.T) {
 	ctx := context.Background()
 
 	cfg := state.Config{
-		MaxLogsCount:      8,
+		MaxLogsCount:      40,
 		MaxLogsBlockRange: 10,
 		ForkIDIntervals:   stateCfg.ForkIDIntervals,
 	}
@@ -895,39 +895,69 @@ func TestGetLogs(t *testing.T) {
 	time := time.Now()
 	blockNumber := big.NewInt(1)
 
-	for i := 0; i < 3; i++ {
-		tx := types.NewTx(&types.LegacyTx{
-			Nonce:    uint64(i),
-			To:       nil,
-			Value:    new(big.Int),
-			Gas:      0,
-			GasPrice: big.NewInt(0),
-		})
+	maxBlocks := 3
+	txsPerBlock := 4
+	logsPerTx := 5
 
-		logs := []*types.Log{}
-		for j := 0; j < 4; j++ {
-			logs = append(logs, &types.Log{TxHash: tx.Hash(), Index: uint(j)})
+	nonce := uint64(0)
+
+	// number of blocks to be created
+	for b := 0; b < maxBlocks; b++ {
+		logIndex := uint(0)
+		transactions := make([]*types.Transaction, 0, txsPerBlock)
+		receipts := make([]*types.Receipt, 0, txsPerBlock)
+		stateRoots := make([]common.Hash, 0, txsPerBlock)
+
+		// number of transactions in a block to be created
+		for t := 0; t < txsPerBlock; t++ {
+			nonce++
+			txIndex := uint(t + 1)
+
+			tx := types.NewTx(&types.LegacyTx{
+				Nonce:    nonce,
+				To:       nil,
+				Value:    new(big.Int),
+				Gas:      0,
+				GasPrice: big.NewInt(0),
+			})
+
+			logs := []*types.Log{}
+
+			// if block is even logIndex follows a sequence related to the block
+			// for odd blocks logIndex follows a sequence related ot the tx
+			// this is needed to simulate a logIndex difference introduced on Etrog
+			// and we need to maintain to be able to synchronize these blocks
+			// number of logs in a transaction to be created
+			for l := 0; l < logsPerTx; l++ {
+				li := logIndex
+				if b%2 != 0 { // even block
+					li = uint(l)
+				}
+
+				logs = append(logs, &types.Log{TxHash: tx.Hash(), TxIndex: txIndex, Index: li})
+				logIndex++
+			}
+
+			receipt := &types.Receipt{
+				Type:              tx.Type(),
+				PostState:         state.ZeroHash.Bytes(),
+				CumulativeGasUsed: 0,
+				EffectiveGasPrice: big.NewInt(0),
+				BlockNumber:       blockNumber,
+				GasUsed:           tx.Gas(),
+				TxHash:            tx.Hash(),
+				TransactionIndex:  txIndex,
+				Status:            types.ReceiptStatusSuccessful,
+				Logs:              logs,
+			}
+
+			transactions = append(transactions, tx)
+			receipts = append(receipts, receipt)
+			stateRoots = append(stateRoots, state.ZeroHash)
 		}
-
-		receipt := &types.Receipt{
-			Type:              tx.Type(),
-			PostState:         state.ZeroHash.Bytes(),
-			CumulativeGasUsed: 0,
-			EffectiveGasPrice: big.NewInt(0),
-			BlockNumber:       blockNumber,
-			GasUsed:           tx.Gas(),
-			TxHash:            tx.Hash(),
-			TransactionIndex:  0,
-			Status:            types.ReceiptStatusSuccessful,
-			Logs:              logs,
-		}
-
-		transactions := []*types.Transaction{tx}
-		receipts := []*types.Receipt{receipt}
-		stateRoots := []common.Hash{state.ZeroHash}
 
 		header := state.NewL2Header(&types.Header{
-			Number:     big.NewInt(int64(i) + 1),
+			Number:     big.NewInt(int64(b) + 1),
 			ParentHash: state.ZeroHash,
 			Coinbase:   state.ZeroAddress,
 			Root:       state.ZeroHash,
@@ -953,6 +983,8 @@ func TestGetLogs(t *testing.T) {
 		err = testState.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, stateRoots, dbTx)
 		require.NoError(t, err)
 	}
+
+	require.NoError(t, dbTx.Commit(ctx))
 
 	type testCase struct {
 		name          string
@@ -988,20 +1020,227 @@ func TestGetLogs(t *testing.T) {
 			name:          "logs returned successfully",
 			from:          1,
 			to:            2,
-			logCount:      8,
+			logCount:      40,
 			expectedError: nil,
 		},
 	}
 
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
-			logs, err := testState.GetLogs(ctx, testCase.from, testCase.to, []common.Address{}, [][]common.Hash{}, nil, nil, dbTx)
-
+			logs, err := testState.GetLogs(ctx, testCase.from, testCase.to, []common.Address{}, [][]common.Hash{}, nil, nil, nil)
 			assert.Equal(t, testCase.logCount, len(logs))
 			assert.Equal(t, testCase.expectedError, err)
+
+			// check tx index and log index order
+			lastBlockNumber := uint64(0)
+			lastTxIndex := uint(0)
+			lastLogIndex := uint(0)
+
+			for i, l := range logs {
+				// if block has changed and it's not the first log, reset lastTxIndex
+				if uint(l.BlockNumber) != uint(lastBlockNumber) && i != 0 {
+					lastTxIndex = 0
+				}
+
+				if l.TxIndex < lastTxIndex {
+					t.Errorf("invalid tx index, expected greater than or equal to %v, but found %v", lastTxIndex, l.TxIndex)
+				}
+				// add tolerance for log index Etrog issue that was starting log indexes from 0 for each tx within a block
+				// if tx index has changed and the log index starts on zero, than resets the lastLogIndex to zero
+				if l.TxIndex != lastTxIndex && l.Index == 0 {
+					lastLogIndex = 0
+				}
+
+				if l.Index < lastLogIndex {
+					t.Errorf("invalid log index, expected greater than %v, but found %v", lastLogIndex, l.Index)
+				}
+
+				lastBlockNumber = l.BlockNumber
+				lastTxIndex = l.TxIndex
+				lastLogIndex = l.Index
+			}
 		})
 	}
+}
+
+func TestGetLogsByBlockNumber(t *testing.T) {
+	initOrResetDB()
+
+	ctx := context.Background()
+
+	cfg := state.Config{
+		MaxLogsCount:      40,
+		MaxLogsBlockRange: 10,
+		ForkIDIntervals:   stateCfg.ForkIDIntervals,
+	}
+
+	mt, err := l1infotree.NewL1InfoTree(32, [][32]byte{})
+	if err != nil {
+		panic(err)
+	}
+	testState = state.NewState(stateCfg, pgstatestorage.NewPostgresStorage(cfg, stateDb), executorClient, stateTree, nil, mt)
+
+	dbTx, err := testState.BeginStateTransaction(ctx)
+	require.NoError(t, err)
+	err = testState.AddBlock(ctx, block, dbTx)
+	assert.NoError(t, err)
+
+	batchNumber := uint64(1)
+	_, err = testState.Exec(ctx, "INSERT INTO state.batch (batch_num, wip) VALUES ($1, FALSE)", batchNumber)
+	assert.NoError(t, err)
+
+	time := time.Now()
+	blockNumber := big.NewInt(1)
+
+	maxBlocks := 3
+	txsPerBlock := 4
+	logsPerTx := 5
+
+	nonce := uint64(0)
+
+	// number of blocks to be created
+	for b := 0; b < maxBlocks; b++ {
+		logIndex := uint(0)
+		transactions := make([]*types.Transaction, 0, txsPerBlock)
+		receipts := make([]*types.Receipt, 0, txsPerBlock)
+		stateRoots := make([]common.Hash, 0, txsPerBlock)
+
+		// number of transactions in a block to be created
+		for t := 0; t < txsPerBlock; t++ {
+			nonce++
+			txIndex := uint(t + 1)
+
+			tx := types.NewTx(&types.LegacyTx{
+				Nonce:    nonce,
+				To:       nil,
+				Value:    new(big.Int),
+				Gas:      0,
+				GasPrice: big.NewInt(0),
+			})
+
+			logs := []*types.Log{}
+
+			// if block is even logIndex follows a sequence related to the block
+			// for odd blocks logIndex follows a sequence related ot the tx
+			// this is needed to simulate a logIndex difference introduced on Etrog
+			// and we need to maintain to be able to synchronize these blocks
+			// number of logs in a transaction to be created
+			for l := 0; l < logsPerTx; l++ {
+				li := logIndex
+				if b%2 != 0 { // even block
+					li = uint(l)
+				}
+
+				logs = append(logs, &types.Log{TxHash: tx.Hash(), TxIndex: txIndex, Index: li})
+				logIndex++
+			}
+
+			receipt := &types.Receipt{
+				Type:              tx.Type(),
+				PostState:         state.ZeroHash.Bytes(),
+				CumulativeGasUsed: 0,
+				EffectiveGasPrice: big.NewInt(0),
+				BlockNumber:       blockNumber,
+				GasUsed:           tx.Gas(),
+				TxHash:            tx.Hash(),
+				TransactionIndex:  txIndex,
+				Status:            types.ReceiptStatusSuccessful,
+				Logs:              logs,
+			}
+
+			transactions = append(transactions, tx)
+			receipts = append(receipts, receipt)
+			stateRoots = append(stateRoots, state.ZeroHash)
+		}
+
+		header := state.NewL2Header(&types.Header{
+			Number:     big.NewInt(int64(b) + 1),
+			ParentHash: state.ZeroHash,
+			Coinbase:   state.ZeroAddress,
+			Root:       state.ZeroHash,
+			GasUsed:    1,
+			GasLimit:   10,
+			Time:       uint64(time.Unix()),
+		})
+
+		st := trie.NewStackTrie(nil)
+		l2Block := state.NewL2Block(header, transactions, []*state.L2Header{}, receipts, st)
+		for _, receipt := range receipts {
+			receipt.BlockHash = l2Block.Hash()
+		}
+
+		numTxs := len(transactions)
+		storeTxsEGPData := make([]state.StoreTxEGPData, numTxs)
+		txsL2Hash := make([]common.Hash, numTxs)
+		for i := range transactions {
+			storeTxsEGPData[i] = state.StoreTxEGPData{EGPLog: nil, EffectivePercentage: state.MaxEffectivePercentage}
+			txsL2Hash[i] = common.HexToHash(fmt.Sprintf("0x%d", i))
+		}
+
+		err = testState.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, stateRoots, dbTx)
+		require.NoError(t, err)
+	}
+
 	require.NoError(t, dbTx.Commit(ctx))
+
+	type testCase struct {
+		name          string
+		blockNumber   uint64
+		logCount      int
+		expectedError error
+	}
+
+	testCases := []testCase{
+		{
+			name:          "logs returned successfully",
+			blockNumber:   1,
+			logCount:      20,
+			expectedError: nil,
+		},
+		{
+			name:          "logs returned successfully",
+			blockNumber:   2,
+			logCount:      20,
+			expectedError: nil,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			logs, err := testState.GetLogsByBlockNumber(ctx, testCase.blockNumber, nil)
+			assert.Equal(t, testCase.logCount, len(logs))
+			assert.Equal(t, testCase.expectedError, err)
+
+			// check tx index and log index order
+			lastBlockNumber := uint64(0)
+			lastTxIndex := uint(0)
+			lastLogIndex := uint(0)
+
+			for i, l := range logs {
+				// if block has changed and it's not the first log, reset lastTxIndex
+				if uint(l.BlockNumber) != uint(lastBlockNumber) && i != 0 {
+					lastTxIndex = 0
+				}
+
+				if l.TxIndex < lastTxIndex {
+					t.Errorf("invalid tx index, expected greater than or equal to %v, but found %v", lastTxIndex, l.TxIndex)
+				}
+				// add tolerance for log index Etrog issue that was starting log indexes from 0 for each tx within a block
+				// if tx index has changed and the log index starts on zero, than resets the lastLogIndex to zero
+				if l.TxIndex != lastTxIndex && l.Index == 0 {
+					lastLogIndex = 0
+				}
+
+				if l.Index < lastLogIndex {
+					t.Errorf("invalid log index, expected greater than %v, but found %v", lastLogIndex, l.Index)
+				}
+
+				lastBlockNumber = l.BlockNumber
+				lastTxIndex = l.TxIndex
+				lastLogIndex = l.Index
+			}
+		})
+	}
 }
 
 func TestGetNativeBlockHashesInRange(t *testing.T) {
@@ -1410,4 +1649,41 @@ func TestGetLastGER(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, common.HexToHash("0x2").String(), ger.String())
 
+}
+
+func TestGetFirstUncheckedBlock(t *testing.T) {
+	var err error
+	blockNumber := uint64(51001)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber, Checked: true}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 1, Checked: false}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 2, Checked: true}, nil)
+	require.NoError(t, err)
+
+	block, err := testState.GetFirstUncheckedBlock(context.Background(), blockNumber, nil)
+	require.NoError(t, err)
+	require.Equal(t, uint64(blockNumber+1), block.BlockNumber)
+}
+
+func TestUpdateCheckedBlockByNumber(t *testing.T) {
+	var err error
+	blockNumber := uint64(54001)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber, Checked: true}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 1, Checked: false}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 2, Checked: true}, nil)
+	require.NoError(t, err)
+
+	b1, err := testState.GetBlockByNumber(context.Background(), uint64(blockNumber), nil)
+	require.NoError(t, err)
+	require.True(t, b1.Checked)
+
+	err = testState.UpdateCheckedBlockByNumber(context.Background(), uint64(blockNumber), false, nil)
+	require.NoError(t, err)
+
+	b1, err = testState.GetBlockByNumber(context.Background(), uint64(blockNumber), nil)
+	require.NoError(t, err)
+	require.False(t, b1.Checked)
 }

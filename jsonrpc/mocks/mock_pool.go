@@ -70,34 +70,6 @@ func (_m *PoolMock) CalculateEffectiveGasPrice(rawTx []byte, txGasPrice *big.Int
 	return r0, r1
 }
 
-// CalculateEffectiveGasPricePercentage provides a mock function with given fields: gasPrice, effectiveGasPrice
-func (_m *PoolMock) CalculateEffectiveGasPricePercentage(gasPrice *big.Int, effectiveGasPrice *big.Int) (uint8, error) {
-	ret := _m.Called(gasPrice, effectiveGasPrice)
-
-	if len(ret) == 0 {
-		panic("no return value specified for CalculateEffectiveGasPricePercentage")
-	}
-
-	var r0 uint8
-	var r1 error
-	if rf, ok := ret.Get(0).(func(*big.Int, *big.Int) (uint8, error)); ok {
-		return rf(gasPrice, effectiveGasPrice)
-	}
-	if rf, ok := ret.Get(0).(func(*big.Int, *big.Int) uint8); ok {
-		r0 = rf(gasPrice, effectiveGasPrice)
-	} else {
-		r0 = ret.Get(0).(uint8)
-	}
-
-	if rf, ok := ret.Get(1).(func(*big.Int, *big.Int) error); ok {
-		r1 = rf(gasPrice, effectiveGasPrice)
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
 // CountPendingTransactions provides a mock function with given fields: ctx
 func (_m *PoolMock) CountPendingTransactions(ctx context.Context) (uint64, error) {
 	ret := _m.Called(ctx)

@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"testing"
 
+	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,8 +24,6 @@ var (
 )
 
 func TestCalculateEffectiveGasPricePercentage(t *testing.T) {
-	egp := NewEffectiveGasPrice(egpCfg)
-
 	testCases := []struct {
 		name          string
 		breakEven     *big.Int
@@ -37,14 +36,14 @@ func TestCalculateEffectiveGasPricePercentage(t *testing.T) {
 			name:          "Nil breakEven or gasPrice",
 			gasPrice:      big.NewInt(1),
 			expectedValue: uint8(0),
-			err:           ErrEffectiveGasPriceEmpty,
+			err:           state.ErrEffectiveGasPriceEmpty,
 		},
 		{
 			name:          "Zero breakEven or gasPrice",
 			breakEven:     big.NewInt(1),
 			gasPrice:      big.NewInt(0),
 			expectedValue: uint8(0),
-			err:           ErrEffectiveGasPriceEmpty,
+			err:           state.ErrEffectiveGasPriceEmpty,
 		},
 		{
 			name:          "Both positive, gasPrice less than breakEven",
@@ -104,7 +103,7 @@ func TestCalculateEffectiveGasPricePercentage(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			actual, err := egp.CalculateEffectiveGasPricePercentage(tc.gasPrice, tc.breakEven)
+			actual, err := state.CalculateEffectiveGasPricePercentage(tc.gasPrice, tc.breakEven)
 			assert.Equal(t, tc.err, err)
 			if actual != 0 {
 				assert.Equal(t, tc.expectedValue, actual)

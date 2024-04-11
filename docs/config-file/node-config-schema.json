@@ -853,6 +853,11 @@
 					"description": "TrustedSequencerURL is the rpc url to connect and sync the trusted state",
 					"default": ""
 				},
+				"SyncBlockProtection": {
+					"type": "string",
+					"description": "SyncBlockProtection specify the state to sync (lastest, finalized or safe)",
+					"default": "safe"
+				},
 				"L1SyncCheckL2BlockHash": {
 					"type": "boolean",
 					"description": "L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)",

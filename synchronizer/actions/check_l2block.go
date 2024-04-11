@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -129,11 +129,14 @@ func (p *CheckL2BlockHash) iterationCheckL2Block(ctx context.Context, l2BlockNum
 }
 
 func compareL2Blocks(prefixLogs string, localL2Block *state.L2Block, trustedL2Block *types.Block) error {
-	if localL2Block == nil || trustedL2Block == nil || trustedL2Block.Hash == nil {
-		return fmt.Errorf("%s localL2Block or trustedL2Block or trustedHash are nil", prefixLogs)
+	if localL2Block == nil || trustedL2Block == nil {
+		return fmt.Errorf("%s localL2Block or trustedL2Block are nil", prefixLogs)
 	}
-	if localL2Block.Hash() != *trustedL2Block.Hash {
-		return fmt.Errorf("%s localL2Block.Hash %s and trustedL2Block.Hash %s are different", prefixLogs, localL2Block.Hash().String(), (*trustedL2Block.Hash).String())
+	if localL2Block.Hash() != trustedL2Block.Hash() {
+		return fmt.Errorf("%s localL2Block.Hash %s and trustedL2Block.Hash %s are different", prefixLogs, localL2Block.Hash().String(), trustedL2Block.Hash().String())
+	}
+	if localL2Block.ParentHash() != trustedL2Block.ParentHash() {
+		return fmt.Errorf("%s localL2Block.ParentHash %s and trustedL2Block.ParentHash %s are different", prefixLogs, localL2Block.ParentHash().String(), trustedL2Block.ParentHash().String())
 	}
 	return nil
 }

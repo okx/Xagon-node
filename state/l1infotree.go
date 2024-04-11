@@ -3,7 +3,6 @@ package state
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/0xPolygonHermez/zkevm-node/l1infotree"
 	"github.com/0xPolygonHermez/zkevm-node/log"
@@ -34,20 +33,20 @@ func (s *State) buildL1InfoTreeCacheIfNeed(ctx context.Context, dbTx pgx.Tx) err
 	if s.l1InfoTree != nil {
 		return nil
 	}
-	log.Debugf("Building L1InfoTree cache")
-	allLeaves, err := s.storage.GetAllL1InfoRootEntries(ctx, dbTx)
+	// Reset L1InfoTree siblings and leaves
+	allLeaves, err := s.GetAllL1InfoRootEntries(ctx, dbTx)
 	if err != nil {
-		log.Error("error getting all leaves. Error: ", err)
-		return fmt.Errorf("error getting all leaves. Error: %w", err)
+		log.Error("error getting all leaves to reset l1InfoTree. Error: ", err)
+		return err
 	}
 	var leaves [][32]byte
 	for _, leaf := range allLeaves {
 		leaves = append(leaves, leaf.Hash())
 	}
-	mt, err := l1infotree.NewL1InfoTree(uint8(32), leaves) //nolint:gomnd
+	mt, err := s.l1InfoTree.ResetL1InfoTree(leaves)
 	if err != nil {
-		log.Error("error creating L1InfoTree. Error: ", err)
-		return fmt.Errorf("error creating L1InfoTree. Error: %w", err)
+		log.Error("error resetting l1InfoTree. Error: ", err)
+		return err
 	}
 	s.l1InfoTree = mt
 	return nil

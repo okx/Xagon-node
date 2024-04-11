@@ -139,6 +139,7 @@ DisableAPIs = []
 SyncInterval = "1s"
 SyncChunkSize = 100
 TrustedSequencerURL = "" # If it is empty or not specified, then the value is read from the smc
+SyncBlockProtection = "safe" # latest, finalized, safe
 L1SynchronizationMode = "sequential"
 L1SyncCheckL2BlockHash = true
 L1SyncCheckL2BlockNumberhModulus = 30

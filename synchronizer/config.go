@@ -13,6 +13,8 @@ type Config struct {
 	SyncChunkSize uint64 `mapstructure:"SyncChunkSize"`
 	// TrustedSequencerURL is the rpc url to connect and sync the trusted state
 	TrustedSequencerURL string `mapstructure:"TrustedSequencerURL"`
+	// SyncBlockProtection specify the state to sync (lastest, finalized or safe)
+	SyncBlockProtection string `mapstructure:"SyncBlockProtection"`
 
 	// L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)
 	L1SyncCheckL2BlockHash bool `mapstructure:"L1SyncCheckL2BlockHash"`

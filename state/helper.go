@@ -18,8 +18,6 @@ const (
 	double       = 2
 	ether155V    = 27
 	etherPre155V = 35
-	// MaxEffectivePercentage is the maximum value that can be used as effective percentage
-	MaxEffectivePercentage = uint8(255)
 	// Decoding constants
 	headerByteLength uint64 = 1
 	sLength          uint64 = 32

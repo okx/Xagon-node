@@ -295,12 +295,12 @@ func (_m *StateMock) GetLastVerifiedBatch(ctx context.Context, dbTx pgx.Tx) (*st
 	return r0, r1
 }
 
-// GetLeafsByL1InfoRoot provides a mock function with given fields: ctx, l1InfoRoot, dbTx
-func (_m *StateMock) GetLeafsByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error) {
+// GetLeavesByL1InfoRoot provides a mock function with given fields: ctx, l1InfoRoot, dbTx
+func (_m *StateMock) GetLeavesByL1InfoRoot(ctx context.Context, l1InfoRoot common.Hash, dbTx pgx.Tx) ([]state.L1InfoTreeExitRootStorageEntry, error) {
 	ret := _m.Called(ctx, l1InfoRoot, dbTx)
 
 	if len(ret) == 0 {
-		panic("no return value specified for GetLeafsByL1InfoRoot")
+		panic("no return value specified for GetLeavesByL1InfoRoot")
 	}
 
 	var r0 []state.L1InfoTreeExitRootStorageEntry
