@@ -179,8 +179,6 @@ type L1Config struct {
 	PolAddr common.Address `json:"polTokenAddress"`
 	// GlobalExitRootManagerAddr Address of the L1 GlobalExitRootManager contract
 	GlobalExitRootManagerAddr common.Address `json:"polygonZkEVMGlobalExitRootAddress"`
-	// ForceBatchAddress Address of the L1 ForceBatch contract
-	Fork9UpgradeBatch uint64 `json:"fork9UpgradeBatch"`
 }
 
 type externalGasProviders struct {
@@ -210,6 +208,8 @@ type Client struct {
 	auth  map[common.Address]bind.TransactOpts // empty in case of read-only client
 
 	da dataavailability.BatchDataProvider
+
+	fork9UpgradeBatch uint64
 }
 
 // NewClient creates a new etherman.
@@ -829,8 +829,8 @@ func (etherMan *Client) updateForkId(ctx context.Context, vLog types.Log, blocks
 		log.Debug("ignoring this event because it is related to another rollup %d, we are rollupID %d", affectedRollupID, etherMan.RollupID)
 		return nil
 	}
-	if forkID == state.FORKID_9 && etherMan.l1Cfg.Fork9UpgradeBatch != 0 {
-		batchNum = etherMan.l1Cfg.Fork9UpgradeBatch
+	if forkID == state.FORKID_9 && etherMan.fork9UpgradeBatch != 0 {
+		batchNum = etherMan.fork9UpgradeBatch
 	}
 	log.Infof("updateForkId: %d, %d, %s", batchNum, forkID, version)
 
@@ -2076,6 +2076,12 @@ func (etherMan *Client) GetDAProtocolName() (string, error) {
 func (etherMan *Client) SetDataProvider(da dataavailability.BatchDataProvider) {
 	log.Infof("setting data provider")
 	etherMan.da = da
+}
+
+// SetFork9UpgradeBatch sets the fork9 upgrade batch
+func (etherMan *Client) SetFork9UpgradeBatch(fork9UpgradeBatch uint64) {
+	log.Infof("SetFork9UpgradeBatch:%v", fork9UpgradeBatch)
+	etherMan.fork9UpgradeBatch = fork9UpgradeBatch
 }
 
 // SetDataAvailabilityProtocol sets the address for the new data availability protocol

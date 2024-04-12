@@ -100,7 +100,6 @@
 | - [polygonRollupManagerAddress](#L1Config_polygonRollupManagerAddress )             | No      | array of integer | No         | -          | RollupManagerAddr Address of the L1 contract                               |
 | - [polTokenAddress](#L1Config_polTokenAddress )                                     | No      | array of integer | No         | -          | PolAddr Address of the L1 Pol token Contract                               |
 | - [polygonZkEVMGlobalExitRootAddress](#L1Config_polygonZkEVMGlobalExitRootAddress ) | No      | array of integer | No         | -          | GlobalExitRootManagerAddr Address of the L1 GlobalExitRootManager contract |
-| - [fork9UpgradeBatch](#L1Config_fork9UpgradeBatch )                                 | No      | integer          | No         | -          | ForceBatchAddress Address of the L1 ForceBatch contract                    |
 
 ### <a name="L1Config_chainId"></a>5.1. `L1Config.chainId`
 
@@ -126,11 +125,6 @@
 
 **Type:** : `array of integer`
 **Description:** GlobalExitRootManagerAddr Address of the L1 GlobalExitRootManager contract
-
-### <a name="L1Config_fork9UpgradeBatch"></a>5.6. `L1Config.fork9UpgradeBatch`
-
-**Type:** : `integer`
-**Description:** ForceBatchAddress Address of the L1 ForceBatch contract
 
 ----------------------------------------------------------------------------------------------------------------------------
 Generated using [json-schema-for-humans](https://github.com/coveooss/json-schema-for-humans)

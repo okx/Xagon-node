@@ -28,6 +28,7 @@
 | - [HashDB](#HashDB )                                 | No      | object  | No         | -          | Configuration of the hash database connection                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | - [State](#State )                                   | No      | object  | No         | -          | State service configuration                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | - [Apollo](#Apollo )                                 | No      | object  | No         | -          | Apollo configuration                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| - [Fork9UpgradeBatch](#Fork9UpgradeBatch )           | No      | integer | No         | -          | ForceBatchAddress Address of the L1 ForceBatch contract                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ## <a name="IsTrustedSequencer"></a>1. `IsTrustedSequencer`
 
@@ -4002,7 +4003,6 @@ Password=""
 | - [polygonRollupManagerAddress](#NetworkConfig_l1Config_polygonRollupManagerAddress )             | No      | array of integer | No         | -          | RollupManagerAddr Address of the L1 contract                               |
 | - [polTokenAddress](#NetworkConfig_l1Config_polTokenAddress )                                     | No      | array of integer | No         | -          | PolAddr Address of the L1 Pol token Contract                               |
 | - [polygonZkEVMGlobalExitRootAddress](#NetworkConfig_l1Config_polygonZkEVMGlobalExitRootAddress ) | No      | array of integer | No         | -          | GlobalExitRootManagerAddr Address of the L1 GlobalExitRootManager contract |
-| - [fork9UpgradeBatch](#NetworkConfig_l1Config_fork9UpgradeBatch )                                 | No      | integer          | No         | -          | ForceBatchAddress Address of the L1 ForceBatch contract                    |
 
 #### <a name="NetworkConfig_l1Config_chainId"></a>13.1.1. `NetworkConfig.l1Config.chainId`
 
@@ -4037,20 +4037,6 @@ chainId=0
 
 **Type:** : `array of integer`
 **Description:** GlobalExitRootManagerAddr Address of the L1 GlobalExitRootManager contract
-
-#### <a name="NetworkConfig_l1Config_fork9UpgradeBatch"></a>13.1.6. `NetworkConfig.l1Config.fork9UpgradeBatch`
-
-**Type:** : `integer`
-
-**Default:** `0`
-
-**Description:** ForceBatchAddress Address of the L1 ForceBatch contract
-
-**Example setting the default value** (0):
-```
-[NetworkConfig.l1Config]
-fork9UpgradeBatch=0
-```
 
 ### <a name="NetworkConfig_L2BridgeAddr"></a>13.2. `NetworkConfig.L2BridgeAddr`
 
@@ -5489,6 +5475,19 @@ AppID=""
 ```
 [Apollo]
 NamespaceName=""
+```
+
+## <a name="Fork9UpgradeBatch"></a>22. `Fork9UpgradeBatch`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Description:** ForceBatchAddress Address of the L1 ForceBatch contract
+
+**Example setting the default value** (0):
+```
+Fork9UpgradeBatch=0
 ```
 
 ----------------------------------------------------------------------------------------------------------------------------

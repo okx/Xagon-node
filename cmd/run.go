@@ -334,14 +334,14 @@ func runSynchronizer(cfg config.Config, etherman *etherman.Client, ethTxManagerS
 			}
 
 			// XLayer handler
-			setEthermanDaXLayer(cfg, st, eth, false)
+			setEthermanXLayer(cfg, st, eth, false)
 
 			etherManForL1 = append(etherManForL1, eth)
 		}
 	}
 
 	// XLayer handler
-	setEthermanDaXLayer(cfg, st, etherman, false)
+	setEthermanXLayer(cfg, st, etherman, false)
 
 	etm := ethtxmanager.New(cfg.EthTxManager, etherman, ethTxManagerStorage, st)
 	sy, err := synchronizer.NewSynchronizer(
