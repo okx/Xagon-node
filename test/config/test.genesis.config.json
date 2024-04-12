@@ -5,7 +5,7 @@
         "polygonRollupManagerAddress": "0xF5336Cb12989c0673071dF0c8a930900D7DF8D3e",
         "polTokenAddress": "0xcFE6D77a653b988203BfAc9C6a69eA9D583bdC2b",
         "polygonZkEVMGlobalExitRootAddress": "0x6Ae5b0863dBF3477335c0102DBF432aFf04ceb22",
-		"Fork9UpgradeBatch": 0
+        "Fork9UpgradeBatch": 0
     },
     "genesisBlockNumber": 199,
 	"rollupCreationBlockNumber": 199,
