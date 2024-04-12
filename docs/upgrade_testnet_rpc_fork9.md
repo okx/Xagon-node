@@ -2,7 +2,7 @@
 XLayer Testnet has been upgraded to Fork9. You can upgrade permission less rpc nodes in two ways. 
 
 For more detailed information, please refer to:https://www.okx.com/zh-hans/xlayer/docs/developer/setup-zknode/setup-production-zknode
-## Re-download the script and snapshot. It will take about 3 hours. (Recommended)
+## 1.Re-download the script and snapshot. It will take about 3 hours. (Recommended)
 ``` bash
 apt install axel  # Parallel download tools
 apt install pigz  # Parallel compression tools
