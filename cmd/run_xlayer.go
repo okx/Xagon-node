@@ -28,7 +28,7 @@ func createSequenceSenderXLayer(cfg config.Config, pool *pool.Pool, etmStorage *
 		log.Fatal(err)
 	}
 
-	da := setEthermanXLayer(cfg, st, etherman, true)
+	da := setEthermanDaXLayer(cfg, st, etherman, true)
 
 	_, privKey, err := etherman.LoadAuthFromKeyStoreXLayer(cfg.SequenceSender.DAPermitApiPrivateKey.Path, cfg.SequenceSender.DAPermitApiPrivateKey.Password)
 	if err != nil {
@@ -134,13 +134,11 @@ func newDataAvailability(c config.Config, st *state.State, etherman *etherman.Cl
 	)
 }
 
-func setEthermanXLayer(c config.Config, st *state.State, etherman *etherman.Client, isSequenceSender bool) *dataavailability.DataAvailability {
+func setEthermanDaXLayer(c config.Config, st *state.State, etherman *etherman.Client, isSequenceSender bool) *dataavailability.DataAvailability {
 	da, err := newDataAvailability(c, st, etherman, isSequenceSender)
 	if err != nil {
 		log.Fatal(err)
 	}
 	etherman.SetDataProvider(da)
-
-	etherman.SetFork9UpgradeBatch(c.Fork9UpgradeBatch)
 	return da
 }
