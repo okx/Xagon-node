@@ -179,6 +179,8 @@ type L1Config struct {
 	PolAddr common.Address `json:"polTokenAddress"`
 	// GlobalExitRootManagerAddr Address of the L1 GlobalExitRootManager contract
 	GlobalExitRootManagerAddr common.Address `json:"polygonZkEVMGlobalExitRootAddress"`
+	// ForceBatchAddress Address of the L1 ForceBatch contract
+	Fork9UpgradeBatch uint64 `json:"fork9UpgradeBatch"`
 }
 
 type externalGasProviders struct {
@@ -827,6 +829,11 @@ func (etherMan *Client) updateForkId(ctx context.Context, vLog types.Log, blocks
 		log.Debug("ignoring this event because it is related to another rollup %d, we are rollupID %d", affectedRollupID, etherMan.RollupID)
 		return nil
 	}
+	if forkID == state.FORKID_9 && etherMan.l1Cfg.Fork9UpgradeBatch != 0 {
+		batchNum = etherMan.l1Cfg.Fork9UpgradeBatch
+	}
+	log.Infof("updateForkId: %d, %d, %s", batchNum, forkID, version)
+
 	fork := ForkID{
 		BatchNumber: batchNum,
 		ForkID:      forkID,
