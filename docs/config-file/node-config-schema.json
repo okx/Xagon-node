@@ -1586,6 +1586,11 @@
 							"maxItems": 20,
 							"minItems": 20,
 							"description": "GlobalExitRootManagerAddr Address of the L1 GlobalExitRootManager contract"
+						},
+						"fork9UpgradeBatch": {
+							"type": "integer",
+							"description": "ForceBatchAddress Address of the L1 ForceBatch contract",
+							"default": 0
 						}
 					},
 					"additionalProperties": false,
