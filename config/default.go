@@ -5,6 +5,7 @@ const DefaultValues = `
 IsTrustedSequencer = false
 ForkUpgradeBatchNumber = 0
 ForkUpgradeNewForkId = 0
+Fork9UpgradeBatch = 0
 
 [Log]
 Environment = "development" # "production" or "development"

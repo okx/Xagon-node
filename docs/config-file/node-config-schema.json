@@ -2164,6 +2164,11 @@
 			"additionalProperties": false,
 			"type": "object",
 			"description": "Apollo configuration"
+		},
+		"Fork9UpgradeBatch": {
+			"type": "integer",
+			"description": "ForceBatchAddress Address of the L1 ForceBatch contract",
+			"default": 0
 		}
 	},
 	"additionalProperties": false,

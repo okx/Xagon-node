@@ -28,6 +28,7 @@
 | - [HashDB](#HashDB )                                 | No      | object  | No         | -          | Configuration of the hash database connection                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | - [State](#State )                                   | No      | object  | No         | -          | State service configuration                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | - [Apollo](#Apollo )                                 | No      | object  | No         | -          | Apollo configuration                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| - [Fork9UpgradeBatch](#Fork9UpgradeBatch )           | No      | integer | No         | -          | ForceBatchAddress Address of the L1 ForceBatch contract                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 ## <a name="IsTrustedSequencer"></a>1. `IsTrustedSequencer`
 
@@ -5474,6 +5475,19 @@ AppID=""
 ```
 [Apollo]
 NamespaceName=""
+```
+
+## <a name="Fork9UpgradeBatch"></a>22. `Fork9UpgradeBatch`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Description:** ForceBatchAddress Address of the L1 ForceBatch contract
+
+**Example setting the default value** (0):
+```
+Fork9UpgradeBatch=0
 ```
 
 ----------------------------------------------------------------------------------------------------------------------------

@@ -216,7 +216,7 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 
 	gasLimit := l2Block.GasLimit
 	// We check/set the maximum value of gasLimit for batches <= to ETROG fork. For batches >= to ELDERBERRY fork we use always the value returned by the executor
-	if forkID <= FORKID_ETROG && gasLimit > MaxL2BlockGasLimit {
+	if forkID <= FORKID_ELDERBERRY && gasLimit > MaxL2BlockGasLimit {
 		gasLimit = MaxL2BlockGasLimit
 	}
 
