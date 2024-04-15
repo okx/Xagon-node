@@ -4,7 +4,6 @@ import (
 	"context"
 	"math/big"
 	"sort"
-	"strconv"
 	"sync"
 	"time"
 
@@ -170,7 +169,7 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		e.dgpMan.cacheLock.Lock()
 		e.dgpMan.lastPrice = getAvgPrice(rawGP, price)
 		e.dgpMan.lastL2BatchNumber = l2BatchNumber
-		metrics.DynamicGasPrice(strconv.FormatUint(e.dgpMan.lastL2BatchNumber, 10), e.dgpMan.lastPrice.Int64())
+		metrics.DynamicGasPrice(e.dgpMan.lastPrice.Int64())
 		e.dgpMan.cacheLock.Unlock()
 		return
 	}
@@ -178,7 +177,7 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 	e.dgpMan.cacheLock.Lock()
 	e.dgpMan.lastPrice = price
 	e.dgpMan.lastL2BatchNumber = l2BatchNumber
-	metrics.DynamicGasPrice(strconv.FormatUint(e.dgpMan.lastL2BatchNumber, 10), e.dgpMan.lastPrice.Int64())
+	metrics.DynamicGasPrice(e.dgpMan.lastPrice.Int64())
 	e.dgpMan.cacheLock.Unlock()
 }
 

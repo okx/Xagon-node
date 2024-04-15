@@ -133,6 +133,6 @@ func RequestInnerTxAddErrorCount() {
 }
 
 // DynamicGasPrice sets the gauge vector to the given batch number and dynamic gas price.
-func DynamicGasPrice(batchNum string, dgp int64) {
-	metrics.GaugeVecSet(LastDynamicGPName, batchNum, float64(dgp))
+func DynamicGasPrice(dgp int64) {
+	metrics.GaugeVecSet(LastDynamicGPName, "inf", float64(dgp))
 }
