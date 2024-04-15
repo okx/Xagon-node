@@ -23,8 +23,8 @@ var (
 	width = 0.1
 	count = 10
 
-	LastDynamicGPName        = prefix + "dynamic_gas_price"
-	LastBatchNumberLabelName = "batch_number"
+	LastDynamicGPName        = prefix + "dynamic_gas_price" //nolint:gomnd
+	LastBatchNumberLabelName = "batch_number"               //nolint:gomnd
 
 	gaugeVecs = []metrics.GaugeVecOpts{
 		{
