@@ -23,16 +23,16 @@ var (
 	width = 0.1
 	count = 10
 
-	LastDynamicGPName        = prefix + "dynamic_gas_price" //nolint:gomnd
-	LastBatchNumberLabelName = "batch_number"               //nolint:gomnd
+	lastDynamicGasPriceName  = prefix + "dynamic_gas_price"
+	lastBatchNumberLabelName = "batch_number"
 
 	gaugeVecs = []metrics.GaugeVecOpts{
 		{
 			GaugeOpts: prometheus.GaugeOpts{
-				Name: LastDynamicGPName,
+				Name: lastDynamicGasPriceName,
 				Help: "[JSONRPC] dynamic gas price",
 			},
-			Labels: []string{LastBatchNumberLabelName},
+			Labels: []string{lastBatchNumberLabelName},
 		},
 	}
 
@@ -134,5 +134,5 @@ func RequestInnerTxAddErrorCount() {
 
 // DynamicGasPrice sets the gauge vector to the given batch number and dynamic gas price.
 func DynamicGasPrice(dgp int64) {
-	metrics.GaugeVecSet(LastDynamicGPName, "inf", float64(dgp))
+	metrics.GaugeVecSet(lastDynamicGasPriceName, "inf", float64(dgp))
 }
