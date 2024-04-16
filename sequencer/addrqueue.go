@@ -199,7 +199,7 @@ func (a *addrQueue) updateCurrentNonceBalance(nonce *uint64, balance *big.Int) (
 	if a.readyTx == nil {
 		nrTx, found := a.notReadyTxs[a.currentNonce]
 		if found {
-			if a.currentBalance.Cmp(nrTx.Cost) >= 0 {
+			if a.checkQueueBalanceEnough(a.currentBalance, nrTx.Cost) {
 				a.readyTx = nrTx
 				log.Infof("set notReadyTx %s as readyTx for addrQueue %s", nrTx.HashStr, a.fromStr)
 				delete(a.notReadyTxs, a.currentNonce)
