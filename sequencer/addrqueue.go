@@ -51,7 +51,8 @@ func (a *addrQueue) addTx(tx *TxTracker) (newReadyTx, prevReadyTx, replacedTx *T
 				// if it is a different tx then we need to return the replaced tx to set as failed in the pool
 				repTx = oldReadyTx
 			}
-			if a.currentBalance.Cmp(tx.Cost) >= 0 {
+			//if a.currentBalance.Cmp(tx.Cost) >= 0 {
+			if a.checkQueueBalanceEnough(a.currentBalance, tx.Cost) {
 				a.readyTx = tx
 				return tx, oldReadyTx, repTx, nil
 			} else { // If there is not enough balance we set the new tx as notReadyTxs
@@ -188,7 +189,7 @@ func (a *addrQueue) updateCurrentNonceBalance(nonce *uint64, balance *big.Int) (
 	if a.readyTx != nil {
 		// If readyTX.nonce is not the currentNonce or currentBalance is less that the readyTx.Cost
 		// set readyTx=nil. Later we will move the tx to notReadyTxs
-		if (a.readyTx.Nonce != a.currentNonce) || (a.currentBalance.Cmp(a.readyTx.Cost) < 0) {
+		if (a.readyTx.Nonce != a.currentNonce) || !a.checkQueueBalanceEnough(a.currentBalance, a.readyTx.Cost) {
 			oldReadyTx = a.readyTx
 			a.readyTx = nil
 		}
