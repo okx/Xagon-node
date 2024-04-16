@@ -737,8 +737,10 @@ func (f *finalizer) updateWorkerAfterSuccessfulProcessing(ctx context.Context, t
 		log.Debugf("tx %s deleted from address %s", txHash.String(), txFrom.Hex())
 	}
 
+	// XLayer handle
 	_, found := result.ReadWriteAddresses[txFrom]
-	if found {
+	exist := result.BlockResponses != nil && len(result.BlockResponses) > 0 && result.BlockResponses[0].TransactionResponses != nil && len(result.BlockResponses[0].TransactionResponses) > 0
+	if found && exist {
 		txResponse := result.BlockResponses[0].TransactionResponses[0]
 		if executor.IsROMOutOfGasError(executor.RomErrorCode(txResponse.RomError)) {
 			// get latest balance and nonce.
