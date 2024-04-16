@@ -51,7 +51,6 @@ func (a *addrQueue) addTx(tx *TxTracker) (newReadyTx, prevReadyTx, replacedTx *T
 				// if it is a different tx then we need to return the replaced tx to set as failed in the pool
 				repTx = oldReadyTx
 			}
-			//if a.currentBalance.Cmp(tx.Cost) >= 0 {
 			if a.checkQueueBalanceEnough(a.currentBalance, tx.Cost) {
 				a.readyTx = tx
 				return tx, oldReadyTx, repTx, nil
