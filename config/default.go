@@ -169,6 +169,7 @@ TxLifetimeCheckInterval = "10m"
 TxLifetimeMax = "3h"
 LoadPoolTxsCheckInterval = "500ms"
 StateConsistencyCheckInterval = "5s"
+ForceCheckQueueBalanceEnough = false
 	[Sequencer.Finalizer]
 		NewTxsWaitInterval = "100ms"
 		ForcedBatchesTimeout = "60s"

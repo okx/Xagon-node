@@ -9,11 +9,12 @@ import (
 
 // ApolloConfig is the apollo RPC dynamic config
 type ApolloConfig struct {
-	EnableApollo           bool
-	FullBatchSleepDuration types.Duration
-	PackBatchSpacialList   []string
-	GasPriceMultiple       float64
-	QueryPendingTxsLimit   uint64
+	EnableApollo                 bool
+	FullBatchSleepDuration       types.Duration
+	PackBatchSpacialList         []string
+	GasPriceMultiple             float64
+	QueryPendingTxsLimit         uint64
+	ForceCheckQueueBalanceEnough bool
 
 	sync.RWMutex
 }
@@ -43,6 +44,7 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().PackBatchSpacialList = apolloConfig.PackBatchSpacialList
 	getApolloConfig().GasPriceMultiple = apolloConfig.GasPriceMultiple
 	getApolloConfig().QueryPendingTxsLimit = apolloConfig.QueryPendingTxsLimit
+	getApolloConfig().ForceCheckQueueBalanceEnough = apolloConfig.ForceCheckQueueBalanceEnough
 	getApolloConfig().Unlock()
 }
 
@@ -91,6 +93,17 @@ func getQueryPendingTxsLimit(limit uint64) uint64 {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
 		ret = getApolloConfig().QueryPendingTxsLimit
+	}
+
+	return ret
+}
+
+func getForceQueueBalanceEnoughConfig(defaultValue bool) bool {
+	ret := defaultValue
+	if getApolloConfig().Enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		ret = getApolloConfig().ForceCheckQueueBalanceEnough
 	}
 
 	return ret

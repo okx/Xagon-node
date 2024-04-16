@@ -38,6 +38,9 @@ type Config struct {
 	GasPriceMultiple float64 `mapstructure:"GasPriceMultiple"`
 	// QueryPendingTxsLimit is used to limit amount txs from the db
 	QueryPendingTxsLimit uint64 `mapstructure:"QueryPendingTxsLimit"`
+
+	// ForceCheckQueueBalanceEnough is used to check if the queue has enough balance
+	ForceCheckQueueBalanceEnough bool `mapstructure:"ForceCheckQueueBalanceEnough"`
 }
 
 // StreamServerCfg contains the data streamer's configuration properties

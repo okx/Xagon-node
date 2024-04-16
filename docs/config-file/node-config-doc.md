@@ -2632,6 +2632,7 @@ CheckLastL2BlockHashOnCloseBatch=true
 | - [PackBatchSpacialList](#Sequencer_PackBatchSpacialList )                           | No      | array of string | No         | -          | XLayer config<br />PackBatchSpacialList is the list of addresses that will have a special gas price |
 | - [GasPriceMultiple](#Sequencer_GasPriceMultiple )                                   | No      | number          | No         | -          | GasPriceMultiple is the multiple of the gas price                                                   |
 | - [QueryPendingTxsLimit](#Sequencer_QueryPendingTxsLimit )                           | No      | integer         | No         | -          | QueryPendingTxsLimit is used to limit amount txs from the db                                        |
+| - [ForceCheckQueueBalanceEnough](#Sequencer_ForceCheckQueueBalanceEnough )           | No      | boolean         | No         | -          | ForceCheckQueueBalanceEnough is used to check if the queue has enough balance                       |
 
 ### <a name="Sequencer_DeletePoolTxsL1BlockConfirmations"></a>10.1. `Sequencer.DeletePoolTxsL1BlockConfirmations`
 
@@ -3302,6 +3303,20 @@ GasPriceMultiple=0
 ```
 [Sequencer]
 QueryPendingTxsLimit=0
+```
+
+### <a name="Sequencer_ForceCheckQueueBalanceEnough"></a>10.12. `Sequencer.ForceCheckQueueBalanceEnough`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** ForceCheckQueueBalanceEnough is used to check if the queue has enough balance
+
+**Example setting the default value** (false):
+```
+[Sequencer]
+ForceCheckQueueBalanceEnough=false
 ```
 
 ## <a name="SequenceSender"></a>11. `[SequenceSender]`

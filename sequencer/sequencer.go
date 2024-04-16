@@ -96,6 +96,8 @@ func (s *Sequencer) Start(ctx context.Context) {
 		s.updateDataStreamerFile(ctx, s.cfg.StreamServer.ChainID)
 	}
 
+	SetForceQueueBalanceConfig(s.cfg.ForceCheckQueueBalanceEnough)
+
 	go s.loadFromPool(ctx)
 
 	go s.countPendingTx()

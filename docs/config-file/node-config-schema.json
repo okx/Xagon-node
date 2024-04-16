@@ -1276,6 +1276,11 @@
 					"type": "integer",
 					"description": "QueryPendingTxsLimit is used to limit amount txs from the db",
 					"default": 0
+				},
+				"ForceCheckQueueBalanceEnough": {
+					"type": "boolean",
+					"description": "ForceCheckQueueBalanceEnough is used to check if the queue has enough balance",
+					"default": false
 				}
 			},
 			"additionalProperties": false,
