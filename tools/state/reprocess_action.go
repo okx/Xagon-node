@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
@@ -163,7 +164,7 @@ func (r *reprocessAction) processBatchV2(batch2 *state.Batch, oldStateRoot commo
 			OldStateRoot:              stateroot,
 			Coinbase:                  batch2.Coinbase,
 			L1InfoRoot_V2:             state.GetMockL1InfoRoot(),
-			TimestampLimit_V2:         uint64(batch2.Timestamp.Unix()),
+			TimestampLimit_V2:         uint64(batch2.Timestamp.Add(time.Hour * 24).Unix()),
 			Transactions:              batchL2Data,
 			SkipFirstChangeL2Block_V2: false,
 			SkipWriteBlockInfoRoot_V2: false,
