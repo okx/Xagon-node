@@ -228,9 +228,9 @@ func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) erro
 	if addrs[txTracker.FromStr] {
 		txTracker.IsClaimTx = true
 		_, l2gp := s.pool.GetL1AndL2GasPrice()
-		multiple := getGasPriceMultiple(s.cfg.GasPriceMultiple)
-		defaultGp := new(big.Int).SetUint64(uint64(float64(l2gp) * multiple))
-		txTracker.GasPrice = s.worker.getClaimGp(defaultGp, multiple)
+		defaultGp := new(big.Int).SetUint64(l2gp)
+		baseGp := s.worker.getBaseClaimGp(defaultGp)
+		txTracker.GasPrice = baseGp.Mul(baseGp, new(big.Int).SetUint64(uint64(getGasPriceMultiple(s.cfg.GasPriceMultiple))))
 	}
 
 	replacedTx, dropReason := s.worker.AddTxTracker(ctx, txTracker)

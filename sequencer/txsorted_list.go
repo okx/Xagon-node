@@ -2,7 +2,6 @@ package sequencer
 
 import (
 	"fmt"
-	"math/big"
 	"sort"
 	"sync"
 
@@ -150,25 +149,4 @@ func (e *txSortedList) GetSorted() []*TxTracker {
 	defer e.mutex.Unlock()
 
 	return e.sorted
-}
-
-// GetSuggestClaimGp returns the claim gp in sorted list
-func (e *txSortedList) GetSuggestClaimGp(defaultGp *big.Int, GasPriceMultiple float64) *big.Int {
-	e.mutex.Lock()
-	defer e.mutex.Unlock()
-
-	// no tx in list, use default gasprice
-	if len(e.sorted) == 0 {
-		return defaultGp
-	}
-
-	// has claim tx and other tx, use other tx gas price multiple
-	for _, tx := range e.sorted {
-		if !tx.IsClaimTx {
-			return tx.GasPrice.Mul(tx.GasPrice, new(big.Int).SetUint64(uint64(GasPriceMultiple)))
-		}
-	}
-
-	// only claim tx in list, use claim tx gas price
-	return e.sorted[0].GasPrice
 }
