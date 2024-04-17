@@ -136,14 +136,6 @@ func (e *txSortedList) isGreaterThan(tx1 *TxTracker, tx2 *TxTracker) bool {
 
 // isGreaterOrEqualThan returns true if the tx1 has greater or equal gasPrice than tx2
 func (e *txSortedList) isGreaterOrEqualThan(tx1 *TxTracker, tx2 *TxTracker) bool {
-	//if tx1.IsClaimTx {
-	//	if tx2.IsClaimTx {
-	//		return false
-	//	} else {
-	//		tx1.GasPrice = tx2.GasPrice
-	//		return true
-	//	}
-	//}
 	cmp := tx1.GasPrice.Cmp(tx2.GasPrice)
 	if cmp >= 0 {
 		return true
