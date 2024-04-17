@@ -381,3 +381,7 @@ func (w *Worker) addTxToSortedList(readyTx *TxTracker) {
 		w.readyTxsCond.L.Unlock()
 	}
 }
+
+func (w *Worker) getClaimGp(defaultGp *big.Int, GasPriceMultiple float64) *big.Int {
+	return w.txSortedList.GetSuggestClaimGp(defaultGp, GasPriceMultiple)
+}

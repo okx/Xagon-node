@@ -226,9 +226,11 @@ func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) erro
 
 	addrs := getPackBatchSpacialList(s.cfg.PackBatchSpacialList)
 	if addrs[txTracker.FromStr] {
+		txTracker.IsClaimTx = true
 		_, l2gp := s.pool.GetL1AndL2GasPrice()
-		newGp := uint64(float64(l2gp) * getGasPriceMultiple(s.cfg.GasPriceMultiple))
-		txTracker.GasPrice = new(big.Int).SetUint64(newGp)
+		multiple := getGasPriceMultiple(s.cfg.GasPriceMultiple)
+		defaultGp := new(big.Int).SetUint64(uint64(float64(l2gp) * multiple))
+		txTracker.GasPrice = s.worker.getClaimGp(defaultGp, multiple)
 	}
 
 	replacedTx, dropReason := s.worker.AddTxTracker(ctx, txTracker)
