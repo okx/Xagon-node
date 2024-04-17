@@ -3,7 +3,6 @@ package sequencer
 import (
 	"context"
 	"fmt"
-	"math/big"
 	"sync"
 	"time"
 
@@ -226,9 +225,7 @@ func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) erro
 
 	addrs := getPackBatchSpacialList(s.cfg.PackBatchSpacialList)
 	if addrs[txTracker.FromStr] {
-		_, l2gp := s.pool.GetL1AndL2GasPrice()
-		newGp := uint64(float64(l2gp) * getGasPriceMultiple(s.cfg.GasPriceMultiple))
-		txTracker.GasPrice = new(big.Int).SetUint64(newGp)
+		txTracker.IsClaimTx = true
 	}
 
 	replacedTx, dropReason := s.worker.AddTxTracker(ctx, txTracker)
