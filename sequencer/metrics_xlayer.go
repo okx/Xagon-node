@@ -20,26 +20,26 @@ func getReasonFromBatch(batchCloseReason state.ClosingReason) BlockClosingReason
 
 // Summary returns the metrics summary.
 func (m *metrics) Summary(blockNum, batchNum, timestamp uint64) string {
-	TotalSequencerTime := "SequencerTime<" + fmt.Sprintf("%v", m.sequencerTime().Microseconds()) +
-		"ms, newL2Block<" + fmt.Sprintf("%v", m.newL2BlockTimes.sequencer.Microseconds()) +
-		"ms>, txs<" + fmt.Sprintf("%v", m.transactionsTimes.sequencer.Microseconds()) +
-		"ms>, l2Block<" + fmt.Sprintf("%v", m.l2BlockTimes.sequencer.Microseconds()) + ">>, "
+	TotalSequencerTime := "SequencerTime<" + fmt.Sprintf("%v", m.sequencerTime().Milliseconds()) +
+		"ms, newL2Block<" + fmt.Sprintf("%v", m.newL2BlockTimes.sequencer.Milliseconds()) +
+		"ms>, txs<" + fmt.Sprintf("%v", m.transactionsTimes.sequencer.Milliseconds()) +
+		"ms>, l2Block<" + fmt.Sprintf("%v", m.l2BlockTimes.sequencer.Milliseconds()) + "ms>>, "
 
-	TotalExecutorTime := "ExecutorTime<" + fmt.Sprintf("%v", m.executorTime().Microseconds()) +
-		"ms, newL2Block<" + fmt.Sprintf("%v", m.newL2BlockTimes.executor.Microseconds()) +
-		"ms>, txs<" + fmt.Sprintf("%v", m.transactionsTimes.executor.Microseconds()) +
-		"ms>, l2Block<" + fmt.Sprintf("%v", m.l2BlockTimes.executor.Microseconds()) + ">>, "
+	TotalExecutorTime := "ExecutorTime<" + fmt.Sprintf("%v", m.executorTime().Milliseconds()) +
+		"ms, newL2Block<" + fmt.Sprintf("%v", m.newL2BlockTimes.executor.Milliseconds()) +
+		"ms>, txs<" + fmt.Sprintf("%v", m.transactionsTimes.executor.Milliseconds()) +
+		"ms>, l2Block<" + fmt.Sprintf("%v", m.l2BlockTimes.executor.Milliseconds()) + "ms>>, "
 
 	result := "BlockNumber<" + fmt.Sprintf("%v", blockNum) + ">, " +
 		"BatchNum<" + fmt.Sprintf("%v", batchNum) + ">, " +
-		"Timestamp<" + fmt.Sprintf("%v", timestamp) + ">, " +
 		"TxCount<" + fmt.Sprintf("%v", m.l2BlockTxsCount) + ">, " +
 		"Gas<" + fmt.Sprintf("%v", m.gas) + ">, " +
-		"TotalTime<" + fmt.Sprintf("%v", m.totalTime().Microseconds()) + "ms>, " +
-		"IdleTime<" + fmt.Sprintf("%v", m.idleTime.Microseconds()) + "ms>, " +
+		"TotalTime<" + fmt.Sprintf("%v", m.totalTime().Milliseconds()) + "ms>, " +
+		"IdleTime<" + fmt.Sprintf("%v", m.idleTime.Milliseconds()) + "ms>, " +
 		TotalSequencerTime +
 		TotalExecutorTime +
-		"CloseReason<" + m.closeReason + ">, "
+		"CloseReason<" + m.closeReason + ">, " +
+		"Timestamp<" + fmt.Sprintf("%v", timestamp) + ">, "
 
 	return result
 }
