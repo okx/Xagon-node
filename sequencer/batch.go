@@ -157,6 +157,7 @@ func (f *finalizer) finalizeWIPBatch(ctx context.Context, closeReason state.Clos
 
 	// Close the wip L2 block if it has transactions, otherwise we keep the wip L2 block to store it in the new wip batch
 	if !f.wipL2Block.isEmpty() {
+		f.setWIPL2BlockCloseReason(getReasonFromBatch(closeReason))
 		f.closeWIPL2Block(ctx)
 	}
 
@@ -180,6 +181,7 @@ func (f *finalizer) closeAndOpenNewWIPBatch(ctx context.Context, closeReason sta
 	// If we will process forced batches after we close the wip batch then we must close the current wip L2 block,
 	// since the processForcedBatches function needs to create new L2 blocks (cannot "reuse" the current wip L2 block if it's empty)
 	if processForcedBatches {
+		f.setWIPL2BlockCloseReason(getReasonFromBatch(closeReason))
 		f.closeWIPL2Block(ctx)
 	}
 
