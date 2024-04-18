@@ -11,7 +11,7 @@ type BlockClosingReason string
 
 const (
 	// BlockMaxDeltaTimestamp is the closing reason when the max delta timestamp is reached.
-	BlockMaxDeltaTimestamp BlockClosingReason = "Block closed, max delta timestamp"
+	BlockMaxDeltaTimestamp BlockClosingReason = "Max delta timestamp"
 )
 
 func getReasonFromBatch(batchCloseReason state.ClosingReason) BlockClosingReason {
