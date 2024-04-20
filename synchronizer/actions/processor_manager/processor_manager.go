@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
+	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/actions"
 	"github.com/jackc/pgx/v4"
 )
@@ -62,6 +63,9 @@ func (p *L1EventProcessors) Process(ctx context.Context, forkId actions.ForkIdTy
 			strBlockNumber = "nil"
 		}
 		return fmt.Errorf("can't process blocknumber:%s event:%s, forkid:%d because: %w", strBlockNumber, order.Name, forkId, ErrCantProcessThisEvent)
+	}
+	if block.BlockNumber == 5733221 {
+		log.Infof("Processing block %d, block time : %d", block.BlockNumber, block.ReceivedAt.Unix())
 	}
 	return processor.Process(ctx, order, block, dbTx)
 }

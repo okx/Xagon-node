@@ -70,6 +70,9 @@ func (g *ProcessorL1SequenceBatchesEtrog) Process(ctx context.Context, order eth
 	if l1Block == nil || len(l1Block.SequencedBatches) <= order.Pos {
 		return actions.ErrInvalidParams
 	}
+	if l1Block.BlockNumber == 5733221 {
+		log.Infof("Processing block %d, block time : %d", l1Block.BlockNumber, l1Block.ReceivedAt.Unix())
+	}
 	err := g.ProcessSequenceBatches(ctx, l1Block.SequencedBatches[order.Pos], l1Block.BlockNumber, l1Block.ReceivedAt, dbTx)
 	return err
 }
@@ -79,6 +82,9 @@ func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Con
 	if len(sequencedBatches) == 0 {
 		log.Warn("Empty sequencedBatches array detected, ignoring...")
 		return nil
+	}
+	if blockNumber == 5733221 {
+		log.Infof("ProcessSequenceBatches block %d, block time : %d", blockNumber, l1BlockTimestamp.Unix())
 	}
 	now := p.timeProvider.Now()
 	for _, sbatch := range sequencedBatches {
