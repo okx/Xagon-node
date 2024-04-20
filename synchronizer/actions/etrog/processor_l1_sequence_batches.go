@@ -224,7 +224,7 @@ func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Con
 			if errors.Is(err, state.ErrNotFound) {
 				log.Debugf("BatchNumber: %d, not found in trusted state. Storing it...", batch.BatchNumber)
 				// If it is not found, store batch
-				log.Infof("processSequenceBatches: (not found batch) ProcessAndStoreClosedBatch . BatchNumber: %d, BlockNumber: %d GER:%s", processCtx.BatchNumber, blockNumber, processCtx.GlobalExitRoot.String())
+				log.Infof("processSequenceBatches: (not found batch) ProcessAndStoreClosedBatch . BatchNumber: %d, BlockNumber: %d , block time: %d, GER:%s", processCtx.BatchNumber, blockNumber, l1BlockTimestamp.Unix(), processCtx.GlobalExitRoot.String())
 				newStateRoot, flushID, proverID, err := p.state.ProcessAndStoreClosedBatchV2(ctx, processCtx, dbTx, stateMetrics.SynchronizerCallerLabel)
 				if err != nil {
 					log.Errorf("error storing trustedBatch. BatchNumber: %d, BlockNumber: %d, error: %v", batch.BatchNumber, blockNumber, err)

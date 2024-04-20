@@ -1273,9 +1273,6 @@ func (etherMan *Client) sequencedBatchesEvent(ctx context.Context, vLog types.Lo
 			return fmt.Errorf("error getting hashParent. BlockNumber: %d. Error: %w", vLog.BlockNumber, err)
 		}
 		block := prepareBlock(vLog, time.Unix(int64(fullBlock.Time()), 0), fullBlock)
-		if block.BlockNumber == 5733221 {
-			log.Infof("Block: %d, block time: %d, timestamp : %d, full block time: %d ", block.BlockNumber, block.ReceivedAt, fullBlock.ReceivedAt.Unix(), fullBlock.Time())
-		}
 		block.SequencedBatches = append(block.SequencedBatches, sequences)
 		*blocks = append(*blocks, block)
 	} else if (*blocks)[len(*blocks)-1].BlockHash == vLog.BlockHash && (*blocks)[len(*blocks)-1].BlockNumber == vLog.BlockNumber {
@@ -1284,6 +1281,12 @@ func (etherMan *Client) sequencedBatchesEvent(ctx context.Context, vLog types.Lo
 		log.Error("Error processing SequencedBatches event. BlockHash:", vLog.BlockHash, ". BlockNumber: ", vLog.BlockNumber)
 		return fmt.Errorf("error processing SequencedBatches event")
 	}
+	for _, sequence := range sequences {
+		if sequence.BatchNumber == 501709 {
+			log.Warnf("Sequence: %v, block: %d, block time: %d", sequence.BatchNumber, (*blocks)[len(*blocks)-1].BlockNumber, (*blocks)[len(*blocks)-1].ReceivedAt)
+		}
+	}
+
 	or := Order{
 		Name: SequenceBatchesOrder,
 		Pos:  len((*blocks)[len(*blocks)-1].SequencedBatches) - 1,
