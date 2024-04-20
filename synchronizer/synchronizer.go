@@ -677,7 +677,7 @@ func (s *ClientSynchronizer) ProcessBlockRange(blocks []etherman.Block, order ma
 			ParentHash:  blocks[i].ParentHash,
 			ReceivedAt:  blocks[i].ReceivedAt,
 		}
-		log.Infof("BlockNumber: %d, BlockHash: %s, block time: %d", blocks[i].BlockNumber, blocks[i].BlockHash.String(), blocks[i].ReceivedAt.Unix()
+		log.Infof("BlockNumber: %d, BlockHash: %s, block time: %d", blocks[i].BlockNumber, blocks[i].BlockHash.String(), blocks[i].ReceivedAt.Unix())
 		// Add block information
 		err = s.state.AddBlock(s.ctx, &b, dbTx)
 		if err != nil {
