@@ -861,7 +861,7 @@
 				"L1SyncCheckL2BlockHash": {
 					"type": "boolean",
 					"description": "L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)",
-					"default": true
+					"default": false
 				},
 				"L1SyncCheckL2BlockNumberhModulus": {
 					"type": "integer",

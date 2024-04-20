@@ -2254,14 +2254,14 @@ SyncBlockProtection="safe"
 
 **Type:** : `boolean`
 
-**Default:** `true`
+**Default:** `false`
 
 **Description:** L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)
 
-**Example setting the default value** (true):
+**Example setting the default value** (false):
 ```
 [Synchronizer]
-L1SyncCheckL2BlockHash=true
+L1SyncCheckL2BlockHash=false
 ```
 
 ### <a name="Synchronizer_L1SyncCheckL2BlockNumberhModulus"></a>9.6. `Synchronizer.L1SyncCheckL2BlockNumberhModulus`

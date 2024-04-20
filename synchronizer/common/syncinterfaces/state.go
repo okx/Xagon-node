@@ -28,6 +28,7 @@ type StateFullInterface interface {
 	AddForcedBatch(ctx context.Context, forcedBatch *state.ForcedBatch, dbTx pgx.Tx) error
 	AddBlock(ctx context.Context, block *state.Block, dbTx pgx.Tx) error
 	Reset(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) error
+	ResetL1InfoTree()
 	GetPreviousBlock(ctx context.Context, offset uint64, dbTx pgx.Tx) (*state.Block, error)
 	GetFirstUncheckedBlock(ctx context.Context, fromBlockNumber uint64, dbTx pgx.Tx) (*state.Block, error)
 	UpdateCheckedBlockByNumber(ctx context.Context, blockNumber uint64, newCheckedStatus bool, dbTx pgx.Tx) error
