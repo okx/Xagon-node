@@ -22,6 +22,7 @@ type Worker struct {
 	state            stateInterface
 	batchConstraints state.BatchConstraintsCfg
 	readyTxsCond     *timeoutCond
+	claimGp          *big.Int
 }
 
 // NewWorker creates an init a worker
@@ -341,6 +342,9 @@ func (w *Worker) GetBestFittingTx(resources state.BatchResources) (*TxTracker, e
 
 	if foundAt != -1 {
 		log.Debugf("best fitting tx %s found at index %d with gasPrice %d", tx.HashStr, foundAt, tx.GasPrice)
+		if !tx.IsClaimTx {
+			w.claimGp = tx.GasPrice
+		}
 		return tx, nil
 	} else {
 		return nil, ErrNoFittingTransaction
@@ -380,4 +384,14 @@ func (w *Worker) addTxToSortedList(readyTx *TxTracker) {
 		w.readyTxsCond.Signal()
 		w.readyTxsCond.L.Unlock()
 	}
+}
+
+func (w *Worker) getBaseClaimGp(defaultGp *big.Int) *big.Int {
+	w.workerMutex.Lock()
+	defer w.workerMutex.Unlock()
+
+	if w.claimGp.Cmp(defaultGp) < 0 {
+		w.claimGp = defaultGp
+	}
+	return w.claimGp
 }
