@@ -1283,7 +1283,7 @@ func (etherMan *Client) sequencedBatchesEvent(ctx context.Context, vLog types.Lo
 	}
 	for _, sequence := range sequences {
 		if sequence.BatchNumber == 501709 {
-			log.Warnf("Sequence: %v, block: %d, block time: %d", sequence.BatchNumber, (*blocks)[len(*blocks)-1].BlockNumber, (*blocks)[len(*blocks)-1].ReceivedAt)
+			log.Warnf("Sequence: %v, block: %d, block time: %d", sequence.BatchNumber, (*blocks)[len(*blocks)-1].BlockNumber, (*blocks)[len(*blocks)-1].ReceivedAt.Unix())
 		}
 	}
 
