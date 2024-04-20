@@ -677,6 +677,7 @@ func (s *ClientSynchronizer) ProcessBlockRange(blocks []etherman.Block, order ma
 			ParentHash:  blocks[i].ParentHash,
 			ReceivedAt:  blocks[i].ReceivedAt,
 		}
+		log.Infof("BlockNumber: %d, BlockHash: %s, block time: %d", blocks[i].BlockNumber, blocks[i].BlockHash.String(), blocks[i].ReceivedAt.Unix()
 		// Add block information
 		err = s.state.AddBlock(s.ctx, &b, dbTx)
 		if err != nil {
@@ -690,7 +691,9 @@ func (s *ClientSynchronizer) ProcessBlockRange(blocks []etherman.Block, order ma
 			}
 			return err
 		}
-
+		if blocks[i].BlockNumber == 5733221 {
+			log.Warnf("Block 5733221, BlockHash: %s, block time: %d", blocks[i].BlockHash.String(), blocks[i].ReceivedAt.Unix())
+		}
 		for _, element := range order[blocks[i].BlockHash] {
 			batchSequence := l1event_orders.GetSequenceFromL1EventOrder(element.Name, &blocks[i], element.Pos)
 			var forkId uint64
