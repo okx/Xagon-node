@@ -291,7 +291,7 @@ func TestSpeedTx(t *testing.T) {
 	time.Sleep(3 * time.Second)
 	count, err := poolInstance.CountPendingTransactions(ctx)
 	require.NoError(t, err)
-	require.Equal(t, levelCount*txPerAddr*addrPerLevel, count)
+	require.Equal(t, levelCount*txPerAddr*addrPerLevel, int(count))
 
 	finishedCh := make(chan int, 1)
 	cfg.Sequencer.QueryPendingTxsLimit = 10000
