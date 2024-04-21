@@ -308,6 +308,9 @@ func TestSpeedTx(t *testing.T) {
 		case level := <-finishedCh:
 			require.Equal(t, finishedLevel, level)
 			finishedLevel--
+			if level == -1 {
+				return
+			}
 		}
 	}
 }
