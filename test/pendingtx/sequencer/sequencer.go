@@ -33,7 +33,7 @@ func New(cfg sequencer.Config, batchCfg state.BatchConfig, txPool txPool) (*Sequ
 }
 
 // Start starts the sequencer
-func (s *Sequencer) Start(ctx context.Context, levelCount, txCountPerLevel int) {
+func (s *Sequencer) Start(ctx context.Context, levelCount, txCountPerLevel int, finishedCh chan int) {
 	err := s.pool.MarkWIPTxsAsPending(ctx)
 	if err != nil {
 		log.Fatalf("failed to mark WIP txs as pending, error: %v", err)
@@ -43,7 +43,7 @@ func (s *Sequencer) Start(ctx context.Context, levelCount, txCountPerLevel int) 
 
 	s.workerReadyTxsCond = newTimeoutCond(&sync.Mutex{})
 	s.worker = NewWorker(s.batchCfg.Constraints, s.workerReadyTxsCond)
-	s.finalizer = newFinalizer(s.cfg.Finalizer, s.batchCfg.Constraints, s.worker, s.pool, s.workerReadyTxsCond, levelCount, txCountPerLevel)
+	s.finalizer = newFinalizer(s.cfg.Finalizer, s.batchCfg.Constraints, s.worker, s.pool, s.workerReadyTxsCond, levelCount, txCountPerLevel, finishedCh)
 	go s.finalizer.Start(ctx)
 
 	go s.expireOldWorkerTxs(ctx)

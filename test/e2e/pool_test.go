@@ -6,9 +6,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/0xPolygonHermez/zkevm-node/config"
 	"github.com/0xPolygonHermez/zkevm-node/log"
+	"github.com/0xPolygonHermez/zkevm-node/pool/pgpoolstorage"
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/HasOpCode"
+	"github.com/0xPolygonHermez/zkevm-node/test/dbutils"
 	"github.com/0xPolygonHermez/zkevm-node/test/operations"
+	"github.com/0xPolygonHermez/zkevm-node/test/pendingtx/pool"
+	"github.com/0xPolygonHermez/zkevm-node/test/pendingtx/sequencer"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
@@ -253,4 +258,55 @@ func TestHasOpCode(t *testing.T) {
 	egpLog, err = opsMan.State().GetTransactionEGPLogByHash(ctx, scCallBalance.Hash(), nil)
 	require.NoError(t, err)
 	require.Equal(t, egpLog.BalanceOC, true)
+}
+
+func TestSpeedTx(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
+	var err error
+	err = operations.Teardown()
+	require.NoError(t, err)
+
+	defer func() { require.NoError(t, operations.Teardown()) }()
+
+	ctx := context.Background()
+	opsCfg := operations.GetDefaultOperationsConfig()
+	opsMan, err := operations.NewManager(ctx, opsCfg)
+	require.NoError(t, err)
+	err = opsMan.Setup()
+	require.NoError(t, err)
+
+	poolStorage, err := pgpoolstorage.NewPostgresPoolStorage(dbutils.NewPoolConfigFromEnv())
+	require.NoError(t, err)
+
+	cfg, err := config.Default()
+	require.NoError(t, err)
+	poolInstance := pool.NewPool(cfg.Pool, poolStorage)
+
+	levelCount, txPerAddr, addrPerLevel := 50, 400, 5
+	poolInstance.PrepareTx(ctx, levelCount, addrPerLevel, txPerAddr)
+
+	time.Sleep(3 * time.Second)
+	count, err := poolInstance.CountPendingTransactions(ctx)
+	require.NoError(t, err)
+	require.Equal(t, levelCount*txPerAddr*addrPerLevel, count)
+
+	finishedCh := make(chan int, 1)
+	seq, err := sequencer.New(cfg.Sequencer, cfg.State.Batch, poolInstance)
+	require.NoError(t, err)
+	go seq.Start(ctx, levelCount, addrPerLevel*txPerAddr, finishedCh)
+
+	time.Sleep(1 * time.Second)
+	go poolInstance.Speed(ctx)
+
+	finishedLevel := levelCount - 1
+	for {
+		select {
+		case level := <-finishedCh:
+			require.Equal(t, finishedLevel, level)
+			finishedLevel--
+		}
+	}
 }

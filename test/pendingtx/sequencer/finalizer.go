@@ -2,7 +2,6 @@ package sequencer
 
 import (
 	"context"
-	"fmt"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/0xPolygonHermez/zkevm-node/sequencer"
@@ -22,6 +21,8 @@ type finalizer struct {
 
 	speedLevelTxCount []int64
 	txCountPerLevel   int64
+
+	finishedCh chan int
 }
 
 // newFinalizer returns a new instance of Finalizer.
@@ -32,6 +33,7 @@ func newFinalizer(
 	poolIntf txPool,
 	workerReadyTxsCond *timeoutCond,
 	levelCount, txCountPerLevel int,
+	finishedCh chan int,
 ) *finalizer {
 	f := finalizer{
 		cfg:                cfg,
@@ -41,6 +43,7 @@ func newFinalizer(
 		workerReadyTxsCond: workerReadyTxsCond,
 		speedLevelTxCount:  make([]int64, levelCount),
 		txCountPerLevel:    int64(txCountPerLevel),
+		finishedCh:         finishedCh,
 	}
 
 	return &f
@@ -72,22 +75,18 @@ func (f *finalizer) finalizeBatches(ctx context.Context) {
 			showNotFoundTxLog = true
 
 			// ignore processTransaction
-			result := &state.ProcessBatchResponse{}
-			f.updateWorkerAfterSuccessfulProcessing(ctx, tx.Hash, tx.From, tx.Nonce, false, result)
+			f.updateWorkerAfterSuccessfulProcessing(ctx, tx.Hash, tx.From, tx.Nonce, false)
 
 			level := f.poolIntf.GetLevelByAddr(tx.To)
 			f.speedLevelTxCount[level]++
 			if f.speedLevelTxCount[level] == f.txCountPerLevel {
-				fmt.Println("===================")
-				fmt.Printf("Speed level [%d] finished.\nAll level: %v\n", level, f.speedLevelTxCount)
-				fmt.Println("===================")
+				//fmt.Println("===================")
+				//fmt.Printf("Speed level [%d] finished.\nAll level: %v\n", level, f.speedLevelTxCount)
+				//fmt.Println("===================")
+				f.finishedCh <- level
 			}
 
 			processedTxCount++
-			if processedTxCount%1000 == 0 {
-				//time.Sleep(1 * time.Second)
-			}
-
 		} else {
 			if showNotFoundTxLog {
 				log.Debug("no transactions to be processed. Waiting...")
@@ -107,7 +106,7 @@ func (f *finalizer) finalizeBatches(ctx context.Context) {
 	}
 }
 
-func (f *finalizer) updateWorkerAfterSuccessfulProcessing(ctx context.Context, txHash common.Hash, txFrom common.Address, nonce uint64, isForced bool, result *state.ProcessBatchResponse) {
+func (f *finalizer) updateWorkerAfterSuccessfulProcessing(ctx context.Context, txHash common.Hash, txFrom common.Address, nonce uint64, isForced bool) {
 	// Delete the transaction from the worker
 	if isForced {
 		f.workerIntf.DeleteForcedTx(txHash, txFrom)

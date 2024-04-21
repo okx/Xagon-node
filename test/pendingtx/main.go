@@ -7,6 +7,7 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/config"
@@ -14,15 +15,15 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	xl_pool "github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/0xPolygonHermez/zkevm-node/pool/pgpoolstorage"
+	"github.com/0xPolygonHermez/zkevm-node/test/pendingtx/pool"
+	"github.com/0xPolygonHermez/zkevm-node/test/pendingtx/sequencer"
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
-	"github.com/x1/x1-node/test/pendingtx/pool"
-	"github.com/x1/x1-node/test/pendingtx/sequencer"
 )
 
 var (
 	levelCount   = 50
-	addrPerLevel = 4000
+	addrPerLevel = 400
 	txPerAddr    = 5
 )
 
@@ -33,7 +34,7 @@ func main() {
 		return
 	}
 	log.Init(c.Log)
-	var cancelFuncs []context.CancelFunc
+	//var cancelFuncs []context.CancelFunc
 	ctx := context.Background()
 
 	poolInstance := createPool(c.Pool)
@@ -41,7 +42,7 @@ func main() {
 	poolInstance.PrepareTx(ctx, levelCount, addrPerLevel, txPerAddr)
 	cost := time.Since(start)
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(3 * time.Second)
 	count, err := poolInstance.CountPendingTransactions(ctx)
 	if err != nil {
 		log.Error(err)
@@ -51,13 +52,29 @@ func main() {
 	fmt.Printf("prepared tx count:%d. time cost:%s\n", count, cost)
 	fmt.Println("===================")
 
+	finishedCh := make(chan int, 1)
 	seq := createSequencer(*c, poolInstance)
-	go seq.Start(ctx, levelCount, addrPerLevel*txPerAddr)
+	go seq.Start(ctx, levelCount, addrPerLevel*txPerAddr, finishedCh)
 
-	time.Sleep(5 * time.Second)
+	//time.Sleep(5 * time.Second)
 	go poolInstance.Speed(ctx)
 
-	waitSignal(cancelFuncs)
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, os.Interrupt, syscall.SIGTERM)
+	for {
+		select {
+		case <-sigCh:
+			log.Info("terminating application gracefully...")
+			os.Exit(0)
+		case level := <-finishedCh:
+			fmt.Println("===================")
+			fmt.Printf("Speed level [%d] finished.\n", level)
+			fmt.Println("===================")
+			if level == 0 {
+				os.Exit(0)
+			}
+		}
+	}
 }
 
 func createSequencer(cfg config.Config, pool *pool.Pool) *sequencer.Sequencer {
@@ -92,7 +109,7 @@ func runMigrations(c db.Config, name string) {
 
 func waitSignal(cancelFuncs []context.CancelFunc) {
 	signals := make(chan os.Signal, 1)
-	signal.Notify(signals, os.Interrupt)
+	signal.Notify(signals, os.Interrupt, syscall.SIGTERM)
 
 	for sig := range signals {
 		switch sig {

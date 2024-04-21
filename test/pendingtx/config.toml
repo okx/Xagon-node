@@ -2,7 +2,7 @@ IsTrustedSequencer = true
 
 [Log]
 Environment = "development" # "production" or "development"
-Level = "info"
+Level = "error"
 Outputs = ["stderr"]
 
 [State]

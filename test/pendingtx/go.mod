@@ -1,4 +1,4 @@
-module github.com/x1/x1-node/test/pendingtx
+module github.com/0xPolygonHermez/zkevm-node/test/pendingtx
 
 go 1.21
 
