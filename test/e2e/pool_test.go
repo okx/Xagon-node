@@ -303,9 +303,11 @@ func TestSpeedTx(t *testing.T) {
 	go poolInstance.Speed(ctx)
 
 	finishedLevel := levelCount - 1
+	log.Debugf("finishedLevel", finishedLevel)
 	for {
 		select {
 		case level := <-finishedCh:
+			log.Debugf("finishedLevel", finishedLevel, level)
 			require.Equal(t, finishedLevel, level)
 			finishedLevel--
 			if finishedLevel == -1 {
