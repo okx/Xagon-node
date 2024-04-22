@@ -13,16 +13,16 @@ func (p *ProcessorL1SequenceBatchesEtrog) updatePermissionLessBatchTimestamp(ctx
 		return nil
 	}
 
+	log.Infof("Permission less rpc updates batch timestamp for batch: %v with new timestamp:%v", batchNumber, batchTime)
 	err := p.state.UpdateBatchTimestamp(ctx, batchNumber, batchTime, dbTx)
 	if err != nil {
-		log.Errorf("error update batch timestamp for batch: %d. Error; %v", batchNumber, err)
+		log.Errorf("error update batch timestamp for batch: %v, batchTime:%v, . Error; %v", batchNumber, batchTime, err)
 		rollbackErr := dbTx.Rollback(ctx)
 		if rollbackErr != nil {
-			log.Errorf("error rolling back state. BatchNumber: %d, rollbackErr: %v", batchNumber, rollbackErr)
+			log.Errorf("error rolling back state. BatchNumber: %d, batchTime:%v, rollbackErr: %v", batchNumber, batchTime, rollbackErr)
 			return rollbackErr
 		}
 		return err
 	}
-	log.Infof("Permission less rpc updates batch timestamp for batch: %v with new timestamp:%v", batchNumber, batchTime)
 	return nil
 }
