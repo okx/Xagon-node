@@ -118,6 +118,7 @@ func TestL1SequenceBatchesPermissionlessBatchSequencedThatAlreadyExistsHappyPath
 	l1Block := newL1Block(mocks, batch, l1InfoRoot)
 	expectationsPreExecution(t, mocks, ctx, batch, nil)
 	executionResponse := newProcessBatchResponseV2(batch)
+	mocks.Synchronizer.EXPECT().IsTrustedSequencer().Return(false)
 	expectationsForExecution(t, mocks, ctx, l1Block.SequencedBatches[1][0], l1Block.ReceivedAt, executionResponse)
 	mocks.State.EXPECT().AddAccumulatedInputHash(ctx, executionResponse.NewBatchNum, common.BytesToHash(executionResponse.NewAccInputHash), mocks.DbTx).Return(nil)
 	expectationsAddSequencedBatch(t, mocks, ctx, executionResponse)
@@ -213,7 +214,6 @@ func TestL1SequenceForcedBatchesNum1TrustedBatch(t *testing.T) {
 
 	executionResponse := newProcessBatchResponseV2(batch)
 	executionResponse.NewStateRoot = common.HexToHash(hashExamplesValues[2]).Bytes()
-
 	expectationsProcessAndStoreClosedBatchV2(t, mocks, ctx, executionResponse, nil)
 	expectationsAddSequencedBatch(t, mocks, ctx, executionResponse)
 	mocks.Synchronizer.EXPECT().PendingFlushID(mock.Anything, mock.Anything)
