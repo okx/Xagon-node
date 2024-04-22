@@ -302,8 +302,8 @@ func TestSpeedTx(t *testing.T) {
 	require.NoError(t, err)
 	go seq.Start(ctx, levelCount, addrPerLevel*txPerAddr, finishedCh)
 
-	time.Sleep(1 * time.Second)
-	go poolInstance.Speed(ctx)
+	//time.Sleep(1 * time.Second)
+	//go poolInstance.Speed(ctx)
 
 	finishedLevel := levelCount - 1
 	for {
