@@ -269,14 +269,14 @@ func TestSpeedTx(t *testing.T) {
 	err = operations.Teardown()
 	require.NoError(t, err)
 
-	defer func() { require.NoError(t, operations.Teardown()) }()
+	//defer func() { require.NoError(t, operations.Teardown()) }()
 
 	ctx := context.Background()
-	opsCfg := operations.GetDefaultOperationsConfig()
-	opsMan, err := operations.NewManager(ctx, opsCfg)
-	require.NoError(t, err)
-	err = opsMan.Setup()
-	require.NoError(t, err)
+	//opsCfg := operations.GetDefaultOperationsConfig()
+	//opsMan, err := operations.NewManager(ctx, opsCfg)
+	//require.NoError(t, err)
+	//err = opsMan.Setup()
+	//require.NoError(t, err)
 
 	poolStorage, err := pgpoolstorage.NewPostgresPoolStorage(dbutils.NewPoolConfigFromEnv())
 	require.NoError(t, err)
