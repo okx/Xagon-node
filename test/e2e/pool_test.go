@@ -284,6 +284,7 @@ func TestSpeedTx(t *testing.T) {
 	cfg, err := config.Default()
 	require.NoError(t, err)
 	cfg.Log.Level = "error"
+	log.Init(cfg.Log)
 
 	poolInstance := pool.NewPool(cfg.Pool, poolStorage)
 
