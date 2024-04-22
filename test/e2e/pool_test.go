@@ -283,6 +283,8 @@ func TestSpeedTx(t *testing.T) {
 
 	cfg, err := config.Default()
 	require.NoError(t, err)
+	cfg.Log.Level = "error"
+
 	poolInstance := pool.NewPool(cfg.Pool, poolStorage)
 
 	levelCount, txPerAddr, addrPerLevel := 50, 400, 5
@@ -303,11 +305,9 @@ func TestSpeedTx(t *testing.T) {
 	go poolInstance.Speed(ctx)
 
 	finishedLevel := levelCount - 1
-	log.Debugf("finishedLevel", finishedLevel)
 	for {
 		select {
 		case level := <-finishedCh:
-			log.Debugf("finishedLevel", finishedLevel, level)
 			require.Equal(t, finishedLevel, level)
 			finishedLevel--
 			if finishedLevel == -1 {
