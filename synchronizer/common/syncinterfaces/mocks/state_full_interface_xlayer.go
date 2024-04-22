@@ -4,9 +4,15 @@ package mock_syncinterfaces
 
 import (
 	context "context"
+	"time"
+
 	"github.com/jackc/pgx/v4"
 )
 
 func (_m *StateFullInterface) GetBatchL2DataByNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) ([]byte, error){
 	return nil, nil
+}
+
+func (_m *StateFullInterface) UpdateBatchTimestamp(ctx context.Context, batchNumber uint64, batchTime time.Time, dbTx pgx.Tx) error {
+	return nil
 }
