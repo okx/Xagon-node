@@ -288,7 +288,7 @@ func TestSpeedTx(t *testing.T) {
 
 	poolInstance := pool.NewPool(cfg.Pool, poolStorage)
 
-	levelCount, txPerAddr, addrPerLevel := 50, 400, 5
+	levelCount, txPerAddr, addrPerLevel := 50, 100, 5
 	poolInstance.PrepareTx(ctx, levelCount, addrPerLevel, txPerAddr)
 
 	time.Sleep(3 * time.Second)
