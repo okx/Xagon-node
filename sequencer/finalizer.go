@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -842,6 +843,7 @@ func (f *finalizer) Halt(ctx context.Context, err error, isFatal bool) {
 			seqMetrics.HaltCount()
 			log.Errorf("halting finalizer, error: %v", err)
 			time.Sleep(5 * time.Second) //nolint:gomnd
+			os.Exit(1)
 		}
 	}
 }
