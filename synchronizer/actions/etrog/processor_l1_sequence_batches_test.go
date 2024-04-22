@@ -99,6 +99,8 @@ func TestL1SequenceBatchesTrustedBatchSequencedThatAlreadyExistsHappyPath(t *tes
 	l1InfoRoot := common.HexToHash(hashExamplesValues[0])
 	l1Block := newL1Block(mocks, batch, l1InfoRoot)
 	expectationsPreExecution(t, mocks, ctx, batch, nil)
+
+	mocks.Synchronizer.EXPECT().IsTrustedSequencer().Return(false)
 	executionResponse := newProcessBatchResponseV2(batch)
 	expectationsForExecution(t, mocks, ctx, l1Block.SequencedBatches[1][0], l1Block.ReceivedAt, executionResponse)
 	mocks.State.EXPECT().AddAccumulatedInputHash(ctx, executionResponse.NewBatchNum, common.BytesToHash(executionResponse.NewAccInputHash), mocks.DbTx).Return(nil)
