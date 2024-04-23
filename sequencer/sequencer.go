@@ -93,15 +93,16 @@ func (s *Sequencer) Start(ctx context.Context) {
 		s.updateDataStreamerFile(ctx, s.cfg.StreamServer.ChainID)
 	}
 
+	s.workerReadyTxsCond = newTimeoutCond(&sync.Mutex{})
+	s.worker = NewWorker(s.stateIntf, s.batchCfg.Constraints, s.workerReadyTxsCond)
+	s.finalizer = newFinalizer(s.cfg.Finalizer, s.poolCfg, s.worker, s.pool, s.stateIntf, s.etherman, s.address, s.isSynced, s.batchCfg.Constraints, s.eventLog, s.streamServer, s.workerReadyTxsCond, s.dataToStream)
+
 	go s.loadFromPool(ctx)
 
 	if s.streamServer != nil {
 		go s.sendDataToStreamer(s.cfg.StreamServer.ChainID)
 	}
 
-	s.workerReadyTxsCond = newTimeoutCond(&sync.Mutex{})
-	s.worker = NewWorker(s.stateIntf, s.batchCfg.Constraints, s.workerReadyTxsCond)
-	s.finalizer = newFinalizer(s.cfg.Finalizer, s.poolCfg, s.worker, s.pool, s.stateIntf, s.etherman, s.address, s.isSynced, s.batchCfg.Constraints, s.eventLog, s.streamServer, s.workerReadyTxsCond, s.dataToStream)
 	go s.finalizer.Start(ctx)
 
 	go s.deleteOldPoolTxs(ctx)
