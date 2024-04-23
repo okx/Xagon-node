@@ -28,6 +28,7 @@ type PoolInterface interface {
 	AddInnerTx(ctx context.Context, txHash common.Hash, innerTx []byte) error
 	GetInnerTx(ctx context.Context, txHash common.Hash) (string, error)
 	GetMinSuggestedGasPriceWithDelta(ctx context.Context, delta time.Duration) (uint64, error)
+	IsPendingStatEnabled(ctx context.Context) bool
 }
 
 // StateInterface gathers the methods required to interact with the state.

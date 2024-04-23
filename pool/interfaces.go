@@ -42,6 +42,12 @@ type storage interface {
 	GetEarliestProcessedTx(ctx context.Context) (common.Hash, error)
 	AddInnerTx(ctx context.Context, txHash common.Hash, innerTx []byte) error
 	GetInnerTx(ctx context.Context, txHash common.Hash) (string, error)
+	GetPendingFromAndMinNonceBefore(ctx context.Context, timeDuration time.Duration) ([]common.Address, []uint64, error)
+	LockStat(ctx context.Context, timeDuration time.Duration) (bool, error)
+	UnLockStat(ctx context.Context) error
+	UpdateStatAndUnlock(ctx context.Context, totoal, skip, balanceIssue, nonceIssue uint64) error
+	GetStat(ctx context.Context) (uint64, uint64, uint64, uint64, error)
+	CountTransactionsByFromStatusAndNonce(ctx context.Context, from common.Address, nonce uint64, status ...TxStatus) (uint64, error)
 }
 
 type stateInterface interface {

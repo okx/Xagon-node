@@ -84,3 +84,26 @@ func (_m *PoolMock) GetMinSuggestedGasPriceWithDelta(ctx context.Context, delta 
 
 	return r0, r1
 }
+
+// IsPendingStatEnabled provides a mock function with given fields: ctx
+func (_m *PoolMock) IsPendingStatEnabled(ctx context.Context) bool {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for IsPendingStatEnabled")
+	}
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func(context.Context) bool); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) bool); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(bool)
+		}
+	}
+
+	return r0
+}
