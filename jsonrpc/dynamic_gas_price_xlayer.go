@@ -157,21 +157,21 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		return
 	}
 
-	if !isCongested {
+	isLastBlockEmpty, err := e.isLastBlockEmpty(ctx)
+	if err != nil {
+		log.Errorf("failed to judge if the last block is empty: ", err)
+		return
+	}
+
+	if !isCongested || isLastBlockEmpty {
 		log.Debug("there is no congestion for L2")
 		gasPrices, err := e.pool.GetGasPrices(ctx)
 		if err != nil {
 			log.Errorf("failed to get raw gas prices when it is not congested: ", err)
 			return
 		}
-
 		rawGP := new(big.Int).SetUint64(gasPrices.L2GasPrice)
-		e.dgpMan.cacheLock.Lock()
-		e.dgpMan.lastPrice = getAvgPrice(rawGP, price)
-		e.dgpMan.lastL2BatchNumber = l2BatchNumber
-		metrics.DynamicGasPrice(e.dgpMan.lastPrice.Int64())
-		e.dgpMan.cacheLock.Unlock()
-		return
+		price = getAvgPrice(rawGP, price)
 	}
 
 	e.dgpMan.cacheLock.Lock()
@@ -217,6 +217,17 @@ func (e *EthEndpoints) isCongested(ctx context.Context) (bool, error) {
 		return false, err
 	}
 	if txCount >= e.cfg.DynamicGP.CongestionTxThreshold {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (e *EthEndpoints) isLastBlockEmpty(ctx context.Context) (bool, error) {
+	block, err := e.state.GetLastL2Block(ctx, nil)
+	if err != nil {
+		return true, err
+	}
+	if len(block.Transactions()) == 0 {
 		return true, nil
 	}
 	return false, nil
