@@ -21,7 +21,7 @@ var (
 
 	start = 0.1
 	width = 0.1
-	count = 10
+	count = 50
 
 	lastDynamicGasPriceName  = prefix + "dynamic_gas_price"
 	lastBatchNumberLabelName = "batch_number"
