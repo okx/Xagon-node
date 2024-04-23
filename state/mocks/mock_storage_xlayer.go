@@ -4,6 +4,7 @@ package mocks
 
 import (
 	context "context"
+	"time"
 
 	pgx "github.com/jackc/pgx/v4"
 )
@@ -14,4 +15,8 @@ func (_m *StorageMock) GetBatchL2DataByNumber(ctx context.Context, batchNumber u
 
 func (_m *StorageMock) GetBatchL2DataByNumbers(ctx context.Context, batchNumbers []uint64, dbTx pgx.Tx) (map[uint64][]byte, error){
 	return nil, nil
+}
+
+func (_m *StorageMock) UpdateBatchTimestamp(ctx context.Context, batchNumber uint64, batchTime time.Time, dbTx pgx.Tx) error {
+	return nil
 }

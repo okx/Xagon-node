@@ -32,6 +32,9 @@ type stateProcessSequenceBatches interface {
 	AddVirtualBatch(ctx context.Context, virtualBatch *state.VirtualBatch, dbTx pgx.Tx) error
 	AddTrustedReorg(ctx context.Context, trustedReorg *state.TrustedReorg, dbTx pgx.Tx) error
 	GetL1InfoTreeDataFromBatchL2Data(ctx context.Context, batchL2Data []byte, dbTx pgx.Tx) (map[uint32]state.L1DataV2, common.Hash, common.Hash, error)
+
+	//XLayer methods
+	UpdateBatchTimestamp(ctx context.Context, batchNumber uint64, batchTime time.Time, dbTx pgx.Tx) error
 }
 
 type syncProcessSequenceBatchesInterface interface {
@@ -274,6 +277,12 @@ func (p *ProcessorL1SequenceBatchesEtrog) ProcessSequenceBatches(ctx context.Con
 					log.Errorf("error rolling back state. BatchNumber: %d, BlockNumber: %d, rollbackErr: %v", batch.BatchNumber, blockNumber, rollbackErr)
 					return rollbackErr
 				}
+				return err
+			}
+
+			// XLayer's handle. Update the existing batch with L1's MaxSequenceTimestamp
+			err = p.updatePermissionLessBatchTimestamp(ctx, batch.BatchNumber, l1BlockTimestamp, dbTx)
+			if err != nil {
 				return err
 			}
 		}

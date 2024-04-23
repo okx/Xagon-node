@@ -8,6 +8,7 @@ import (
 	"time"
 
 	zktypes "github.com/0xPolygonHermez/zkevm-node/config/types"
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -168,6 +169,7 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		e.dgpMan.cacheLock.Lock()
 		e.dgpMan.lastPrice = getAvgPrice(rawGP, price)
 		e.dgpMan.lastL2BatchNumber = l2BatchNumber
+		metrics.DynamicGasPrice(e.dgpMan.lastPrice.Int64())
 		e.dgpMan.cacheLock.Unlock()
 		return
 	}
@@ -175,6 +177,7 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 	e.dgpMan.cacheLock.Lock()
 	e.dgpMan.lastPrice = price
 	e.dgpMan.lastL2BatchNumber = l2BatchNumber
+	metrics.DynamicGasPrice(e.dgpMan.lastPrice.Int64())
 	e.dgpMan.cacheLock.Unlock()
 }
 

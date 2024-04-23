@@ -75,6 +75,7 @@ func Register() {
 	// XLayer handler
 	metrics.RegisterCounterVecs(counterVecsXLayer...)
 	metrics.RegisterHistogramVecs(histogramVecs...)
+	metrics.RegisterGaugeVecs(gaugeVecs...)
 }
 
 // CountConn increments the connection counter vector by one for the
