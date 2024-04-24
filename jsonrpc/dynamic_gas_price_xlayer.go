@@ -165,6 +165,7 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 
 	if !isCongested || isLastBlockEmpty {
 		log.Debug("there is no congestion for L2")
+		
 		gasPrices, err := e.pool.GetGasPrices(ctx)
 		if err != nil {
 			log.Errorf("failed to get raw gas prices when it is not congested: ", err)
