@@ -409,7 +409,7 @@ func TestDebugTraceTransaction(t *testing.T) {
 					var err error
 					if forceTxIndexDifferentFromZero {
 						// send eth transfers txs to make the trace tx to not be the index 0 in the block
-						sendEthTransfersWithoutWaiting(t, ctx, ethereumClient, auth, common.HexToAddress(operations.DefaultSequencerAddress), big.NewInt(1), 3)
+						sendEthTransfersWithoutWaiting(t, ctx, ethereumClient, auth, common.HexToAddress(fromAddressHex), big.NewInt(1), 3)
 					}
 
 					signedTx, err = tc.createSignedTx(t, ctx, auth, ethereumClient, customData)
