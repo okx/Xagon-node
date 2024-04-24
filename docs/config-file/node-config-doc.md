@@ -2268,15 +2268,15 @@ L1SyncCheckL2BlockHash=true
 
 **Type:** : `integer`
 
-**Default:** `30`
+**Default:** `600`
 
 **Description:** L1SyncCheckL2BlockNumberhModulus is the modulus used to choose the l2block to check
 a modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)
 
-**Example setting the default value** (30):
+**Example setting the default value** (600):
 ```
 [Synchronizer]
-L1SyncCheckL2BlockNumberhModulus=30
+L1SyncCheckL2BlockNumberhModulus=600
 ```
 
 ### <a name="Synchronizer_L1SynchronizationMode"></a>9.7. `Synchronizer.L1SynchronizationMode`

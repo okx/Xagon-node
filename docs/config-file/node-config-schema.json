@@ -866,7 +866,7 @@
 				"L1SyncCheckL2BlockNumberhModulus": {
 					"type": "integer",
 					"description": "L1SyncCheckL2BlockNumberhModulus is the modulus used to choose the l2block to check\na modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)",
-					"default": 30
+					"default": 600
 				},
 				"L1SynchronizationMode": {
 					"type": "string",

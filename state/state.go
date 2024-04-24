@@ -62,13 +62,37 @@ func NewState(cfg Config, storage storage, executorClient executor.ExecutorServi
 	return state
 }
 
+// StateTx is the state transaction that extends the database tx
+type StateTx struct {
+	pgx.Tx
+	stateInstance      *State
+	L1InfoTreeModified bool
+}
+
 // BeginStateTransaction starts a state transaction
 func (s *State) BeginStateTransaction(ctx context.Context) (pgx.Tx, error) {
 	tx, err := s.Begin(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return tx, nil
+	res := &StateTx{
+		Tx:            tx,
+		stateInstance: s,
+	}
+	return res, nil
+}
+
+// Rollback do the dbTx rollback + modifications in cache mechanism
+func (tx *StateTx) Rollback(ctx context.Context) error {
+	if tx.L1InfoTreeModified {
+		tx.stateInstance.ResetL1InfoTree()
+	}
+	return tx.Tx.Rollback(ctx)
+}
+
+// SetL1InfoTreeModified sets the flag to true to save that the L1InfoTree has been modified
+func (tx *StateTx) SetL1InfoTreeModified() {
+	tx.L1InfoTreeModified = true
 }
 
 // GetBalance from a given address
