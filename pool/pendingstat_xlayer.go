@@ -165,7 +165,7 @@ func (p *Pool) countBalanceIssueTransactions(ctx context.Context, addresses []co
 			mLog.Warnf("error getting balance for address %v, l2block %v, err %v", addr, err, lastL2Block.Root())
 			continue
 		}
-		if balance.Uint64() < txs[0].Value().Uint64() {
+		if balance.Cmp(txs[0].Cost()) < 0 {
 			count, err := p.storage.CountTransactionsByFromAndStatus(ctx, addr, TxStatusPending)
 			if err != nil {
 				mLog.Warnf("error getting transactions count by from %v, err %v", addr, err)
