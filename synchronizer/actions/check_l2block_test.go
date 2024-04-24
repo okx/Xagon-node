@@ -32,12 +32,15 @@ func TestCheckL2BlockHash_GetMinimumL2BlockToCheck(t *testing.T) {
 		{1, 10, 10},
 		{9, 10, 10},
 		{10, 10, 20},
-		{0, 0, 1},
-		{1, 0, 2},
+		{0, 1, 1},
+		{1, 1, 2},
 	}
+	_, err := actions.NewCheckL2BlockHash(nil, nil, 1, 0)
+	require.Error(t, err)
 	for _, data := range values {
 		// Call the GetNextL2BlockToCheck method
-		checkL2Block := actions.NewCheckL2BlockHash(nil, nil, data.initial, data.modulus)
+		checkL2Block, err := actions.NewCheckL2BlockHash(nil, nil, data.initial, data.modulus)
+		require.NoError(t, err)
 		nextL2Block := checkL2Block.GetMinimumL2BlockToCheck()
 
 		// Assert the expected result
@@ -58,7 +61,9 @@ func newCheckL2BlocksTestData(t *testing.T, initialL2Block, modulus uint64) Chec
 		mockState:   mock_syncinterfaces.NewStateFullInterface(t),
 		zKEVMClient: mock_syncinterfaces.NewZKEVMClientEthereumCompatibleInterface(t),
 	}
-	res.sut = actions.NewCheckL2BlockHash(res.mockState, res.zKEVMClient, initialL2Block, modulus)
+	var err error
+	res.sut, err = actions.NewCheckL2BlockHash(res.mockState, res.zKEVMClient, initialL2Block, modulus)
+	require.NoError(t, err)
 	return res
 }
 func TestCheckL2BlockHash_GetNextL2BlockToCheck(t *testing.T) {
@@ -77,7 +82,8 @@ func TestCheckL2BlockHash_GetNextL2BlockToCheck(t *testing.T) {
 	}
 
 	for _, data := range values {
-		checkL2Block := actions.NewCheckL2BlockHash(nil, nil, 0, 0)
+		checkL2Block, err := actions.NewCheckL2BlockHash(nil, nil, 0, 1)
+		require.NoError(t, err)
 		shouldCheck, nextL2Block := checkL2Block.GetNextL2BlockToCheck(data.lastLocalL2BlockNumber, data.minL2BlockNumberToCheck)
 
 		assert.Equal(t, data.expectedShouldCheck, shouldCheck, data)
@@ -86,7 +92,7 @@ func TestCheckL2BlockHash_GetNextL2BlockToCheck(t *testing.T) {
 }
 
 func TestCheckL2BlockHashMatch(t *testing.T) {
-	data := newCheckL2BlocksTestData(t, 1, 10)
+	data := newCheckL2BlocksTestData(t, 1, 14)
 	lastL2Block := uint64(14)
 	lastL2BlockBigInt := big.NewInt(int64(lastL2Block))
 	gethHeader := types.Header{
@@ -113,7 +119,7 @@ func TestCheckL2BlockHashMatch(t *testing.T) {
 }
 
 func TestCheckL2BlockHashMismatch(t *testing.T) {
-	data := newCheckL2BlocksTestData(t, 1, 10)
+	data := newCheckL2BlocksTestData(t, 1, 14)
 	lastL2Block := uint64(14)
 	lastL2BlockBigInt := big.NewInt(int64(lastL2Block))
 	gethHeader := types.Header{

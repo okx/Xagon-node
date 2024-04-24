@@ -211,6 +211,10 @@ func (a *addrQueue) updateCurrentNonceBalance(nonce *uint64, balance *big.Int) (
 	if oldReadyTx != nil && oldReadyTx.Nonce > a.currentNonce {
 		log.Infof("set readyTx %s as notReadyTx from addrQueue %s", oldReadyTx.HashStr, a.fromStr)
 		a.notReadyTxs[oldReadyTx.Nonce] = oldReadyTx
+	} else if oldReadyTx != nil { // if oldReadyTx doesn't have a valid nonce then we add it to the txsToDelete
+		reason := runtime.ErrIntrinsicInvalidNonce.Error()
+		oldReadyTx.FailedReason = &reason
+		txsToDelete = append(txsToDelete, oldReadyTx)
 	}
 
 	return a.readyTx, oldReadyTx, txsToDelete

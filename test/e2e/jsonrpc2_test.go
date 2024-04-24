@@ -456,22 +456,27 @@ func TestCallMissingParameters(t *testing.T) {
 			expectedError: types.ErrorObject{Code: types.InvalidParamsErrorCode, Message: "missing value for required argument 0"},
 		},
 		{
-			name:          "params has only first parameter",
-			params:        []interface{}{map[string]interface{}{"value": "0x1"}},
-			expectedError: types.ErrorObject{Code: types.InvalidParamsErrorCode, Message: "missing value for required argument 1"},
+			name:   "params has only first parameter",
+			params: []interface{}{map[string]interface{}{"value": "0x1", "from": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266", "to": "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92267"}},
 		},
 	}
 
 	for _, network := range networks {
-		log.Infof("Network %s", network.Name)
-		for _, testCase := range testCases {
+		t.Logf("Network %s", network.Name)
+		for tc, testCase := range testCases {
+			t.Logf("testCase %d", tc)
 			t.Run(network.Name+testCase.name, func(t *testing.T) {
 				response, err := client.JSONRPCCall(network.URL, "eth_call", testCase.params...)
 				require.NoError(t, err)
-				require.NotNil(t, response.Error)
-				require.Nil(t, response.Result)
-				require.Equal(t, testCase.expectedError.Code, response.Error.Code)
-				require.Equal(t, testCase.expectedError.Message, response.Error.Message)
+				if (testCase.expectedError != types.ErrorObject{}) {
+					require.NotNil(t, response.Error)
+					require.Nil(t, response.Result)
+					require.Equal(t, testCase.expectedError.Code, response.Error.Code)
+					require.Equal(t, testCase.expectedError.Message, response.Error.Message)
+				} else {
+					require.Nil(t, response.Error)
+					require.NotNil(t, response.Result)
+				}
 			})
 		}
 	}
@@ -620,24 +625,39 @@ func TestEstimateGas(t *testing.T) {
 		txToMsg, err := sc.Increment(auth)
 		require.NoError(t, err)
 
-		// add funds to address 0x000...001 used in the test
-		nonce, err := ethereumClient.NonceAt(ctx, auth.From, nil)
-		require.NoError(t, err)
-		value := big.NewInt(1000)
-		require.NoError(t, err)
-		tx = ethTypes.NewTx(&ethTypes.LegacyTx{
-			Nonce:    nonce,
-			To:       state.Ptr(common.HexToAddress("0x1")),
-			Value:    value,
-			Gas:      24000,
-			GasPrice: gasPrice,
-		})
-		signedTx, err := auth.Signer(auth.From, tx)
-		require.NoError(t, err)
-		err = ethereumClient.SendTransaction(ctx, signedTx)
-		require.NoError(t, err)
-		err = operations.WaitTxToBeMined(ctx, ethereumClient, signedTx, operations.DefaultTimeoutTxToBeMined)
-		require.NoError(t, err)
+		// addresses the test needs to have balance
+		addressesToAddBalance := map[common.Address]*big.Int{
+			// add funds to address 0x111...111 which is the default address
+			// when estimating TXs without specifying the sender
+			common.HexToAddress("0x1111111111111111111111111111111111111111"): big.NewInt(3000000000000000),
+
+			// add funds to address 0x000...001
+			common.HexToAddress("0x1"): big.NewInt(1000),
+		}
+
+		for addr, value := range addressesToAddBalance {
+			nonce, err := ethereumClient.NonceAt(ctx, auth.From, nil)
+			require.NoError(t, err)
+			value := value
+			require.NoError(t, err)
+			tx = ethTypes.NewTx(&ethTypes.LegacyTx{
+				Nonce:    nonce,
+				To:       state.Ptr(addr),
+				Value:    value,
+				Gas:      24000,
+				GasPrice: gasPrice,
+			})
+			signedTx, err := auth.Signer(auth.From, tx)
+			require.NoError(t, err)
+			err = ethereumClient.SendTransaction(ctx, signedTx)
+			require.NoError(t, err)
+			err = operations.WaitTxToBeMined(ctx, ethereumClient, signedTx, operations.DefaultTimeoutTxToBeMined)
+			require.NoError(t, err)
+
+			balance, err := ethereumClient.BalanceAt(ctx, addr, nil)
+			require.NoError(t, err)
+			log.Debugf("%v balance: %v", addr.String(), balance.String())
+		}
 
 		type testCase struct {
 			name          string
@@ -670,19 +690,15 @@ func TestEstimateGas(t *testing.T) {
 				name:          "with gasPrice set and without from address",
 				address:       nil,
 				setGasPrice:   true,
-				expectedError: types.NewRPCError(-32000, "gas required exceeds allowance"),
+				expectedError: nil,
 			},
-			// TODO: This test is failing due to geth bug
-			//       we can uncomment it when updating geth version
-			//       on l1 image, it's returning error code -32000 when
-			//       it should be returning error code 3 due to execution message
-			// {
-			// 	name:          "with gasPrice and value set and address with enough balance",
-			// 	address:       state.Ptr(auth.From),
-			// 	value:         state.Ptr(int64(1)),
-			// 	setGasPrice:   true,
-			// 	expectedError: types.NewRPCError(3, "execution reverted"),
-			// },
+			{
+				name:          "with gasPrice and value set and address with enough balance",
+				address:       state.Ptr(auth.From),
+				value:         state.Ptr(int64(1)),
+				setGasPrice:   true,
+				expectedError: types.NewRPCError(-32000, "execution reverted"),
+			},
 			{
 				name:          "with gasPrice and value set and address without enough balance",
 				address:       state.Ptr(common.HexToAddress("0x1")),
@@ -697,13 +713,21 @@ func TestEstimateGas(t *testing.T) {
 				setGasPrice:   true,
 				expectedError: types.NewRPCError(-32000, "insufficient funds for transfer"),
 			},
-			{
-				name:          "with gasPrice and value set and without from address",
-				address:       nil,
-				value:         state.Ptr(int64(-1)),
-				setGasPrice:   true,
-				expectedError: types.NewRPCError(-32000, "insufficient funds for transfer"),
-			},
+			// TODO = Review the test below in future versions of geth.
+			//
+			// Geth is returning -32000, "insufficient funds for transfer"
+			// zkEVM is returning 3, "execution reverted"
+			//
+			// Since the tx has value, the method increment is not payable
+			// and the default account has balance, the tx should revert
+			//
+			// {
+			// 	name:          "with gasPrice and value set and without from address",
+			// 	address:       nil,
+			// 	value:         state.Ptr(int64(-1)),
+			// 	setGasPrice:   true,
+			// 	expectedError: types.NewRPCError(-32000, "insufficient funds for transfer"),
+			// },
 			{
 				name:          "without gasPrice set and address with enough balance",
 				address:       state.Ptr(auth.From),
@@ -746,7 +770,6 @@ func TestEstimateGas(t *testing.T) {
 				if testCase.value != nil {
 					v := *testCase.value
 					if v == -1 { //set the value as acc balance + 1 to force overflow
-
 						msg.Value = common.Big0.Add(balance, common.Big1)
 					} else {
 						msg.Value = big.NewInt(0).SetInt64(v)
@@ -757,7 +780,10 @@ func TestEstimateGas(t *testing.T) {
 					msg.GasPrice = gasPrice
 				}
 
-				_, err = ethereumClient.EstimateGas(ctx, msg)
+				gas, err := ethereumClient.EstimateGas(ctx, msg)
+				t.Log("testCase: ", testCase.name)
+				t.Log("err: ", err)
+				t.Log("gas: ", gas)
 				if testCase.expectedError != nil {
 					rpcErr := err.(rpc.Error)
 					errMsg := fmt.Sprintf("[%v] expected: %v %v found: %v %v", network.Name, testCase.expectedError.ErrorCode(), testCase.expectedError.Error(), rpcErr.ErrorCode(), rpcErr.Error())

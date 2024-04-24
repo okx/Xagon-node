@@ -143,7 +143,15 @@ TrustedSequencerURL = "" # If it is empty or not specified, then the value is re
 SyncBlockProtection = "safe" # latest, finalized, safe
 L1SynchronizationMode = "sequential"
 L1SyncCheckL2BlockHash = true
-L1SyncCheckL2BlockNumberhModulus = 30
+L1SyncCheckL2BlockNumberhModulus = 600
+	[Synchronizer.L1BlockCheck]
+		Enable = true
+		L1SafeBlockPoint = "finalized"
+		L1SafeBlockOffset = 0
+		ForceCheckBeforeStart = true
+		PreCheckEnable = true
+		L1PreSafeBlockPoint = "safe"
+		L1PreSafeBlockOffset = 0
 	[Synchronizer.L1ParallelSynchronization]
 		MaxClients = 10
 		MaxPendingNoProcessedBlocks = 25

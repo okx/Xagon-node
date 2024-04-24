@@ -192,7 +192,7 @@ To configure your Metamask to use your local environment, follow these steps:
 | Address | Description |
 |---|---|
 | 0x8dAF17A20c9DBA35f005b6324F493785D239719d | Polygon ZKEVM |
-| 0x40E0576c0A7dff9dc460B29ba73e79aBf73dD2a9 | Polygon Bridge |
+| 0xFe12ABaa190Ef0c8638Ee0ba9F828BF41368Ca0E | Polygon Bridge |
 | 0x5FbDB2315678afecb367f032d93F642f64180aa3 | Pol token |
 | 0x8A791620dd6260079BF849Dc5567aDC3F2FdC318 | Polygon GlobalExitRootManager |
 | 0xB7f8BC63BbcaD18155201308C8f3540b07f84F5e | Polygon RollupManager |

@@ -5,6 +5,7 @@ import (
 	"math/big"
 	"time"
 
+	ethermanTypes "github.com/0xPolygonHermez/zkevm-node/etherman"
 	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/ethereum/go-ethereum/common"
@@ -31,12 +32,14 @@ type txPool interface {
 	CountPendingTransactions(ctx context.Context) (uint64, error)
 }
 
-// etherman contains the methods required to interact with ethereum.
-type etherman interface {
+// ethermanInterface contains the methods required to interact with ethereum.
+type ethermanInterface interface {
 	TrustedSequencer() (common.Address, error)
 	GetLatestBatchNumber() (uint64, error)
 	GetLatestBlockNumber(ctx context.Context) (uint64, error)
 	HeaderByNumber(ctx context.Context, number *big.Int) (*types.Header, error)
+	GetRollupInfoByBlockRange(ctx context.Context, fromBlock uint64, toBlock *uint64) ([]ethermanTypes.Block, map[common.Hash][]ethermanTypes.Order, error)
+	DepositCount(ctx context.Context, blockNumber *uint64) (*big.Int, error)
 }
 
 // stateInterface gathers the methods required to interact with the state.

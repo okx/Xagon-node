@@ -821,6 +821,66 @@ func (_c *StateFullInterface_GetBatchByNumber_Call) RunAndReturn(run func(contex
 	return _c
 }
 
+// GetBlockByNumber provides a mock function with given fields: ctx, blockNumber, dbTx
+func (_m *StateFullInterface) GetBlockByNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*state.Block, error) {
+	ret := _m.Called(ctx, blockNumber, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetBlockByNumber")
+	}
+
+	var r0 *state.Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) (*state.Block, error)); ok {
+		return rf(ctx, blockNumber, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) *state.Block); ok {
+		r0 = rf(ctx, blockNumber, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*state.Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, pgx.Tx) error); ok {
+		r1 = rf(ctx, blockNumber, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StateFullInterface_GetBlockByNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetBlockByNumber'
+type StateFullInterface_GetBlockByNumber_Call struct {
+	*mock.Call
+}
+
+// GetBlockByNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - blockNumber uint64
+//   - dbTx pgx.Tx
+func (_e *StateFullInterface_Expecter) GetBlockByNumber(ctx interface{}, blockNumber interface{}, dbTx interface{}) *StateFullInterface_GetBlockByNumber_Call {
+	return &StateFullInterface_GetBlockByNumber_Call{Call: _e.mock.On("GetBlockByNumber", ctx, blockNumber, dbTx)}
+}
+
+func (_c *StateFullInterface_GetBlockByNumber_Call) Run(run func(ctx context.Context, blockNumber uint64, dbTx pgx.Tx)) *StateFullInterface_GetBlockByNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StateFullInterface_GetBlockByNumber_Call) Return(_a0 *state.Block, _a1 error) *StateFullInterface_GetBlockByNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StateFullInterface_GetBlockByNumber_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) (*state.Block, error)) *StateFullInterface_GetBlockByNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetExitRootByGlobalExitRoot provides a mock function with given fields: ctx, ger, dbTx
 func (_m *StateFullInterface) GetExitRootByGlobalExitRoot(ctx context.Context, ger common.Hash, dbTx pgx.Tx) (*state.GlobalExitRoot, error) {
 	ret := _m.Called(ctx, ger, dbTx)
@@ -1805,6 +1865,66 @@ func (_c *StateFullInterface_GetPreviousBlock_Call) RunAndReturn(run func(contex
 	return _c
 }
 
+// GetPreviousBlockToBlockNumber provides a mock function with given fields: ctx, blockNumber, dbTx
+func (_m *StateFullInterface) GetPreviousBlockToBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*state.Block, error) {
+	ret := _m.Called(ctx, blockNumber, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPreviousBlockToBlockNumber")
+	}
+
+	var r0 *state.Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) (*state.Block, error)); ok {
+		return rf(ctx, blockNumber, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) *state.Block); ok {
+		r0 = rf(ctx, blockNumber, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*state.Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, pgx.Tx) error); ok {
+		r1 = rf(ctx, blockNumber, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StateFullInterface_GetPreviousBlockToBlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPreviousBlockToBlockNumber'
+type StateFullInterface_GetPreviousBlockToBlockNumber_Call struct {
+	*mock.Call
+}
+
+// GetPreviousBlockToBlockNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - blockNumber uint64
+//   - dbTx pgx.Tx
+func (_e *StateFullInterface_Expecter) GetPreviousBlockToBlockNumber(ctx interface{}, blockNumber interface{}, dbTx interface{}) *StateFullInterface_GetPreviousBlockToBlockNumber_Call {
+	return &StateFullInterface_GetPreviousBlockToBlockNumber_Call{Call: _e.mock.On("GetPreviousBlockToBlockNumber", ctx, blockNumber, dbTx)}
+}
+
+func (_c *StateFullInterface_GetPreviousBlockToBlockNumber_Call) Run(run func(ctx context.Context, blockNumber uint64, dbTx pgx.Tx)) *StateFullInterface_GetPreviousBlockToBlockNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StateFullInterface_GetPreviousBlockToBlockNumber_Call) Return(_a0 *state.Block, _a1 error) *StateFullInterface_GetPreviousBlockToBlockNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StateFullInterface_GetPreviousBlockToBlockNumber_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) (*state.Block, error)) *StateFullInterface_GetPreviousBlockToBlockNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetReorgedTransactions provides a mock function with given fields: ctx, batchNumber, dbTx
 func (_m *StateFullInterface) GetReorgedTransactions(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) ([]*types.Transaction, error) {
 	ret := _m.Called(ctx, batchNumber, dbTx)
@@ -1984,6 +2104,67 @@ func (_c *StateFullInterface_GetStoredFlushID_Call) Return(_a0 uint64, _a1 strin
 }
 
 func (_c *StateFullInterface_GetStoredFlushID_Call) RunAndReturn(run func(context.Context) (uint64, string, error)) *StateFullInterface_GetStoredFlushID_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetUncheckedBlocks provides a mock function with given fields: ctx, fromBlockNumber, toBlockNumber, dbTx
+func (_m *StateFullInterface) GetUncheckedBlocks(ctx context.Context, fromBlockNumber uint64, toBlockNumber uint64, dbTx pgx.Tx) ([]*state.Block, error) {
+	ret := _m.Called(ctx, fromBlockNumber, toBlockNumber, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUncheckedBlocks")
+	}
+
+	var r0 []*state.Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, pgx.Tx) ([]*state.Block, error)); ok {
+		return rf(ctx, fromBlockNumber, toBlockNumber, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, pgx.Tx) []*state.Block); ok {
+		r0 = rf(ctx, fromBlockNumber, toBlockNumber, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*state.Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, pgx.Tx) error); ok {
+		r1 = rf(ctx, fromBlockNumber, toBlockNumber, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StateFullInterface_GetUncheckedBlocks_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUncheckedBlocks'
+type StateFullInterface_GetUncheckedBlocks_Call struct {
+	*mock.Call
+}
+
+// GetUncheckedBlocks is a helper method to define mock.On call
+//   - ctx context.Context
+//   - fromBlockNumber uint64
+//   - toBlockNumber uint64
+//   - dbTx pgx.Tx
+func (_e *StateFullInterface_Expecter) GetUncheckedBlocks(ctx interface{}, fromBlockNumber interface{}, toBlockNumber interface{}, dbTx interface{}) *StateFullInterface_GetUncheckedBlocks_Call {
+	return &StateFullInterface_GetUncheckedBlocks_Call{Call: _e.mock.On("GetUncheckedBlocks", ctx, fromBlockNumber, toBlockNumber, dbTx)}
+}
+
+func (_c *StateFullInterface_GetUncheckedBlocks_Call) Run(run func(ctx context.Context, fromBlockNumber uint64, toBlockNumber uint64, dbTx pgx.Tx)) *StateFullInterface_GetUncheckedBlocks_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(uint64), args[3].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StateFullInterface_GetUncheckedBlocks_Call) Return(_a0 []*state.Block, _a1 error) *StateFullInterface_GetUncheckedBlocks_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StateFullInterface_GetUncheckedBlocks_Call) RunAndReturn(run func(context.Context, uint64, uint64, pgx.Tx) ([]*state.Block, error)) *StateFullInterface_GetUncheckedBlocks_Call {
 	_c.Call.Return(run)
 	return _c
 }

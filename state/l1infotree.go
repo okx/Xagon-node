@@ -3,6 +3,7 @@ package state
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/0xPolygonHermez/zkevm-node/l1infotree"
 	"github.com/0xPolygonHermez/zkevm-node/log"
@@ -54,6 +55,14 @@ func (s *State) buildL1InfoTreeCacheIfNeed(ctx context.Context, dbTx pgx.Tx) err
 
 // AddL1InfoTreeLeaf adds a new leaf to the L1InfoTree and returns the entry and error
 func (s *State) AddL1InfoTreeLeaf(ctx context.Context, l1InfoTreeLeaf *L1InfoTreeLeaf, dbTx pgx.Tx) (*L1InfoTreeExitRootStorageEntry, error) {
+	var stateTx *StateTx
+	if dbTx != nil {
+		var ok bool
+		stateTx, ok = dbTx.(*StateTx)
+		if !ok {
+			return nil, fmt.Errorf("error casting dbTx to stateTx")
+		}
+	}
 	var newIndex uint32
 	gerIndex, err := s.GetLatestIndex(ctx, dbTx)
 	if err != nil && !errors.Is(err, ErrNotFound) {
@@ -72,6 +81,9 @@ func (s *State) AddL1InfoTreeLeaf(ctx context.Context, l1InfoTreeLeaf *L1InfoTre
 	if err != nil {
 		log.Error("error add new leaf to the L1InfoTree. Error: ", err)
 		return nil, err
+	}
+	if stateTx != nil {
+		stateTx.SetL1InfoTreeModified()
 	}
 	entry := L1InfoTreeExitRootStorageEntry{
 		L1InfoTreeLeaf:  *l1InfoTreeLeaf,

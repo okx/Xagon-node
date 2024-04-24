@@ -109,6 +109,16 @@ func isSyncrhonizedTrustedState(lastTrustedStateBatchNumber uint64, latestSynced
 	return lastTrustedStateBatchNumber < latestSyncedBatch
 }
 
+func sanityCheckBatchReturnedByTrusted(batch *types.Batch, expectedBatchNumber uint64) error {
+	if batch == nil {
+		return fmt.Errorf("batch %d is nil", expectedBatchNumber)
+	}
+	if uint64(batch.Number) != expectedBatchNumber {
+		return fmt.Errorf("batch %d is not the expected batch %d", batch.Number, expectedBatchNumber)
+	}
+	return nil
+}
+
 func (s *TrustedBatchesRetrieve) syncTrustedBatchesToFrom(ctx context.Context, latestSyncedBatch uint64, lastTrustedStateBatchNumber uint64) error {
 	batchNumberToSync := max(latestSyncedBatch, s.firstBatchNumberToSync)
 	for batchNumberToSync <= lastTrustedStateBatchNumber {
@@ -118,6 +128,11 @@ func (s *TrustedBatchesRetrieve) syncTrustedBatchesToFrom(ctx context.Context, l
 		metrics.GetTrustedBatchInfoTime(time.Since(start))
 		if err != nil {
 			log.Warnf("%s failed to get batch %d from trusted state. Error: %v", debugPrefix, batchNumberToSync, err)
+			return err
+		}
+		err = sanityCheckBatchReturnedByTrusted(batchToSync, batchNumberToSync)
+		if err != nil {
+			log.Warnf("%s sanity check over Batch returned by Trusted-RPC failed: %v", debugPrefix, err)
 			return err
 		}
 
@@ -161,6 +176,10 @@ func (s *TrustedBatchesRetrieve) syncTrustedBatchesToFrom(ctx context.Context, l
 			s.TrustedStateMngr.Clear()
 		}
 		batchNumberToSync++
+		if !batchToSync.Closed && batchNumberToSync <= lastTrustedStateBatchNumber {
+			log.Infof("%s Batch %d is not closed. so we break synchronization from Trusted Node because can only have 1 WIP batch on state", debugPrefix, batchToSync.Number)
+			return nil
+		}
 	}
 
 	log.Infof("syncTrustedState: Trusted state fully synchronized from %d to %d", latestSyncedBatch, lastTrustedStateBatchNumber)

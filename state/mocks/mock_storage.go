@@ -5549,6 +5549,66 @@ func (_c *StorageMock_GetPreviousBlock_Call) RunAndReturn(run func(context.Conte
 	return _c
 }
 
+// GetPreviousBlockToBlockNumber provides a mock function with given fields: ctx, blockNumber, dbTx
+func (_m *StorageMock) GetPreviousBlockToBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*state.Block, error) {
+	ret := _m.Called(ctx, blockNumber, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetPreviousBlockToBlockNumber")
+	}
+
+	var r0 *state.Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) (*state.Block, error)); ok {
+		return rf(ctx, blockNumber, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, pgx.Tx) *state.Block); ok {
+		r0 = rf(ctx, blockNumber, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*state.Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, pgx.Tx) error); ok {
+		r1 = rf(ctx, blockNumber, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StorageMock_GetPreviousBlockToBlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetPreviousBlockToBlockNumber'
+type StorageMock_GetPreviousBlockToBlockNumber_Call struct {
+	*mock.Call
+}
+
+// GetPreviousBlockToBlockNumber is a helper method to define mock.On call
+//   - ctx context.Context
+//   - blockNumber uint64
+//   - dbTx pgx.Tx
+func (_e *StorageMock_Expecter) GetPreviousBlockToBlockNumber(ctx interface{}, blockNumber interface{}, dbTx interface{}) *StorageMock_GetPreviousBlockToBlockNumber_Call {
+	return &StorageMock_GetPreviousBlockToBlockNumber_Call{Call: _e.mock.On("GetPreviousBlockToBlockNumber", ctx, blockNumber, dbTx)}
+}
+
+func (_c *StorageMock_GetPreviousBlockToBlockNumber_Call) Run(run func(ctx context.Context, blockNumber uint64, dbTx pgx.Tx)) *StorageMock_GetPreviousBlockToBlockNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StorageMock_GetPreviousBlockToBlockNumber_Call) Return(_a0 *state.Block, _a1 error) *StorageMock_GetPreviousBlockToBlockNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StorageMock_GetPreviousBlockToBlockNumber_Call) RunAndReturn(run func(context.Context, uint64, pgx.Tx) (*state.Block, error)) *StorageMock_GetPreviousBlockToBlockNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetProcessingContext provides a mock function with given fields: ctx, batchNumber, dbTx
 func (_m *StorageMock) GetProcessingContext(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*state.ProcessingContext, error) {
 	ret := _m.Called(ctx, batchNumber, dbTx)
@@ -6828,6 +6888,67 @@ func (_c *StorageMock_GetTxsOlderThanNL1BlocksUntilTxHash_Call) Return(_a0 []com
 }
 
 func (_c *StorageMock_GetTxsOlderThanNL1BlocksUntilTxHash_Call) RunAndReturn(run func(context.Context, uint64, common.Hash, pgx.Tx) ([]common.Hash, error)) *StorageMock_GetTxsOlderThanNL1BlocksUntilTxHash_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetUncheckedBlocks provides a mock function with given fields: ctx, fromBlockNumber, toBlockNumber, dbTx
+func (_m *StorageMock) GetUncheckedBlocks(ctx context.Context, fromBlockNumber uint64, toBlockNumber uint64, dbTx pgx.Tx) ([]*state.Block, error) {
+	ret := _m.Called(ctx, fromBlockNumber, toBlockNumber, dbTx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetUncheckedBlocks")
+	}
+
+	var r0 []*state.Block
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, pgx.Tx) ([]*state.Block, error)); ok {
+		return rf(ctx, fromBlockNumber, toBlockNumber, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, uint64, pgx.Tx) []*state.Block); ok {
+		r0 = rf(ctx, fromBlockNumber, toBlockNumber, dbTx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]*state.Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, uint64, pgx.Tx) error); ok {
+		r1 = rf(ctx, fromBlockNumber, toBlockNumber, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// StorageMock_GetUncheckedBlocks_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetUncheckedBlocks'
+type StorageMock_GetUncheckedBlocks_Call struct {
+	*mock.Call
+}
+
+// GetUncheckedBlocks is a helper method to define mock.On call
+//   - ctx context.Context
+//   - fromBlockNumber uint64
+//   - toBlockNumber uint64
+//   - dbTx pgx.Tx
+func (_e *StorageMock_Expecter) GetUncheckedBlocks(ctx interface{}, fromBlockNumber interface{}, toBlockNumber interface{}, dbTx interface{}) *StorageMock_GetUncheckedBlocks_Call {
+	return &StorageMock_GetUncheckedBlocks_Call{Call: _e.mock.On("GetUncheckedBlocks", ctx, fromBlockNumber, toBlockNumber, dbTx)}
+}
+
+func (_c *StorageMock_GetUncheckedBlocks_Call) Run(run func(ctx context.Context, fromBlockNumber uint64, toBlockNumber uint64, dbTx pgx.Tx)) *StorageMock_GetUncheckedBlocks_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(uint64), args[3].(pgx.Tx))
+	})
+	return _c
+}
+
+func (_c *StorageMock_GetUncheckedBlocks_Call) Return(_a0 []*state.Block, _a1 error) *StorageMock_GetUncheckedBlocks_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *StorageMock_GetUncheckedBlocks_Call) RunAndReturn(run func(context.Context, uint64, uint64, pgx.Tx) ([]*state.Block, error)) *StorageMock_GetUncheckedBlocks_Call {
 	_c.Call.Return(run)
 	return _c
 }

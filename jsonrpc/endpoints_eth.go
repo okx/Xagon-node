@@ -75,8 +75,6 @@ func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash
 	return e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		if arg == nil {
 			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 0", nil, false)
-		} else if blockArg == nil {
-			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 1", nil, false)
 		}
 		block, respErr := e.getBlockByArg(ctx, blockArg, dbTx)
 		if respErr != nil {
@@ -120,6 +118,9 @@ func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash
 		if result.Reverted() {
 			data := make([]byte, len(result.ReturnValue))
 			copy(data, result.ReturnValue)
+			if len(data) == 0 {
+				return nil, types.NewRPCError(types.DefaultErrorCode, result.Err.Error())
+			}
 			return nil, types.NewRPCErrorWithData(types.RevertedErrorCode, result.Err.Error(), data)
 		} else if result.Failed() {
 			return nil, types.NewRPCError(types.DefaultErrorCode, result.Err.Error())
@@ -198,6 +199,9 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 		if errors.Is(err, runtime.ErrExecutionReverted) {
 			data := make([]byte, len(returnValue))
 			copy(data, returnValue)
+			if len(data) == 0 {
+				return nil, types.NewRPCError(types.DefaultErrorCode, err.Error())
+			}
 			return nil, types.NewRPCErrorWithData(types.RevertedErrorCode, err.Error(), data)
 		} else if err != nil {
 			return nil, types.NewRPCError(types.DefaultErrorCode, err.Error())

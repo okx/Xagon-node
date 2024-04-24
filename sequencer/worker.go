@@ -23,6 +23,7 @@ type Worker struct {
 	batchConstraints state.BatchConstraintsCfg
 	readyTxsCond     *timeoutCond
 	claimGp          *big.Int
+	wipTx            *TxTracker
 }
 
 // NewWorker creates an init a worker
@@ -58,6 +59,12 @@ func (w *Worker) AddTxTracker(ctx context.Context, tx *TxTracker) (replacedTx *T
 		log.Errorf("outOfCounters error (node level) for tx %s", tx.Hash.String())
 		w.workerMutex.Unlock()
 		return nil, pool.ErrOutOfCounters
+	}
+
+	if (w.wipTx != nil) && (w.wipTx.FromStr == tx.FromStr) && (w.wipTx.Nonce == tx.Nonce) {
+		log.Infof("adding tx %s (nonce %d) from address %s that matches current processing tx %s (nonce %d), rejecting it as duplicated nonce", tx.Hash, tx.Nonce, tx.From, w.wipTx.Hash, w.wipTx.Nonce)
+		w.workerMutex.Unlock()
+		return nil, ErrDuplicatedNonce
 	}
 
 	addr, found := w.pool[tx.FromStr]
@@ -174,6 +181,8 @@ func (w *Worker) MoveTxToNotReady(txHash common.Hash, from common.Address, actua
 	defer w.workerMutex.Unlock()
 	log.Debugf("move tx %s to notReady (from: %s, actualNonce: %d, actualBalance: %s)", txHash.String(), from.String(), actualNonce, actualBalance.String())
 
+	w.resetWipTx(txHash)
+
 	addrQueue, found := w.pool[from.String()]
 	if found {
 		// Sanity check. The txHash must be the readyTx
@@ -194,6 +203,8 @@ func (w *Worker) MoveTxToNotReady(txHash common.Hash, from common.Address, actua
 func (w *Worker) DeleteTx(txHash common.Hash, addr common.Address) {
 	w.workerMutex.Lock()
 	defer w.workerMutex.Unlock()
+
+	w.resetWipTx(txHash)
 
 	addrQueue, found := w.pool[addr.String()]
 	if found {
@@ -293,6 +304,8 @@ func (w *Worker) GetBestFittingTx(resources state.BatchResources) (*TxTracker, e
 	w.workerMutex.Lock()
 	defer w.workerMutex.Unlock()
 
+	w.wipTx = nil
+
 	if w.txSortedList.len() == 0 {
 		return nil, ErrTransactionsListEmpty
 	}
@@ -345,6 +358,7 @@ func (w *Worker) GetBestFittingTx(resources state.BatchResources) (*TxTracker, e
 		if !tx.IsClaimTx {
 			w.claimGp = tx.GasPrice
 		}
+		w.wipTx = tx
 		return tx, nil
 	} else {
 		return nil, ErrNoFittingTransaction
@@ -394,4 +408,10 @@ func (w *Worker) getBaseClaimGp(defaultGp *big.Int) *big.Int {
 		w.claimGp = defaultGp
 	}
 	return w.claimGp
+}
+
+func (w *Worker) resetWipTx(txHash common.Hash) {
+	if (w.wipTx != nil) && (w.wipTx.Hash == txHash) {
+		w.wipTx = nil
+	}
 }

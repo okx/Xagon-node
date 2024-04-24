@@ -265,7 +265,7 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 	rollupID, err := rollupManager.RollupAddressToID(&bind.CallOpts{Pending: false}, l1Config.ZkEVMAddr)
 	if err != nil {
 		log.Debugf("error rollupManager.RollupAddressToID(%s). Error: %w", l1Config.RollupManagerAddr, err)
-		// TODO return error after the upgrade
+		return nil, err
 	}
 	log.Debug("rollupID: ", rollupID)
 
@@ -1515,7 +1515,7 @@ func (etherMan *Client) forceSequencedBatchesEvent(ctx context.Context, vLog typ
 	if err != nil {
 		return err
 	}
-	// TODO completar los datos de forcedBlockHas, forcedGer y forcedTimestamp
+	// TODO complete data forcedBlockHash, forcedGer y forcedTimestamp
 
 	// Read the tx for this batch.
 	tx, err := etherMan.EthClient.TransactionInBlock(ctx, vLog.BlockHash, vLog.TxIndex)
@@ -1818,6 +1818,17 @@ func (etherMan *Client) EstimateGas(ctx context.Context, from common.Address, to
 		Value: value,
 		Data:  data,
 	})
+}
+
+// DepositCount returns deposits count
+func (etherman *Client) DepositCount(ctx context.Context, blockNumber *uint64) (*big.Int, error) {
+	var opts *bind.CallOpts
+	if blockNumber != nil {
+		opts = new(bind.CallOpts)
+		opts.BlockNumber = new(big.Int).SetUint64(*blockNumber)
+	}
+
+	return etherman.GlobalExitRootManager.DepositCount(opts)
 }
 
 // CheckTxWasMined check if a tx was already mined

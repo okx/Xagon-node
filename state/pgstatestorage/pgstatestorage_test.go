@@ -1687,3 +1687,24 @@ func TestUpdateCheckedBlockByNumber(t *testing.T) {
 	require.NoError(t, err)
 	require.False(t, b1.Checked)
 }
+
+func TestGetUncheckedBlocks(t *testing.T) {
+	var err error
+	blockNumber := uint64(61001)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber, Checked: true}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 1, Checked: false}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 2, Checked: true}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 3, Checked: false}, nil)
+	require.NoError(t, err)
+	err = testState.AddBlock(context.Background(), &state.Block{BlockNumber: blockNumber + 4, Checked: false}, nil)
+	require.NoError(t, err)
+
+	blocks, err := testState.GetUncheckedBlocks(context.Background(), blockNumber, blockNumber+3, nil)
+	require.NoError(t, err)
+	require.Equal(t, 2, len(blocks))
+	require.Equal(t, uint64(blockNumber+1), blocks[0].BlockNumber)
+	require.Equal(t, uint64(blockNumber+3), blocks[1].BlockNumber)
+}
