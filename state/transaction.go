@@ -893,7 +893,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 		log.Debug("Estimate gas. Tx not executed")
 	}
 	log.Infof("state-EstimateGas time. getBlock:%vms, getBatch:%vms, getForkID:%vms, getNonce:%vms, getEnd:%vms, internalGas:%vms, exec:%vms",
-		getBlockTime.Milliseconds(), getBatchTime.Milliseconds(), getForkIDTime.Milliseconds(), getNonceTime.Milliseconds(), getEndTime.Milliseconds(), internalGasTime.Milliseconds(), time.Now().Sub(t6).Milliseconds())
+		getBlockTime.Milliseconds(), getBatchTime.Milliseconds(), getForkIDTime.Milliseconds(), getNonceTime.Milliseconds(), getEndTime.Milliseconds(), internalGasTime.Milliseconds(), time.Since(t6).Milliseconds())
 
 	return highEnd, nil, nil
 }
