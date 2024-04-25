@@ -4,8 +4,8 @@ import (
 	"sync"
 )
 
-// PoolTxCounter is the pool tx counter
-type PoolTxCounter struct {
+// PoolReadyTxCounter is the pool tx counter
+type PoolReadyTxCounter struct {
 	// Ready is the number of ready transactions
 	Address map[string]int64
 
@@ -13,17 +13,17 @@ type PoolTxCounter struct {
 	RwMutex sync.RWMutex
 }
 
-var poolTxCounterInst *PoolTxCounter
-var poolTxCounterOnce sync.Once
+var poolReadyTxCounterInst *PoolReadyTxCounter
+var poolReadyTxCounterOnce sync.Once
 
-func getPoolTxCounter() *PoolTxCounter {
-	poolTxCounterOnce.Do(func() {
-		poolTxCounterInst = &PoolTxCounter{}
+func getPoolReadyTxCounter() *PoolReadyTxCounter {
+	poolReadyTxCounterOnce.Do(func() {
+		poolReadyTxCounterInst = &PoolReadyTxCounter{}
 	})
-	return poolTxCounterInst
+	return poolReadyTxCounterInst
 }
 
-func (ptx *PoolTxCounter) set(addr string, count int64) {
+func (ptx *PoolReadyTxCounter) set(addr string, count int64) {
 	ptx.RwMutex.Lock()
 	defer ptx.RwMutex.Unlock()
 	if ptx.Address == nil {
@@ -32,13 +32,14 @@ func (ptx *PoolTxCounter) set(addr string, count int64) {
 	ptx.Address[addr] = count
 }
 
-func (ptx *PoolTxCounter) delete(addr string) {
+func (ptx *PoolReadyTxCounter) delete(addr string) {
 	ptx.RwMutex.Lock()
 	defer ptx.RwMutex.Unlock()
 	delete(ptx.Address, addr)
 }
 
-func (ptx *PoolTxCounter) sum() int64 {
+// Sum returns the sum of the ready tx counter
+func (ptx *PoolReadyTxCounter) Sum() int64 {
 	ptx.RwMutex.RLock()
 	defer ptx.RwMutex.RUnlock()
 	var sum int64

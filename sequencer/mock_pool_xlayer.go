@@ -10,3 +10,7 @@ import (
 func (_m *PoolMock) CountPendingTransactions(ctx context.Context) (uint64, error) {
 	return 0, nil
 }
+
+func (_m *PoolMock) UpdateReadyTxCount(ctx context.Context, count uint64) error {
+	return nil
+}

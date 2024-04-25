@@ -10,7 +10,6 @@ import (
 	zktypes "github.com/0xPolygonHermez/zkevm-node/config/types"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/log"
-	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -213,21 +212,11 @@ func (e *EthEndpoints) getL2BatchTxsTips(ctx context.Context, l2BlockNumber uint
 }
 
 func (e *EthEndpoints) isCongested(ctx context.Context) (bool, error) {
-	var txCount uint64
-	if e.pool != nil && e.pool.IsPendingStatEnabled(ctx) {
-		stat := pool.GetPendingStat()
-		if stat.Total < stat.SkipNonce+stat.BalanceIssue+stat.ErrorNonce {
-			txCount = 0
-		} else {
-			txCount = stat.Total - stat.SkipNonce - stat.BalanceIssue - stat.ErrorNonce
-		}
-	} else {
-		cnt, err := e.pool.CountPendingTransactions(ctx)
-		if err != nil {
-			return false, err
-		}
-		txCount = cnt
+	txCount, err := e.pool.GetReadyTxCount(ctx)
+	if err != nil {
+		return false, err
 	}
+
 	if txCount >= e.cfg.DynamicGP.CongestionTxThreshold {
 		return true, nil
 	}

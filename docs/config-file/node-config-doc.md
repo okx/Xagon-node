@@ -709,7 +709,6 @@ SecretKey=""
 | - [FreeGasAddress](#Pool_FreeGasAddress )                                       | No      | array of string | No         | -          | XLayer config<br />FreeGasAddress is the default free gas address                                    |
 | - [FreeClaimGasLimit](#Pool_FreeClaimGasLimit )                                 | No      | integer         | No         | -          | FreeClaimGasLimit is the max gas allowed use to do a free claim                                      |
 | - [BridgeClaimMethodSigs](#Pool_BridgeClaimMethodSigs )                         | No      | array of string | No         | -          | BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method                            |
-| - [PendingStat](#Pool_PendingStat )                                             | No      | object          | No         | -          | PendingStat is the configuration for the pending statistics                                          |
 
 ### <a name="Pool_IntervalToRefreshBlockedAddresses"></a>7.1. `Pool.IntervalToRefreshBlockedAddresses`
 
@@ -1248,102 +1247,6 @@ FreeClaimGasLimit=150000
 
 **Type:** : `array of string`
 **Description:** BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method
-
-### <a name="Pool_PendingStat"></a>7.18. `[Pool.PendingStat]`
-
-**Type:** : `object`
-**Description:** PendingStat is the configuration for the pending statistics
-
-| Property                                            | Pattern | Type    | Deprecated | Definition | Title/Description |
-| --------------------------------------------------- | ------- | ------- | ---------- | ---------- | ----------------- |
-| - [Enable](#Pool_PendingStat_Enable )               | No      | boolean | No         | -          | -                 |
-| - [Interval](#Pool_PendingStat_Interval )           | No      | string  | No         | -          | Duration          |
-| - [StaleInterval](#Pool_PendingStat_StaleInterval ) | No      | string  | No         | -          | Duration          |
-| - [CacheInternal](#Pool_PendingStat_CacheInternal ) | No      | string  | No         | -          | Duration          |
-
-#### <a name="Pool_PendingStat_Enable"></a>7.18.1. `Pool.PendingStat.Enable`
-
-**Type:** : `boolean`
-
-**Default:** `false`
-
-**Example setting the default value** (false):
-```
-[Pool.PendingStat]
-Enable=false
-```
-
-#### <a name="Pool_PendingStat_Interval"></a>7.18.2. `Pool.PendingStat.Interval`
-
-**Title:** Duration
-
-**Type:** : `string`
-
-**Default:** `"0s"`
-
-**Examples:** 
-
-```json
-"1m"
-```
-
-```json
-"300ms"
-```
-
-**Example setting the default value** ("0s"):
-```
-[Pool.PendingStat]
-Interval="0s"
-```
-
-#### <a name="Pool_PendingStat_StaleInterval"></a>7.18.3. `Pool.PendingStat.StaleInterval`
-
-**Title:** Duration
-
-**Type:** : `string`
-
-**Default:** `"0s"`
-
-**Examples:** 
-
-```json
-"1m"
-```
-
-```json
-"300ms"
-```
-
-**Example setting the default value** ("0s"):
-```
-[Pool.PendingStat]
-StaleInterval="0s"
-```
-
-#### <a name="Pool_PendingStat_CacheInternal"></a>7.18.4. `Pool.PendingStat.CacheInternal`
-
-**Title:** Duration
-
-**Type:** : `string`
-
-**Default:** `"0s"`
-
-**Examples:** 
-
-```json
-"1m"
-```
-
-```json
-"300ms"
-```
-
-**Example setting the default value** ("0s"):
-```
-[Pool.PendingStat]
-CacheInternal="0s"
-```
 
 ## <a name="RPC"></a>8. `[RPC]`
 

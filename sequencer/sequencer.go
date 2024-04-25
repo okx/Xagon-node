@@ -104,6 +104,8 @@ func (s *Sequencer) Start(ctx context.Context) {
 
 	go s.countPendingTx()
 
+	go s.countReadyTx()
+
 	if s.streamServer != nil {
 		go s.sendDataToStreamer(s.cfg.StreamServer.ChainID)
 	}

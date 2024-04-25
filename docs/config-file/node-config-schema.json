@@ -471,44 +471,6 @@
 					},
 					"type": "array",
 					"description": "BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method"
-				},
-				"PendingStat": {
-					"properties": {
-						"Enable": {
-							"type": "boolean",
-							"default": false
-						},
-						"Interval": {
-							"type": "string",
-							"title": "Duration",
-							"default": "0s",
-							"examples": [
-								"1m",
-								"300ms"
-							]
-						},
-						"StaleInterval": {
-							"type": "string",
-							"title": "Duration",
-							"default": "0s",
-							"examples": [
-								"1m",
-								"300ms"
-							]
-						},
-						"CacheInternal": {
-							"type": "string",
-							"title": "Duration",
-							"default": "0s",
-							"examples": [
-								"1m",
-								"300ms"
-							]
-						}
-					},
-					"additionalProperties": false,
-					"type": "object",
-					"description": "PendingStat is the configuration for the pending statistics"
 				}
 			},
 			"additionalProperties": false,

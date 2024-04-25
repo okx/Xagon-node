@@ -84,8 +84,3 @@ func (p *Pool) GetMinSuggestedGasPriceWithDelta(ctx context.Context, delta time.
 
 	return p.storage.MinL2GasPriceSince(ctx, fromTimestamp)
 }
-
-// IsPendingStatEnabled checks if the pending stat is enabled
-func (p *Pool) IsPendingStatEnabled(ctx context.Context) bool {
-	return getEnablePendingStat(p.cfg.PendingStat.Enable)
-}

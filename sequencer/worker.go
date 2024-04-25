@@ -112,7 +112,7 @@ func (w *Worker) AddTxTracker(ctx context.Context, tx *TxTracker) (replacedTx *T
 	if newReadyTx != nil {
 		log.Debugf("newReadyTx %s (nonce: %d, gasPrice: %d, addr: %s) added to TxSortedList", newReadyTx.HashStr, newReadyTx.Nonce, newReadyTx.GasPrice, tx.FromStr)
 		w.addTxToSortedList(newReadyTx)
-		getPoolTxCounter().set(addr.fromStr, addr.GetTxCount())
+		getPoolReadyTxCounter().set(addr.fromStr, addr.GetTxCount())
 	}
 
 	if repTx != nil {
@@ -137,7 +137,7 @@ func (w *Worker) applyAddressUpdate(from common.Address, fromNonce *uint64, from
 		if newReadyTx != nil {
 			log.Debugf("newReadyTx %s (nonce: %d, gasPrice: %d) added to TxSortedList", newReadyTx.Hash.String(), newReadyTx.Nonce, newReadyTx.GasPrice)
 			w.addTxToSortedList(newReadyTx)
-			getPoolTxCounter().set(addrQueue.fromStr, addrQueue.GetTxCount())
+			getPoolReadyTxCounter().set(addrQueue.fromStr, addrQueue.GetTxCount())
 		}
 
 		return newReadyTx, prevReadyTx, txsToDelete
@@ -205,7 +205,7 @@ func (w *Worker) DeleteTx(txHash common.Hash, addr common.Address) {
 			log.Debugf("tx %s deleted from TxSortedList", deletedReadyTx.Hash.String())
 			w.txSortedList.delete(deletedReadyTx)
 
-			getPoolTxCounter().set(addrQueue.fromStr, addrQueue.GetTxCount())
+			getPoolReadyTxCounter().set(addrQueue.fromStr, addrQueue.GetTxCount())
 		}
 	} else {
 		log.Warnf("addrQueue %s not found", addr.String())
