@@ -31,6 +31,7 @@ func (e *txSortedList) add(tx *TxTracker) bool {
 	if _, found := e.list[tx.HashStr]; !found {
 		e.list[tx.HashStr] = tx
 		e.addSort(tx)
+
 		return true
 	}
 	return false
