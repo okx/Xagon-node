@@ -96,8 +96,6 @@ func NewPool(cfg Config, batchConstraintsCfg state.BatchConstraintsCfg, s storag
 		}
 	}(&cfg, p)
 
-	p.startPendingStat()
-
 	return p
 }
 

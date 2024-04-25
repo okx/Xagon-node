@@ -66,7 +66,6 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().setFreeGasAddresses(apolloConfig.FreeGasAddress)
 	getApolloConfig().EnableWhitelist = apolloConfig.EnableWhitelist
 	getApolloConfig().setBridgeClaimMethods(apolloConfig.BridgeClaimMethodSigs)
-	getApolloConfig().EnablePendingStat = apolloConfig.PendingStat.Enable
 	getApolloConfig().Unlock()
 }
 
@@ -124,14 +123,4 @@ func getEnableWhitelist(enableWhitelist bool) bool {
 	}
 
 	return enableWhitelist
-}
-
-func getEnablePendingStat(enablePendingStat bool) bool {
-	if getApolloConfig().enable() {
-		getApolloConfig().RLock()
-		defer getApolloConfig().RUnlock()
-		return getApolloConfig().EnablePendingStat
-	}
-
-	return enablePendingStat
 }

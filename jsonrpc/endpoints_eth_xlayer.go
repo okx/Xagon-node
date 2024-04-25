@@ -16,7 +16,6 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
-	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -401,8 +400,23 @@ func (e *EthEndpoints) getMinPriceFromSequencerNode() (interface{}, types.Error)
 
 // GetPendingStat returns the pending stat
 func (e *EthEndpoints) GetPendingStat() (interface{}, types.Error) {
-	if e.isDisabled("eth_getPendingStat") || (e.pool != nil && !e.pool.IsPendingStatEnabled(context.Background())) {
+	if e.isDisabled("eth_getPendingStat") {
 		return RPCErrorResponse(types.DefaultErrorCode, "not supported yet", nil, true)
 	}
-	return pool.GetPendingStat(), nil
+
+	pendingTotal, err := e.pool.CountPendingTransactions(context.Background())
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, "failed to get pending transactions count", err, true)
+	}
+	readyTxCount, err := e.pool.GetReadyTxCount(context.Background())
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, "failed to get ready tx count", err, true)
+	}
+	return struct {
+		Total        uint64 `json:"total"`
+		ReadyTxCount uint64 `json:"readyTxCount"`
+	}{
+		Total:        pendingTotal,
+		ReadyTxCount: readyTxCount,
+	}, nil
 }
