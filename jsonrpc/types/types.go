@@ -263,6 +263,33 @@ type Block struct {
 	BlockInfoRoot   *common.Hash        `json:"blockInfoRoot,omitempty"`
 }
 
+type BlockAdapter struct {
+	BaseFeePerGas   string              `json:"baseFeePerGas"`
+	BlobGasUsed     string              `json:"blobGasUsed"`
+	ParentHash      common.Hash         `json:"parentHash"`
+	Sha3Uncles      common.Hash         `json:"sha3Uncles"`
+	Miner           *common.Address     `json:"miner"`
+	StateRoot       common.Hash         `json:"stateRoot"`
+	TxRoot          common.Hash         `json:"transactionsRoot"`
+	ReceiptsRoot    common.Hash         `json:"receiptsRoot"`
+	LogsBloom       types.Bloom         `json:"logsBloom"`
+	Difficulty      ArgUint64           `json:"difficulty"`
+	TotalDifficulty *ArgUint64          `json:"totalDifficulty"`
+	Size            ArgUint64           `json:"size"`
+	Number          ArgUint64           `json:"number"`
+	GasLimit        ArgUint64           `json:"gasLimit"`
+	GasUsed         ArgUint64           `json:"gasUsed"`
+	Timestamp       ArgUint64           `json:"timestamp"`
+	ExtraData       ArgBytes            `json:"extraData"`
+	MixHash         common.Hash         `json:"mixHash"`
+	Nonce           *ArgBytes           `json:"nonce"`
+	Hash            *common.Hash        `json:"hash"`
+	Transactions    []TransactionOrHash `json:"transactions"`
+	Uncles          []common.Hash       `json:"uncles"`
+	GlobalExitRoot  *common.Hash        `json:"globalExitRoot,omitempty"`
+	BlockInfoRoot   *common.Hash        `json:"blockInfoRoot,omitempty"`
+}
+
 // NewBlock creates a Block instance
 func NewBlock(ctx context.Context, st StateInterface, hash *common.Hash, b *state.L2Block, receipts []types.Receipt, fullTx, includeReceipts bool, includeExtraInfo *bool, dbTx pgx.Tx) (*Block, error) {
 	h := b.Header()
@@ -350,6 +377,35 @@ func NewBlock(ctx context.Context, st StateInterface, hash *common.Hash, b *stat
 	}
 
 	return res, nil
+}
+
+func (b *Block) Format() *BlockAdapter {
+	return &BlockAdapter{
+		BaseFeePerGas:   "0x0",
+		BlobGasUsed:     "0x0",
+		ParentHash:      b.ParentHash,
+		Sha3Uncles:      b.Sha3Uncles,
+		Miner:           b.Miner,
+		StateRoot:       b.StateRoot,
+		TxRoot:          b.TxRoot,
+		ReceiptsRoot:    b.ReceiptsRoot,
+		LogsBloom:       b.LogsBloom,
+		Difficulty:      b.Difficulty,
+		TotalDifficulty: b.TotalDifficulty,
+		Size:            b.Size,
+		Number:          b.Number,
+		GasLimit:        b.GasLimit,
+		GasUsed:         b.GasUsed,
+		Timestamp:       b.Timestamp,
+		ExtraData:       b.ExtraData,
+		MixHash:         b.MixHash,
+		Nonce:           b.Nonce,
+		Hash:            b.Hash,
+		Transactions:    b.Transactions,
+		Uncles:          b.Uncles,
+		GlobalExitRoot:  b.GlobalExitRoot,
+		BlockInfoRoot:   b.BlockInfoRoot,
+	}
 }
 
 // Batch structure

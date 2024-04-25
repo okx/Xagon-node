@@ -365,7 +365,8 @@ func (e *EthEndpoints) GetBlockByHash(hash types.ArgHash, fullTx bool, includeEx
 			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't build block response for block by hash %v", hash.Hash()), err, true)
 		}
 
-		return rpcBlock, nil
+		res := rpcBlock.Format()
+		return res, nil
 	})
 }
 
@@ -395,7 +396,8 @@ func (e *EthEndpoints) GetBlockByNumber(number types.BlockNumber, fullTx bool, i
 			rpcBlock.Nonce = nil
 			rpcBlock.TotalDifficulty = nil
 
-			return rpcBlock, nil
+			res := rpcBlock.Format()
+			return res, nil
 		}
 		var err error
 		blockNumber, rpcErr := number.GetNumericBlockNumber(ctx, e.state, e.etherman, dbTx)
@@ -424,8 +426,8 @@ func (e *EthEndpoints) GetBlockByNumber(number types.BlockNumber, fullTx bool, i
 		if err != nil {
 			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't build block response for block by number %v", blockNumber), err, true)
 		}
-
-		return rpcBlock, nil
+		res := rpcBlock.Format()
+		return res, nil
 	})
 }
 
