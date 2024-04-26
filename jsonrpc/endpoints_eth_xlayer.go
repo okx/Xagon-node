@@ -296,7 +296,7 @@ func (e *EthEndpoints) GetBlockInternalTransactionsV2(number types.BlockNumber) 
 		}
 
 		var blockInternalTxs []interface{}
-		for k, ret := range blockResult {
+		for _, ret := range blockResult {
 			r, stderr := ret.TraceResult.MarshalJSON()
 			if stderr != nil {
 				return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
@@ -306,7 +306,7 @@ func (e *EthEndpoints) GetBlockInternalTransactionsV2(number types.BlockNumber) 
 			if stderr != nil {
 				return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
 			}
-			blockInternalTxs[k] = internalTxTraceToInnerTxs(of)
+			blockInternalTxs = append(blockInternalTxs, internalTxTraceToInnerTxs(of))
 		}
 		return blockInternalTxs, nil
 	})
