@@ -146,7 +146,6 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 		// Send Batch to the Executor
 		startTime = time.Now()
 		processBatchResponse, err := s.executorClient.ProcessBatch(ctx, processBatchRequest)
-		fmt.Printf("------ProcessBatch response:%+v\n", processBatchResponse)
 		endTime = time.Now()
 		if err != nil {
 			return nil, err
@@ -168,7 +167,6 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 		}
 
 		convertedResponse, err := s.convertToProcessBatchResponse(processBatchResponse)
-		fmt.Printf("------convertToProcessBatchResponse response:%+v\n", convertedResponse)
 		if err != nil {
 			return nil, err
 		}
@@ -304,7 +302,6 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 		// Send Batch to the Executor
 		startTime = time.Now()
 		processBatchResponseV2, err := s.executorClient.ProcessBatchV2(ctx, processBatchRequestV2)
-		fmt.Printf("------ProcessBatch V2 response:%+v\n", processBatchResponseV2)
 		endTime = time.Now()
 		if err != nil {
 			return nil, err
@@ -327,7 +324,6 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 		}
 
 		convertedResponse, err := s.convertToProcessBatchResponseV2(processBatchResponseV2)
-		fmt.Printf("------convertToProcessBatchResponse V2 response:TransactionResponses:%v, %+v\n", len(convertedResponse.BlockResponses[0].TransactionResponses), convertedResponse.BlockResponses[0].TransactionResponses)
 		if err != nil {
 			return nil, err
 		}
