@@ -1,14 +1,16 @@
 package sequencer
 
-func (a *addrQueue) GetTxCount() int64 {
+func (a *addrQueue) GetTxCount() uint64 {
 	if a == nil {
 		return 0
 	}
-	var readyTxCount, notReadyTxCount int64
+	var readyTxCount uint64
 	if a.readyTx != nil {
 		readyTxCount = 1
 	}
-	notReadyTxCount = int64(len(a.notReadyTxs))
+	notReadyTxCount := uint64(len(a.notReadyTxs))
+	forcedTxCount := uint64(len(a.forcedTxs))
+	pendingTxsToStoreCount := uint64(len(a.pendingTxsToStore))
 
-	return readyTxCount + notReadyTxCount
+	return readyTxCount + notReadyTxCount + forcedTxCount + pendingTxsToStoreCount
 }

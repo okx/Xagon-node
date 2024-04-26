@@ -94,4 +94,5 @@ type workerInterface interface {
 	NewTxTracker(tx pool.Transaction, usedZKcounters state.ZKCounters, reservedZKCouners state.ZKCounters, ip string) (*TxTracker, error)
 	AddForcedTx(txHash common.Hash, addr common.Address)
 	DeleteForcedTx(txHash common.Hash, addr common.Address)
+	CountReadyTx() uint64
 }

@@ -446,6 +446,8 @@ func (f *finalizer) storeL2Block(ctx context.Context, l2Block *L2Block) error {
 func (f *finalizer) finalizeWIPL2Block(ctx context.Context) {
 	log.Debugf("finalizing WIP L2 block [%d]", f.wipL2Block.trackingNum)
 
+	getPoolReadyTxCounter().setReadyTxCount(f.workerIntf.CountReadyTx())
+
 	prevTimestamp := f.wipL2Block.timestamp
 	prevL1InfoTreeIndex := f.wipL2Block.l1InfoTreeExitRoot.L1InfoTreeIndex
 

@@ -23,6 +23,8 @@ type Worker struct {
 	batchConstraints state.BatchConstraintsCfg
 	readyTxsCond     *timeoutCond
 	claimGp          *big.Int
+
+	readyTxCounter map[string]uint64
 }
 
 // NewWorker creates an init a worker
@@ -33,6 +35,7 @@ func NewWorker(state stateInterface, constraints state.BatchConstraintsCfg, read
 		state:            state,
 		batchConstraints: constraints,
 		readyTxsCond:     readyTxsCond,
+		readyTxCounter:   make(map[string]uint64),
 		claimGp:          new(big.Int),
 	}
 
@@ -108,11 +111,12 @@ func (w *Worker) AddTxTracker(ctx context.Context, tx *TxTracker) (replacedTx *T
 	if prevReadyTx != nil {
 		log.Debugf("prevReadyTx %s (nonce: %d, gasPrice: %d, addr: %s) deleted from TxSortedList", prevReadyTx.HashStr, prevReadyTx.Nonce, prevReadyTx.GasPrice, tx.FromStr)
 		w.txSortedList.delete(prevReadyTx)
+		w.deleteReadyTxCounter(prevReadyTx.FromStr)
 	}
 	if newReadyTx != nil {
 		log.Debugf("newReadyTx %s (nonce: %d, gasPrice: %d, addr: %s) added to TxSortedList", newReadyTx.HashStr, newReadyTx.Nonce, newReadyTx.GasPrice, tx.FromStr)
 		w.addTxToSortedList(newReadyTx)
-		getPoolReadyTxCounter().set(addr.fromStr, addr.GetTxCount())
+		w.setReadyTxCounter(addr.fromStr, addr.GetTxCount())
 	}
 
 	if repTx != nil {
@@ -133,11 +137,12 @@ func (w *Worker) applyAddressUpdate(from common.Address, fromNonce *uint64, from
 		if prevReadyTx != nil {
 			log.Debugf("prevReadyTx %s (nonce: %d, gasPrice: %d) deleted from TxSortedList", prevReadyTx.Hash.String(), prevReadyTx.Nonce, prevReadyTx.GasPrice)
 			w.txSortedList.delete(prevReadyTx)
+			w.deleteReadyTxCounter(prevReadyTx.FromStr)
 		}
 		if newReadyTx != nil {
 			log.Debugf("newReadyTx %s (nonce: %d, gasPrice: %d) added to TxSortedList", newReadyTx.Hash.String(), newReadyTx.Nonce, newReadyTx.GasPrice)
 			w.addTxToSortedList(newReadyTx)
-			getPoolReadyTxCounter().set(addrQueue.fromStr, addrQueue.GetTxCount())
+			w.setReadyTxCounter(addrQueue.fromStr, addrQueue.GetTxCount())
 		}
 
 		return newReadyTx, prevReadyTx, txsToDelete
@@ -204,8 +209,7 @@ func (w *Worker) DeleteTx(txHash common.Hash, addr common.Address) {
 		if deletedReadyTx != nil {
 			log.Debugf("tx %s deleted from TxSortedList", deletedReadyTx.Hash.String())
 			w.txSortedList.delete(deletedReadyTx)
-
-			getPoolReadyTxCounter().set(addrQueue.fromStr, addrQueue.GetTxCount())
+			w.deleteReadyTxCounter(deletedReadyTx.FromStr)
 		}
 	} else {
 		log.Warnf("addrQueue %s not found", addr.String())
@@ -346,7 +350,7 @@ func (w *Worker) GetBestFittingTx(resources state.BatchResources) (*TxTracker, e
 	wg.Wait()
 
 	if foundAt != -1 {
-		log.Debugf("best fitting tx %s found at index %d with gasPrice %d", tx.HashStr, foundAt, tx.GasPrice)
+		log.Infof("best fitting tx %s found at index %d with gasPrice %d", tx.HashStr, foundAt, tx.GasPrice)
 		if !tx.IsClaimTx {
 			w.claimGp = tx.GasPrice
 		}
@@ -370,6 +374,7 @@ func (w *Worker) ExpireTransactions(maxTime time.Duration) []*TxTracker {
 
 		if prevReadyTx != nil {
 			w.txSortedList.delete(prevReadyTx)
+			w.deleteReadyTxCounter(prevReadyTx.FromStr)
 		}
 
 		/*if addrQueue.IsEmpty() {

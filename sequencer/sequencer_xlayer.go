@@ -24,7 +24,7 @@ func (s *Sequencer) countPendingTx() {
 }
 
 func (s *Sequencer) updateReadyTxCount() {
-	err := s.pool.UpdateReadyTxCount(context.Background(), uint64(getPoolReadyTxCounter().Sum()))
+	err := s.pool.UpdateReadyTxCount(context.Background(), getPoolReadyTxCounter().getReadyTxCount())
 	if err != nil {
 		log.Errorf("error adding ready tx count: %v", err)
 	}
