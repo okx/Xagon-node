@@ -277,7 +277,7 @@ func (s *State) monitorNewL2Blocks() {
 			}
 			lastL2BlockNumberSeen = block.NumberU64()
 			log.Debugf("[monitorNewL2Blocks] NewL2BlockEvent for block %v took %v to be sent", block.NumberU64(), time.Since(start))
-			log.Infof("new l2 block detected: number %v, hash %v", block.NumberU64(), block.Hash().String())
+			log.Infof("new l2 block detected: number %v, tx count: %v, hash %v", block.NumberU64(), len(block.Transactions()), block.Hash().String())
 		}
 
 		// interval to check for new l2 blocks
