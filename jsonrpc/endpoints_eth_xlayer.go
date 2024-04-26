@@ -264,6 +264,54 @@ func (e *EthEndpoints) GetBlockInternalTransactions(hash types.ArgHash) (interfa
 	return blockInternalTxs, nil
 }
 
+// GetBlockInternalTransactionsV2 returns internal transactions by block number
+func (e *EthEndpoints) GetBlockInternalTransactionsV2(number types.BlockNumber) (interface{}, types.Error) {
+	return e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
+		if number == types.PendingBlockNumber {
+			return RPCErrorResponse(types.DefaultErrorCode, "failed to pending block", fmt.Errorf("not support pending block %v", number), true)
+		}
+
+		blockNumber, rpcErr := number.GetNumericBlockNumber(ctx, e.state, e.etherman, dbTx)
+		if rpcErr != nil {
+			return nil, rpcErr
+		}
+
+		traceCfg := defaultTraceConfig
+		tracer := "callTracer"
+		traceCfg.Tracer = &tracer
+		stateTraceConfig := state.TraceConfig{
+			DisableStack:     traceCfg.DisableStack,
+			DisableStorage:   traceCfg.DisableStorage,
+			EnableMemory:     traceCfg.EnableMemory,
+			EnableReturnData: traceCfg.EnableReturnData,
+			Tracer:           traceCfg.Tracer,
+			TracerConfig:     traceCfg.TracerConfig,
+		}
+
+		blockResult, err := e.state.DebugBlock(ctx, blockNumber, stateTraceConfig, dbTx)
+		if err != nil {
+			errorMessage := "failed to get trace"
+			log.Errorf("%v: %v", errorMessage, err)
+			return nil, types.NewRPCError(types.DefaultErrorCode, errorMessage)
+		}
+
+		var blockInternalTxs []interface{}
+		for k, ret := range blockResult {
+			r, stderr := ret.TraceResult.MarshalJSON()
+			if stderr != nil {
+				return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
+			}
+			var of okFrame
+			stderr = json.Unmarshal(r, &of)
+			if stderr != nil {
+				return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
+			}
+			blockInternalTxs[k] = internalTxTraceToInnerTxs(of)
+		}
+		return blockInternalTxs, nil
+	})
+}
+
 func (e *EthEndpoints) getGasEstimationWithFactorXLayer(gasEstimation uint64) uint64 {
 	gasEstimationWithFactor := gasEstimation
 	var gasLimitFactor float64
