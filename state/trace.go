@@ -335,7 +335,7 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 		}
 
 		convertedResponse, err := s.convertToProcessBatchResponseV2(processBatchResponseV2)
-		fmt.Printf("------convertToProcessBatchResponse V2 response:%+v\n", convertedResponse)
+		fmt.Printf("------convertToProcessBatchResponse V2 response:TransactionResponses:%v, %+v\n", len(convertedResponse.BlockResponses[0].TransactionResponses), convertedResponse.BlockResponses[0].TransactionResponses)
 		if err != nil {
 			return nil, err
 		}
