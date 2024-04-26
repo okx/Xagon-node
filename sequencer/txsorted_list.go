@@ -40,6 +40,7 @@ func (e *txSortedList) add(tx *TxTracker) bool {
 func (e *txSortedList) delete(tx *TxTracker) bool {
 	e.mutex.Lock()
 	defer e.mutex.Unlock()
+	getPoolReadyTxCounter().delete(tx.FromStr)
 
 	if tx, found := e.list[tx.HashStr]; found {
 		sLen := len(e.sorted)

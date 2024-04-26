@@ -203,8 +203,6 @@ func (w *Worker) DeleteTx(txHash common.Hash, addr common.Address) {
 		if deletedReadyTx != nil {
 			log.Debugf("tx %s deleted from TxSortedList", deletedReadyTx.Hash.String())
 			w.txSortedList.delete(deletedReadyTx)
-
-			getPoolReadyTxCounter().set(addrQueue.fromStr, addrQueue.GetTxCount())
 		}
 	} else {
 		log.Warnf("addrQueue %s not found", addr.String())

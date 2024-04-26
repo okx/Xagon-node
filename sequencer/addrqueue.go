@@ -191,8 +191,6 @@ func (a *addrQueue) updateCurrentNonceBalance(nonce *uint64, balance *big.Int) (
 		if (a.readyTx.Nonce != a.currentNonce) || (a.currentBalance.Cmp(a.readyTx.Cost) < 0) {
 			oldReadyTx = a.readyTx
 			a.readyTx = nil
-
-			getPoolReadyTxCounter().delete(oldReadyTx.FromStr)
 		}
 	}
 
@@ -205,8 +203,6 @@ func (a *addrQueue) updateCurrentNonceBalance(nonce *uint64, balance *big.Int) (
 				a.readyTx = nrTx
 				log.Infof("set notReadyTx %s as readyTx for addrQueue %s", nrTx.HashStr, a.fromStr)
 				delete(a.notReadyTxs, a.currentNonce)
-
-				getPoolReadyTxCounter().set(a.fromStr, a.GetTxCount())
 			}
 		}
 	}
@@ -215,8 +211,6 @@ func (a *addrQueue) updateCurrentNonceBalance(nonce *uint64, balance *big.Int) (
 	if oldReadyTx != nil && oldReadyTx.Nonce > a.currentNonce {
 		log.Infof("set readyTx %s as notReadyTx from addrQueue %s", oldReadyTx.HashStr, a.fromStr)
 		a.notReadyTxs[oldReadyTx.Nonce] = oldReadyTx
-
-		getPoolReadyTxCounter().delete(oldReadyTx.FromStr)
 	}
 
 	return a.readyTx, oldReadyTx, txsToDelete
