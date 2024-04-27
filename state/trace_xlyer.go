@@ -46,19 +46,17 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 	}
 	oldStateRoot = previousL2Block.Root()
 
-	var tx *types.Transaction
-	var receipt *types.Receipt
-	var transactionHash common.Hash
+	var lastTxInBlock *types.Transaction
+	var lastTxReceiptInBlock *types.Receipt
 	if len(l2Block.Transactions()) > 0 {
 		// gets the last transaction
-		tx = l2Block.Transactions()[len(l2Block.Transactions())-1]
+		lastTxInBlock = l2Block.Transactions()[len(l2Block.Transactions())-1]
 		if err != nil {
 			return nil, err
 		}
 
-		transactionHash = tx.Hash()
 		// gets the last tx receipt
-		receipt, err = s.GetTransactionReceipt(ctx, transactionHash, dbTx)
+		lastTxReceiptInBlock, err = s.GetTransactionReceipt(ctx, lastTxInBlock.Hash(), dbTx)
 		if err != nil {
 			return nil, err
 		}
@@ -70,8 +68,8 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 	var effectivePercentage []uint8
 	for i := 0; i < len(l2Block.Transactions()); i++ {
 		txsToEncode = append(txsToEncode, *l2Block.Transactions()[i])
-		txGasPrice := tx.GasPrice()
-		effectiveGasPrice := receipt.EffectiveGasPrice
+		txGasPrice := lastTxInBlock.GasPrice()
+		effectiveGasPrice := lastTxReceiptInBlock.EffectiveGasPrice
 		egpPercentage, err := CalculateEffectiveGasPricePercentage(txGasPrice, effectiveGasPrice)
 		if errors.Is(err, ErrEffectiveGasPriceEmpty) {
 			egpPercentage = MaxEffectivePercentage
@@ -94,7 +92,7 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 	var startTime, endTime time.Time
 	if forkId < FORKID_ETROG {
 		traceConfigRequest := &executor.TraceConfig{
-			TxHashToGenerateFullTrace: transactionHash.Bytes(),
+			TxHashToGenerateFullTrace: lastTxInBlock.Hash().Bytes(),
 			// set the defaults to the maximum information we can have.
 			// this is needed to process custom tracers later
 			DisableStorage:   cFalse,
@@ -173,7 +171,7 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 		responses = convertedResponse.BlockResponses[0].TransactionResponses
 	} else {
 		traceConfigRequestV2 := &executor.TraceConfigV2{
-			TxHashToGenerateFullTrace: transactionHash.Bytes(),
+			TxHashToGenerateFullTrace: lastTxInBlock.Hash().Bytes(),
 			// set the defaults to the maximum information we can have.
 			// this is needed to process custom tracers later
 			DisableStorage:   cFalse,
@@ -352,7 +350,7 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 			return nil, err
 		}
 
-		ctx := instrumentation.Context{
+		context := instrumentation.Context{
 			From:         senderAddress.String(),
 			Input:        response.Tx.Data(),
 			Gas:          response.Tx.Gas(),
@@ -366,15 +364,15 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 
 		// Fill trace context
 		if response.Tx.To() == nil {
-			ctx.Type = "CREATE"
-			ctx.To = result.CreateAddress.Hex()
+			context.Type = "CREATE"
+			context.To = result.CreateAddress.Hex()
 		} else {
-			ctx.Type = "CALL"
-			ctx.To = response.Tx.To().Hex()
+			context.Type = "CALL"
+			context.To = response.Tx.To().Hex()
 		}
-		result.FullTrace.Context = ctx
+		result.FullTrace.Context = context
 
-		gasPrice, ok := new(big.Int).SetString(ctx.GasPrice, encoding.Base10)
+		gasPrice, ok := new(big.Int).SetString(context.GasPrice, encoding.Base10)
 		if !ok {
 			log.Errorf("debug transaction: failed to parse gasPrice")
 			return nil, fmt.Errorf("failed to parse gasPrice")
@@ -383,12 +381,11 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 		// select and prepare tracer
 		var tracer tracers.Tracer
 		tracerContext := &tracers.Context{
-			BlockHash:   receipt.BlockHash,
-			BlockNumber: receipt.BlockNumber,
+			BlockHash:   l2Block.Hash(),
+			BlockNumber: l2Block.Number(),
 			TxIndex:     index,
 			TxHash:      response.TxHash,
 		}
-		fmt.Printf("====== TxIndex: %d, TxHash: %s, TxHashL2_V2: %s", index, response.TxHash.String(), response.TxHashL2_V2.String())
 
 		if traceConfig.IsDefaultTracer() {
 			structLoggerCfg := structlogger.Config{
@@ -398,6 +395,10 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 				EnableReturnData: traceConfig.EnableReturnData,
 			}
 			tracer := structlogger.NewStructLogger(structLoggerCfg)
+			receipt, err := s.GetTransactionReceipt(ctx, response.TxHash, dbTx)
+			if err != nil {
+				return nil, err
+			}
 			traceResult, err := tracer.ParseTrace(result, *receipt)
 			if err != nil {
 				return nil, err
