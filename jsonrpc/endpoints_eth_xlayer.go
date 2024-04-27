@@ -268,7 +268,8 @@ func (e *EthEndpoints) GetBlockInternalTransactions(hash types.ArgHash) (interfa
 func (e *EthEndpoints) GetBlockInternalTransactionsV2(number types.BlockNumber) (interface{}, types.Error) {
 	return e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		if number == types.PendingBlockNumber {
-			return RPCErrorResponse(types.DefaultErrorCode, "failed to pending block", fmt.Errorf("not support pending block %v", number), true)
+			return RPCErrorResponse(types.DefaultErrorCode, "failed to pending block",
+				fmt.Errorf("not support pending block %v", number), true)
 		}
 
 		blockNumber, rpcErr := number.GetNumericBlockNumber(ctx, e.state, e.etherman, dbTx)
@@ -290,9 +291,8 @@ func (e *EthEndpoints) GetBlockInternalTransactionsV2(number types.BlockNumber) 
 
 		blockResult, err := e.state.DebugBlock(ctx, blockNumber, stateTraceConfig, dbTx)
 		if err != nil {
-			errorMessage := "failed to get trace"
-			log.Errorf("%v: %v", errorMessage, err)
-			return nil, types.NewRPCError(types.DefaultErrorCode, errorMessage)
+			log.Errorf("%v: %v", "failed to get trace", err)
+			return nil, types.NewRPCError(types.DefaultErrorCode, err.Error())
 		}
 
 		var blockInternalTxs [][]*InnerTx

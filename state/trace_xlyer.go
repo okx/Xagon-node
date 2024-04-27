@@ -206,7 +206,7 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 		if isInjectedTx {
 			transactions = append([]byte{}, batch.BatchL2Data...)
 		} else {
-			// build the raw batch so we can get the index l1 info tree for the l2 block
+			// build the raw batch, so we can get the index l1 info tree for the l2 block
 			rawBatch, err := DecodeBatchV2(batch.BatchL2Data)
 			if err != nil {
 				log.Errorf("error decoding BatchL2Data for batch %d, error: %v", batch.BatchNumber, err)
