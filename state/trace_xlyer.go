@@ -336,7 +336,7 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 	}
 
 	var results []*runtime.ExecutionResult
-	for _, response := range responses {
+	for index, response := range responses {
 		result := &runtime.ExecutionResult{
 			CreateAddress: response.CreateAddress,
 			GasLeft:       response.GasLeft,
@@ -347,35 +347,34 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 			Err:           response.RomError,
 		}
 
-		senderAddress, err := GetSender(*tx)
+		senderAddress, err := GetSender(response.Tx)
 		if err != nil {
 			return nil, err
 		}
 
-		context := instrumentation.Context{
+		ctx := instrumentation.Context{
 			From:         senderAddress.String(),
-			Input:        tx.Data(),
-			Gas:          tx.Gas(),
-			Value:        tx.Value(),
+			Input:        response.Tx.Data(),
+			Gas:          response.Tx.Gas(),
+			Value:        response.Tx.Value(),
 			Output:       result.ReturnValue,
-			GasPrice:     tx.GasPrice().String(),
+			GasPrice:     response.Tx.GasPrice().String(),
 			OldStateRoot: oldStateRoot,
 			Time:         uint64(endTime.Sub(startTime)),
 			GasUsed:      result.GasUsed,
 		}
 
 		// Fill trace context
-		if tx.To() == nil {
-			context.Type = "CREATE"
-			context.To = result.CreateAddress.Hex()
+		if response.Tx.To() == nil {
+			ctx.Type = "CREATE"
+			ctx.To = result.CreateAddress.Hex()
 		} else {
-			context.Type = "CALL"
-			context.To = tx.To().Hex()
+			ctx.Type = "CALL"
+			ctx.To = response.Tx.To().Hex()
 		}
+		result.FullTrace.Context = ctx
 
-		result.FullTrace.Context = context
-
-		gasPrice, ok := new(big.Int).SetString(context.GasPrice, encoding.Base10)
+		gasPrice, ok := new(big.Int).SetString(ctx.GasPrice, encoding.Base10)
 		if !ok {
 			log.Errorf("debug transaction: failed to parse gasPrice")
 			return nil, fmt.Errorf("failed to parse gasPrice")
@@ -386,9 +385,10 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 		tracerContext := &tracers.Context{
 			BlockHash:   receipt.BlockHash,
 			BlockNumber: receipt.BlockNumber,
-			TxIndex:     int(receipt.TransactionIndex),
-			TxHash:      transactionHash,
+			TxIndex:     index,
+			TxHash:      response.TxHash,
 		}
+		fmt.Printf("====== TxIndex: %d, TxHash: %s, TxHashL2_V2: %s", index, response.TxHash.String(), response.TxHashL2_V2.String())
 
 		if traceConfig.IsDefaultTracer() {
 			structLoggerCfg := structlogger.Config{
