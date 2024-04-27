@@ -110,6 +110,7 @@ func (s *State) convertToProcessTransactionResponseV2(responses []*executor.Proc
 	results := make([]*ProcessTransactionResponse, 0, len(responses))
 
 	for _, response := range responses {
+		fmt.Printf("++++++ tx response: %+v\n", response)
 		if response.Error != executor.RomError_ROM_ERROR_NO_ERROR {
 			isRomLevelError = true
 		}
