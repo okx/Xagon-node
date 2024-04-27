@@ -294,9 +294,10 @@ func (e *EthEndpoints) GetBlockInternalTransactionsV2(number types.BlockNumber) 
 			log.Errorf("%v: %v", errorMessage, err)
 			return nil, types.NewRPCError(types.DefaultErrorCode, errorMessage)
 		}
-		fmt.Printf("------blockResult: %+v\n", blockResult)
+
 		var blockInternalTxs [][]*InnerTx
 		for _, ret := range blockResult {
+			fmt.Printf("------blockResult: %+v\n", ret)
 			r, stderr := ret.TraceResult.MarshalJSON()
 			if stderr != nil {
 				return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
