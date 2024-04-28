@@ -231,7 +231,8 @@ func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) erro
 		_, l2gp := s.pool.GetL1AndL2GasPrice()
 		defaultGp := new(big.Int).SetUint64(l2gp)
 		baseGp := s.worker.getBaseClaimGp(defaultGp)
-		txTracker.GasPrice = baseGp.Mul(baseGp, new(big.Int).SetUint64(uint64(getGasPriceMultiple(s.cfg.GasPriceMultiple))))
+		copyBaseGp := new(big.Int).Set(baseGp)
+		txTracker.GasPrice = copyBaseGp.Mul(copyBaseGp, new(big.Int).SetUint64(uint64(getGasPriceMultiple(s.cfg.GasPriceMultiple))))
 	}
 
 	replacedTx, dropReason := s.worker.AddTxTracker(ctx, txTracker)
