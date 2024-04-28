@@ -65,7 +65,7 @@ func (e *EthEndpoints) GetInternalTransactions(hash types.ArgHash) (interface{},
 		if stderr != nil {
 			return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
 		}
-		fmt.Printf("------GetInternalTransactions:%s, %s\n", hash.Hash().String(), string(r))
+		//fmt.Printf("------GetInternalTransactions:%s, %s\n", hash.Hash().String(), string(r))
 		var of okFrame
 		stderr = json.Unmarshal(r, &of)
 		if stderr != nil {
@@ -301,7 +301,7 @@ func (e *EthEndpoints) GetBlockInternalTransactionsV2(number types.BlockNumber) 
 			if stderr != nil {
 				return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
 			}
-			fmt.Printf("------GetBlockInternalTransactionsV2:%s, %s\n", txHash.String(), string(r))
+			//fmt.Printf("------GetBlockInternalTransactionsV2:%s, %s\n", txHash.String(), string(r))
 			var of okFrame
 			stderr = json.Unmarshal(r, &of)
 			if stderr != nil {

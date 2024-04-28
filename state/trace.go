@@ -461,7 +461,7 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 		log.Errorf("debug transaction: failed parse the trace using the tracer: %v", err)
 		return nil, fmt.Errorf("failed parse the trace using the tracer: %v", err)
 	}
-	fmt.Printf("DebugTransaction:%s  %s\n", transactionHash.String(), string(traceResult))
+	fmt.Printf("DebugTransaction   txhash:%s,  fullTrace:%+v,  traceResult:%s\n", response.TxHash.String(), result.FullTrace, string(traceResult))
 	result.TraceResult = traceResult
 
 	return result, nil
