@@ -456,7 +456,7 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 			log.Errorf("debug transaction: failed parse the trace using the tracer: %v", err)
 			return nil, fmt.Errorf("failed parse the trace using the tracer: %v", err)
 		}
-
+		fmt.Printf("DebugBlock:%s  %s\n", response.TxHash.String(), string(traceResult))
 		result.TraceResult = traceResult
 		results[response.TxHash] = result
 	}
