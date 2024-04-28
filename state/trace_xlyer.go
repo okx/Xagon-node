@@ -171,7 +171,7 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 		responses = convertedResponse.BlockResponses[0].TransactionResponses
 	} else {
 		traceConfigRequestV2 := &executor.TraceConfigV2{
-			TxHashToGenerateFullTrace: lastTxInBlock.Hash().Bytes(),
+			//TxHashToGenerateFullTrace: lastTxInBlock.Hash().Bytes(),
 			// set the defaults to the maximum information we can have.
 			// this is needed to process custom tracers later
 			DisableStorage:   cFalse,
