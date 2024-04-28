@@ -295,8 +295,8 @@ func (e *EthEndpoints) GetBlockInternalTransactionsV2(number types.BlockNumber) 
 			return nil, types.NewRPCError(types.DefaultErrorCode, err.Error())
 		}
 
-		var blockInternalTxs [][]*InnerTx
-		for _, ret := range blockResult {
+		blockInternalTxs := make(map[common.Hash][]*InnerTx)
+		for txHash, ret := range blockResult {
 			r, stderr := ret.TraceResult.MarshalJSON()
 			if stderr != nil {
 				return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
@@ -306,7 +306,7 @@ func (e *EthEndpoints) GetBlockInternalTransactionsV2(number types.BlockNumber) 
 			if stderr != nil {
 				return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
 			}
-			blockInternalTxs = append(blockInternalTxs, internalTxTraceToInnerTxs(of))
+			blockInternalTxs[txHash] = internalTxTraceToInnerTxs(of)
 		}
 		return blockInternalTxs, nil
 	})

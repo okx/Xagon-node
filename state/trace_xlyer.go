@@ -25,7 +25,7 @@ import (
 )
 
 // DebugBlock re-executes all block tx to generate its trace
-func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig TraceConfig, dbTx pgx.Tx) ([]*runtime.ExecutionResult, error) {
+func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig TraceConfig, dbTx pgx.Tx) (map[common.Hash]*runtime.ExecutionResult, error) {
 	var err error
 
 	// gets the l2 l2Block
@@ -333,7 +333,7 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 		return nil, fmt.Errorf("tx hash not found in executor response")
 	}
 
-	var results []*runtime.ExecutionResult
+	results := make(map[common.Hash]*runtime.ExecutionResult)
 	for index, response := range responses {
 		result := &runtime.ExecutionResult{
 			CreateAddress: response.CreateAddress,
@@ -404,7 +404,7 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 				return nil, err
 			}
 			result.TraceResult = traceResult
-			results = append(results, result)
+			results[response.TxHash] = result
 			continue
 		} else if traceConfig.Is4ByteTracer() {
 			tracer, err = native.NewFourByteTracer(tracerContext, traceConfig.TracerConfig)
@@ -458,7 +458,7 @@ func (s *State) DebugBlock(ctx context.Context, blockNumber uint64, traceConfig 
 		}
 
 		result.TraceResult = traceResult
-		results = append(results, result)
+		results[response.TxHash] = result
 	}
 	return results, nil
 }

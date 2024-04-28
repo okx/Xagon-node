@@ -116,7 +116,7 @@ func (_m *StateMock) DebugTransaction(ctx context.Context, transactionHash commo
 
 
 // DebugBlock provides a mock function with given fields: ctx, blockNumber, traceConfig, dbTx
-func (_m *StateMock) DebugBlock(ctx context.Context,  blockNumber uint64, traceConfig state.TraceConfig, dbTx pgx.Tx) ([]*runtime.ExecutionResult, error) {
+func (_m *StateMock) DebugBlock(ctx context.Context,  blockNumber uint64, traceConfig state.TraceConfig, dbTx pgx.Tx) (map[common.Hash]*runtime.ExecutionResult, error) {
 	return nil, nil
 }
 
