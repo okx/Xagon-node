@@ -114,6 +114,11 @@ func (_m *StateMock) DebugTransaction(ctx context.Context, transactionHash commo
 	return r0, r1
 }
 
+// DebugBlock provides a mock function with given fields: ctx, blockNumber, traceConfig, dbTx
+func (_m *StateMock) DebugBlock(ctx context.Context,  blockNumber uint64, traceConfig state.TraceConfig, dbTx pgx.Tx) (map[common.Hash]*runtime.ExecutionResult, error) {
+	return nil, nil
+}
+
 // EstimateGas provides a mock function with given fields: transaction, senderAddress, l2BlockNumber, dbTx
 func (_m *StateMock) EstimateGas(transaction *coretypes.Transaction, senderAddress common.Address, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error) {
 	ret := _m.Called(transaction, senderAddress, l2BlockNumber, dbTx)
