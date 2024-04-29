@@ -423,7 +423,8 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 
 	// Make sure the transaction is signed properly.
 	if err := state.CheckSignature(poolTx.Transaction); err != nil {
-		log.Errorf("invalid sender: %v", err)
+
+		log.Errorf("chainId %d, invalid sender: %v", poolTx.Transaction.ChainId(), err)
 		return ErrInvalidSender
 	}
 
