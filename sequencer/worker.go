@@ -33,6 +33,7 @@ func NewWorker(state stateInterface, constraints state.BatchConstraintsCfg, read
 		state:            state,
 		batchConstraints: constraints,
 		readyTxsCond:     readyTxsCond,
+		claimGp:          new(big.Int),
 	}
 
 	return &w
