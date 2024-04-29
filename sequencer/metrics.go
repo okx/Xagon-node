@@ -44,6 +44,8 @@ type metrics struct {
 	gas                uint64
 	estimatedTxsPerSec float64
 	estimatedGasPerSec uint64
+
+	closeReason string
 }
 
 func (m *metrics) sub(mSub metrics) {

@@ -57,6 +57,9 @@ type Config struct {
 	FreeClaimGasLimit uint64 `mapstructure:"FreeClaimGasLimit"`
 	// BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method
 	BridgeClaimMethodSigs []string `mapstructure:"BridgeClaimMethodSigs"`
+
+	// PendingStat is the configuration for the pending statistics
+	PendingStat PendingStatCfg `mapstructure:"PendingStat"`
 }
 
 // EffectiveGasPriceCfg contains the configuration properties for the effective gas price

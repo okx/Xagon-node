@@ -709,6 +709,8 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 
 	ctx := context.Background()
 
+	t0 := time.Now()
+
 	var l2Block *L2Block
 	var err error
 	if l2BlockNumber == nil {
@@ -720,10 +722,16 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 		return 0, nil, err
 	}
 
+	t1 := time.Now()
+	getBlockTime := t1.Sub(t0)
+
 	batch, err := s.GetBatchByL2BlockNumber(ctx, l2Block.NumberU64(), dbTx)
 	if err != nil {
 		return 0, nil, err
 	}
+
+	t2 := time.Now()
+	getBatchTime := t2.Sub(t1)
 
 	forkID := s.GetForkIDByBatchNumber(batch.BatchNumber)
 	latestL2BlockNumber, err := s.GetLastL2BlockNumber(ctx, dbTx)
@@ -731,11 +739,17 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 		return 0, nil, err
 	}
 
+	t3 := time.Now()
+	getForkIDTime := t3.Sub(t2)
+
 	loadedNonce, err := s.tree.GetNonce(ctx, senderAddress, l2Block.Root().Bytes())
 	if err != nil {
 		return 0, nil, err
 	}
 	nonce := loadedNonce.Uint64()
+
+	t4 := time.Now()
+	getNonceTime := t4.Sub(t3)
 
 	highEnd := MaxTxGasLimit
 
@@ -796,6 +810,9 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 		}
 	}
 
+	t5 := time.Now()
+	getEndTime := t5.Sub(t4)
+
 	// testTransaction runs the transaction with the specified gas value.
 	// it returns a status indicating if the transaction has failed, if it
 	// was reverted and the accompanying error
@@ -825,6 +842,9 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 			highEnd,
 		)
 	}
+
+	t6 := time.Now()
+	internalGasTime := t6.Sub(t5)
 
 	// sets
 	if lowEnd < gasUsed {
@@ -872,6 +892,9 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	} else {
 		log.Debug("Estimate gas. Tx not executed")
 	}
+	log.Infof("state-EstimateGas time. getBlock:%vms, getBatch:%vms, getForkID:%vms, getNonce:%vms, getEnd:%vms, internalGas:%vms, exec:%vms",
+		getBlockTime.Milliseconds(), getBatchTime.Milliseconds(), getForkIDTime.Milliseconds(), getNonceTime.Milliseconds(), getEndTime.Milliseconds(), internalGasTime.Milliseconds(), time.Since(t6).Milliseconds())
+
 	return highEnd, nil, nil
 }
 
@@ -1034,7 +1057,7 @@ func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batc
 
 	txExecutionOnExecutorTime := time.Now()
 	processBatchResponseV2, err := s.executorClient.ProcessBatchV2(ctx, processBatchRequestV2)
-	log.Debugf("executor time: %vms", time.Since(txExecutionOnExecutorTime).Milliseconds())
+	log.Infof("executor time: %vms", time.Since(txExecutionOnExecutorTime).Milliseconds())
 	if err != nil {
 		log.Errorf("error estimating gas: %v", err)
 		return false, false, gasUsed, nil, err

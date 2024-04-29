@@ -16,6 +16,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
+	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
@@ -396,4 +397,12 @@ func (e *EthEndpoints) getMinPriceFromSequencerNode() (interface{}, types.Error)
 		return RPCErrorResponse(types.DefaultErrorCode, "failed to read min gas price from sequencer node", err, true)
 	}
 	return gasPrice, nil
+}
+
+// GetPendingStat returns the pending stat
+func (e *EthEndpoints) GetPendingStat() (interface{}, types.Error) {
+	if e.isDisabled("eth_getPendingStat") || (e.pool != nil && !e.pool.IsPendingStatEnabled(context.Background())) {
+		return RPCErrorResponse(types.DefaultErrorCode, "not supported yet", nil, true)
+	}
+	return pool.GetPendingStat(), nil
 }

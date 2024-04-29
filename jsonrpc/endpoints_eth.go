@@ -172,10 +172,14 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 0", nil, false)
 		}
 
+		t0 := time.Now()
 		block, respErr := e.getBlockByArg(ctx, blockArg, dbTx)
 		if respErr != nil {
 			return nil, respErr
 		}
+
+		t1 := time.Now()
+		getBlockTime := t1.Sub(t0)
 
 		var blockToProcess *uint64
 		if blockArg != nil {
@@ -194,6 +198,9 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 			return RPCErrorResponse(types.DefaultErrorCode, "failed to convert arguments into an unsigned transaction", err, false)
 		}
 
+		t2 := time.Now()
+		toTxTime := t2.Sub(t1)
+
 		gasEstimation, returnValue, err := e.state.EstimateGas(tx, sender, blockToProcess, dbTx)
 		if errors.Is(err, runtime.ErrExecutionReverted) {
 			data := make([]byte, len(returnValue))
@@ -203,10 +210,16 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 			return nil, types.NewRPCError(types.DefaultErrorCode, err.Error())
 		}
 
+		t3 := time.Now()
+		stateEstimateGasTime := t3.Sub(t2)
+
 		// XLayer handler
 		gasEstimation = e.getGasEstimationWithFactorXLayer(gasEstimation)
+		hexGasEstimation := hex.EncodeUint64(gasEstimation)
 
-		return hex.EncodeUint64(gasEstimation), nil
+		log.Infof("EstimateGas time. getBlock:%vms, toTx:%vms, stateEstimateGas:%vms", getBlockTime.Milliseconds(), toTxTime.Milliseconds(), stateEstimateGasTime.Milliseconds())
+
+		return hexGasEstimation, nil
 	})
 }
 

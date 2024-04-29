@@ -239,6 +239,7 @@ func (f *finalizer) processL2Block(ctx context.Context, l2Block *L2Block) error 
 			blockResponse.BlockNumber, l2Block.trackingNum, l2Block.metrics.log(), f.metrics.startsAt().Unix(), f.metrics.log())
 	}
 
+	log.Infof("%v", l2Block.metrics.Summary(blockResponse.BlockNumber, f.wipBatch.batchNumber, l2Block.timestamp))
 	return nil
 }
 
@@ -448,6 +449,7 @@ func (f *finalizer) finalizeWIPL2Block(ctx context.Context) {
 	prevTimestamp := f.wipL2Block.timestamp
 	prevL1InfoTreeIndex := f.wipL2Block.l1InfoTreeExitRoot.L1InfoTreeIndex
 
+	f.setWIPL2BlockCloseReason(BlockMaxDeltaTimestamp)
 	f.closeWIPL2Block(ctx)
 
 	f.openNewWIPL2Block(ctx, prevTimestamp, &prevL1InfoTreeIndex)
