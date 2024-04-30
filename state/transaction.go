@@ -15,7 +15,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
@@ -852,28 +851,29 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 		lowEnd = gasUsed
 	}
 
-	optimisticGasLimit := (gasUsed + params.CallStipend) * 64 / 63 // nolint:gomnd
-	if optimisticGasLimit < highEnd {
-		if forkID < FORKID_ETROG {
-			failed, _, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
-		} else {
-			failed, _, _, _, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
-		}
-		if err != nil {
-			// This should not happen under normal conditions since if we make it this far the
-			// transaction had run without error at least once before.
-			log.Error("Execution error in estimate gas", "err", err)
-			return 0, nil, err
-		}
-		if failed {
-			lowEnd = optimisticGasLimit
-		} else {
-			highEnd = optimisticGasLimit
-		}
-	}
+	//optimisticGasLimit := (gasUsed + params.CallStipend) * 64 / 63 // nolint:gomnd
+	//if optimisticGasLimit < highEnd {
+	//	if forkID < FORKID_ETROG {
+	//		failed, _, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
+	//	} else {
+	//		failed, _, _, _, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
+	//	}
+	//	if err != nil {
+	//		// This should not happen under normal conditions since if we make it this far the
+	//		// transaction had run without error at least once before.
+	//		log.Error("Execution error in estimate gas", "err", err)
+	//		return 0, nil, err
+	//	}
+	//	if failed {
+	//		lowEnd = optimisticGasLimit
+	//	} else {
+	//		highEnd = optimisticGasLimit
+	//	}
+	//}
 
 	// Start the binary search for the lowest possible gas price
-	for (lowEnd < highEnd) && (highEnd-lowEnd) > 4096 {
+	times := 0
+	for (lowEnd < highEnd) && (highEnd-lowEnd) > 4096 && times <= 3 {
 		txExecutionStart := time.Now()
 		mid := (lowEnd + highEnd) / 2 // nolint:gomnd
 		if mid > lowEnd*2 {
@@ -905,6 +905,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 			// If the transaction didn't fail => make this ok value the high end
 			highEnd = mid
 		}
+		times++
 	}
 
 	executions := int64(len(txExecutions))
