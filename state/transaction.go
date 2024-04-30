@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/params"
 	"math/big"
 	"time"
 
@@ -792,6 +793,26 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	// sets
 	if lowEnd < gasUsed {
 		lowEnd = gasUsed
+	}
+
+	optimisticGasLimit := (gasUsed + params.CallStipend) * 64 / 63
+	if optimisticGasLimit < highEnd {
+		if forkID < FORKID_ETROG {
+			failed, _, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
+		} else {
+			failed, _, _, _, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
+		}
+		if err != nil {
+			// This should not happen under normal conditions since if we make it this far the
+			// transaction had run without error at least once before.
+			log.Error("Execution error in estimate gas", "err", err)
+			return 0, nil, err
+		}
+		if failed {
+			lowEnd = optimisticGasLimit
+		} else {
+			highEnd = optimisticGasLimit
+		}
 	}
 
 	// Start the binary search for the lowest possible gas price
