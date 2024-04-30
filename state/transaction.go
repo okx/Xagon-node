@@ -852,7 +852,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 		lowEnd = gasUsed
 	}
 
-	optimisticGasLimit := (gasUsed + params.CallStipend) * 64 / 63
+	optimisticGasLimit := (gasUsed + params.CallStipend) * 64 / 63 // nolint:gomnd
 	if optimisticGasLimit < highEnd {
 		if forkID < FORKID_ETROG {
 			failed, _, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
