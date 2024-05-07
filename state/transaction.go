@@ -753,7 +753,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	t4 := time.Now()
 	getNonceTime := t4.Sub(t3)
 
-	highEnd := transaction.Gas()
+	highEnd := MaxTxGasLimit
 
 	// if gas price is set, set the highEnd to the max amount
 	// of the account afford
@@ -853,24 +853,28 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 		lowEnd = gasUsed
 	}
 
-	optimisticGasLimit := (gasUsed + params.CallStipend) * 64 / 63 // nolint:gomnd
-	if optimisticGasLimit < highEnd {
-		if forkID < FORKID_ETROG {
-			failed, _, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
-		} else {
-			failed, _, _, _, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
+	if transaction.Gas() != 0 {
+		optimisticGasLimit := (gasUsed + params.CallStipend) * 64 / 63 // nolint:gomnd
+		if optimisticGasLimit < highEnd {
+			if forkID < FORKID_ETROG {
+				failed, _, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
+			} else {
+				failed, _, _, _, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
+			}
+			if err != nil {
+				// This should not happen under normal conditions since if we make it this far the
+				// transaction had run without error at least once before.
+				log.Error("Execution error in estimate gas", "err", err)
+				return 0, nil, err
+			}
+			if failed {
+				lowEnd = optimisticGasLimit
+			} else {
+				highEnd = optimisticGasLimit
+			}
 		}
-		if err != nil {
-			// This should not happen under normal conditions since if we make it this far the
-			// transaction had run without error at least once before.
-			log.Error("Execution error in estimate gas", "err", err)
-			return 0, nil, err
-		}
-		if failed {
-			lowEnd = optimisticGasLimit
-		} else {
-			highEnd = optimisticGasLimit
-		}
+	} else {
+		highEnd = transaction.Gas()
 	}
 
 	// Start the binary search for the lowest possible gas price
