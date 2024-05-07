@@ -706,7 +706,6 @@ func CheckSupersetBatchTransactions(existingTxHashes []common.Hash, processedTxs
 
 // EstimateGas for a transaction
 func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common.Address, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error) {
-	fmt.Printf("L2 EstimateGas\n")
 	const ethTransferGas = 21000
 
 	ctx := context.Background()
