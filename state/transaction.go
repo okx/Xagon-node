@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/ethereum/go-ethereum/params"
 	"math/big"
 	"time"
 
@@ -705,6 +706,7 @@ func CheckSupersetBatchTransactions(existingTxHashes []common.Hash, processedTxs
 
 // EstimateGas for a transaction
 func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common.Address, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error) {
+	fmt.Printf("L2 EstimateGas\n")
 	const ethTransferGas = 21000
 
 	ctx := context.Background()
@@ -751,7 +753,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	t4 := time.Now()
 	getNonceTime := t4.Sub(t3)
 
-	highEnd := MaxTxGasLimit
+	highEnd := transaction.Gas()
 
 	// if gas price is set, set the highEnd to the max amount
 	// of the account afford
@@ -851,25 +853,25 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 		lowEnd = gasUsed
 	}
 
-	//optimisticGasLimit := (gasUsed + params.CallStipend) * 64 / 63 // nolint:gomnd
-	//if optimisticGasLimit < highEnd {
-	//	if forkID < FORKID_ETROG {
-	//		failed, _, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
-	//	} else {
-	//		failed, _, _, _, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
-	//	}
-	//	if err != nil {
-	//		// This should not happen under normal conditions since if we make it this far the
-	//		// transaction had run without error at least once before.
-	//		log.Error("Execution error in estimate gas", "err", err)
-	//		return 0, nil, err
-	//	}
-	//	if failed {
-	//		lowEnd = optimisticGasLimit
-	//	} else {
-	//		highEnd = optimisticGasLimit
-	//	}
-	//}
+	optimisticGasLimit := (gasUsed + params.CallStipend) * 64 / 63 // nolint:gomnd
+	if optimisticGasLimit < highEnd {
+		if forkID < FORKID_ETROG {
+			failed, _, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
+		} else {
+			failed, _, _, _, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
+		}
+		if err != nil {
+			// This should not happen under normal conditions since if we make it this far the
+			// transaction had run without error at least once before.
+			log.Error("Execution error in estimate gas", "err", err)
+			return 0, nil, err
+		}
+		if failed {
+			lowEnd = optimisticGasLimit
+		} else {
+			highEnd = optimisticGasLimit
+		}
+	}
 
 	// Start the binary search for the lowest possible gas price
 	//highEnd = gasUsed * 2
