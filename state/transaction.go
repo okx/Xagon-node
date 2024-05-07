@@ -878,7 +878,6 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	}
 
 	// Start the binary search for the lowest possible gas price
-	//highEnd = gasUsed * 2
 	for (lowEnd < highEnd) && (highEnd-lowEnd) > 4096 {
 		txExecutionStart := time.Now()
 		mid := (lowEnd + highEnd) / 2 // nolint:gomnd
