@@ -151,9 +151,6 @@ func (f *finalizer) Start(ctx context.Context) {
 	// Do sanity check for batches closed but pending to be checked
 	f.processBatchesPendingtoCheck(ctx)
 
-	// Do sanity check for batches closed but pending to be checked
-	f.processBatchesPendingtoCheck(ctx)
-
 	// Update L1InfoRoot
 	go f.checkL1InfoTreeUpdate(ctx)
 
