@@ -163,13 +163,15 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		return
 	}
 
+	gasPrices, err := e.pool.GetGasPrices(ctx)
+	if err != nil {
+		log.Errorf("failed to get raw gas prices: ", err)
+		return
+	}
+	metrics.RawGasPrice(int64(gasPrices.L2GasPrice))
+
 	if !isCongested || isLastBlockEmpty {
 		log.Debug("there is no congestion for L2")
-		gasPrices, err := e.pool.GetGasPrices(ctx)
-		if err != nil {
-			log.Errorf("failed to get raw gas prices when it is not congested: ", err)
-			return
-		}
 		rawGP := new(big.Int).SetUint64(gasPrices.L2GasPrice)
 		price = getAvgPrice(rawGP, price)
 	}
