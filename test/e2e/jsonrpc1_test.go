@@ -72,6 +72,7 @@ func Test_Filters(t *testing.T) {
 	}
 	ctx := context.Background()
 	setup()
+
 	defer teardown()
 	for _, network := range networks {
 		// test newBlockFilter creation
@@ -88,9 +89,9 @@ func Test_Filters(t *testing.T) {
 
 		// test newFilter creation with block range and block hash
 		response, err = client.JSONRPCCall(network.URL, "eth_newFilter", map[string]interface{}{
-			"BlockHash": common.HexToHash("0x1"),
-			"FromBlock": "0x1",
-			"ToBlock":   "0x2",
+			"blockHash": common.HexToHash("0x1"),
+			"fromBlock": "0x1",
+			"toBlock":   "0x2",
 		})
 		require.NoError(t, err)
 		require.NotNil(t, response.Error)
@@ -99,11 +100,11 @@ func Test_Filters(t *testing.T) {
 
 		// test newFilter creation with block hash
 		response, err = client.JSONRPCCall(network.URL, "eth_newFilter", map[string]interface{}{
-			"BlockHash": common.HexToHash("0x1"),
-			"Addresses": []common.Address{
+			"blockHash": common.HexToHash("0x1"),
+			"address": []common.Address{
 				common.HexToAddress("0x2"),
 			},
-			"Topics": [][]common.Hash{
+			"topics": [][]common.Hash{
 				{common.HexToHash("0x3")},
 			},
 		})
@@ -118,12 +119,12 @@ func Test_Filters(t *testing.T) {
 
 		// test newFilter creation with block range
 		response, err = client.JSONRPCCall(network.URL, "eth_newFilter", map[string]interface{}{
-			"FromBlock": "0x1",
-			"ToBlock":   "0x2",
-			"Addresses": []common.Address{
+			"fromBlock": "0x1",
+			"toBlock":   "0x2",
+			"address": []common.Address{
 				common.HexToAddress("0x2"),
 			},
-			"Topics": [][]common.Hash{
+			"topics": [][]common.Hash{
 				{common.HexToHash("0x3")},
 			},
 		})
@@ -211,7 +212,7 @@ func Test_Filters(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.NotEqual(t, blockBeforeFilterHash.String(), blockFilterChanges[0].String())
-		assert.Equal(t, blockAfterFilterHash.String(), blockFilterChanges[len(blockFilterChanges)-1].String())
+		assert.Equal(t, blockAfterFilterHash.String(), blockFilterChanges[len(blockFilterChanges)-1].String(), "network: "+network.Name+"blockAfterFilterHash")
 
 		// test getFilterChanges for a logFilter ID
 		// create a SC to emit some logs
@@ -221,7 +222,7 @@ func Test_Filters(t *testing.T) {
 		require.NoError(t, err)
 
 		response, err = client.JSONRPCCall(network.URL, "eth_newFilter", map[string]interface{}{
-			"Addresses": []common.Address{scAddr},
+			"address": []common.Address{scAddr},
 		})
 		require.NoError(t, err)
 		require.Nil(t, response.Error)
@@ -277,7 +278,7 @@ func Test_Filters(t *testing.T) {
 		require.NoError(t, err)
 
 		assert.Equal(t, 30, len(logs))
-		assert.Equal(t, 20, len(logFilterChanges))
+		assert.Equal(t, 20, len(logFilterChanges), "network: "+network.Name+" logFilterChanges")
 	}
 }
 
@@ -668,6 +669,127 @@ func Test_OOCErrors(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			err := testCase.execute(t, context.Background(), sc, ethClient, *auth)
 			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}
+
+func Test_EstimateCounters(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+	ctx := context.Background()
+	setup()
+	defer teardown()
+	ethClient, err := ethclient.Dial(operations.DefaultL2NetworkURL)
+	require.NoError(t, err)
+	auth, err := operations.GetAuth(operations.DefaultSequencerPrivateKey, operations.DefaultL2ChainID)
+	require.NoError(t, err)
+
+	expectedCountersLimits := types.ZKCountersLimits{
+		MaxGasUsed:          types.ArgUint64(hex.DecodeUint64("0x1c9c380")),
+		MaxKeccakHashes:     types.ArgUint64(hex.DecodeUint64("0x861")),
+		MaxPoseidonHashes:   types.ArgUint64(hex.DecodeUint64("0x3d9c5")),
+		MaxPoseidonPaddings: types.ArgUint64(hex.DecodeUint64("0x21017")),
+		MaxMemAligns:        types.ArgUint64(hex.DecodeUint64("0x39c29")),
+		MaxArithmetics:      types.ArgUint64(hex.DecodeUint64("0x39c29")),
+		MaxBinaries:         types.ArgUint64(hex.DecodeUint64("0x73852")),
+		MaxSteps:            types.ArgUint64(hex.DecodeUint64("0x73846a")),
+		MaxSHA256Hashes:     types.ArgUint64(hex.DecodeUint64("0x63c")),
+	}
+
+	type testCase struct {
+		name          string
+		prepareParams func(*testing.T, context.Context, *triggerErrors.TriggerErrors, *ethclient.Client, bind.TransactOpts) map[string]interface{}
+		assert        func(*testing.T, *testCase, types.ZKCountersResponse)
+	}
+
+	testCases := []testCase{
+		{
+			name: "transfer works successfully",
+			prepareParams: func(t *testing.T, ctx context.Context, sc *triggerErrors.TriggerErrors, c *ethclient.Client, a bind.TransactOpts) map[string]interface{} {
+				params := map[string]interface{}{
+					"from":  a.From.String(),
+					"to":    common.HexToAddress("0x1").String(),
+					"gas":   hex.EncodeUint64(30000000),
+					"value": hex.EncodeBig(big.NewInt(10000)),
+				}
+
+				return params
+			},
+			assert: func(t *testing.T, tc *testCase, response types.ZKCountersResponse) {
+				assert.LessOrEqual(t, response.CountersUsed.GasUsed, expectedCountersLimits.MaxGasUsed)
+				assert.LessOrEqual(t, response.CountersUsed.UsedKeccakHashes, expectedCountersLimits.MaxKeccakHashes)
+				assert.LessOrEqual(t, response.CountersUsed.UsedPoseidonHashes, expectedCountersLimits.MaxPoseidonHashes)
+				assert.LessOrEqual(t, response.CountersUsed.UsedPoseidonPaddings, expectedCountersLimits.MaxPoseidonPaddings)
+				assert.LessOrEqual(t, response.CountersUsed.UsedMemAligns, expectedCountersLimits.MaxMemAligns)
+				assert.LessOrEqual(t, response.CountersUsed.UsedArithmetics, expectedCountersLimits.MaxArithmetics)
+				assert.LessOrEqual(t, response.CountersUsed.UsedBinaries, expectedCountersLimits.MaxBinaries)
+				assert.LessOrEqual(t, response.CountersUsed.UsedSteps, expectedCountersLimits.MaxSteps)
+				assert.LessOrEqual(t, response.CountersUsed.UsedSHA256Hashes, expectedCountersLimits.MaxSHA256Hashes)
+				assert.Nil(t, response.Revert)
+				assert.Nil(t, response.OOCError)
+			},
+		},
+		{
+			name: "call OOC poseidon",
+			prepareParams: func(t *testing.T, ctx context.Context, sc *triggerErrors.TriggerErrors, c *ethclient.Client, a bind.TransactOpts) map[string]interface{} {
+				a.GasLimit = 30000000
+				a.NoSend = true
+				tx, err := sc.OutOfCountersPoseidon(&a)
+				require.NoError(t, err)
+
+				params := map[string]interface{}{
+					"from":  a.From.String(),
+					"to":    tx.To().String(),
+					"gas":   hex.EncodeUint64(tx.Gas()),
+					"input": hex.EncodeToHex(tx.Data()),
+					"value": hex.EncodeBig(tx.Value()),
+				}
+
+				return params
+			},
+			assert: func(t *testing.T, tc *testCase, response types.ZKCountersResponse) {
+				assert.Greater(t, response.CountersUsed.UsedPoseidonHashes, expectedCountersLimits.MaxPoseidonHashes)
+				assert.Nil(t, response.Revert)
+				assert.Equal(t, "not enough poseidon counters to continue the execution", *response.OOCError)
+			},
+		},
+	}
+
+	// deploy triggerErrors SC
+	_, tx, sc, err := triggerErrors.DeployTriggerErrors(auth, ethClient)
+	require.NoError(t, err)
+
+	err = operations.WaitTxToBeMined(ctx, ethClient, tx, operations.DefaultTimeoutTxToBeMined)
+	require.NoError(t, err)
+
+	// create TX that cause an OOC
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			tc := tc
+			params := tc.prepareParams(t, context.Background(), sc, ethClient, *auth)
+			require.NoError(t, err)
+
+			res, err := client.JSONRPCCall(operations.DefaultL2NetworkURL, "zkevm_estimateCounters", params)
+			require.NoError(t, err)
+			require.Nil(t, res.Error)
+			require.NotNil(t, res.Result)
+
+			var zkCountersResponse types.ZKCountersResponse
+			err = json.Unmarshal(res.Result, &zkCountersResponse)
+			require.NoError(t, err)
+
+			tc.assert(t, &tc, zkCountersResponse)
+
+			assert.Equal(t, expectedCountersLimits.MaxGasUsed, zkCountersResponse.CountersLimits.MaxGasUsed)
+			assert.Equal(t, expectedCountersLimits.MaxKeccakHashes, zkCountersResponse.CountersLimits.MaxKeccakHashes)
+			assert.Equal(t, expectedCountersLimits.MaxPoseidonHashes, zkCountersResponse.CountersLimits.MaxPoseidonHashes)
+			assert.Equal(t, expectedCountersLimits.MaxPoseidonPaddings, zkCountersResponse.CountersLimits.MaxPoseidonPaddings)
+			assert.Equal(t, expectedCountersLimits.MaxMemAligns, zkCountersResponse.CountersLimits.MaxMemAligns)
+			assert.Equal(t, expectedCountersLimits.MaxArithmetics, zkCountersResponse.CountersLimits.MaxArithmetics)
+			assert.Equal(t, expectedCountersLimits.MaxBinaries, zkCountersResponse.CountersLimits.MaxBinaries)
+			assert.Equal(t, expectedCountersLimits.MaxSteps, zkCountersResponse.CountersLimits.MaxSteps)
+			assert.Equal(t, expectedCountersLimits.MaxSHA256Hashes, zkCountersResponse.CountersLimits.MaxSHA256Hashes)
 		})
 	}
 }

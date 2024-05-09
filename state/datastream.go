@@ -80,7 +80,6 @@ type DSL2BlockStart struct {
 	Coinbase        common.Address // 20 bytes
 	ForkID          uint16         // 2 bytes
 	ChainID         uint32         // 4 bytes
-
 }
 
 // Encode returns the encoded DSL2BlockStart as a byte slice
@@ -111,13 +110,13 @@ func (b DSL2BlockStart) Decode(data []byte) DSL2BlockStart {
 	b.Coinbase = common.BytesToAddress(data[96:116])
 	b.ForkID = binary.BigEndian.Uint16(data[116:118])
 	b.ChainID = binary.BigEndian.Uint32(data[118:122])
-
 	return b
 }
 
 // DSL2Transaction represents a data stream L2 transaction
 type DSL2Transaction struct {
 	L2BlockNumber               uint64      // Not included in the encoded data
+	ImStateRoot                 common.Hash // Not included in the encoded data
 	EffectiveGasPricePercentage uint8       // 1 byte
 	IsValid                     uint8       // 1 byte
 	StateRoot                   common.Hash // 32 bytes
@@ -234,11 +233,9 @@ type DSState interface {
 	GetDSL2Blocks(ctx context.Context, firstBatchNumber, lastBatchNumber uint64, dbTx pgx.Tx) ([]*DSL2Block, error)
 	GetDSL2Transactions(ctx context.Context, firstL2Block, lastL2Block uint64, dbTx pgx.Tx) ([]*DSL2Transaction, error)
 	GetStorageAt(ctx context.Context, address common.Address, position *big.Int, root common.Hash) (*big.Int, error)
-	GetLastL2BlockHeader(ctx context.Context, dbTx pgx.Tx) (*L2Header, error)
 	GetVirtualBatchParentHash(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (common.Hash, error)
 	GetForcedBatchParentHash(ctx context.Context, forcedBatchNumber uint64, dbTx pgx.Tx) (common.Hash, error)
 	GetL1InfoRootLeafByIndex(ctx context.Context, l1InfoTreeIndex uint32, dbTx pgx.Tx) (L1InfoTreeExitRootStorageEntry, error)
-	GetVirtualBatch(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (*VirtualBatch, error)
 }
 
 // GenerateDataStreamerFile generates or resumes a data stream file
@@ -555,16 +552,23 @@ func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.St
 					}
 
 					for _, tx := range l2Block.Txs {
-						// Populate intermediate state root
-						if imStateRoots == nil || (*imStateRoots)[blockStart.L2BlockNumber] == nil {
-							position := GetSystemSCPosition(l2Block.L2BlockNumber)
-							imStateRoot, err := stateDB.GetStorageAt(ctx, common.HexToAddress(SystemSC), big.NewInt(0).SetBytes(position), l2Block.StateRoot)
-							if err != nil {
-								return err
+						// < ETROG => IM State root is retrieved from the system SC (using cache is available)
+						// = ETROG => IM State root is retrieved from the receipt.post_state => Do nothing
+						// > ETROG => IM State root is retrieved from the receipt.im_state_root
+						if l2Block.ForkID < FORKID_ETROG {
+							// Populate intermediate state root with information from the system SC (or cache if available)
+							if imStateRoots == nil || (*imStateRoots)[blockStart.L2BlockNumber] == nil {
+								position := GetSystemSCPosition(l2Block.L2BlockNumber)
+								imStateRoot, err := stateDB.GetStorageAt(ctx, common.HexToAddress(SystemSC), big.NewInt(0).SetBytes(position), l2Block.StateRoot)
+								if err != nil {
+									return err
+								}
+								tx.StateRoot = common.BigToHash(imStateRoot)
+							} else {
+								tx.StateRoot = common.BytesToHash((*imStateRoots)[blockStart.L2BlockNumber])
 							}
-							tx.StateRoot = common.BigToHash(imStateRoot)
-						} else {
-							tx.StateRoot = common.BytesToHash((*imStateRoots)[blockStart.L2BlockNumber])
+						} else if l2Block.ForkID > FORKID_ETROG {
+							tx.StateRoot = tx.ImStateRoot
 						}
 
 						_, err = streamServer.AddStreamEntry(EntryTypeL2Tx, tx.Encode())
@@ -577,6 +581,10 @@ func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.St
 						L2BlockNumber: l2Block.L2BlockNumber,
 						BlockHash:     l2Block.BlockHash,
 						StateRoot:     l2Block.StateRoot,
+					}
+
+					if l2Block.ForkID >= FORKID_ETROG {
+						blockEnd.BlockHash = l2Block.StateRoot
 					}
 
 					_, err = streamServer.AddStreamEntry(EntryTypeL2BlockEnd, blockEnd.Encode())

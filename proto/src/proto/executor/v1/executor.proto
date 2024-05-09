@@ -10,6 +10,9 @@ service ExecutorService {
     /// Processes a batch
     rpc ProcessBatch(ProcessBatchRequest) returns (ProcessBatchResponse) {}
     rpc ProcessBatchV2(ProcessBatchRequestV2) returns (ProcessBatchResponseV2) {}
+    rpc ProcessBatchV3(ProcessBatchRequestV3) returns (ProcessBatchResponseV3) {}
+    rpc ProcessBlobInnerV3(ProcessBlobInnerRequestV3) returns (ProcessBlobInnerResponseV3) {}
+    rpc ProcessStatelessBatchV2(ProcessStatelessBatchRequestV2) returns (ProcessBatchResponseV2) {}
     rpc GetFlushStatus (google.protobuf.Empty) returns (GetFlushStatusResponse) {}
 }
 
@@ -294,6 +297,27 @@ message ProcessBatchRequestV2 {
     DebugV2 debug = 24;
 }
 
+message ProcessStatelessBatchRequestV2 {
+    // Batch data
+    bytes witness = 1; // SMT partial tree, SCs, (indirectly) old state root
+    bytes data_stream = 2; // txs, old batch num, chain id, fork id, effective gas price, block header, index of L1 info tree (global exit root, min timestamp, ...)
+
+    string coinbase = 3; // sequencer address
+    bytes old_acc_input_hash = 4; // 0 for executor, required for the prover
+
+    // Used by injected/first batches (do not use it for regular batches)
+    bytes l1_info_root = 5; // 0 for executor, required for the prover
+    uint64 timestamp_limit = 6; // if 0, replace by now + 10 min internally
+    bytes forced_blockhash_l1 = 7; // we need it, 0 in regular batches, hash in forced batches, also used in injected/first batches, 0 by now
+
+    // Debug
+    string context_id = 8; // batch ID to be shown in the executor traces, for your convenience: "Erigon_candidate_batch_N"
+    TraceConfigV2 trace_config = 9;
+
+    // Mapping to provide minTimestamp for each l1InfoTreeIndex in a batch
+    map<uint64, uint64> l1_info_tree_index_min_timestamp = 10;
+}
+
 message L1DataV2 {
     bytes global_exit_root = 1;
     bytes block_hash_l1 = 2;
@@ -303,7 +327,7 @@ message L1DataV2 {
 
 message DebugV2 {
     uint64 gas_limit = 1;
-    bytes new_state_root = 2; 
+    bytes new_state_root = 2;
     bytes new_acc_input_hash = 3;
     bytes new_local_exit_root = 4;
     uint64 new_batch_num = 5;
@@ -334,6 +358,21 @@ message ProcessBatchResponseV2 {
     uint64 fork_id = 22;
     uint32 invalid_batch = 23;
     RomError error_rom = 24;
+    uint32 cnt_reserve_keccak_hashes = 25;
+    uint32 cnt_reserve_poseidon_hashes = 26;
+    uint32 cnt_reserve_poseidon_paddings = 27;
+    uint32 cnt_reserve_mem_aligns = 28;
+    uint32 cnt_reserve_arithmetics = 29;
+    uint32 cnt_reserve_binaries = 30;
+    uint32 cnt_reserve_steps = 31;
+    uint32 cnt_reserve_sha256_hashes = 32;
+    bytes old_state_root = 33;
+    ResponseDebug debug = 34;
+}
+
+message ResponseDebug {
+    string error_log = 1;
+    string version = 2;
 }
 
 // Trace configuration request params
@@ -374,6 +413,12 @@ message InfoReadWriteV2 {
     string nonce = 1;
     // If balance="" then it has not been set; if set, string is in decimal (base 10)
     string balance = 2;
+    // If sc_code="" then it has not been set; if set, string is in hexa (base 16)
+    string sc_code = 3;
+    // Both sc_storage first (key) and second (value) map elements are set in hexa (base 16)
+    map<string, string> sc_storage = 4;
+    // If sc_length="" then it has not been set; if set, string is in decimal (base 10)
+    string sc_length = 5;
 }
 
 message FullTraceV2 {
@@ -527,6 +572,8 @@ message ProcessTransactionResponseV2 {
     uint32 has_gasprice_opcode = 19;
     // Flag to indicate if opcode 'BALANCE' has been called
     uint32 has_balance_opcode = 20;
+    // Receipt status of the transaction, 1 = success, 0 = failure
+    uint32 status = 21;
 }
 
 message LogV2 {
@@ -625,6 +672,8 @@ enum RomError {
     ROM_ERROR_INVALID_TX_CHANGE_L2_BLOCK_LIMIT_TIMESTAMP = 33;
     // ROM_ERROR_INVALID_TX_CHANGE_L2_BLOCK_MIN_TIMESTAMP indicates that the change l2 block transaction has trigger an error during while executing
     ROM_ERROR_INVALID_TX_CHANGE_L2_BLOCK_MIN_TIMESTAMP = 34;
+    // ROM_ERROR_INVALID_L1_INFO_TREE_INDEX indicates that the l1 info tree index added is not valid since its value is 0
+    ROM_ERROR_INVALID_L1_INFO_TREE_INDEX = 35;
 }
 
 enum ExecutorError {
@@ -854,4 +903,220 @@ enum ExecutorError {
     EXECUTOR_ERROR_INVALID_L1_INFO_TREE_INDEX = 111;
     // EXECUTOR_ERROR_INVALID_L1_INFO_TREE_SMT_PROOF_VALUE indicates that the ROM asked for an L1InfoTree SMT proof that was not present in the input
     EXECUTOR_ERROR_INVALID_L1_INFO_TREE_SMT_PROOF_VALUE = 112;
+    // EXECUTOR_ERROR_INVALID_WITNESS indicates that the provided witness data is invalid
+    EXECUTOR_ERROR_INVALID_WITNESS = 113;
+    // EXECUTOR_ERROR_INVALID_CBOR indicates that the provided CBOR data is invalid
+    EXECUTOR_ERROR_INVALID_CBOR = 114;
+    // EXECUTOR_ERROR_INVALID_DATA_STREAM indicates that the provided data stream data is invalid
+    EXECUTOR_ERROR_INVALID_DATA_STREAM = 115;
+    // EXECUTOR_ERROR_INVALID_UPDATE_MERKLE_TREE indicates that the provided update merkle tree is invalid, e.g. because the executor is configured not to write to database
+    EXECUTOR_ERROR_INVALID_UPDATE_MERKLE_TREE = 116;
+    // EXECUTOR_ERROR_SM_MAIN_INVALID_TX_STATUS_ERROR indicates that a TX has an invalid status-error combination
+    EXECUTOR_ERROR_SM_MAIN_INVALID_TX_STATUS_ERROR = 117;
+    // EXECUTOR_ERROR_INVALID_PREVIOUS_L1_INFO_TREE_ROOT indicates that the input parameter previous_l1_info_tree_root is invalid
+    EXECUTOR_ERROR_INVALID_PREVIOUS_L1_INFO_TREE_ROOT = 118;
+    // EXECUTOR_ERROR_INVALID_FORCED_HASH_DATA indicates that the input parameter forced_hash_data is invalid
+    EXECUTOR_ERROR_INVALID_FORCED_HASH_DATA = 119;
+    // EXECUTOR_ERROR_INVALID_FORCED_DATA_GLOBAL_EXIT_ROOT indicates that the input parameter forced_data.global_exit_root is invalid
+    EXECUTOR_ERROR_INVALID_FORCED_DATA_GLOBAL_EXIT_ROOT = 120;
+    // EXECUTOR_ERROR_INVALID_FORCED_DATA_BLOCK_HASH_L1 indicates that the input parameter forced_data.block_hash_l1 is invalid
+    EXECUTOR_ERROR_INVALID_FORCED_DATA_BLOCK_HASH_L1 = 121;
+    // EXECUTOR_ERROR_INVALID_L1_DATA_V3_INITIAL_HISTORIC_ROOT indicates that the input parameter L1 Data initiali_historic_root is invalid
+    EXECUTOR_ERROR_INVALID_L1_DATA_V3_INITIAL_HISTORIC_ROOT = 122;
+    // EXECUTOR_ERROR_INVALID_OLD_BLOB_STATE_ROOT indicates that the input parameter old_blob_state_root is invalid
+    EXECUTOR_ERROR_INVALID_OLD_BLOB_STATE_ROOT = 123;
+    // EXECUTOR_ERROR_INVALID_OLD_BLOB_ACC_INPUT_HASH indicates that the input parameter old_blob_acc_input_hash is invalid
+    EXECUTOR_ERROR_INVALID_OLD_BLOB_ACC_INPUT_HASH = 124;
+    // EXECUTOR_ERROR_INVALID_LAST_L1_INFO_TREE_ROOT indicates that the input parameter last_l1_info_tree_root is invalid
+    EXECUTOR_ERROR_INVALID_LAST_L1_INFO_TREE_ROOT = 125;
+    // EXECUTOR_ERROR_INVALID_NEW_BLOB_STATE_ROOT indicates that the input parameter new_blob_state_root is invalid
+    EXECUTOR_ERROR_INVALID_NEW_BLOB_STATE_ROOT = 126;
+    // EXECUTOR_ERROR_INVALID_NEW_BLOB_ACC_INPUT_HASH indicates that the input parameter new_blob_acc_input_hash is invalid
+    EXECUTOR_ERROR_INVALID_NEW_BLOB_ACC_INPUT_HASH = 127;
+    // EXECUTOR_ERROR_INVALID_BLOB_DATA indicates that the input parameter blob_data is invalid (too long)
+    EXECUTOR_ERROR_INVALID_BLOB_DATA = 128;
+    // EXECUTOR_ERROR_INVALID_ZK_GAS_LIMIT indicates that the input parameter zk_gas_limit is invalid
+    EXECUTOR_ERROR_INVALID_ZK_GAS_LIMIT = 129;
+    // EXECUTOR_ERROR_INVALID_POINT_Z indicates that the input parameter point_z is invalid
+    EXECUTOR_ERROR_INVALID_POINT_Z = 130;
+    // EXECUTOR_ERROR_INVALID_POINT_Y indicates that the input parameter point_y is invalid
+    EXECUTOR_ERROR_INVALID_POINT_Y = 131;
+    // EXECUTOR_ERROR_SM_MAIN_POINT_Z_MISMATCH indicates that the input parameter point_z is different from the one calculated by the executor
+    EXECUTOR_ERROR_SM_MAIN_POINT_Z_MISMATCH = 132;
+    // EXECUTOR_ERROR_SM_MAIN_BLOB_L2_HASH_DATA_MISMATCH indicates that the input parameter blob L2 data hash is different from the one calculated by the executor
+    EXECUTOR_ERROR_SM_MAIN_BLOB_L2_HASH_DATA_MISMATCH = 133;
+    // EXECUTOR_ERROR_SM_MAIN_BATCH_HASH_DATA_MISMATCH indicates that the input parameter batch data hash is different from the one calculated by the executor
+    EXECUTOR_ERROR_SM_MAIN_BATCH_HASH_DATA_MISMATCH = 134;
+    // EXECUTOR_ERROR_SM_MAIN_INVALID_BLOB_TYPE indicates that the input parameter blob type is invalid
+    EXECUTOR_ERROR_SM_MAIN_INVALID_BLOB_TYPE = 135;
+    // EXECUTOR_ERROR_SM_MAIN_UNRESTORED_SAVED_CONTEXT indicates that at least one saved context was not restored before finishing the execution
+    EXECUTOR_ERROR_SM_MAIN_UNRESTORED_SAVED_CONTEXT = 136;
+    // EXECUTOR_ERROR_SM_MAIN_INVALID_MEMORY_CTX indicates that the memory context polynomial was assigned an invalid value
+    EXECUTOR_ERROR_SM_MAIN_INVALID_MEMORY_CTX = 137;
+    // EXECUTOR_ERROR_INVALID_VERSIONED_HASH indicates that the input parameter versioned_hash is invalid
+    EXECUTOR_ERROR_INVALID_VERSIONED_HASH = 138;
+    // EXECUTOR_ERROR_INVALID_KZG_COMMITMENT indicates that the input parameter kzg_commitment is invalid
+    EXECUTOR_ERROR_INVALID_KZG_COMMITMENT = 139;
+    // EXECUTOR_ERROR_INVALID_KZG_PROOF indicates that the input parameter kzg_proof is invalid
+    EXECUTOR_ERROR_INVALID_KZG_PROOF = 140;
+}
+
+////////////////////////////////////////////////
+////////////  START V3 SECTION  ////////////////
+////////////////////////////////////////////////
+
+message ProcessBatchRequestV3 {
+    bytes old_state_root = 1;
+    bytes old_acc_input_hash = 2;
+    bytes previous_l1_info_tree_root = 3;
+    uint32 previous_l1_info_tree_index = 4;
+    uint64 chain_id = 5;
+    uint64 fork_id = 6;
+    bytes batch_l2_data = 7;
+    bytes forced_hash_data = 8;
+    ForcedData forced_data = 9;
+    string coinbase = 10;
+    uint32 update_merkle_tree = 11;
+    // flag to indicate that counters should not be taken into account
+    uint32 no_counters = 12;
+    // from is used for unsigned transactions with sender
+    string from = 13;
+    // flag to skip the restriction to start a batch with a changeL2Block transaction
+    uint32 skip_first_change_l2_block = 14;
+    // flag to skip writing the block info root in the state
+    uint32 skip_write_block_info_root = 15;
+    // lInfoTree information
+    map<uint32, L1DataV3> l1_info_tree_data = 16;
+    // For testing purposes only
+    map<string, string> db = 17;
+    map<string, string> contracts_bytecode = 18; // For debug/testing purpposes only. Don't fill this on production
+    TraceConfigV2 trace_config = 19;
+    string context_id = 20;
+    uint32 get_keys = 21; // if 1, the keys used to read or write storage values will be returned
+    // The state override set is an optional address-to-state mapping,
+    // where each entry specifies some state to be ephemerally overridden
+    // prior to executing the call.
+    map<string, OverrideAccountV2> state_override = 22;
+    DebugV2 debug = 23;
+}
+
+message L1DataV3 {
+    bytes global_exit_root = 1;
+    bytes block_hash_l1 = 2;
+    uint64 min_timestamp = 3;
+    repeated bytes smt_proof_previous_index = 4;
+    bytes initial_historic_root = 5;
+}
+
+message ProcessBatchResponseV3 {
+    bytes new_state_root = 1;
+    bytes new_acc_input_hash = 2;
+    bytes new_local_exit_root = 3;
+    uint64 new_last_timestamp = 4;
+    bytes current_l1_info_tree_root = 5;
+    uint32 current_l1_info_tree_index = 6;
+    uint32 cnt_keccak_hashes = 7;
+    uint32 cnt_poseidon_hashes = 8;
+    uint32 cnt_poseidon_paddings = 9;
+    uint32 cnt_mem_aligns = 10;
+    uint32 cnt_arithmetics = 11;
+    uint32 cnt_binaries = 12;
+    uint32 cnt_steps = 13;
+    uint32 cnt_sha256_hashes = 14;
+    repeated ProcessBlockResponseV2 block_responses = 15;
+    ExecutorError error = 16;
+    map<string, InfoReadWriteV2> read_write_addresses = 17;
+    uint64 flush_id = 18;
+    uint64 stored_flush_id = 19;
+    string prover_id = 20;
+    uint64 gas_used = 21;
+    repeated bytes smt_keys = 22;
+    repeated bytes program_keys = 23;
+    uint64 fork_id = 24;
+    uint32 invalid_batch = 25;
+    RomError error_rom = 26;
+    uint32 cnt_reserve_keccak_hashes = 27;
+    uint32 cnt_reserve_poseidon_hashes = 28;
+    uint32 cnt_reserve_poseidon_paddings = 29;
+    uint32 cnt_reserve_mem_aligns = 30;
+    uint32 cnt_reserve_arithmetics = 31;
+    uint32 cnt_reserve_binaries = 32;
+    uint32 cnt_reserve_steps = 33;
+    uint32 cnt_reserve_sha256_hashes = 34;
+    bytes old_state_root = 35;
+    ResponseDebug debug = 36;
+}
+
+message ForcedData {
+    bytes global_exit_root = 1;
+    bytes block_hash_l1 = 2;
+    uint64 min_timestamp = 3;
+}
+
+message ProcessBlobInnerRequestV3 {
+    // inputs
+    bytes old_blob_state_root = 1;
+    bytes old_blob_acc_input_hash = 2;
+    uint64 old_num_blob = 3;
+    bytes old_state_root = 4;
+    uint64 fork_id = 5;
+    // belong to blobAccInputHash
+    uint32 last_l1_info_tree_index = 6;
+    bytes last_l1_info_tree_root = 7;
+    uint64 timestamp_limit = 8;
+    string coinbase = 9;
+    uint64 zk_gas_limit = 10;
+    uint32 blob_type = 11;
+    bytes versioned_hash = 12;
+    bytes kzg_commitment = 13;
+    bytes kzg_proof = 14;
+    bytes point_z = 15;
+    bytes point_y = 16;
+    bytes blob_data = 17;
+    bytes forced_hash_data = 18;
+    string context_id = 19;
+    DebugV3 debug = 20;
+    map<string, string> db = 21;
+    map<string, string> contracts_bytecode = 22; // For debug/testing purpposes only. Don't fill this on production
+}
+
+message DebugV3 {
+    bytes new_blob_state_root = 1;
+    bytes new_blob_acc_input_hash = 2;
+    uint64 new_blob_num = 3;
+}
+
+message ProcessBlobInnerResponseV3 {
+    // outputs
+    bytes new_blob_state_root = 1;
+    bytes new_blob_acc_input_hash = 2;
+    uint64 new_num_blob = 3;
+    bytes final_acc_batch_hash_data = 4;
+    bytes local_exit_root_from_blob = 5;
+    uint32 is_invalid = 6;
+    // extra
+    repeated bytes batch_data = 7;
+    ExecutorError error = 8;
+    RomBlobError error_rom_blob = 9;
+    ResponseDebug debug = 10;
+}
+
+enum RomBlobError {
+    ROM_BLOB_ERROR_UNSPECIFIED = 0;
+    // ROM_ERROR_NO_ERROR indicates the execution ended successfully
+    ROM_BLOB_ERROR_NO_ERROR = 1;
+    // ROM_BLOB_ERROR_INVALID_PARSING indicates that has been an error while parsing the blob data
+    ROM_BLOB_ERROR_INVALID_PARSING = 2;
+    // ROM_BLOB_ERROR_INVALID_MSB_BYTE indicates that the MSB on one field element is different than zero (only for blob_type = 1)
+    ROM_BLOB_ERROR_INVALID_MSB_BYTE = 3;
+    // ROM_BLOB_ERROR_INVALID_ZK_GAS_LIMIT not enough zk_gas_limit supplied to pay for batches proofs
+    ROM_BLOB_ERROR_INVALID_ZK_GAS_LIMIT = 4;
+    // ROM_BLOB_ERROR_INVALID_BLOB_TYPE blob_type not supported
+    ROM_BLOB_ERROR_INVALID_BLOB_TYPE = 5;
+    // ROM_BLOB_ERROR_INVALID_COMPRESSION_TYPE compression type not supported
+    ROM_BLOB_ERROR_INVALID_COMPRESSION_TYPE = 6;
+    // ROM_BLOB_ERROR_INVALID_FORCED_BATCHES blobtype = 2 and numBatches > 1
+    ROM_BLOB_ERROR_INVALID_FORCED_BATCHES = 7;
+    // ROM_BLOB_ERROR_INVALID_TOTALBODY_LEN totalBodyLen != blobDataLen - 1 (byte compression) - 4 (bytes totalBodyLen)
+    ROM_BLOB_ERROR_INVALID_TOTALBODY_LEN = 8;
 }

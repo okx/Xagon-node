@@ -64,9 +64,9 @@ type ProcessorL1SequenceBatches struct {
 func NewProcessorL1SequenceBatches(state stateProcessSequenceBatches,
 	etherMan ethermanProcessSequenceBatches, pool poolProcessSequenceBatchesInterface, eventLog syncinterfaces.EventLogInterface, sync syncProcessSequenceBatchesInterface) *ProcessorL1SequenceBatches {
 	return &ProcessorL1SequenceBatches{
-		ProcessorBase: actions.ProcessorBase[ProcessorL1SequenceBatches]{
-			SupportedEvent:    []etherman.EventOrder{etherman.SequenceBatchesOrder},
-			SupportedForkdIds: &actions.ForksIdToIncaberry},
+		ProcessorBase: *actions.NewProcessorBase[ProcessorL1SequenceBatches](
+			[]etherman.EventOrder{etherman.SequenceBatchesOrder},
+			actions.ForksIdToIncaberry),
 		state:    state,
 		etherMan: etherMan,
 		pool:     pool,

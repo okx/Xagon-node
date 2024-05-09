@@ -40,6 +40,7 @@ type Transaction struct {
 	types.Transaction
 	Status TxStatus
 	state.ZKCounters
+	ReservedZKCounters    state.ZKCounters
 	ReceivedAt            time.Time
 	PreprocessedStateRoot common.Hash
 	IsWIP                 bool

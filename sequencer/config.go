@@ -90,4 +90,16 @@ type FinalizerCfg struct {
 	// SequentialProcessL2Block indicates if the processing of a L2 Block must be done in the same finalizer go func instead
 	// in the processPendingL2Blocks go func
 	SequentialProcessL2Block bool `mapstructure:"SequentialProcessL2Block"`
+
+	// Metrics is the config for the sequencer metrics
+	Metrics MetricsCfg `mapstructure:"Metrics"`
+}
+
+// MetricsCfg contains the sequencer metrics configuration properties
+type MetricsCfg struct {
+	// Interval is the interval of time to calculate sequencer metrics
+	Interval types.Duration `mapstructure:"Interval"`
+
+	// EnableLog is a flag to enable/disable metrics logs
+	EnableLog bool `mapstructure:"EnableLog"`
 }

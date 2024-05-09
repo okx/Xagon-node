@@ -255,7 +255,7 @@ type Block struct {
 	Timestamp       ArgUint64           `json:"timestamp"`
 	ExtraData       ArgBytes            `json:"extraData"`
 	MixHash         common.Hash         `json:"mixHash"`
-	Nonce           ArgBytes            `json:"nonce"`
+	Nonce           *ArgBytes           `json:"nonce"`
 	Hash            *common.Hash        `json:"hash"`
 	Transactions    []TransactionOrHash `json:"transactions"`
 	Uncles          []common.Hash       `json:"uncles"`
@@ -267,32 +267,28 @@ type Block struct {
 func NewBlock(ctx context.Context, st StateInterface, hash *common.Hash, b *state.L2Block, receipts []types.Receipt, fullTx, includeReceipts bool, includeExtraInfo *bool, dbTx pgx.Tx) (*Block, error) {
 	h := b.Header()
 
-	var miner *common.Address
-	if h.Coinbase.String() != state.ZeroAddress.String() {
-		cb := h.Coinbase
-		miner = &cb
-	}
-
 	n := big.NewInt(0).SetUint64(h.Nonce.Uint64())
-	nonce := common.LeftPadBytes(n.Bytes(), 8) //nolint:gomnd
+	nonce := ArgBytes(common.LeftPadBytes(n.Bytes(), 8)) //nolint:gomnd
 
-	difficulty := ArgUint64(0)
-	var totalDifficulty *ArgUint64
-	if h.Difficulty != nil && h.Difficulty.Uint64() > 0 {
-		difficulty = ArgUint64(h.Difficulty.Uint64())
-		totalDifficulty = &difficulty
+	var difficulty uint64
+	if h.Difficulty != nil {
+		difficulty = h.Difficulty.Uint64()
+	} else {
+		difficulty = uint64(0)
 	}
+
+	totalDifficult := ArgUint64(difficulty)
 
 	res := &Block{
 		ParentHash:      h.ParentHash,
 		Sha3Uncles:      h.UncleHash,
-		Miner:           miner,
+		Miner:           &h.Coinbase,
 		StateRoot:       h.Root,
 		TxRoot:          h.TxHash,
 		ReceiptsRoot:    h.ReceiptHash,
 		LogsBloom:       h.Bloom,
-		Difficulty:      difficulty,
-		TotalDifficulty: totalDifficulty,
+		Difficulty:      ArgUint64(difficulty),
+		TotalDifficulty: &totalDifficult,
 		Size:            ArgUint64(b.Size()),
 		Number:          ArgUint64(b.Number().Uint64()),
 		GasLimit:        ArgUint64(h.GasLimit),
@@ -300,7 +296,7 @@ func NewBlock(ctx context.Context, st StateInterface, hash *common.Hash, b *stat
 		Timestamp:       ArgUint64(h.Time),
 		ExtraData:       ArgBytes(h.Extra),
 		MixHash:         h.MixDigest,
-		Nonce:           nonce,
+		Nonce:           &nonce,
 		Hash:            hash,
 		Transactions:    []TransactionOrHash{},
 		Uncles:          []common.Hash{},
@@ -329,7 +325,7 @@ func NewBlock(ctx context.Context, st StateInterface, hash *common.Hash, b *stat
 				if err != nil {
 					return nil, err
 				}
-				l2Hash = &l2h
+				l2Hash = l2h
 			}
 
 			rpcTx, err := NewTransaction(*tx, receiptPtr, includeReceipts, l2Hash)
@@ -422,7 +418,7 @@ func NewBatch(ctx context.Context, st StateInterface, batch *state.Batch, virtua
 			if err != nil {
 				return nil, err
 			}
-			rpcTx, err := NewTransaction(tx, receiptPtr, includeReceipts, &l2Hash)
+			rpcTx, err := NewTransaction(tx, receiptPtr, includeReceipts, l2Hash)
 			if err != nil {
 				return nil, err
 			}
@@ -605,7 +601,7 @@ func NewTransaction(
 
 // Receipt structure
 type Receipt struct {
-	Root              common.Hash     `json:"root"`
+	Root              *common.Hash    `json:"root,omitempty"`
 	CumulativeGasUsed ArgUint64       `json:"cumulativeGasUsed"`
 	LogsBloom         types.Bloom     `json:"logsBloom"`
 	Logs              []*types.Log    `json:"logs"`
@@ -647,7 +643,6 @@ func NewReceipt(tx types.Transaction, r *types.Receipt, l2Hash *common.Hash) (Re
 		return Receipt{}, err
 	}
 	receipt := Receipt{
-		Root:              common.BytesToHash(r.PostState),
 		CumulativeGasUsed: ArgUint64(r.CumulativeGasUsed),
 		LogsBloom:         r.Bloom,
 		Logs:              logs,
@@ -663,6 +658,11 @@ func NewReceipt(tx types.Transaction, r *types.Receipt, l2Hash *common.Hash) (Re
 		Type:              ArgUint64(r.Type),
 		TxL2Hash:          l2Hash,
 	}
+	if len(r.PostState) > 0 {
+		root := common.BytesToHash(r.PostState)
+		receipt.Root = &root
+	}
+
 	if r.EffectiveGasPrice != nil {
 		egp := ArgBig(*r.EffectiveGasPrice)
 		receipt.EffectiveGasPrice = &egp
@@ -705,4 +705,71 @@ type ExitRoots struct {
 	Timestamp       ArgUint64   `json:"timestamp"`
 	MainnetExitRoot common.Hash `json:"mainnetExitRoot"`
 	RollupExitRoot  common.Hash `json:"rollupExitRoot"`
+}
+
+// ZKCounters counters for the tx
+type ZKCounters struct {
+	GasUsed              ArgUint64 `json:"gasUsed"`
+	UsedKeccakHashes     ArgUint64 `json:"usedKeccakHashes"`
+	UsedPoseidonHashes   ArgUint64 `json:"usedPoseidonHashes"`
+	UsedPoseidonPaddings ArgUint64 `json:"usedPoseidonPaddings"`
+	UsedMemAligns        ArgUint64 `json:"usedMemAligns"`
+	UsedArithmetics      ArgUint64 `json:"usedArithmetics"`
+	UsedBinaries         ArgUint64 `json:"usedBinaries"`
+	UsedSteps            ArgUint64 `json:"usedSteps"`
+	UsedSHA256Hashes     ArgUint64 `json:"usedSHA256Hashes"`
+}
+
+// ZKCountersLimits used to return the zk counter limits to the user
+type ZKCountersLimits struct {
+	MaxGasUsed          ArgUint64 `json:"maxGasUsed"`
+	MaxKeccakHashes     ArgUint64 `json:"maxKeccakHashes"`
+	MaxPoseidonHashes   ArgUint64 `json:"maxPoseidonHashes"`
+	MaxPoseidonPaddings ArgUint64 `json:"maxPoseidonPaddings"`
+	MaxMemAligns        ArgUint64 `json:"maxMemAligns"`
+	MaxArithmetics      ArgUint64 `json:"maxArithmetics"`
+	MaxBinaries         ArgUint64 `json:"maxBinaries"`
+	MaxSteps            ArgUint64 `json:"maxSteps"`
+	MaxSHA256Hashes     ArgUint64 `json:"maxSHA256Hashes"`
+}
+
+// RevertInfo contains the reverted message and data when a tx
+// is reverted during the zk counter estimation
+type RevertInfo struct {
+	Message string    `json:"message"`
+	Data    *ArgBytes `json:"data,omitempty"`
+}
+
+// ZKCountersResponse returned when counters are estimated
+type ZKCountersResponse struct {
+	CountersUsed   ZKCounters       `json:"countersUsed"`
+	CountersLimits ZKCountersLimits `json:"countersLimit"`
+	Revert         *RevertInfo      `json:"revert,omitempty"`
+	OOCError       *string          `json:"oocError,omitempty"`
+}
+
+// NewZKCountersResponse creates an instance of ZKCounters to be returned
+// by the RPC to the caller
+func NewZKCountersResponse(zkCounters state.ZKCounters, limits ZKCountersLimits, revert *RevertInfo, oocErr error) ZKCountersResponse {
+	var oocErrMsg *string
+	if oocErr != nil {
+		s := oocErr.Error()
+		oocErrMsg = &s
+	}
+	return ZKCountersResponse{
+		CountersUsed: ZKCounters{
+			GasUsed:              ArgUint64(zkCounters.GasUsed),
+			UsedKeccakHashes:     ArgUint64(zkCounters.KeccakHashes),
+			UsedPoseidonHashes:   ArgUint64(zkCounters.PoseidonHashes),
+			UsedPoseidonPaddings: ArgUint64(zkCounters.PoseidonPaddings),
+			UsedMemAligns:        ArgUint64(zkCounters.MemAligns),
+			UsedArithmetics:      ArgUint64(zkCounters.Arithmetics),
+			UsedBinaries:         ArgUint64(zkCounters.Binaries),
+			UsedSteps:            ArgUint64(zkCounters.Steps),
+			UsedSHA256Hashes:     ArgUint64(zkCounters.Sha256Hashes_V2),
+		},
+		CountersLimits: limits,
+		Revert:         revert,
+		OOCError:       oocErrMsg,
+	}
 }

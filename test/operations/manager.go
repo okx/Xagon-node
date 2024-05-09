@@ -503,7 +503,11 @@ func initState(cfg state.Config) (*state.State, error) {
 	if err != nil {
 		panic(err)
 	}
-	st := state.NewState(stateCfg, stateDb, executorClient, stateTree, eventLog, mt)
+	mtr, err := l1infotree.NewL1InfoTreeRecursive(32)
+	if err != nil {
+		panic(err)
+	}
+	st := state.NewState(stateCfg, stateDb, executorClient, stateTree, eventLog, mt, mtr)
 	return st, nil
 }
 

@@ -93,6 +93,36 @@ func (_m *PoolMock) GetDefaultMinGasPriceAllowed() uint64 {
 	return r0
 }
 
+// GetEarliestProcessedTx provides a mock function with given fields: ctx
+func (_m *PoolMock) GetEarliestProcessedTx(ctx context.Context) (common.Hash, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetEarliestProcessedTx")
+	}
+
+	var r0 common.Hash
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (common.Hash, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) common.Hash); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(common.Hash)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
 // GetGasPrices provides a mock function with given fields: ctx
 func (_m *PoolMock) GetGasPrices(ctx context.Context) (pool.GasPrices, error) {
 	ret := _m.Called(ctx)
@@ -180,7 +210,7 @@ func (_m *PoolMock) GetNonWIPPendingTxs(ctx context.Context) ([]pool.Transaction
 }
 
 // GetTxZkCountersByHash provides a mock function with given fields: ctx, hash
-func (_m *PoolMock) GetTxZkCountersByHash(ctx context.Context, hash common.Hash) (*state.ZKCounters, error) {
+func (_m *PoolMock) GetTxZkCountersByHash(ctx context.Context, hash common.Hash) (*state.ZKCounters, *state.ZKCounters, error) {
 	ret := _m.Called(ctx, hash)
 
 	if len(ret) == 0 {
@@ -188,8 +218,9 @@ func (_m *PoolMock) GetTxZkCountersByHash(ctx context.Context, hash common.Hash)
 	}
 
 	var r0 *state.ZKCounters
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, common.Hash) (*state.ZKCounters, error)); ok {
+	var r1 *state.ZKCounters
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, common.Hash) (*state.ZKCounters, *state.ZKCounters, error)); ok {
 		return rf(ctx, hash)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, common.Hash) *state.ZKCounters); ok {
@@ -200,13 +231,21 @@ func (_m *PoolMock) GetTxZkCountersByHash(ctx context.Context, hash common.Hash)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, common.Hash) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, common.Hash) *state.ZKCounters); ok {
 		r1 = rf(ctx, hash)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(*state.ZKCounters)
+		}
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, common.Hash) error); ok {
+		r2 = rf(ctx, hash)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // MarkWIPTxsAsPending provides a mock function with given fields: ctx

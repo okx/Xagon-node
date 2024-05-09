@@ -17,6 +17,11 @@ import (
 	"github.com/ethereum/go-ethereum/core/types"
 )
 
+const (
+	// MaxTxGasLimit is the gas limit allowed per tx in a batch
+	MaxTxGasLimit = uint64(30000000)
+)
+
 // TestConvertToProcessBatchResponse for test purposes
 func (s *State) TestConvertToProcessBatchResponse(batchResponse *executor.ProcessBatchResponse) (*ProcessBatchResponse, error) {
 	return s.convertToProcessBatchResponse(batchResponse)
@@ -181,6 +186,7 @@ func (s *State) convertToProcessBlockResponse(responses []*executor.ProcessTrans
 		}
 
 		blockResponse.TransactionResponses = append(blockResponse.TransactionResponses, txResponse)
+		blockResponse.GasLimit = MaxTxGasLimit
 		results = append(results, blockResponse)
 	}
 
@@ -301,13 +307,13 @@ func convertToInstrumentationContract(response *executor.Contract) instrumentati
 
 func convertToCounters(resp *executor.ProcessBatchResponse) ZKCounters {
 	return ZKCounters{
-		GasUsed:              resp.CumulativeGasUsed,
-		UsedKeccakHashes:     resp.CntKeccakHashes,
-		UsedPoseidonHashes:   resp.CntPoseidonHashes,
-		UsedPoseidonPaddings: resp.CntPoseidonPaddings,
-		UsedMemAligns:        resp.CntMemAligns,
-		UsedArithmetics:      resp.CntArithmetics,
-		UsedBinaries:         resp.CntBinaries,
-		UsedSteps:            resp.CntSteps,
+		GasUsed:          resp.CumulativeGasUsed,
+		KeccakHashes:     resp.CntKeccakHashes,
+		PoseidonHashes:   resp.CntPoseidonHashes,
+		PoseidonPaddings: resp.CntPoseidonPaddings,
+		MemAligns:        resp.CntMemAligns,
+		Arithmetics:      resp.CntArithmetics,
+		Binaries:         resp.CntBinaries,
+		Steps:            resp.CntSteps,
 	}
 }

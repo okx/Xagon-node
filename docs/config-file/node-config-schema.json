@@ -64,6 +64,11 @@
 					"description": "URL is the URL of the Ethereum node for L1",
 					"default": "http://localhost:8545"
 				},
+				"ConsensusL1URL": {
+					"type": "string",
+					"description": "ConsensusL1URL is the URL of the consensus L1 RPC endpoint",
+					"default": ""
+				},
 				"ForkIDChunkSize": {
 					"type": "integer",
 					"description": "ForkIDChunkSize is the max interval for each call to L1 provider to get the forkIDs",
@@ -450,6 +455,45 @@
 					"type": "boolean",
 					"description": "EnableHttpLog allows the user to enable or disable the logs related to the HTTP\nrequests to be captured by the server.",
 					"default": true
+				},
+				"ZKCountersLimits": {
+					"properties": {
+						"MaxKeccakHashes": {
+							"type": "integer",
+							"default": 0
+						},
+						"MaxPoseidonHashes": {
+							"type": "integer",
+							"default": 0
+						},
+						"MaxPoseidonPaddings": {
+							"type": "integer",
+							"default": 0
+						},
+						"MaxMemAligns": {
+							"type": "integer",
+							"default": 0
+						},
+						"MaxArithmetics": {
+							"type": "integer",
+							"default": 0
+						},
+						"MaxBinaries": {
+							"type": "integer",
+							"default": 0
+						},
+						"MaxSteps": {
+							"type": "integer",
+							"default": 0
+						},
+						"MaxSHA256Hashes": {
+							"type": "integer",
+							"default": 0
+						}
+					},
+					"additionalProperties": false,
+					"type": "object",
+					"description": "ZKCountersLimits defines the ZK Counter limits"
 				}
 			},
 			"additionalProperties": false,
@@ -478,6 +522,72 @@
 					"description": "TrustedSequencerURL is the rpc url to connect and sync the trusted state",
 					"default": ""
 				},
+				"SyncBlockProtection": {
+					"type": "string",
+					"description": "SyncBlockProtection specify the state to sync (lastest, finalized or safe)",
+					"default": "safe"
+				},
+				"L1SyncCheckL2BlockHash": {
+					"type": "boolean",
+					"description": "L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)",
+					"default": true
+				},
+				"L1SyncCheckL2BlockNumberModulus": {
+					"type": "integer",
+					"description": "L1SyncCheckL2BlockNumberModulus is the modulus used to choose the l2block to check\na modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)",
+					"default": 600
+				},
+				"L1BlockCheck": {
+					"properties": {
+						"Enable": {
+							"type": "boolean",
+							"description": "Enable if is true then the check l1 Block Hash is active",
+							"default": true
+						},
+						"L1SafeBlockPoint": {
+							"type": "string",
+							"enum": [
+								"finalized",
+								"safe",
+								"latest"
+							],
+							"description": "L1SafeBlockPoint is the point that a block is considered safe enough to be checked\nit can be: finalized, safe,pending or latest",
+							"default": "finalized"
+						},
+						"L1SafeBlockOffset": {
+							"type": "integer",
+							"description": "L1SafeBlockOffset is the offset to add to L1SafeBlockPoint as a safe point\nit can be positive or negative\nExample: L1SafeBlockPoint= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block",
+							"default": 0
+						},
+						"ForceCheckBeforeStart": {
+							"type": "boolean",
+							"description": "ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks",
+							"default": true
+						},
+						"PreCheckEnable": {
+							"type": "boolean",
+							"description": "PreCheckEnable if is true then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock",
+							"default": true
+						},
+						"L1PreSafeBlockPoint": {
+							"type": "string",
+							"enum": [
+								"finalized",
+								"safe",
+								"latest"
+							],
+							"description": "L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked\nit can be: finalized, safe,pending or latest",
+							"default": "safe"
+						},
+						"L1PreSafeBlockOffset": {
+							"type": "integer",
+							"description": "L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point\nit can be positive or negative\nExample: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block",
+							"default": 0
+						}
+					},
+					"additionalProperties": false,
+					"type": "object"
+				},
 				"L1SynchronizationMode": {
 					"type": "string",
 					"enum": [
@@ -485,7 +595,7 @@
 						"parallel"
 					],
 					"description": "L1SynchronizationMode define how to synchronize with L1:\n- parallel: Request data to L1 in parallel, and process sequentially. The advantage is that executor is not blocked waiting for L1 data\n- sequential: Request data to L1 and execute",
-					"default": "parallel"
+					"default": "sequential"
 				},
 				"L1ParallelSynchronization": {
 					"properties": {
@@ -585,6 +695,28 @@
 					"additionalProperties": false,
 					"type": "object",
 					"description": "L1ParallelSynchronization Configuration for parallel mode (if L1SynchronizationMode equal to 'parallel')"
+				},
+				"L2Synchronization": {
+					"properties": {
+						"AcceptEmptyClosedBatches": {
+							"type": "boolean",
+							"description": "AcceptEmptyClosedBatches is a flag to enable or disable the acceptance of empty batches.\nif true, the synchronizer will accept empty batches and process them.",
+							"default": false
+						},
+						"ReprocessFullBatchOnClose": {
+							"type": "boolean",
+							"description": "ReprocessFullBatchOnClose if is true when a batch is closed is force to reprocess again",
+							"default": true
+						},
+						"CheckLastL2BlockHashOnCloseBatch": {
+							"type": "boolean",
+							"description": "CheckLastL2BlockHashOnCloseBatch if is true when a batch is closed is force to check the last L2Block hash",
+							"default": true
+						}
+					},
+					"additionalProperties": false,
+					"type": "object",
+					"description": "L2Synchronization Configuration for L2 synchronization"
 				}
 			},
 			"additionalProperties": false,
@@ -739,6 +871,28 @@
 							"type": "boolean",
 							"description": "SequentialProcessL2Block indicates if the processing of a L2 Block must be done in the same finalizer go func instead\nin the processPendingL2Blocks go func",
 							"default": true
+						},
+						"Metrics": {
+							"properties": {
+								"Interval": {
+									"type": "string",
+									"title": "Duration",
+									"description": "Interval is the interval of time to calculate sequencer metrics",
+									"default": "1h0m0s",
+									"examples": [
+										"1m",
+										"300ms"
+									]
+								},
+								"EnableLog": {
+									"type": "boolean",
+									"description": "EnableLog is a flag to enable/disable metrics logs",
+									"default": true
+								}
+							},
+							"additionalProperties": false,
+							"type": "object",
+							"description": "Metrics is the config for the sequencer metrics"
 						}
 					},
 					"additionalProperties": false,
@@ -1011,6 +1165,11 @@
 					"type": "integer",
 					"description": "UpgradeEtrogBatchNumber is the number of the first batch after upgrading to etrog",
 					"default": 0
+				},
+				"BatchProofL1BlockConfirmations": {
+					"type": "integer",
+					"description": "BatchProofL1BlockConfirmations is number of L1 blocks to consider we can generate the proof for a virtual batch",
+					"default": 2
 				}
 			},
 			"additionalProperties": false,
@@ -1484,7 +1643,7 @@
 								},
 								"MaxCumulativeGasUsed": {
 									"type": "integer",
-									"default": 30000000
+									"default": 1125899906842624
 								},
 								"MaxKeccakHashes": {
 									"type": "integer",
@@ -1541,6 +1700,11 @@
 					"type": "integer",
 					"description": "MaxNativeBlockHashBlockRange is a configuration to set the max range for block number when querying\nnative block hashes in a single call to the state, if zero it means no limit",
 					"default": 0
+				},
+				"AvoidForkIDInMemory": {
+					"type": "boolean",
+					"description": "AvoidForkIDInMemory is a configuration that forces the ForkID information to be loaded\nfrom the DB every time it's needed",
+					"default": false
 				}
 			},
 			"additionalProperties": false,

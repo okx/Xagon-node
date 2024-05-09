@@ -173,14 +173,17 @@ func sendBatches(cliCtx *cli.Context) error {
 		for i := 0; i < nb; i++ {
 			// empty rollup
 			seqs = append(seqs, ethmanTypes.Sequence{
-				GlobalExitRoot: common.HexToHash("0x"),
-				BatchL2Data:    []byte{},
-				Timestamp:      int64(currentBlock.Time() - 1), // fit in latest-sequence < > current-block rage
+				BatchNumber:          uint64(i),
+				GlobalExitRoot:       common.HexToHash("0x"),
+				BatchL2Data:          []byte{},
+				LastL2BLockTimestamp: int64(currentBlock.Time() - 1), // fit in latest-sequence < > current-block rage
 			})
 		}
 
 		// send to L1
-		to, data, err := ethMan.BuildSequenceBatchesTxData(auth.From, seqs, auth.From)
+		firstSequence := seqs[0]
+		lastSequence := seqs[len(seqs)-1]
+		to, data, err := ethMan.BuildSequenceBatchesTxData(auth.From, seqs, uint64(lastSequence.LastL2BLockTimestamp), firstSequence.BatchNumber, auth.From)
 		if err != nil {
 			return err
 		}
@@ -286,7 +289,7 @@ func sendBatches(cliCtx *cli.Context) error {
 						switch vLog.Topics[0] {
 						case etherman.SequencedBatchesSigHash():
 							if vLog.TxHash == tx.Hash() { // ignore other txs happening on L1
-								sb, err := ethMan.ZkEVM.ParseSequenceBatches(vLog)
+								sb, err := ethMan.EtrogZkEVM.ParseSequenceBatches(vLog)
 								if err != nil {
 									return err
 								}
@@ -299,7 +302,7 @@ func sendBatches(cliCtx *cli.Context) error {
 								}
 							}
 						case etherman.TrustedVerifyBatchesSigHash():
-							vb, err := ethMan.ZkEVM.ParseVerifyBatches(vLog)
+							vb, err := ethMan.EtrogZkEVM.ParseVerifyBatches(vLog)
 							if err != nil {
 								return err
 							}

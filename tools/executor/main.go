@@ -28,20 +28,20 @@ const (
 func main() {
 	// Start containers
 	defer func() {
-		cmd := exec.Command("docker-compose", "down", "--remove-orphans")
+		cmd := exec.Command("docker", "compose", "down", "--remove-orphans")
 		if err := cmd.Run(); err != nil {
 			log.Errorf("Failed stop containers: %v", err)
 			return
 		}
 	}()
 	log.Info("Starting DB and prover")
-	cmd := exec.Command("docker-compose", "up", "-d", "executor-tool-db")
+	cmd := exec.Command("docker", "compose", "up", "-d", "executor-tool-db")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		log.Errorf("Failed to star DB: %w. %v", err, out)
 		return
 	}
 	time.Sleep(time.Second * waitForDBSeconds)
-	cmd = exec.Command("docker-compose", "up", "-d", "executor-tool-prover")
+	cmd = exec.Command("docker", "compose", "up", "-d", "executor-tool-prover")
 	if out, err := cmd.CombinedOutput(); err != nil {
 		log.Errorf("Failed to star prover: %v. %v", err, out)
 		return

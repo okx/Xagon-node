@@ -68,21 +68,35 @@ func NewSyncTrustedStateExecutor(zkEVMClient zkEVMClientInterface, state syncTru
 	}
 }
 
+// GetCachedBatch implements syncinterfaces.SyncTrustedStateExecutor. Returns a cached batch
+func (s *SyncTrustedBatchesAction) GetCachedBatch(batchNumber uint64) *state.Batch {
+	if s.TrustedState.LastTrustedBatches == nil {
+		return nil
+	}
+	for _, batch := range s.TrustedState.LastTrustedBatches {
+		if batch.BatchNumber == batchNumber {
+			return batch
+		}
+	}
+	return nil
+}
+
 // SyncTrustedState synchronizes information from the trusted sequencer
 // related to the trusted state when the node has all the information from
 // l1 synchronized
-func (s *SyncTrustedBatchesAction) SyncTrustedState(ctx context.Context, latestSyncedBatch uint64) error {
+func (s *SyncTrustedBatchesAction) SyncTrustedState(ctx context.Context, latestSyncedBatch uint64, maximumBatchNumberToProcess uint64) error {
 	log.Info("syncTrustedState: Getting trusted state info")
 	start := time.Now()
-	lastTrustedStateBatchNumber, err := s.zkEVMClient.BatchNumber(ctx)
+	lastTrustedStateBatchNumberSeen, err := s.zkEVMClient.BatchNumber(ctx)
 	metrics.GetTrustedBatchNumberTime(time.Since(start))
 	if err != nil {
 		log.Warn("syncTrustedState: error syncing trusted state. Error: ", err)
 		return err
 	}
-
+	lastTrustedStateBatchNumber := min(lastTrustedStateBatchNumberSeen, maximumBatchNumberToProcess)
 	log.Debug("syncTrustedState: lastTrustedStateBatchNumber ", lastTrustedStateBatchNumber)
 	log.Debug("syncTrustedState: latestSyncedBatch ", latestSyncedBatch)
+	log.Debug("syncTrustedState: lastTrustedStateBatchNumberSeen ", lastTrustedStateBatchNumberSeen)
 	if lastTrustedStateBatchNumber < latestSyncedBatch {
 		return nil
 	}

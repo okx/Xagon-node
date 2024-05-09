@@ -248,6 +248,228 @@ func (_c *ExecutorServiceClientMock_ProcessBatchV2_Call) RunAndReturn(run func(c
 	return _c
 }
 
+// ProcessBatchV3 provides a mock function with given fields: ctx, in, opts
+func (_m *ExecutorServiceClientMock) ProcessBatchV3(ctx context.Context, in *executor.ProcessBatchRequestV3, opts ...grpc.CallOption) (*executor.ProcessBatchResponseV3, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ProcessBatchV3")
+	}
+
+	var r0 *executor.ProcessBatchResponseV3
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *executor.ProcessBatchRequestV3, ...grpc.CallOption) (*executor.ProcessBatchResponseV3, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *executor.ProcessBatchRequestV3, ...grpc.CallOption) *executor.ProcessBatchResponseV3); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*executor.ProcessBatchResponseV3)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *executor.ProcessBatchRequestV3, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ExecutorServiceClientMock_ProcessBatchV3_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ProcessBatchV3'
+type ExecutorServiceClientMock_ProcessBatchV3_Call struct {
+	*mock.Call
+}
+
+// ProcessBatchV3 is a helper method to define mock.On call
+//   - ctx context.Context
+//   - in *executor.ProcessBatchRequestV3
+//   - opts ...grpc.CallOption
+func (_e *ExecutorServiceClientMock_Expecter) ProcessBatchV3(ctx interface{}, in interface{}, opts ...interface{}) *ExecutorServiceClientMock_ProcessBatchV3_Call {
+	return &ExecutorServiceClientMock_ProcessBatchV3_Call{Call: _e.mock.On("ProcessBatchV3",
+		append([]interface{}{ctx, in}, opts...)...)}
+}
+
+func (_c *ExecutorServiceClientMock_ProcessBatchV3_Call) Run(run func(ctx context.Context, in *executor.ProcessBatchRequestV3, opts ...grpc.CallOption)) *ExecutorServiceClientMock_ProcessBatchV3_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]grpc.CallOption, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(grpc.CallOption)
+			}
+		}
+		run(args[0].(context.Context), args[1].(*executor.ProcessBatchRequestV3), variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *ExecutorServiceClientMock_ProcessBatchV3_Call) Return(_a0 *executor.ProcessBatchResponseV3, _a1 error) *ExecutorServiceClientMock_ProcessBatchV3_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ExecutorServiceClientMock_ProcessBatchV3_Call) RunAndReturn(run func(context.Context, *executor.ProcessBatchRequestV3, ...grpc.CallOption) (*executor.ProcessBatchResponseV3, error)) *ExecutorServiceClientMock_ProcessBatchV3_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ProcessBlobInnerV3 provides a mock function with given fields: ctx, in, opts
+func (_m *ExecutorServiceClientMock) ProcessBlobInnerV3(ctx context.Context, in *executor.ProcessBlobInnerRequestV3, opts ...grpc.CallOption) (*executor.ProcessBlobInnerResponseV3, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ProcessBlobInnerV3")
+	}
+
+	var r0 *executor.ProcessBlobInnerResponseV3
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *executor.ProcessBlobInnerRequestV3, ...grpc.CallOption) (*executor.ProcessBlobInnerResponseV3, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *executor.ProcessBlobInnerRequestV3, ...grpc.CallOption) *executor.ProcessBlobInnerResponseV3); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*executor.ProcessBlobInnerResponseV3)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *executor.ProcessBlobInnerRequestV3, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ExecutorServiceClientMock_ProcessBlobInnerV3_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ProcessBlobInnerV3'
+type ExecutorServiceClientMock_ProcessBlobInnerV3_Call struct {
+	*mock.Call
+}
+
+// ProcessBlobInnerV3 is a helper method to define mock.On call
+//   - ctx context.Context
+//   - in *executor.ProcessBlobInnerRequestV3
+//   - opts ...grpc.CallOption
+func (_e *ExecutorServiceClientMock_Expecter) ProcessBlobInnerV3(ctx interface{}, in interface{}, opts ...interface{}) *ExecutorServiceClientMock_ProcessBlobInnerV3_Call {
+	return &ExecutorServiceClientMock_ProcessBlobInnerV3_Call{Call: _e.mock.On("ProcessBlobInnerV3",
+		append([]interface{}{ctx, in}, opts...)...)}
+}
+
+func (_c *ExecutorServiceClientMock_ProcessBlobInnerV3_Call) Run(run func(ctx context.Context, in *executor.ProcessBlobInnerRequestV3, opts ...grpc.CallOption)) *ExecutorServiceClientMock_ProcessBlobInnerV3_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]grpc.CallOption, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(grpc.CallOption)
+			}
+		}
+		run(args[0].(context.Context), args[1].(*executor.ProcessBlobInnerRequestV3), variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *ExecutorServiceClientMock_ProcessBlobInnerV3_Call) Return(_a0 *executor.ProcessBlobInnerResponseV3, _a1 error) *ExecutorServiceClientMock_ProcessBlobInnerV3_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ExecutorServiceClientMock_ProcessBlobInnerV3_Call) RunAndReturn(run func(context.Context, *executor.ProcessBlobInnerRequestV3, ...grpc.CallOption) (*executor.ProcessBlobInnerResponseV3, error)) *ExecutorServiceClientMock_ProcessBlobInnerV3_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// ProcessStatelessBatchV2 provides a mock function with given fields: ctx, in, opts
+func (_m *ExecutorServiceClientMock) ProcessStatelessBatchV2(ctx context.Context, in *executor.ProcessStatelessBatchRequestV2, opts ...grpc.CallOption) (*executor.ProcessBatchResponseV2, error) {
+	_va := make([]interface{}, len(opts))
+	for _i := range opts {
+		_va[_i] = opts[_i]
+	}
+	var _ca []interface{}
+	_ca = append(_ca, ctx, in)
+	_ca = append(_ca, _va...)
+	ret := _m.Called(_ca...)
+
+	if len(ret) == 0 {
+		panic("no return value specified for ProcessStatelessBatchV2")
+	}
+
+	var r0 *executor.ProcessBatchResponseV2
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, *executor.ProcessStatelessBatchRequestV2, ...grpc.CallOption) (*executor.ProcessBatchResponseV2, error)); ok {
+		return rf(ctx, in, opts...)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, *executor.ProcessStatelessBatchRequestV2, ...grpc.CallOption) *executor.ProcessBatchResponseV2); ok {
+		r0 = rf(ctx, in, opts...)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*executor.ProcessBatchResponseV2)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, *executor.ProcessStatelessBatchRequestV2, ...grpc.CallOption) error); ok {
+		r1 = rf(ctx, in, opts...)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// ExecutorServiceClientMock_ProcessStatelessBatchV2_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ProcessStatelessBatchV2'
+type ExecutorServiceClientMock_ProcessStatelessBatchV2_Call struct {
+	*mock.Call
+}
+
+// ProcessStatelessBatchV2 is a helper method to define mock.On call
+//   - ctx context.Context
+//   - in *executor.ProcessStatelessBatchRequestV2
+//   - opts ...grpc.CallOption
+func (_e *ExecutorServiceClientMock_Expecter) ProcessStatelessBatchV2(ctx interface{}, in interface{}, opts ...interface{}) *ExecutorServiceClientMock_ProcessStatelessBatchV2_Call {
+	return &ExecutorServiceClientMock_ProcessStatelessBatchV2_Call{Call: _e.mock.On("ProcessStatelessBatchV2",
+		append([]interface{}{ctx, in}, opts...)...)}
+}
+
+func (_c *ExecutorServiceClientMock_ProcessStatelessBatchV2_Call) Run(run func(ctx context.Context, in *executor.ProcessStatelessBatchRequestV2, opts ...grpc.CallOption)) *ExecutorServiceClientMock_ProcessStatelessBatchV2_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		variadicArgs := make([]grpc.CallOption, len(args)-2)
+		for i, a := range args[2:] {
+			if a != nil {
+				variadicArgs[i] = a.(grpc.CallOption)
+			}
+		}
+		run(args[0].(context.Context), args[1].(*executor.ProcessStatelessBatchRequestV2), variadicArgs...)
+	})
+	return _c
+}
+
+func (_c *ExecutorServiceClientMock_ProcessStatelessBatchV2_Call) Return(_a0 *executor.ProcessBatchResponseV2, _a1 error) *ExecutorServiceClientMock_ProcessStatelessBatchV2_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *ExecutorServiceClientMock_ProcessStatelessBatchV2_Call) RunAndReturn(run func(context.Context, *executor.ProcessStatelessBatchRequestV2, ...grpc.CallOption) (*executor.ProcessBatchResponseV2, error)) *ExecutorServiceClientMock_ProcessStatelessBatchV2_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // NewExecutorServiceClientMock creates a new instance of ExecutorServiceClientMock. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.
 // The first argument is typically a *testing.T value.
 func NewExecutorServiceClientMock(t interface {

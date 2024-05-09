@@ -132,12 +132,6 @@ func main() {
 		log.Debugf("Sending TX to transfer ETH")
 		to := common.HexToAddress(receiverAddr)
 		tx = ethTransfer(ctx, client, auth, to, transferAmount, nil)
-		fmt.Println()
-
-		// Invalid ETH Transfer
-		log.Debugf("Sending Invalid TX to transfer ETH")
-		nonce := tx.Nonce() + 1
-		ethTransfer(ctx, client, auth, to, transferAmount, &nonce)
 		err = operations.WaitTxToBeMined(ctx, client, tx, txTimeout)
 		chkErr(err)
 		fmt.Println()

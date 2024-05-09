@@ -318,6 +318,9 @@ func TestDebugTraceTransaction(t *testing.T) {
 		{name: "memory", prepare: prepareMemory, createSignedTx: createMemorySignedTx},
 		{name: "bridge", prepare: prepareBridge, createSignedTx: createBridgeSignedTx},
 		{name: "deploy create 0", createSignedTx: createDeployCreate0SignedTx},
+		{name: "log0 all zeros", prepare: prepareLog0, createSignedTx: createLog0AllZeros},
+		{name: "log0 empty", prepare: prepareLog0, createSignedTx: createLog0Empty},
+		{name: "log0 short", prepare: prepareLog0, createSignedTx: createLog0Short},
 
 		// failed transactions
 		{name: "sc deployment reverted", createSignedTx: createScDeployRevertedSignedTx},
@@ -731,6 +734,58 @@ func TestDebugTraceBlock(t *testing.T) {
 			}
 		})
 	}
+}
+
+func Test_DebugFirstBatch(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
+	const l2NetworkURL = "http://localhost:8124"
+	const l2ExplorerRPCComponentName = "l2-explorer-json-rpc"
+
+	var err error
+	if !dockersArePreLaunchedForDebugTests {
+		err = operations.Teardown()
+		require.NoError(t, err)
+
+		defer func() {
+			require.NoError(t, operations.Teardown())
+			require.NoError(t, operations.StopComponent(l2ExplorerRPCComponentName))
+		}()
+	}
+
+	ctx := context.Background()
+	opsCfg := operations.GetDefaultOperationsConfig()
+	if !dockersArePreLaunchedForDebugTests {
+		opsMan, err := operations.NewManager(ctx, opsCfg)
+		require.NoError(t, err)
+		err = opsMan.Setup()
+		require.NoError(t, err)
+
+		err = operations.StartComponent(l2ExplorerRPCComponentName, func() (bool, error) { return operations.NodeUpCondition(l2NetworkURL) })
+		require.NoError(t, err)
+	} else {
+		log.Info("Using pre-launched dockers: no reset Database")
+	}
+
+	debugOptions := map[string]interface{}{
+		"tracer": "callTracer",
+		"tracerConfig": map[string]interface{}{
+			"onlyTopCall": false,
+			"withLog":     true,
+		},
+	}
+
+	response, err := client.JSONRPCCall(l2NetworkURL, "debug_traceBlockByNumber", "0x1", debugOptions)
+	require.NoError(t, err)
+	require.Nil(t, response.Error)
+	require.NotNil(t, response.Result)
+
+	response, err = client.JSONRPCCall(l2NetworkURL, "debug_traceBlockByNumber", "0x1")
+	require.NoError(t, err)
+	require.Nil(t, response.Error)
+	require.NotNil(t, response.Result)
 }
 
 func getTxInResponseDebugTest(t *testing.T, response json.RawMessage, txIndex uint, debugPrefix string) map[string]interface{} {

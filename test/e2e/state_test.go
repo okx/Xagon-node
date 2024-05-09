@@ -82,7 +82,7 @@ func TestStateTransition(t *testing.T) {
 
 			st := opsman.State()
 
-			// Check leafs
+			// Check leaves
 			l2Block, err := st.GetLastL2Block(ctx, nil)
 			require.NoError(t, err)
 			for addrStr, leaf := range testCase.ExpectedNewLeafs {

@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonrollupmanager"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonzkevm"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonrollupmanager"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-node/test/constants"
 	"github.com/stretchr/testify/require"
 
@@ -31,6 +31,7 @@ const (
 
 var (
 	toAddress = common.HexToAddress(toAddressHex)
+	opsMan    *operations.Manager
 )
 
 var networks = []struct {
@@ -65,7 +66,7 @@ func setup() {
 	}
 
 	opsCfg := operations.GetDefaultOperationsConfig()
-	opsMan, err := operations.NewManager(ctx, opsCfg)
+	opsMan, err = operations.NewManager(ctx, opsCfg)
 	if err != nil {
 		panic(err)
 	}
@@ -140,11 +141,11 @@ func sendForcedBatchForVector(t *testing.T, txs []byte, opsman *operations.Manag
 
 	// Create smc client
 	zkEvmAddr := common.HexToAddress(operations.DefaultL1ZkEVMSmartContract)
-	zkEvm, err := polygonzkevm.NewPolygonzkevm(zkEvmAddr, ethClient)
+	zkEvm, err := etrogpolygonzkevm.NewEtrogpolygonzkevm(zkEvmAddr, ethClient)
 	require.NoError(t, err)
 
 	rollupManagerAddr := common.HexToAddress(operations.DefaultL1RollupManagerSmartContract)
-	rollupManager, err := polygonrollupmanager.NewPolygonrollupmanager(rollupManagerAddr, ethClient)
+	rollupManager, err := etrogpolygonrollupmanager.NewEtrogpolygonrollupmanager(rollupManagerAddr, ethClient)
 	require.NoError(t, err)
 
 	auth, err := operations.GetAuth(operations.DefaultSequencerPrivateKey, operations.DefaultL1ChainID)

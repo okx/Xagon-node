@@ -27,6 +27,10 @@ decode-entry: ## Runs the tool to decode a given entry number
 decode-l2block: ## Runs the tool to decode a given L2 block
 	go run main.go decode-l2block -cfg config/tool.config.toml -l2block $(arguments)
 
+.PHONY: decode-batch
+decode-batch: ## Runs the tool to decode a given batch
+	go run main.go decode-batch -cfg config/tool.config.toml -batch $(arguments)
+
 .PHONY: decode-entry-offline
 decode-entry-offline: ## Runs the offline tool to decode a given entry number
 	go run main.go decode-entry-offline -cfg config/tool.config.toml -entry $(arguments)
@@ -34,6 +38,10 @@ decode-entry-offline: ## Runs the offline tool to decode a given entry number
 .PHONY: decode-l2block-offline
 decode-l2block-offline: ## Runs the offline tool to decode a given L2 block
 	go run main.go decode-l2block-offline -cfg config/tool.config.toml -l2block $(arguments)
+
+.PHONY: decode-batch-offline
+decode-batch-offline: ## Runs the offline tool to decode a given batch
+	go run main.go decode-batch-offline -cfg config/tool.config.toml -batch $(arguments)
 
 .PHONY: truncate
 truncate: ## Runs the offline tool to truncate the stream file

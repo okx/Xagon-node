@@ -45,6 +45,10 @@ type Config struct {
 	// MaxNativeBlockHashBlockRange is a configuration to set the max range for block number when querying
 	// native block hashes in a single call to the state, if zero it means no limit
 	MaxNativeBlockHashBlockRange uint64
+
+	// AvoidForkIDInMemory is a configuration that forces the ForkID information to be loaded
+	// from the DB every time it's needed
+	AvoidForkIDInMemory bool
 }
 
 // BatchConfig represents the configuration of the batch constraints
@@ -70,12 +74,12 @@ type BatchConstraintsCfg struct {
 // IsWithinConstraints checks if the counters are within the batch constraints
 func (c BatchConstraintsCfg) IsWithinConstraints(counters ZKCounters) bool {
 	return counters.GasUsed <= c.MaxCumulativeGasUsed &&
-		counters.UsedKeccakHashes <= c.MaxKeccakHashes &&
-		counters.UsedPoseidonHashes <= c.MaxPoseidonHashes &&
-		counters.UsedPoseidonPaddings <= c.MaxPoseidonPaddings &&
-		counters.UsedMemAligns <= c.MaxMemAligns &&
-		counters.UsedArithmetics <= c.MaxArithmetics &&
-		counters.UsedBinaries <= c.MaxBinaries &&
-		counters.UsedSteps <= c.MaxSteps &&
-		counters.UsedSha256Hashes_V2 <= c.MaxSHA256Hashes
+		counters.KeccakHashes <= c.MaxKeccakHashes &&
+		counters.PoseidonHashes <= c.MaxPoseidonHashes &&
+		counters.PoseidonPaddings <= c.MaxPoseidonPaddings &&
+		counters.MemAligns <= c.MaxMemAligns &&
+		counters.Arithmetics <= c.MaxArithmetics &&
+		counters.Binaries <= c.MaxBinaries &&
+		counters.Steps <= c.MaxSteps &&
+		counters.Sha256Hashes_V2 <= c.MaxSHA256Hashes
 }

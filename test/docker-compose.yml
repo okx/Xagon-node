@@ -453,7 +453,9 @@ services:
 
   zkevm-mock-l1-network:
     container_name: zkevm-mock-l1-network
-    image: hermeznetwork/geth-zkevm-contracts:v2.1.1-fork.7-geth1.12.0
+    # This image contains the contracts upgraded to Feijoa, disabled 
+    image: hermeznetwork/geth-zkevm-contracts:elderberry-fork.9-geth1.13.11
+    # image: hermeznetwork/geth-zkevm-contracts:v2.1.3-fork.8-geth1.12.0
     ports:
       - 8545:8545
       - 8546:8546
@@ -513,10 +515,13 @@ services:
 
   zkevm-prover:
     container_name: zkevm-prover
-    image: hermeznetwork/zkevm-prover:v4.0.1
+    #image: hermeznetwork/zkevm-prover:v7.0.0-RC4
+    image: hermeznetwork/zkevm-prover:v6.0.0
     ports:
       - 50061:50061 # MT
       - 50071:50071 # Executor
+    environment:
+      - EXPERIMENTAL_DOCKER_DESKTOP_FORCE_QEMU=1
     volumes:
       - ./config/test.prover.config.json:/usr/src/app/config.json
     command: >
@@ -602,12 +607,15 @@ services:
 
   zkevm-permissionless-prover:
     container_name: zkevm-permissionless-prover
-    image: hermeznetwork/zkevm-prover:v4.0.1
+    #image: hermeznetwork/zkevm-prover:v7.0.0-RC4
+    image: hermeznetwork/zkevm-prover:v6.0.0
     ports:
       # - 50058:50058 # Prover
       - 50059:50052 # Mock prover
       - 50068:50061 # MT
       - 50078:50071 # Executor
+    environment:
+      - EXPERIMENTAL_DOCKER_DESKTOP_FORCE_QEMU=1
     volumes:
       - ./config/test.permissionless.prover.config.json:/usr/src/app/config.json
     command: >

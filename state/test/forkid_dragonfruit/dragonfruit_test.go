@@ -1486,11 +1486,13 @@ func TestExecutorRevert(t *testing.T) {
 	})
 
 	receipts := []*types.Receipt{receipt, receipt1}
+	imStateRoots := []common.Hash{common.BytesToHash(processBatchResponse.Responses[0].StateRoot), common.BytesToHash(processBatchResponse.Responses[1].StateRoot)}
 
 	transactions := []*types.Transaction{signedTx0, signedTx1}
 
 	// Create block to be able to calculate its hash
-	l2Block := state.NewL2Block(header, transactions, []*state.L2Header{}, receipts, &trie.StackTrie{})
+	st := trie.NewStackTrie(nil)
+	l2Block := state.NewL2Block(header, transactions, []*state.L2Header{}, receipts, st)
 	l2Block.ReceivedAt = time.Now()
 
 	receipt.BlockHash = l2Block.Hash()
@@ -1504,7 +1506,7 @@ func TestExecutorRevert(t *testing.T) {
 		txsL2Hash[i] = common.HexToHash(fmt.Sprintf("0x%d", i))
 	}
 
-	err = testState.AddL2Block(ctx, 0, l2Block, receipts, txsL2Hash, storeTxsEGPData, dbTx)
+	err = testState.AddL2Block(ctx, 0, l2Block, receipts, txsL2Hash, storeTxsEGPData, imStateRoots, dbTx)
 	require.NoError(t, err)
 	l2Block, err = testState.GetL2BlockByHash(ctx, l2Block.Hash(), dbTx)
 	require.NoError(t, err)

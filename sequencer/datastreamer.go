@@ -36,6 +36,7 @@ func (f *finalizer) DSSendL2Block(batchNumber uint64, blockResponse *state.Proce
 				IsValid:                     1,
 				EncodedLength:               uint32(len(binaryTxData)),
 				Encoded:                     binaryTxData,
+				StateRoot:                   txResponse.StateRoot,
 			}
 
 			l2Transactions = append(l2Transactions, l2Transaction)

@@ -34,8 +34,8 @@ func (p *PostgresStorage) getExecQuerier(dbTx pgx.Tx) ExecQuerier {
 	return p
 }
 
-// Reset resets the state to a block for the given DB tx
-func (p *PostgresStorage) Reset(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) error {
+// ResetToL1BlockNumber resets the state to a block for the given DB tx
+func (p *PostgresStorage) ResetToL1BlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) error {
 	e := p.getExecQuerier(dbTx)
 	const resetSQL = "DELETE FROM state.block WHERE block_num > $1"
 	if _, err := e.Exec(ctx, resetSQL, blockNumber); err != nil {
@@ -119,15 +119,16 @@ func (p *PostgresStorage) GetStateRootByBatchNumber(ctx context.Context, batchNu
 	return common.HexToHash(stateRootStr), nil
 }
 
-// GetLogsByBlockNumber get all the logs from a specific block ordered by log index
+// GetLogsByBlockNumber get all the logs from a specific block ordered by tx index and log index
 func (p *PostgresStorage) GetLogsByBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) ([]*types.Log, error) {
 	const query = `
-      SELECT t.l2_block_num, b.block_hash, l.tx_hash, l.log_index, l.address, l.data, l.topic0, l.topic1, l.topic2, l.topic3
+      SELECT t.l2_block_num, b.block_hash, l.tx_hash, r.tx_index, l.log_index, l.address, l.data, l.topic0, l.topic1, l.topic2, l.topic3
         FROM state.log l
        INNER JOIN state.transaction t ON t.hash = l.tx_hash
        INNER JOIN state.l2block b ON b.block_num = t.l2_block_num
+       INNER JOIN state.receipt r ON r.tx_hash = t.hash
        WHERE b.block_num = $1
-       ORDER BY l.log_index ASC`
+       ORDER BY r.tx_index ASC, l.log_index ASC`
 
 	q := p.getExecQuerier(dbTx)
 	rows, err := q.Query(ctx, query, blockNumber)
@@ -142,11 +143,12 @@ func (p *PostgresStorage) GetLogsByBlockNumber(ctx context.Context, blockNumber 
 func (p *PostgresStorage) GetLogs(ctx context.Context, fromBlock uint64, toBlock uint64, addresses []common.Address, topics [][]common.Hash, blockHash *common.Hash, since *time.Time, dbTx pgx.Tx) ([]*types.Log, error) {
 	// query parts
 	const queryCount = `SELECT count(*) `
-	const querySelect = `SELECT t.l2_block_num, b.block_hash, l.tx_hash, l.log_index, l.address, l.data, l.topic0, l.topic1, l.topic2, l.topic3 `
+	const querySelect = `SELECT t.l2_block_num, b.block_hash, l.tx_hash, r.tx_index, l.log_index, l.address, l.data, l.topic0, l.topic1, l.topic2, l.topic3 `
 
 	const queryBody = `FROM state.log l
        INNER JOIN state.transaction t ON t.hash = l.tx_hash
        INNER JOIN state.l2block b ON b.block_num = t.l2_block_num
+       INNER JOIN state.receipt r ON r.tx_hash = t.hash
        WHERE (l.address = any($1) OR $1 IS NULL)
          AND (l.topic0 = any($2) OR $2 IS NULL)
          AND (l.topic1 = any($3) OR $3 IS NULL)
@@ -157,7 +159,7 @@ func (p *PostgresStorage) GetLogs(ctx context.Context, fromBlock uint64, toBlock
 	const queryFilterByBlockHash = `AND b.block_hash = $7 `
 	const queryFilterByBlockNumbers = `AND b.block_num BETWEEN $7 AND $8 `
 
-	const queryOrder = `ORDER BY b.block_num ASC, l.log_index ASC`
+	const queryOrder = `ORDER BY b.block_num ASC, r.tx_index ASC, l.log_index ASC`
 
 	// count queries
 	const queryToCountLogsByBlockHash = "" +

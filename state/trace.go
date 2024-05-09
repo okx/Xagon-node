@@ -61,11 +61,22 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 	}
 	oldStateRoot = previousL2Block.Root()
 
+	count := 0
+	for _, tx := range l2Block.Transactions() {
+		checkReceipt, err := s.GetTransactionReceipt(ctx, tx.Hash(), dbTx)
+		if err != nil {
+			return nil, err
+		}
+		if checkReceipt.TransactionIndex < receipt.TransactionIndex {
+			count++
+		}
+	}
+
 	// since the executor only stores the state roots by block, we need to
 	// execute all the txs in the block until the tx we want to trace
 	var txsToEncode []types.Transaction
 	var effectivePercentage []uint8
-	for i := 0; i <= int(receipt.TransactionIndex); i++ {
+	for i := 0; i <= count; i++ {
 		txsToEncode = append(txsToEncode, *l2Block.Transactions()[i])
 		effectivePercentage = append(effectivePercentage, MaxEffectivePercentage)
 		log.Debugf("trace will reprocess tx: %v", l2Block.Transactions()[i].Hash().String())
@@ -187,17 +198,51 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 				traceConfigRequestV2.EnableReturnData = cFalse
 			}
 		}
-		deltaTimestamp := uint32(uint64(time.Now().Unix()) - l2Block.Time())
-		transactions := s.BuildChangeL2Block(deltaTimestamp, uint32(0))
 
-		batchL2Data, err := EncodeTransactions(txsToEncode, effectivePercentage, forkId)
-		if err != nil {
-			log.Errorf("error encoding transaction ", err)
-			return nil, err
+		// if the l2 block number is 1, it means this is a network that started
+		// at least on Etrog fork, in this case the l2 block 1 will contain the
+		// injected tx that needs to be processed in a different way
+		isInjectedTx := l2Block.NumberU64() == 1
+
+		var transactions, batchL2Data []byte
+		if isInjectedTx {
+			transactions = append([]byte{}, batch.BatchL2Data...)
+		} else {
+			// build the raw batch so we can get the index l1 info tree for the l2 block
+			rawBatch, err := DecodeBatchV2(batch.BatchL2Data)
+			if err != nil {
+				log.Errorf("error decoding BatchL2Data for batch %d, error: %v", batch.BatchNumber, err)
+				return nil, err
+			}
+
+			// identify the first l1 block number so we can identify the
+			// current l2 block index in the block array
+			firstBlockNumberForBatch, err := s.GetFirstL2BlockNumberForBatchNumber(ctx, batch.BatchNumber, dbTx)
+			if err != nil {
+				log.Errorf("failed to get first l2 block number for batch %v: %v ", batch.BatchNumber, err)
+				return nil, err
+			}
+
+			// computes the l2 block index
+			rawL2BlockIndex := l2Block.NumberU64() - firstBlockNumberForBatch
+			if rawL2BlockIndex > uint64(len(rawBatch.Blocks)-1) {
+				log.Errorf("computed rawL2BlockIndex is greater than the number of blocks we have in the batch %v: %v ", batch.BatchNumber, err)
+				return nil, err
+			}
+
+			// builds the ChangeL2Block transaction with the correct timestamp and IndexL1InfoTree
+			rawL2Block := rawBatch.Blocks[rawL2BlockIndex]
+			deltaTimestamp := uint32(l2Block.Time() - previousL2Block.Time())
+			transactions = s.BuildChangeL2Block(deltaTimestamp, rawL2Block.IndexL1InfoTree)
+
+			batchL2Data, err = EncodeTransactions(txsToEncode, effectivePercentage, forkId)
+			if err != nil {
+				log.Errorf("error encoding transaction ", err)
+				return nil, err
+			}
+
+			transactions = append(transactions, batchL2Data...)
 		}
-
-		transactions = append(transactions, batchL2Data...)
-
 		// prepare process batch request
 		processBatchRequestV2 := &executor.ProcessBatchRequestV2{
 			OldBatchNum:     batch.BatchNumber - 1,
@@ -213,10 +258,45 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 			ContextId:        uuid.NewString(),
 
 			// v2 fields
-			L1InfoRoot:             l2Block.BlockInfoRoot().Bytes(),
+			L1InfoRoot:             GetMockL1InfoRoot().Bytes(),
 			TimestampLimit:         uint64(time.Now().Unix()),
 			SkipFirstChangeL2Block: cFalse,
 			SkipWriteBlockInfoRoot: cTrue,
+		}
+
+		if isInjectedTx {
+			virtualBatch, err := s.GetVirtualBatch(ctx, batch.BatchNumber, dbTx)
+			if err != nil {
+				log.Errorf("failed to load virtual batch %v", batch.BatchNumber, err)
+				return nil, err
+			}
+			l1Block, err := s.GetBlockByNumber(ctx, virtualBatch.BlockNumber, dbTx)
+			if err != nil {
+				log.Errorf("failed to load l1 block %v", virtualBatch.BlockNumber, err)
+				return nil, err
+			}
+
+			processBatchRequestV2.ForcedBlockhashL1 = l1Block.BlockHash.Bytes()
+			processBatchRequestV2.SkipVerifyL1InfoRoot = 1
+		} else {
+			// gets the L1InfoTreeData for the transactions
+			l1InfoTreeData, _, _, err := s.GetL1InfoTreeDataFromBatchL2Data(ctx, transactions, dbTx)
+			if err != nil {
+				return nil, err
+			}
+
+			// In case we have any l1InfoTreeData, add them to the request
+			if len(l1InfoTreeData) > 0 {
+				processBatchRequestV2.L1InfoTreeData = map[uint32]*executor.L1DataV2{}
+				processBatchRequestV2.SkipVerifyL1InfoRoot = cTrue
+				for k, v := range l1InfoTreeData {
+					processBatchRequestV2.L1InfoTreeData[k] = &executor.L1DataV2{
+						GlobalExitRoot: v.GlobalExitRoot.Bytes(),
+						BlockHashL1:    v.BlockHashL1.Bytes(),
+						MinTimestamp:   v.MinTimestamp,
+					}
+				}
+			}
 		}
 
 		// Send Batch to the Executor
@@ -227,19 +307,20 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 			return nil, err
 		} else if processBatchResponseV2.Error != executor.ExecutorError_EXECUTOR_ERROR_NO_ERROR {
 			err = executor.ExecutorErr(processBatchResponseV2.Error)
-			s.eventLog.LogExecutorErrorV2(ctx, processBatchResponseV2.Error, processBatchRequestV2)
+			s.eventLog.LogExecutorError(ctx, processBatchResponseV2.Error, processBatchRequestV2)
 			return nil, err
 		}
 
-		// Transactions are decoded only for logging purposes
-		// as they are not longer needed in the convertToProcessBatchResponse function
-		txs, _, _, err := DecodeTxs(batchL2Data, forkId)
-		if err != nil && !errors.Is(err, ErrInvalidData) {
-			return nil, err
-		}
-
-		for _, tx := range txs {
-			log.Debugf(tx.Hash().String())
+		if !isInjectedTx {
+			// Transactions are decoded only for logging purposes
+			// as they are no longer needed in the convertToProcessBatchResponse function
+			txs, _, _, err := DecodeTxs(batchL2Data, forkId)
+			if err != nil && !errors.Is(err, ErrInvalidData) {
+				return nil, err
+			}
+			for _, tx := range txs {
+				log.Debugf(tx.Hash().String())
+			}
 		}
 
 		convertedResponse, err := s.convertToProcessBatchResponseV2(processBatchResponseV2)

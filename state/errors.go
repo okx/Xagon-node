@@ -69,7 +69,9 @@ var (
 	ErrMaxNativeBlockHashBlockRangeLimitExceeded = errors.New("native block hashes are limited to a %v block range")
 )
 
-func constructErrorFromRevert(err error, returnValue []byte) error {
+// ConstructErrorFromRevert extracts the reverted reason from the provided returnValue
+// and creates an instance of error that wraps the original error + the reverted reason
+func ConstructErrorFromRevert(err error, returnValue []byte) error {
 	revertErrMsg, unpackErr := abi.UnpackRevertError(returnValue)
 	if unpackErr != nil {
 		return err

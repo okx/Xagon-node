@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/event"
+	"github.com/0xPolygonHermez/zkevm-node/hex"
 	"github.com/0xPolygonHermez/zkevm-node/log"
-	"github.com/0xPolygonHermez/zkevm-node/sequencer/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	stateMetrics "github.com/0xPolygonHermez/zkevm-node/state/metrics"
 	"github.com/ethereum/go-ethereum/common"
@@ -31,6 +31,32 @@ type Batch struct {
 
 func (w *Batch) isEmpty() bool {
 	return w.countOfL2Blocks == 0
+}
+
+// processBatchesPendingtoCheck performs a sanity check for batches closed but pending to be checked
+func (f *finalizer) processBatchesPendingtoCheck(ctx context.Context) {
+	notCheckedBatches, err := f.stateIntf.GetNotCheckedBatches(ctx, nil)
+	if err != nil && err != state.ErrNotFound {
+		log.Fatalf("failed to get batches not checked, error: ", err)
+	}
+
+	if len(notCheckedBatches) == 0 {
+		return
+	}
+
+	log.Infof("executing sanity check for not checked batches")
+
+	prevBatchNumber := notCheckedBatches[0].BatchNumber - 1
+	prevBatch, err := f.stateIntf.GetBatchByNumber(ctx, prevBatchNumber, nil)
+	if err != nil {
+		log.Fatalf("failed to get batch %d, error: ", prevBatchNumber, err)
+	}
+	oldStateRoot := prevBatch.StateRoot
+
+	for _, notCheckedBatch := range notCheckedBatches {
+		_, _ = f.batchSanityCheck(ctx, notCheckedBatch.BatchNumber, oldStateRoot, notCheckedBatch.StateRoot)
+		oldStateRoot = notCheckedBatch.StateRoot
+	}
 }
 
 // setWIPBatch sets finalizer wip batch to the state batch passed as parameter
@@ -89,7 +115,7 @@ func (f *finalizer) initWIPBatch(ctx context.Context) {
 	// Get the last batch in trusted state
 	lastStateBatch, err := f.stateIntf.GetBatchByNumber(ctx, lastBatchNum, nil)
 	if err != nil {
-		log.Fatalf("failed to get last batch, error: %v", err)
+		log.Fatalf("failed to get last batch %d, error: %v", lastBatchNum, err)
 	}
 
 	isClosed := !lastStateBatch.WIP
@@ -98,7 +124,7 @@ func (f *finalizer) initWIPBatch(ctx context.Context) {
 
 	if isClosed { //if the last batch is close then open a new wip batch
 		if lastStateBatch.BatchNumber+1 == f.cfg.HaltOnBatchNumber {
-			f.Halt(ctx, fmt.Errorf("finalizer reached stop sequencer on batch number: %d", f.cfg.HaltOnBatchNumber))
+			f.Halt(ctx, fmt.Errorf("finalizer reached stop sequencer on batch number: %d", f.cfg.HaltOnBatchNumber), false)
 		}
 
 		f.wipBatch, err = f.openNewWIPBatch(ctx, lastStateBatch.BatchNumber+1, lastStateBatch.StateRoot)
@@ -118,22 +144,17 @@ func (f *finalizer) initWIPBatch(ctx context.Context) {
 
 // finalizeWIPBatch closes the current batch and opens a new one, potentially processing forced batches between the batch is closed and the resulting new empty batch
 func (f *finalizer) finalizeWIPBatch(ctx context.Context, closeReason state.ClosingReason) {
-	start := time.Now()
-	defer func() {
-		metrics.ProcessingTime(time.Since(start))
-	}()
-
 	prevTimestamp := f.wipL2Block.timestamp
 	prevL1InfoTreeIndex := f.wipL2Block.l1InfoTreeExitRoot.L1InfoTreeIndex
 
-	// Close the wip L2 block if it has transactions, if not we keep it open to store it in the new wip batch
+	// Close the wip L2 block if it has transactions, otherwise we keep the wip L2 block to store it in the new wip batch
 	if !f.wipL2Block.isEmpty() {
 		f.closeWIPL2Block(ctx)
 	}
 
 	err := f.closeAndOpenNewWIPBatch(ctx, closeReason)
 	if err != nil {
-		f.Halt(ctx, fmt.Errorf("failed to create new WIP batch, error: %v", err))
+		f.Halt(ctx, fmt.Errorf("failed to create new WIP batch, error: %v", err), true)
 	}
 
 	// If we have closed the wipL2Block then we open a new one
@@ -142,13 +163,22 @@ func (f *finalizer) finalizeWIPBatch(ctx context.Context, closeReason state.Clos
 	}
 }
 
-// closeAndOpenNewWIPBatch closes the current batch and opens a new one, potentially processing forced batches between the batch is closed and the resulting new empty batch
+// closeAndOpenNewWIPBatch closes the current batch and opens a new one, potentially processing forced batches between the batch is closed and the resulting new wip batch
 func (f *finalizer) closeAndOpenNewWIPBatch(ctx context.Context, closeReason state.ClosingReason) error {
+	f.nextForcedBatchesMux.Lock()
+	processForcedBatches := len(f.nextForcedBatches) > 0
+	f.nextForcedBatchesMux.Unlock()
+
+	// If we will process forced batches after we close the wip batch then we must close the current wip L2 block,
+	// since the processForcedBatches function needs to create new L2 blocks (cannot "reuse" the current wip L2 block if it's empty)
+	if processForcedBatches {
+		f.closeWIPL2Block(ctx)
+	}
+
 	// Wait until all L2 blocks are processed by the executor
 	startWait := time.Now()
 	f.pendingL2BlocksToProcessWG.Wait()
 	elapsed := time.Since(startWait)
-	stateMetrics.ExecutorProcessingTime(string(stateMetrics.SequencerCallerLabel), elapsed)
 	log.Debugf("waiting for pending L2 blocks to be processed took: %v", elapsed)
 
 	// Wait until all L2 blocks are store
@@ -170,11 +200,7 @@ func (f *finalizer) closeAndOpenNewWIPBatch(ctx context.Context, closeReason sta
 	// Reprocess full batch as sanity check
 	if f.cfg.SequentialBatchSanityCheck {
 		// Do the full batch reprocess now
-		_, err := f.batchSanityCheck(ctx, f.wipBatch.batchNumber, f.wipBatch.initialStateRoot, f.wipBatch.finalStateRoot)
-		if err != nil {
-			// There is an error reprocessing the batch. We halt the execution of the Sequencer at this point
-			return fmt.Errorf("halting sequencer because of error reprocessing full batch %d (sanity check), error: %v ", f.wipBatch.batchNumber, err)
-		}
+		_, _ = f.batchSanityCheck(ctx, f.wipBatch.batchNumber, f.wipBatch.initialStateRoot, f.wipBatch.finalStateRoot)
 	} else {
 		// Do the full batch reprocess in parallel
 		go func() {
@@ -183,7 +209,7 @@ func (f *finalizer) closeAndOpenNewWIPBatch(ctx context.Context, closeReason sta
 	}
 
 	if f.wipBatch.batchNumber+1 == f.cfg.HaltOnBatchNumber {
-		f.Halt(ctx, fmt.Errorf("finalizer reached stop sequencer on batch number: %d", f.cfg.HaltOnBatchNumber))
+		f.Halt(ctx, fmt.Errorf("finalizer reached stop sequencer on batch number: %d", f.cfg.HaltOnBatchNumber), false)
 	}
 
 	// Metadata for the next batch
@@ -191,7 +217,7 @@ func (f *finalizer) closeAndOpenNewWIPBatch(ctx context.Context, closeReason sta
 	lastBatchNumber := f.wipBatch.batchNumber
 
 	// Process forced batches
-	if len(f.nextForcedBatches) > 0 {
+	if processForcedBatches {
 		lastBatchNumber, stateRoot = f.processForcedBatches(ctx, lastBatchNumber, stateRoot)
 		// We must init/reset the wip L2 block from the state since processForcedBatches can created new L2 blocks
 		f.initWIPL2Block(ctx)
@@ -205,7 +231,7 @@ func (f *finalizer) closeAndOpenNewWIPBatch(ctx context.Context, closeReason sta
 	if f.wipL2Block != nil {
 		f.wipBatch.imStateRoot = f.wipL2Block.imStateRoot
 		// Subtract the WIP L2 block used resources to batch
-		overflow, overflowResource := f.wipBatch.imRemainingResources.Sub(f.wipL2Block.usedResources)
+		overflow, overflowResource := f.wipBatch.imRemainingResources.Sub(state.BatchResources{ZKCounters: f.wipL2Block.usedZKCounters, Bytes: f.wipL2Block.bytes})
 		if overflow {
 			return fmt.Errorf("failed to subtract L2 block [%d] used resources to new wip batch %d, overflow resource: %s",
 				f.wipL2Block.trackingNum, f.wipBatch.batchNumber, overflowResource)
@@ -273,6 +299,11 @@ func (f *finalizer) openNewWIPBatch(ctx context.Context, batchNumber uint64, sta
 
 // closeWIPBatch closes the current batch in the state
 func (f *finalizer) closeWIPBatch(ctx context.Context) error {
+	// Sanity check: batch must not be empty (should have L2 blocks)
+	if f.wipBatch.isEmpty() {
+		f.Halt(ctx, fmt.Errorf("closing WIP batch %d without L2 blocks and should have at least 1", f.wipBatch.batchNumber), false)
+	}
+
 	usedResources := getUsedBatchResources(f.batchConstraints, f.wipBatch.imRemainingResources)
 	receipt := state.ProcessingReceipt{
 		BatchNumber:    f.wipBatch.batchNumber,
@@ -315,12 +346,13 @@ func (f *finalizer) batchSanityCheck(ctx context.Context, batchNum uint64, initi
 		// Log batch detailed info
 		log.Errorf("batch %d sanity check error: initialStateRoot: %s, expectedNewStateRoot: %s", batch.BatchNumber, initialStateRoot, expectedNewStateRoot)
 		for i, rawL2block := range rawL2Blocks.Blocks {
+			log.Infof("block[%d], txs: %d, deltaTimestamp: %d, l1InfoTreeIndex: %d", i, len(rawL2block.Transactions), rawL2block.DeltaTimestamp, rawL2block.IndexL1InfoTree)
 			for j, rawTx := range rawL2block.Transactions {
-				log.Infof("batch %d, block position: %d, tx position: %d, tx hash: %s", batch.BatchNumber, i, j, rawTx.Tx.Hash())
+				log.Infof("block[%d].tx[%d]: %s, egpPct: %d, data: %s", batch.BatchNumber, i, j, rawTx.Tx.Hash(), rawTx.EfficiencyPercentage, hex.EncodeToHex(rawTx.Data))
 			}
 		}
 
-		f.Halt(ctx, fmt.Errorf("batch sanity check error. Check previous errors in logs to know which was the cause"))
+		f.Halt(ctx, fmt.Errorf("batch sanity check error. Check previous errors in logs to know which was the cause"), false)
 	}
 
 	log.Debugf("batch %d sanity check: initialStateRoot: %s, expectedNewStateRoot: %s", batchNum, initialStateRoot, expectedNewStateRoot)
@@ -331,21 +363,16 @@ func (f *finalizer) batchSanityCheck(ctx context.Context, batchNum uint64, initi
 		return nil, ErrGetBatchByNumber
 	}
 
-	caller := stateMetrics.DiscardCallerLabel
-	if f.cfg.SequentialBatchSanityCheck {
-		caller = stateMetrics.SequencerCallerLabel
-	}
-
 	batchRequest := state.ProcessRequest{
 		BatchNumber:             batch.BatchNumber,
-		L1InfoRoot_V2:           mockL1InfoRoot,
+		L1InfoRoot_V2:           state.GetMockL1InfoRoot(),
 		OldStateRoot:            initialStateRoot,
 		Transactions:            batch.BatchL2Data,
 		Coinbase:                batch.Coinbase,
 		TimestampLimit_V2:       uint64(time.Now().Unix()),
 		ForkID:                  f.stateIntf.GetForkIDByBatchNumber(batch.BatchNumber),
 		SkipVerifyL1InfoRoot_V2: true,
-		Caller:                  caller,
+		Caller:                  stateMetrics.DiscardCallerLabel,
 	}
 	batchRequest.L1InfoTreeData_V2, _, _, err = f.stateIntf.GetL1InfoTreeDataFromBatchL2Data(ctx, batch.BatchL2Data, nil)
 	if err != nil {
@@ -380,19 +407,7 @@ func (f *finalizer) batchSanityCheck(ctx context.Context, batchNum uint64, initi
 		if err != nil {
 			log.Errorf("error marshaling payload, error: %v", err)
 		} else {
-			event := &event.Event{
-				ReceivedAt:  time.Now(),
-				Source:      event.Source_Node,
-				Component:   event.Component_Sequencer,
-				Level:       event.Level_Critical,
-				EventID:     event.EventID_ReprocessFullBatchOOC,
-				Description: string(payload),
-				Json:        batchRequest,
-			}
-			err = f.eventLog.LogEvent(ctx, event)
-			if err != nil {
-				log.Errorf("error storing payload, error: %v", err)
-			}
+			f.LogEvent(ctx, event.Level_Critical, event.EventID_ReprocessFullBatchOOC, string(payload), batchRequest)
 		}
 
 		return nil, ErrProcessBatchOOC
@@ -402,6 +417,13 @@ func (f *finalizer) batchSanityCheck(ctx context.Context, batchNum uint64, initi
 		log.Errorf("new state root mismatch for batch %d, expected: %s, got: %s", batch.BatchNumber, expectedNewStateRoot.String(), batchResponse.NewStateRoot.String())
 		reprocessError(batch)
 		return nil, ErrStateRootNoMatch
+	}
+
+	err = f.stateIntf.UpdateBatchAsChecked(ctx, batch.BatchNumber, nil)
+	if err != nil {
+		log.Errorf("failed to update batch %d as checked, error: %v", batch.BatchNumber, err)
+		reprocessError(batch)
+		return nil, ErrUpdateBatchAsChecked
 	}
 
 	log.Infof("successful sanity check for batch %d, initialStateRoot: %s, stateRoot: %s, l2Blocks: %d, time: %v, used counters: %s",
@@ -424,28 +446,31 @@ func (f *finalizer) isBatchResourcesMarginExhausted(resources state.BatchResourc
 	if resources.Bytes <= f.getConstraintThresholdUint64(f.batchConstraints.MaxBatchBytesSize) {
 		resourceName = "Bytes"
 		result = true
-	} else if zkCounters.UsedSteps <= f.getConstraintThresholdUint32(f.batchConstraints.MaxSteps) {
+	} else if zkCounters.Steps <= f.getConstraintThresholdUint32(f.batchConstraints.MaxSteps) {
 		resourceName = "Steps"
 		result = true
-	} else if zkCounters.UsedPoseidonPaddings <= f.getConstraintThresholdUint32(f.batchConstraints.MaxPoseidonPaddings) {
+	} else if zkCounters.PoseidonPaddings <= f.getConstraintThresholdUint32(f.batchConstraints.MaxPoseidonPaddings) {
 		resourceName = "PoseidonPaddings"
 		result = true
-	} else if zkCounters.UsedBinaries <= f.getConstraintThresholdUint32(f.batchConstraints.MaxBinaries) {
+	} else if zkCounters.PoseidonHashes <= f.getConstraintThresholdUint32(f.batchConstraints.MaxPoseidonHashes) {
+		resourceName = "PoseidonHashes"
+		result = true
+	} else if zkCounters.Binaries <= f.getConstraintThresholdUint32(f.batchConstraints.MaxBinaries) {
 		resourceName = "Binaries"
 		result = true
-	} else if zkCounters.UsedKeccakHashes <= f.getConstraintThresholdUint32(f.batchConstraints.MaxKeccakHashes) {
+	} else if zkCounters.KeccakHashes <= f.getConstraintThresholdUint32(f.batchConstraints.MaxKeccakHashes) {
 		resourceName = "KeccakHashes"
 		result = true
-	} else if zkCounters.UsedArithmetics <= f.getConstraintThresholdUint32(f.batchConstraints.MaxArithmetics) {
+	} else if zkCounters.Arithmetics <= f.getConstraintThresholdUint32(f.batchConstraints.MaxArithmetics) {
 		resourceName = "Arithmetics"
 		result = true
-	} else if zkCounters.UsedMemAligns <= f.getConstraintThresholdUint32(f.batchConstraints.MaxMemAligns) {
+	} else if zkCounters.MemAligns <= f.getConstraintThresholdUint32(f.batchConstraints.MaxMemAligns) {
 		resourceName = "MemAligns"
 		result = true
 	} else if zkCounters.GasUsed <= f.getConstraintThresholdUint64(f.batchConstraints.MaxCumulativeGasUsed) {
 		resourceName = "CumulativeGas"
 		result = true
-	} else if zkCounters.UsedSha256Hashes_V2 <= f.getConstraintThresholdUint32(f.batchConstraints.MaxSHA256Hashes) {
+	} else if zkCounters.Sha256Hashes_V2 <= f.getConstraintThresholdUint32(f.batchConstraints.MaxSHA256Hashes) {
 		resourceName = "SHA256Hashes"
 		result = true
 	}
@@ -467,15 +492,15 @@ func (f *finalizer) getConstraintThresholdUint32(input uint32) uint32 {
 func getUsedBatchResources(constraints state.BatchConstraintsCfg, remainingResources state.BatchResources) state.BatchResources {
 	return state.BatchResources{
 		ZKCounters: state.ZKCounters{
-			GasUsed:              constraints.MaxCumulativeGasUsed - remainingResources.ZKCounters.GasUsed,
-			UsedKeccakHashes:     constraints.MaxKeccakHashes - remainingResources.ZKCounters.UsedKeccakHashes,
-			UsedPoseidonHashes:   constraints.MaxPoseidonHashes - remainingResources.ZKCounters.UsedPoseidonHashes,
-			UsedPoseidonPaddings: constraints.MaxPoseidonPaddings - remainingResources.ZKCounters.UsedPoseidonPaddings,
-			UsedMemAligns:        constraints.MaxMemAligns - remainingResources.ZKCounters.UsedMemAligns,
-			UsedArithmetics:      constraints.MaxArithmetics - remainingResources.ZKCounters.UsedArithmetics,
-			UsedBinaries:         constraints.MaxBinaries - remainingResources.ZKCounters.UsedBinaries,
-			UsedSteps:            constraints.MaxSteps - remainingResources.ZKCounters.UsedSteps,
-			UsedSha256Hashes_V2:  constraints.MaxSHA256Hashes - remainingResources.ZKCounters.UsedSha256Hashes_V2,
+			GasUsed:          constraints.MaxCumulativeGasUsed - remainingResources.ZKCounters.GasUsed,
+			KeccakHashes:     constraints.MaxKeccakHashes - remainingResources.ZKCounters.KeccakHashes,
+			PoseidonHashes:   constraints.MaxPoseidonHashes - remainingResources.ZKCounters.PoseidonHashes,
+			PoseidonPaddings: constraints.MaxPoseidonPaddings - remainingResources.ZKCounters.PoseidonPaddings,
+			MemAligns:        constraints.MaxMemAligns - remainingResources.ZKCounters.MemAligns,
+			Arithmetics:      constraints.MaxArithmetics - remainingResources.ZKCounters.Arithmetics,
+			Binaries:         constraints.MaxBinaries - remainingResources.ZKCounters.Binaries,
+			Steps:            constraints.MaxSteps - remainingResources.ZKCounters.Steps,
+			Sha256Hashes_V2:  constraints.MaxSHA256Hashes - remainingResources.ZKCounters.Sha256Hashes_V2,
 		},
 		Bytes: constraints.MaxBatchBytesSize - remainingResources.Bytes,
 	}
@@ -485,15 +510,15 @@ func getUsedBatchResources(constraints state.BatchConstraintsCfg, remainingResou
 func getMaxRemainingResources(constraints state.BatchConstraintsCfg) state.BatchResources {
 	return state.BatchResources{
 		ZKCounters: state.ZKCounters{
-			GasUsed:              constraints.MaxCumulativeGasUsed,
-			UsedKeccakHashes:     constraints.MaxKeccakHashes,
-			UsedPoseidonHashes:   constraints.MaxPoseidonHashes,
-			UsedPoseidonPaddings: constraints.MaxPoseidonPaddings,
-			UsedMemAligns:        constraints.MaxMemAligns,
-			UsedArithmetics:      constraints.MaxArithmetics,
-			UsedBinaries:         constraints.MaxBinaries,
-			UsedSteps:            constraints.MaxSteps,
-			UsedSha256Hashes_V2:  constraints.MaxSHA256Hashes,
+			GasUsed:          constraints.MaxCumulativeGasUsed,
+			KeccakHashes:     constraints.MaxKeccakHashes,
+			PoseidonHashes:   constraints.MaxPoseidonHashes,
+			PoseidonPaddings: constraints.MaxPoseidonPaddings,
+			MemAligns:        constraints.MaxMemAligns,
+			Arithmetics:      constraints.MaxArithmetics,
+			Binaries:         constraints.MaxBinaries,
+			Steps:            constraints.MaxSteps,
+			Sha256Hashes_V2:  constraints.MaxSHA256Hashes,
 		},
 		Bytes: constraints.MaxBatchBytesSize,
 	}

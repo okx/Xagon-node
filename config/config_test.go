@@ -42,7 +42,7 @@ func Test_Defaults(t *testing.T) {
 		},
 		{
 			path:          "Synchronizer.L1SynchronizationMode",
-			expectedValue: "parallel",
+			expectedValue: "sequential",
 		},
 		{
 			path:          "Synchronizer.L1ParallelSynchronization.MaxClients",
@@ -52,6 +52,19 @@ func Test_Defaults(t *testing.T) {
 			path:          "Synchronizer.L1ParallelSynchronization.MaxPendingNoProcessedBlocks",
 			expectedValue: uint64(25),
 		},
+		{
+			path:          "Synchronizer.L2Synchronization.AcceptEmptyClosedBatches",
+			expectedValue: false,
+		},
+		{
+			path:          "Synchronizer.L2Synchronization.ReprocessFullBatchOnClose",
+			expectedValue: true,
+		},
+		{
+			path:          "Synchronizer.L2Synchronization.CheckLastL2BlockHashOnCloseBatch",
+			expectedValue: true,
+		},
+
 		{
 			path:          "Sequencer.DeletePoolTxsL1BlockConfirmations",
 			expectedValue: uint64(100),
@@ -115,6 +128,14 @@ func Test_Defaults(t *testing.T) {
 		{
 			path:          "Sequencer.Finalizer.BatchMaxDeltaTimestamp",
 			expectedValue: types.NewDuration(10 * time.Second),
+		},
+		{
+			path:          "Sequencer.Finalizer.Metrics.Interval",
+			expectedValue: types.NewDuration(60 * time.Minute),
+		},
+		{
+			path:          "Sequencer.Finalizer.Metrics.EnableLog",
+			expectedValue: true,
 		},
 		{
 			path:          "Sequencer.StreamServer.Port",
@@ -478,6 +499,10 @@ func Test_Defaults(t *testing.T) {
 			expectedValue: uint64(0),
 		},
 		{
+			path:          "Aggregator.BatchProofL1BlockConfirmations",
+			expectedValue: uint64(2),
+		},
+		{
 			path:          "State.Batch.Constraints.MaxTxsPerBatch",
 			expectedValue: uint64(300),
 		},
@@ -487,7 +512,7 @@ func Test_Defaults(t *testing.T) {
 		},
 		{
 			path:          "State.Batch.Constraints.MaxCumulativeGasUsed",
-			expectedValue: uint64(30000000),
+			expectedValue: uint64(1125899906842624),
 		},
 		{
 			path:          "State.Batch.Constraints.MaxKeccakHashes",

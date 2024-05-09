@@ -40,6 +40,16 @@ const (
 	EventID_SynchronizerRestart EventID = "SYNCHRONIZER RESTART"
 	// EventID_SynchronizerHalt is triggered when the synchronizer halts
 	EventID_SynchronizerHalt EventID = "SYNCHRONIZER HALT"
+	// EventID_SequenceSenderHalt is triggered when the SequenceSender halts
+	EventID_SequenceSenderHalt EventID = "SEQUENCESENDER HALT"
+	// EventID_NodeOOC is triggered when an OOC at node level is detected
+	EventID_NodeOOC EventID = "NODE OOC"
+	// EventID_UsedZKCountersOverflow is triggered when used ZK counters exceeds remaining batch ZK counters
+	EventID_UsedZKCountersOverflow EventID = "USED ZKCOUNTERS OVERFLOW"
+	// EventID_ReservedZKCountersOverflow is triggered when reserved ZK counters exceeds remaining batch ZK counters
+	EventID_ReservedZKCountersOverflow EventID = "RESERVED ZKCOUNTERS OVERFLOW"
+	// EventID_InvalidInfoRoot is triggered when an invalid l1InfoRoot was synced
+	EventID_InvalidInfoRoot EventID = "INVALID INFOROOT"
 	// Source_Node is the source of the event
 	Source_Node Source = "node"
 

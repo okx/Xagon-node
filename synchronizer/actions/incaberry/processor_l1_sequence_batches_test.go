@@ -23,6 +23,7 @@ func TestProcessorL1SequenceBatches_Process(t *testing.T) {
 	// Create an instance of ProcessorL1SequenceBatches
 
 	// Test invalid call, no sequenced batches
+	sut.ProcessorBase.SupportedEvents()
 	err := sut.Process(ctx, etherman.Order{Name: sut.SupportedEvents()[0], Pos: 0}, l1Block, dbTx)
 	require.Error(t, err)
 }

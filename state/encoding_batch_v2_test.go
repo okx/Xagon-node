@@ -186,14 +186,19 @@ func TestDecodeRLPLength(t *testing.T) {
 
 func TestEncodeBatchV2(t *testing.T) {
 	block1 := L2BlockRaw{
-		DeltaTimestamp:  123,
-		IndexL1InfoTree: 456,
-		Transactions:    []L2TxRaw{},
+		ChangeL2BlockHeader: ChangeL2BlockHeader{
+			DeltaTimestamp:  123,
+			IndexL1InfoTree: 456,
+		},
+		Transactions: []L2TxRaw{},
 	}
+
 	block2 := L2BlockRaw{
-		DeltaTimestamp:  789,
-		IndexL1InfoTree: 101112,
-		Transactions:    []L2TxRaw{},
+		ChangeL2BlockHeader: ChangeL2BlockHeader{
+			DeltaTimestamp:  789,
+			IndexL1InfoTree: 101112,
+		},
+		Transactions: []L2TxRaw{},
 	}
 	blocks := []L2BlockRaw{block1, block2}
 
@@ -238,4 +243,37 @@ func TestDecodeForcedBatchV2WithRegularBatch(t *testing.T) {
 	require.NoError(t, err)
 	_, err = DecodeForcedBatchV2(batchL2Data)
 	require.Error(t, err)
+}
+
+func TestEncodeBatchV2WithTxInBinary(t *testing.T) {
+	block1 := L2BlockRaw{
+		ChangeL2BlockHeader: ChangeL2BlockHeader{
+			DeltaTimestamp:  123,
+			IndexL1InfoTree: 456,
+		},
+		Transactions: []L2TxRaw{
+			{
+				EfficiencyPercentage: 255,
+				TxAlreadyEncoded:     true,
+				Data:                 []byte{0x01, 0x02, 0x03},
+			},
+		},
+	}
+
+	block2 := L2BlockRaw{
+		ChangeL2BlockHeader: ChangeL2BlockHeader{
+			DeltaTimestamp:  789,
+			IndexL1InfoTree: 101112,
+		},
+		Transactions: []L2TxRaw{},
+	}
+	blocks := []L2BlockRaw{block1, block2}
+
+	expectedBatchData := []byte{
+		0xb, 0x0, 0x0, 0x0, 0x7b, 0x0, 0x0, 0x1, 0xc8, 0x1, 0x2, 0x3, 0xff, 0xb, 0x0, 0x0, 0x3, 0x15, 0x0, 0x1, 0x8a, 0xf8,
+	}
+
+	batchData, err := EncodeBatchV2(&BatchRawV2{Blocks: blocks})
+	require.NoError(t, err)
+	require.Equal(t, expectedBatchData, batchData)
 }

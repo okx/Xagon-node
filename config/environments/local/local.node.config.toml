@@ -19,7 +19,7 @@ Outputs = ["stderr"]
 		[State.Batch.Constraints]
 		MaxTxsPerBatch = 300
 		MaxBatchBytesSize = 120000
-		MaxCumulativeGasUsed = 30000000
+		MaxCumulativeGasUsed = 1125899906842624
 		MaxKeccakHashes = 2145
 		MaxPoseidonHashes = 252357
 		MaxPoseidonPaddings = 135191
@@ -82,6 +82,7 @@ EnableL2SuggestedGasPricePolling = true
 SyncInterval = "1s"
 SyncChunkSize = 100
 TrustedSequencerURL = "" # If it is empty or not specified, then the value is read from the smc
+SyncBlockProtection = "latest" # latest, finalized, safe
 
 [Sequencer]
 DeletePoolTxsL1BlockConfirmations = 100
@@ -103,6 +104,9 @@ StateConsistencyCheckInterval = "5s"
 		HaltOnBatchNumber = 0
 		SequentialBatchSanityCheck = false
 		SequentialProcessL2Block = true
+	[Sequencer.Finalizer.Metrics]
+		Interval = "60m"
+		EnableLog = true		
 	[Sequencer.StreamServer]
 		Port = 0
 		Filename = ""
@@ -128,6 +132,7 @@ SenderAddress = "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
 CleanupLockedProofsInterval = "2m"
 GeneratingProofCleanupThreshold = "10m"
 UpgradeEtrogBatchNumber = 0
+BatchProofL1BlockConfirmations = 2
 
 [EthTxManager]
 ForcedGas = 0
