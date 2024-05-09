@@ -6,6 +6,7 @@ import (
 	"math/big"
 	"reflect"
 	"testing"
+	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/hex"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/client"
@@ -667,6 +668,91 @@ func Test_OOCErrors(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			err := testCase.execute(t, context.Background(), sc, ethClient, *auth)
 			assert.Equal(t, testCase.expectedError, err)
+		})
+	}
+}
+
+func Test_Gas_Bench2(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+	ctx := context.Background()
+	setup()
+	defer teardown()
+	ethClient, err := ethclient.Dial(operations.DefaultL2NetworkURL)
+	require.NoError(t, err)
+	auth, err := operations.GetAuth(fromPriKey, operations.DefaultL2ChainID)
+	require.NoError(t, err)
+
+	type testCase struct {
+		name          string
+		execute       func(*testing.T, context.Context, *triggerErrors.TriggerErrors, *ethclient.Client, bind.TransactOpts) string
+		expectedError string
+	}
+
+	testCases := []testCase{
+		{
+			name: "estimate gas with given gas limit",
+			execute: func(t *testing.T, ctx context.Context, sc *triggerErrors.TriggerErrors, c *ethclient.Client, a bind.TransactOpts) string {
+				a.GasLimit = 30000000
+				a.NoSend = true
+				tx, err := sc.OutOfCountersPoseidon(&a)
+				require.NoError(t, err)
+
+				t0 := time.Now()
+				_, err = c.EstimateGas(ctx, ethereum.CallMsg{
+					From:     a.From,
+					To:       tx.To(),
+					Gas:      tx.Gas(),
+					GasPrice: tx.GasPrice(),
+					Value:    tx.Value(),
+					Data:     tx.Data(),
+				})
+				log.Infof("EstimateGas time: %v", time.Since(t0))
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			},
+			expectedError: "not enough poseidon counters to continue the execution",
+		},
+		{
+			name: "estimate gas with given gas limit",
+			execute: func(t *testing.T, ctx context.Context, sc *triggerErrors.TriggerErrors, c *ethclient.Client, a bind.TransactOpts) string {
+				a.GasLimit = 0
+				a.NoSend = true
+				tx, err := sc.OutOfCountersPoseidon(&a)
+				require.NoError(t, err)
+
+				t0 := time.Now()
+				_, err = c.EstimateGas(ctx, ethereum.CallMsg{
+					From:     a.From,
+					To:       tx.To(),
+					Gas:      tx.Gas(),
+					GasPrice: tx.GasPrice(),
+					Value:    tx.Value(),
+					Data:     tx.Data(),
+				})
+				log.Infof("EstimateGas time: %v", time.Since(t0))
+				if err != nil {
+					return err.Error()
+				}
+				return ""
+			},
+			expectedError: "",
+		},
+	}
+
+	// deploy triggerErrors SC
+	_, tx, sc, err := triggerErrors.DeployTriggerErrors(auth, ethClient)
+	require.NoError(t, err)
+
+	err = operations.WaitTxToBeMined(ctx, ethClient, tx, operations.DefaultTimeoutTxToBeMined)
+	require.NoError(t, err)
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			testCase.execute(t, context.Background(), sc, ethClient, *auth)
 		})
 	}
 }
