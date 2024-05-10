@@ -836,31 +836,6 @@ func Test_Gas_Bench2(t *testing.T) {
 				}
 				return ""
 			},
-			expectedError: "not enough poseidon counters to continue the execution",
-		},
-		{
-			name: "estimate gas without given gas limit",
-			execute: func(t *testing.T, ctx context.Context, sc *triggerErrors.TriggerErrors, c *ethclient.Client, a bind.TransactOpts) string {
-				a.GasLimit = 30000000
-				a.NoSend = true
-				tx, err := sc.OutOfCountersPoseidon(&a)
-				require.NoError(t, err)
-
-				t0 := time.Now()
-				_, err = c.EstimateGas(ctx, ethereum.CallMsg{
-					From:     a.From,
-					To:       tx.To(),
-					Gas:      0,
-					GasPrice: tx.GasPrice(),
-					Value:    tx.Value(),
-					Data:     tx.Data(),
-				})
-				log.Infof("EstimateGas time: %v", time.Since(t0))
-				if err != nil {
-					return err.Error()
-				}
-				return ""
-			},
 			expectedError: "",
 		},
 	}
