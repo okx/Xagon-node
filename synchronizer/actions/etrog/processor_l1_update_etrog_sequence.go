@@ -38,9 +38,9 @@ func NewProcessorL1UpdateEtrogSequence(state stateProcessUpdateEtrogSequence,
 	sync syncProcessUpdateEtrogSequenceInterface,
 	timeProvider syncCommon.TimeProvider) *ProcessorL1UpdateEtrogSequence {
 	return &ProcessorL1UpdateEtrogSequence{
-		ProcessorBase: actions.ProcessorBase[ProcessorL1UpdateEtrogSequence]{
-			SupportedEvent:    []etherman.EventOrder{etherman.UpdateEtrogSequenceOrder},
-			SupportedForkdIds: &ForksIdOnlyEtrog},
+		ProcessorBase: *actions.NewProcessorBase[ProcessorL1UpdateEtrogSequence](
+			[]etherman.EventOrder{etherman.UpdateEtrogSequenceOrder},
+			actions.ForksIdOnlyEtrog),
 		state:        state,
 		sync:         sync,
 		timeProvider: timeProvider,
@@ -82,6 +82,8 @@ func (g *ProcessorL1UpdateEtrogSequence) processUpdateEtrogSequence(ctx context.
 		BatchL2Data:          &txs,
 		ForcedBlockHashL1:    forcedBlockHashL1,
 		SkipVerifyL1InfoRoot: 1,
+		GlobalExitRoot:       updateEtrogSequence.PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot,
+		ClosingReason:        state.SyncL1EventUpdateEtrogSequenceClosingReason,
 	}
 
 	virtualBatch := state.VirtualBatch{
@@ -110,7 +112,8 @@ func (g *ProcessorL1UpdateEtrogSequence) processUpdateEtrogSequence(ctx context.
 	g.sync.PendingFlushID(flushID, proverID)
 
 	// Store virtualBatch
-	log.Debugf("processUpdateEtrogSequence: Storing virtualBatch. BatchNumber: %d, BlockNumber: %d", virtualBatch.BatchNumber, blockNumber)
+	log.Infof("processUpdateEtrogSequence: Storing virtualBatch. BatchNumber: %d, BlockNumber: %d GER:%s", virtualBatch.BatchNumber, blockNumber,
+		common.Hash(updateEtrogSequence.PolygonRollupBaseEtrogBatchData.ForcedGlobalExitRoot).String())
 	err = g.state.AddVirtualBatch(ctx, &virtualBatch, dbTx)
 	if err != nil {
 		log.Errorf("error storing virtualBatch. BatchNumber: %d, BlockNumber: %d, error: %v", virtualBatch.BatchNumber, blockNumber, err)

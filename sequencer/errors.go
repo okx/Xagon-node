@@ -14,6 +14,8 @@ var (
 	ErrReplacedTransaction = errors.New("replaced transaction")
 	// ErrGetBatchByNumber happens when we get an error trying to get a batch by number (GetBatchByNumber)
 	ErrGetBatchByNumber = errors.New("get batch by number error")
+	// ErrUpdateBatchAsChecked happens when we get an error trying to update a batch as checked (UpdateBatchAsChecked)
+	ErrUpdateBatchAsChecked = errors.New("update batch as checked error")
 	// ErrDecodeBatchL2Data happens when we get an error trying to decode BatchL2Data (DecodeTxs)
 	ErrDecodeBatchL2Data = errors.New("decoding BatchL2Data error")
 	// ErrProcessBatch happens when we get an error trying to process (executor) a batch
@@ -27,8 +29,8 @@ var (
 	ErrExecutorError = errors.New("executor error")
 	// ErrNoFittingTransaction happens when there is not a tx (from the txSortedList) that fits in the remaining batch resources
 	ErrNoFittingTransaction = errors.New("no fit transaction")
-	// ErrBatchResourceUnderFlow happens when there is batch resoure underflow after sustract the resources from a tx
-	ErrBatchResourceUnderFlow = errors.New("batch resource underflow")
+	// ErrBatchResourceOverFlow happens when there is a tx that overlows remaining batch resources
+	ErrBatchResourceOverFlow = errors.New("batch resource overflow")
 	// ErrTransactionsListEmpty happens when txSortedList is empty
 	ErrTransactionsListEmpty = errors.New("transactions list empty")
 )

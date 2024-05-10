@@ -32,17 +32,18 @@ var (
 type State struct {
 	cfg Config
 	storage
-	executorClient executor.ExecutorServiceClient
-	tree           *merkletree.StateTree
-	eventLog       *event.EventLog
-	l1InfoTree     *l1infotree.L1InfoTree
+	executorClient      executor.ExecutorServiceClient
+	tree                *merkletree.StateTree
+	eventLog            *event.EventLog
+	l1InfoTree          *l1infotree.L1InfoTree
+	l1InfoTreeRecursive *l1infotree.L1InfoTreeRecursive
 
 	newL2BlockEvents        chan NewL2BlockEvent
 	newL2BlockEventHandlers []NewL2BlockEventHandler
 }
 
 // NewState creates a new State
-func NewState(cfg Config, storage storage, executorClient executor.ExecutorServiceClient, stateTree *merkletree.StateTree, eventLog *event.EventLog, mt *l1infotree.L1InfoTree) *State {
+func NewState(cfg Config, storage storage, executorClient executor.ExecutorServiceClient, stateTree *merkletree.StateTree, eventLog *event.EventLog, mt *l1infotree.L1InfoTree, mtr *l1infotree.L1InfoTreeRecursive) *State {
 	var once sync.Once
 	once.Do(func() {
 		metrics.Register()
@@ -57,9 +58,17 @@ func NewState(cfg Config, storage storage, executorClient executor.ExecutorServi
 		newL2BlockEvents:        make(chan NewL2BlockEvent, newL2BlockEventBufferSize),
 		newL2BlockEventHandlers: []NewL2BlockEventHandler{},
 		l1InfoTree:              mt,
+		l1InfoTreeRecursive:     mtr,
 	}
 
 	return state
+}
+
+// StateTx is the state transaction that extends the database tx
+type StateTx struct {
+	pgx.Tx
+	stateInstance      *State
+	L1InfoTreeModified bool
 }
 
 // BeginStateTransaction starts a state transaction
@@ -68,7 +77,24 @@ func (s *State) BeginStateTransaction(ctx context.Context) (pgx.Tx, error) {
 	if err != nil {
 		return nil, err
 	}
-	return tx, nil
+	res := &StateTx{
+		Tx:            tx,
+		stateInstance: s,
+	}
+	return res, nil
+}
+
+// Rollback do the dbTx rollback + modifications in cache mechanism
+func (tx *StateTx) Rollback(ctx context.Context) error {
+	if tx.L1InfoTreeModified {
+		tx.stateInstance.ResetL1InfoTree()
+	}
+	return tx.Tx.Rollback(ctx)
+}
+
+// SetL1InfoTreeModified sets the flag to true to save that the L1InfoTree has been modified
+func (tx *StateTx) SetL1InfoTreeModified() {
+	tx.L1InfoTreeModified = true
 }
 
 // GetBalance from a given address

@@ -9,6 +9,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	syncCommon "github.com/0xPolygonHermez/zkevm-node/synchronizer/common"
+	"github.com/0xPolygonHermez/zkevm-node/synchronizer/l2_sync"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jackc/pgx/v4"
 )
@@ -124,8 +125,16 @@ type SyncTrustedBatchExecutor interface {
 	ReProcess(ctx context.Context, data *ProcessData, dbTx pgx.Tx) (*ProcessResponse, error)
 	// NothingProcess process a batch that is already synchronized, so we don't need to process it
 	NothingProcess(ctx context.Context, data *ProcessData, dbTx pgx.Tx) (*ProcessResponse, error)
-	// CloseBatch close a batch
-	//CloseBatch(ctx context.Context, trustedBatch *types.Batch, dbTx pgx.Tx) error
+}
+
+// L1SyncGlobalExitRootChecker is the interface to check if the required GlobalExitRoot is already synced from L1
+type L1SyncGlobalExitRootChecker interface {
+	CheckL1SyncGlobalExitRootEnoughToProcessBatch(ctx context.Context, batchNumber uint64, globalExitRoot common.Hash, dbTx pgx.Tx) error
+}
+
+// PostClosedBatchChecker is the interface to implement a checker post closed batch
+type PostClosedBatchChecker interface {
+	CheckPostClosedBatch(ctx context.Context, processData ProcessData, dbTx pgx.Tx) error
 }
 
 // ProcessorTrustedBatchSync is a template to sync trusted state. It classify what kind of update is needed and call to SyncTrustedStateBatchExecutorSteps
@@ -134,23 +143,49 @@ type SyncTrustedBatchExecutor interface {
 //
 //		the real implementation of the steps is in the SyncTrustedStateBatchExecutorSteps interface that known how to process a batch
 type ProcessorTrustedBatchSync struct {
-	Steps        SyncTrustedBatchExecutor
-	timeProvider syncCommon.TimeProvider
+	Steps              SyncTrustedBatchExecutor
+	timeProvider       syncCommon.TimeProvider
+	l1SyncChecker      L1SyncGlobalExitRootChecker
+	postClosedCheckers []PostClosedBatchChecker
+	Cfg                l2_sync.Config
 }
 
 // NewProcessorTrustedBatchSync creates a new SyncTrustedStateBatchExecutorTemplate
 func NewProcessorTrustedBatchSync(steps SyncTrustedBatchExecutor,
-	timeProvider syncCommon.TimeProvider) *ProcessorTrustedBatchSync {
+	timeProvider syncCommon.TimeProvider, l1SyncChecker L1SyncGlobalExitRootChecker, cfg l2_sync.Config) *ProcessorTrustedBatchSync {
 	return &ProcessorTrustedBatchSync{
-		Steps:        steps,
-		timeProvider: timeProvider,
+		Steps:         steps,
+		timeProvider:  timeProvider,
+		l1SyncChecker: l1SyncChecker,
+		Cfg:           cfg,
 	}
+}
+
+// AddPostChecker add a post closed batch checker
+func (s *ProcessorTrustedBatchSync) AddPostChecker(checker PostClosedBatchChecker) {
+	if s.postClosedCheckers == nil {
+		s.postClosedCheckers = make([]PostClosedBatchChecker, 0)
+	}
+	s.postClosedCheckers = append(s.postClosedCheckers, checker)
 }
 
 // ProcessTrustedBatch processes a trusted batch and return the new state
 func (s *ProcessorTrustedBatchSync) ProcessTrustedBatch(ctx context.Context, trustedBatch *types.Batch, status TrustedState, dbTx pgx.Tx, debugPrefix string) (*TrustedState, error) {
+	if trustedBatch == nil {
+		log.Errorf("%s trustedBatch is nil, it never should be nil", debugPrefix)
+		return nil, fmt.Errorf("%s trustedBatch is nil, it never should be nil", debugPrefix)
+	}
 	log.Debugf("%s Processing trusted batch: %v", debugPrefix, trustedBatch.Number)
 	stateCurrentBatch, statePreviousBatch := s.GetCurrentAndPreviousBatchFromCache(&status)
+	if s.l1SyncChecker != nil {
+		err := s.l1SyncChecker.CheckL1SyncGlobalExitRootEnoughToProcessBatch(ctx, uint64(trustedBatch.Number), trustedBatch.GlobalExitRoot, dbTx)
+		if err != nil {
+			log.Errorf("%s error checking GlobalExitRoot from TrustedBatch. Error: ", debugPrefix, err)
+			return nil, err
+		}
+	} else {
+		log.Infof("Disabled check L1 sync status for process batch")
+	}
 	processMode, err := s.GetModeForProcessBatch(trustedBatch, stateCurrentBatch, statePreviousBatch, debugPrefix)
 	if err != nil {
 		log.Error("%s error getting processMode. Error: ", debugPrefix, trustedBatch.Number, err)
@@ -193,14 +228,10 @@ func (s *ProcessorTrustedBatchSync) GetNextStatus(status TrustedState, processBa
 			log.Warnf("%s error checking sanity of processBatchResp. Error: ", debugPrefix, err)
 		}
 	}
-	if processBatchResp != nil && !processBatchResp.ClearCache {
-		newStatus := updateStatus(status, processBatchResp, closedBatch)
-		log.Debugf("%s Batch synchronized, updated cache for next run", debugPrefix)
-		return &newStatus, nil
-	} else {
-		log.Debugf("%s Batch synchronized -> clear cache", debugPrefix)
-		return nil, nil
-	}
+
+	newStatus := updateStatus(status, processBatchResp, closedBatch)
+	log.Debugf("%s Batch synchronized, updated cache for next run", debugPrefix)
+	return &newStatus, nil
 }
 
 // ExecuteProcessBatch execute the batch and process it
@@ -222,11 +253,20 @@ func (s *ProcessorTrustedBatchSync) ExecuteProcessBatch(ctx context.Context, pro
 		log.Debugf("%s is partially synchronized but we don't have intermediate stateRoot so it needs to be fully reprocessed", processMode.DebugPrefix)
 		processBatchResp, err = s.Steps.ReProcess(ctx, processMode, dbTx)
 	}
-	if processMode.BatchMustBeClosed {
+	if processBatchResp != nil && err == nil && processMode.BatchMustBeClosed {
 		err = checkProcessBatchResultMatchExpected(processMode, processBatchResp.ProcessBatchResponse)
 		if err != nil {
 			log.Error("%s error verifying batch result!  Error: ", processMode.DebugPrefix, err)
 			return nil, err
+		}
+		if s.postClosedCheckers != nil && len(s.postClosedCheckers) > 0 {
+			for _, checker := range s.postClosedCheckers {
+				err := checker.CheckPostClosedBatch(ctx, *processMode, dbTx)
+				if err != nil {
+					log.Errorf("%s error checking post closed batch. Error: ", processMode.DebugPrefix, err)
+					return nil, err
+				}
+			}
 		}
 	}
 	return processBatchResp, err
@@ -239,6 +279,10 @@ func updateStatus(status TrustedState, response *ProcessResponse, closedBatch bo
 	if response == nil || response.ClearCache {
 		return res
 	}
+
+	res.LastTrustedBatches[0] = status.GetCurrentBatch()
+	res.LastTrustedBatches[1] = status.GetPreviousBatch()
+
 	if response.UpdateBatch != nil {
 		res.LastTrustedBatches[0] = response.UpdateBatch
 	}
@@ -265,7 +309,7 @@ func (s *ProcessorTrustedBatchSync) GetModeForProcessBatch(trustedNodeBatch *typ
 		return ProcessData{}, fmt.Errorf("trustedNodeBatch and statePreviousBatch can't be nil")
 	}
 
-	var result ProcessData
+	var result ProcessData = ProcessData{}
 	if stateBatch == nil {
 		result = ProcessData{
 			Mode:              FullProcessMode,
@@ -274,7 +318,7 @@ func (s *ProcessorTrustedBatchSync) GetModeForProcessBatch(trustedNodeBatch *typ
 			Description:       "Batch is not on database, so is the first time we process it",
 		}
 	} else {
-		_, strDiffsBatches := AreEqualStateBatchAndTrustedBatch(stateBatch, trustedNodeBatch, CMP_BATCH_IGNORE_TSTAMP)
+		areBatchesExactlyEqual, strDiffsBatches := AreEqualStateBatchAndTrustedBatch(stateBatch, trustedNodeBatch, CMP_BATCH_IGNORE_TSTAMP)
 		newL2DataFlag, err := ThereAreNewBatchL2Data(stateBatch.BatchL2Data, trustedNodeBatch.BatchL2Data)
 		if err != nil {
 			return ProcessData{}, err
@@ -286,6 +330,10 @@ func (s *ProcessorTrustedBatchSync) GetModeForProcessBatch(trustedNodeBatch *typ
 				OldStateRoot:      common.Hash{},
 				BatchMustBeClosed: isTrustedBatchClosed(trustedNodeBatch) && stateBatch.WIP,
 				Description:       "no new data on batch. Diffs: " + strDiffsBatches,
+			}
+			if areBatchesExactlyEqual {
+				result.BatchMustBeClosed = false
+				result.Description = "exactly batches: " + strDiffsBatches
 			}
 		} else {
 			// We have a previous batch, but in node something change
@@ -308,9 +356,21 @@ func (s *ProcessorTrustedBatchSync) GetModeForProcessBatch(trustedNodeBatch *typ
 			}
 		}
 	}
-	if result.Mode == "" {
-		return result, fmt.Errorf("failed to get mode for process batch %v", trustedNodeBatch.Number)
+
+	if s.Cfg.ReprocessFullBatchOnClose && result.BatchMustBeClosed {
+		if result.Mode == IncrementalProcessMode || result.Mode == NothingProcessMode {
+			result.Description = "forced reprocess due to batch closed and ReprocessFullBatchOnClose"
+			log.Infof("%s Batch %v: Converted mode %s to %s because cfg.ReprocessFullBatchOnClose", debugPrefix, trustedNodeBatch.Number, result.Mode, ReprocessProcessMode)
+			result.Mode = ReprocessProcessMode
+			result.OldStateRoot = statePreviousBatch.StateRoot
+			result.BatchMustBeClosed = true
+		}
 	}
+
+	if result.Mode == "" {
+		return result, fmt.Errorf("batch %v: failed to get mode for process ", trustedNodeBatch.Number)
+	}
+
 	result.BatchNumber = uint64(trustedNodeBatch.Number)
 	result.StateBatch = stateBatch
 	result.TrustedBatch = trustedNodeBatch
@@ -318,11 +378,28 @@ func (s *ProcessorTrustedBatchSync) GetModeForProcessBatch(trustedNodeBatch *typ
 	result.OldAccInputHash = statePreviousBatch.AccInputHash
 	result.Now = s.timeProvider.Now()
 	result.DebugPrefix = fmt.Sprintf("%s mode %s:", debugPrefix, result.Mode)
+	if result.BatchMustBeClosed {
+		result.DebugPrefix += " (must_be_closed)"
+	}
+	if isTrustedBatchEmptyAndClosed(trustedNodeBatch) {
+		if s.Cfg.AcceptEmptyClosedBatches {
+			log.Infof("%s Batch %v: TrustedBatch Empty and closed, accepted due configuration", result.DebugPrefix, trustedNodeBatch.Number)
+		} else {
+			err := fmt.Errorf("%s Batch %v: TrustedBatch Empty and closed, rejected due configuration", result.DebugPrefix, trustedNodeBatch.Number)
+			log.Infof(err.Error())
+			return result, err
+		}
+	}
+
 	return result, nil
 }
 
 func isTrustedBatchClosed(batch *types.Batch) bool {
 	return batch.Closed
+}
+
+func isTrustedBatchEmptyAndClosed(batch *types.Batch) bool {
+	return len(batch.BatchL2Data) == 0 && isTrustedBatchClosed(batch)
 }
 
 func checkStateRootAndLER(batchNumber uint64, expectedStateRoot common.Hash, expectedLER common.Hash, calculatedStateRoot common.Hash, calculatedLER common.Hash) error {
@@ -339,7 +416,13 @@ func checkProcessBatchResultMatchExpected(data *ProcessData, processBatchResp *s
 	var err error = nil
 	var trustedBatch = data.TrustedBatch
 	if trustedBatch == nil {
-		panic("trustedBatch is nil")
+		err = fmt.Errorf("%s trustedBatch is nil, it never should be nil", data.DebugPrefix)
+		log.Error(err.Error())
+		return err
+	}
+	if len(trustedBatch.BatchL2Data) == 0 {
+		log.Warnf("Batch %v: BatchL2Data is empty, no checking", trustedBatch.Number)
+		return nil
 	}
 	if processBatchResp == nil {
 		log.Warnf("Batch %v: Can't check  processBatchResp because is nil, then check store batch in DB", trustedBatch.Number)

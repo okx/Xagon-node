@@ -42,13 +42,13 @@ func NewTestData(t *testing.T) *testData {
 
 func TestCheckL1SyncStatusEnoughToProcessBatchGerZero(t *testing.T) {
 	testData := NewTestData(t)
-	err := testData.sut.CheckL1SyncStatusEnoughToProcessBatch(testData.ctx, 1, state.ZeroHash, nil)
+	err := testData.sut.CheckL1SyncGlobalExitRootEnoughToProcessBatch(testData.ctx, 1, state.ZeroHash, nil)
 	require.NoError(t, err)
 }
 func TestCheckL1SyncStatusEnoughToProcessBatchGerOnDB(t *testing.T) {
 	testData := NewTestData(t)
 	testData.stateMock.EXPECT().GetExitRootByGlobalExitRoot(testData.ctx, globalExitRootNonZero, nil).Return(&state.GlobalExitRoot{}, nil).Once()
-	err := testData.sut.CheckL1SyncStatusEnoughToProcessBatch(testData.ctx, 1, globalExitRootNonZero, nil)
+	err := testData.sut.CheckL1SyncGlobalExitRootEnoughToProcessBatch(testData.ctx, 1, globalExitRootNonZero, nil)
 	require.NoError(t, err)
 }
 
@@ -57,7 +57,7 @@ func TestCheckL1SyncStatusEnoughToProcessBatchGerDatabaseFails(t *testing.T) {
 
 	testData.stateMock.EXPECT().GetExitRootByGlobalExitRoot(testData.ctx, globalExitRootNonZero, nil).Return(nil, randomError).Once()
 
-	err := testData.sut.CheckL1SyncStatusEnoughToProcessBatch(testData.ctx, 1, globalExitRootNonZero, nil)
+	err := testData.sut.CheckL1SyncGlobalExitRootEnoughToProcessBatch(testData.ctx, 1, globalExitRootNonZero, nil)
 	require.Error(t, err)
 }
 
@@ -67,7 +67,7 @@ func TestCheckL1SyncStatusEnoughToProcessBatchGerNoOnDBFailsCallToZkevm(t *testi
 	testData.stateMock.EXPECT().GetExitRootByGlobalExitRoot(testData.ctx, globalExitRootNonZero, nil).Return(nil, state.ErrNotFound).Once()
 	testData.zkevmMock.EXPECT().ExitRootsByGER(testData.ctx, globalExitRootNonZero).Return(nil, randomError).Once()
 
-	err := testData.sut.CheckL1SyncStatusEnoughToProcessBatch(testData.ctx, 1, globalExitRootNonZero, nil)
+	err := testData.sut.CheckL1SyncGlobalExitRootEnoughToProcessBatch(testData.ctx, 1, globalExitRootNonZero, nil)
 	require.Error(t, err)
 }
 
@@ -79,7 +79,7 @@ func TestCheckL1SyncStatusEnoughToProcessBatchGerNoOnDBWeAre1BlockBehind(t *test
 	testData.zkevmMock.EXPECT().ExitRootsByGER(testData.ctx, globalExitRootNonZero).Return(&types.ExitRoots{BlockNumber: types.ArgUint64(l1Block)}, nil).Once()
 	testData.stateMock.EXPECT().GetLastBlock(testData.ctx, nil).Return(&state.Block{BlockNumber: l1Block - 1}, nil).Once()
 
-	err := testData.sut.CheckL1SyncStatusEnoughToProcessBatch(testData.ctx, 1, globalExitRootNonZero, nil)
+	err := testData.sut.CheckL1SyncGlobalExitRootEnoughToProcessBatch(testData.ctx, 1, globalExitRootNonZero, nil)
 	require.ErrorIs(t, err, syncinterfaces.ErrMissingSyncFromL1)
 }
 
@@ -91,7 +91,7 @@ func TestCheckL1SyncStatusEnoughToProcessBatchGerNoOnDBWeAre1BlockBeyond(t *test
 	testData.zkevmMock.EXPECT().ExitRootsByGER(testData.ctx, globalExitRootNonZero).Return(&types.ExitRoots{BlockNumber: types.ArgUint64(l1Block)}, nil).Once()
 	testData.stateMock.EXPECT().GetLastBlock(testData.ctx, nil).Return(&state.Block{BlockNumber: l1Block + 1}, nil).Once()
 
-	err := testData.sut.CheckL1SyncStatusEnoughToProcessBatch(testData.ctx, 1, globalExitRootNonZero, nil)
+	err := testData.sut.CheckL1SyncGlobalExitRootEnoughToProcessBatch(testData.ctx, 1, globalExitRootNonZero, nil)
 	require.ErrorIs(t, err, syncinterfaces.ErrFatalDesyncFromL1)
 	l1BlockNumber := err.(*l2_shared.DeSyncPermissionlessAndTrustedNodeError).L1BlockNumber
 	require.Equal(t, l1Block, l1BlockNumber, "returns the block where is the discrepancy")
@@ -105,7 +105,7 @@ func TestCheckL1SyncStatusEnoughToProcessBatchGerNoOnDBWeAreLastBlockSynced(t *t
 	testData.zkevmMock.EXPECT().ExitRootsByGER(testData.ctx, globalExitRootNonZero).Return(&types.ExitRoots{BlockNumber: types.ArgUint64(l1Block)}, nil).Once()
 	testData.stateMock.EXPECT().GetLastBlock(testData.ctx, nil).Return(&state.Block{BlockNumber: l1Block}, nil).Once()
 
-	err := testData.sut.CheckL1SyncStatusEnoughToProcessBatch(testData.ctx, 1, globalExitRootNonZero, nil)
+	err := testData.sut.CheckL1SyncGlobalExitRootEnoughToProcessBatch(testData.ctx, 1, globalExitRootNonZero, nil)
 	require.ErrorIs(t, err, syncinterfaces.ErrFatalDesyncFromL1)
 	l1BlockNumber := err.(*l2_shared.DeSyncPermissionlessAndTrustedNodeError).L1BlockNumber
 	require.Equal(t, l1Block, l1BlockNumber, "returns the block where is the discrepancy")

@@ -21,6 +21,15 @@ const (
 	cFalse            = 0
 	noFlushID  uint64 = 0
 	noProverID string = ""
+
+	// MockL1InfoRootHex is used to send batches to the Executor
+	// the number below represents this formula:
+	//
+	// 	mockL1InfoRoot := common.Hash{}
+	// for i := 0; i < len(mockL1InfoRoot); i++ {
+	// 	  mockL1InfoRoot[i] = byte(i)
+	// }
+	MockL1InfoRootHex = "0x000102030405060708090a0b0c0d0e0f101112131415161718191a1b1c1d1e1f"
 )
 
 // Batch struct
@@ -51,6 +60,7 @@ type ProcessingContext struct {
 	GlobalExitRoot common.Hash
 	ForcedBatchNum *uint64
 	BatchL2Data    *[]byte
+	ClosingReason  ClosingReason
 }
 
 // ClosingReason represents the reason why a batch is closed.
@@ -73,6 +83,22 @@ const (
 	MaxDeltaTimestampClosingReason ClosingReason = "Max delta timestamp"
 	// NoTxFitsClosingReason is the closing reason used when any of the txs in the pool (worker) fits in the remaining resources of the batch
 	NoTxFitsClosingReason ClosingReason = "No transaction fits"
+
+	// Reason due Synchronizer
+	// ------------------------------------------------------------------------------------------
+
+	// SyncL1EventInitialBatchClosingReason is the closing reason used when a batch is closed by the synchronizer due to an initial batch (first batch mode forced)
+	SyncL1EventInitialBatchClosingReason ClosingReason = "Sync L1: initial"
+	// SyncL1EventSequencedBatchClosingReason is the closing reason used when a batch is closed by the synchronizer due to a sequenced batch event from L1
+	SyncL1EventSequencedBatchClosingReason ClosingReason = "Sync L1: sequenced"
+	// SyncL1EventSequencedForcedBatchClosingReason is the closing reason used when a batch is closed by the synchronizer due to a sequenced forced batch event from L1
+	SyncL1EventSequencedForcedBatchClosingReason ClosingReason = "Sync L1: forced"
+	// SyncL1EventUpdateEtrogSequenceClosingReason is the closing reason used when a batch is closed by the synchronizer due to an UpdateEtrogSequence event from L1 that inject txs
+	SyncL1EventUpdateEtrogSequenceClosingReason ClosingReason = "Sync L1: injected"
+	// SyncL2TrustedBatchClosingReason is the closing reason used when a batch is closed by the synchronizer due to a trusted batch from L2
+	SyncL2TrustedBatchClosingReason ClosingReason = "Sync L2: trusted"
+	// SyncGenesisBatchClosingReason is the closing reason used when genesis batch is created by synchronizer
+	SyncGenesisBatchClosingReason ClosingReason = "Sync: genesis"
 )
 
 // ProcessingReceipt indicates the outcome (StateRoot, AccInputHash) of processing a batch
@@ -147,7 +173,7 @@ func (s *State) OpenBatch(ctx context.Context, processingContext ProcessingConte
 		return err
 	}
 	if prevTimestamp.Unix() > processingContext.Timestamp.Unix() {
-		return ErrTimestampGE
+		return fmt.Errorf(" oldBatch(%d) tstamp=%d > openingBatch(%d)=%d err: %w", lastBatchNum, prevTimestamp.Unix(), processingContext.BatchNumber, processingContext.Timestamp.Unix(), ErrTimestampGE)
 	}
 	return s.OpenBatchInStorage(ctx, processingContext, dbTx)
 }
@@ -614,4 +640,12 @@ func findMax(blocks []L2BlockRaw) uint32 {
 		}
 	}
 	return maxIndex
+}
+
+var mockL1InfoRoot = common.HexToHash(MockL1InfoRootHex)
+
+// GetMockL1InfoRoot returns an instance of common.Hash set
+// with the value provided by the const MockL1InfoRootHex
+func GetMockL1InfoRoot() common.Hash {
+	return mockL1InfoRoot
 }

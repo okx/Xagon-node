@@ -211,23 +211,27 @@ func (a *addrQueue) updateCurrentNonceBalance(nonce *uint64, balance *big.Int) (
 	if oldReadyTx != nil && oldReadyTx.Nonce > a.currentNonce {
 		log.Infof("set readyTx %s as notReadyTx from addrQueue %s", oldReadyTx.HashStr, a.fromStr)
 		a.notReadyTxs[oldReadyTx.Nonce] = oldReadyTx
+	} else if oldReadyTx != nil { // if oldReadyTx doesn't have a valid nonce then we add it to the txsToDelete
+		reason := runtime.ErrIntrinsicInvalidNonce.Error()
+		oldReadyTx.FailedReason = &reason
+		txsToDelete = append(txsToDelete, oldReadyTx)
 	}
 
 	return a.readyTx, oldReadyTx, txsToDelete
 }
 
 // UpdateTxZKCounters updates the ZKCounters for the given tx (txHash)
-func (a *addrQueue) UpdateTxZKCounters(txHash common.Hash, counters state.ZKCounters) {
+func (a *addrQueue) UpdateTxZKCounters(txHash common.Hash, usedZKCounters state.ZKCounters, reservedZKCounters state.ZKCounters) {
 	txHashStr := txHash.String()
 
 	if (a.readyTx != nil) && (a.readyTx.HashStr == txHashStr) {
 		log.Debugf("updating readyTx %s with new ZKCounters from addrQueue %s", txHashStr, a.fromStr)
-		a.readyTx.updateZKCounters(counters)
+		a.readyTx.updateZKCounters(usedZKCounters, reservedZKCounters)
 	} else {
 		for _, txTracker := range a.notReadyTxs {
 			if txTracker.HashStr == txHashStr {
 				log.Debugf("updating notReadyTx %s with new ZKCounters from addrQueue %s", txHashStr, a.fromStr)
-				txTracker.updateZKCounters(counters)
+				txTracker.updateZKCounters(usedZKCounters, reservedZKCounters)
 				break
 			}
 		}

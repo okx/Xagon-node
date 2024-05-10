@@ -10,9 +10,9 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-node/config"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/pol"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonrollupmanager"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonzkevm"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonzkevmglobalexitroot"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonrollupmanager"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevm"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevmglobalexitroot"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/test/constants"
@@ -36,7 +36,7 @@ type l1Stuff struct {
 	authSequencer   *bind.TransactOpts
 	authForcedBatch *bind.TransactOpts
 	zkEvmAddr       common.Address
-	zkEvm           *polygonzkevm.Polygonzkevm
+	zkEvm           *etrogpolygonzkevm.Etrogpolygonzkevm
 }
 
 type l2Stuff struct {
@@ -186,7 +186,7 @@ func setupEnvironmentL1(ctx context.Context, t *testing.T) *l1Stuff {
 	require.NoError(t, err)
 
 	zkEvmAddr := common.HexToAddress(operations.DefaultL1ZkEVMSmartContract)
-	zkEvm, err := polygonzkevm.NewPolygonzkevm(zkEvmAddr, ethClient)
+	zkEvm, err := etrogpolygonzkevm.NewEtrogpolygonzkevm(zkEvmAddr, ethClient)
 	require.NoError(t, err)
 	return &l1Stuff{ethClient: ethClient, authSequencer: authSequencer, authForcedBatch: authForcedBatch, zkEvmAddr: zkEvmAddr, zkEvm: zkEvm}
 }
@@ -216,7 +216,7 @@ func sendForcedBatch(ctx context.Context, t *testing.T, txs []byte, opsman *oper
 	log.Info("Number of forceBatches in the smc: ", num)
 
 	rollupManagerAddr := common.HexToAddress(operations.DefaultL1RollupManagerSmartContract)
-	rollupManager, err := polygonrollupmanager.NewPolygonrollupmanager(rollupManagerAddr, l1.ethClient)
+	rollupManager, err := etrogpolygonrollupmanager.NewEtrogpolygonrollupmanager(rollupManagerAddr, l1.ethClient)
 	require.NoError(t, err)
 
 	// Get tip
@@ -226,7 +226,7 @@ func sendForcedBatch(ctx context.Context, t *testing.T, txs []byte, opsman *oper
 	managerAddress, err := l1.zkEvm.GlobalExitRootManager(&bind.CallOpts{Pending: false})
 	require.NoError(t, err)
 
-	manager, err := polygonzkevmglobalexitroot.NewPolygonzkevmglobalexitroot(managerAddress, l1.ethClient)
+	manager, err := etrogpolygonzkevmglobalexitroot.NewEtrogpolygonzkevmglobalexitroot(managerAddress, l1.ethClient)
 	require.NoError(t, err)
 
 	rootInContract, err := manager.GetLastGlobalExitRoot(&bind.CallOpts{Pending: false})
@@ -299,7 +299,7 @@ func sendForcedBatch(ctx context.Context, t *testing.T, txs []byte, opsman *oper
 	return forcedBatch, nil
 }
 
-func findForcedBatchInL1Logs(ctx context.Context, t *testing.T, fromBlock *big.Int, l1 *l1Stuff) (*polygonzkevm.PolygonzkevmForceBatch, *types.Log, error) {
+func findForcedBatchInL1Logs(ctx context.Context, t *testing.T, fromBlock *big.Int, l1 *l1Stuff) (*etrogpolygonzkevm.EtrogpolygonzkevmForceBatch, *types.Log, error) {
 	query := ethereum.FilterQuery{
 		FromBlock: fromBlock,
 		Addresses: []common.Address{l1.zkEvmAddr},

@@ -1,0 +1,2059 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "contract IPolygonZkEVMGlobalExitRootV2",
+                "name": "_globalExitRootManager",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IERC20Upgradeable",
+                "name": "_pol",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IPolygonZkEVMBridge",
+                "name": "_bridgeAddress",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [],
+        "name": "AccessControlOnlyCanRenounceRolesForSelf",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "AddressDoNotHaveRequiredRole",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "AllSequencedMustBeVerified",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "AllzkEVMSequencedBatchesMustBeVerified",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "BatchFeeOutOfRange",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "CannotUpdateWithUnconsolidatedPendingState",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ChainIDAlreadyExist",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ChainIDOutOfRange",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ExceedMaxVerifyBatches",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "FinalNumBatchBelowLastVerifiedBatch",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "FinalNumBatchDoesNotMatchPendingState",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "FinalNumSequenceBelowLastVerifiedSequence",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "FinalNumSequenceDoesNotMatchPendingState",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "FinalPendingStateNumInvalid",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "HaltTimeoutNotExpired",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InitBatchMustMatchCurrentForkID",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InitNumBatchAboveLastVerifiedBatch",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InitNumBatchDoesNotMatchPendingState",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InitSequenceMustMatchCurrentForkID",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InitSequenceNumDoesNotMatchPendingState",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InvalidProof",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InvalidRangeBatchTimeTarget",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InvalidRangeMultiplierBatchFee",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InvalidRangeMultiplierZkGasPrice",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InvalidRangeSequenceTimeTarget",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "MustSequenceSomeBatch",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "MustSequenceSomeBlob",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NewAccInputHashDoesNotExist",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NewPendingStateTimeoutMustBeLower",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NewStateRootNotInsidePrime",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NewTrustedAggregatorTimeoutMustBeLower",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "OldAccInputHashDoesNotExist",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "OldStateRootDoesNotExist",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "OnlyEmergencyState",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "OnlyNotEmergencyState",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "OnlyRollupAdmin",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "PendingStateDoesNotExist",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "PendingStateInvalid",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "PendingStateNotConsolidable",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "RollupAddressAlreadyExist",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "RollupIDNotAscendingOrder",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "RollupMustExist",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "RollupTypeDoesNotExist",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "RollupTypeObsolete",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "SenderMustBeRollup",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "StoredRootMustBeDifferentThanNewRoot",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "TrustedAggregatorTimeoutNotExpired",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "UpdateNotCompatible",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "UpdateToSameRollupTypeID",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "zkGasPriceOfRange",
+        "type": "error"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "forkID",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "rollupAddress",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "chainID",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint8",
+                "name": "rollupCompatibilityID",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "lastVerifiedSequenceBeforeUpgrade",
+                "type": "uint64"
+            }
+        ],
+        "name": "AddExistingRollup",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "rollupTypeID",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "consensusImplementation",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "verifier",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "forkID",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint8",
+                "name": "rollupCompatibilityID",
+                "type": "uint8"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "genesis",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "description",
+                "type": "string"
+            }
+        ],
+        "name": "AddNewRollupType",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "numSequence",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "stateRoot",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "exitRoot",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "pendingStateNum",
+                "type": "uint64"
+            }
+        ],
+        "name": "ConsolidatePendingState",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint32",
+                "name": "rollupTypeID",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "rollupAddress",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "chainID",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "gasTokenAddress",
+                "type": "address"
+            }
+        ],
+        "name": "CreateNewRollup",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [],
+        "name": "EmergencyStateActivated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [],
+        "name": "EmergencyStateDeactivated",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint8",
+                "name": "version",
+                "type": "uint8"
+            }
+        ],
+        "name": "Initialized",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "rollupTypeID",
+                "type": "uint32"
+            }
+        ],
+        "name": "ObsoleteRollupType",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint128",
+                "name": "zkGasLimit",
+                "type": "uint128"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "blobsSequenced",
+                "type": "uint64"
+            }
+        ],
+        "name": "OnSequence",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "numSequence",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "stateRoot",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "exitRoot",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "aggregator",
+                "type": "address"
+            }
+        ],
+        "name": "OverridePendingState",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "storedStateRoot",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "provedStateRoot",
+                "type": "bytes32"
+            }
+        ],
+        "name": "ProveNonDeterministicPendingState",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "previousAdminRole",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "newAdminRole",
+                "type": "bytes32"
+            }
+        ],
+        "name": "RoleAdminChanged",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            }
+        ],
+        "name": "RoleGranted",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "sender",
+                "type": "address"
+            }
+        ],
+        "name": "RoleRevoked",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "contract IVerifierRollup",
+                "name": "aggregateRollupVerifier",
+                "type": "address"
+            }
+        ],
+        "name": "SetAggregateRollupVerifier",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint16",
+                "name": "newMultiplierSequenceFee",
+                "type": "uint16"
+            }
+        ],
+        "name": "SetMultiplierZkGasPrice",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "newPendingStateTimeout",
+                "type": "uint64"
+            }
+        ],
+        "name": "SetPendingStateTimeout",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint256",
+                "name": "newSequenceFee",
+                "type": "uint256"
+            }
+        ],
+        "name": "SetSequenceFee",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "newTrustedAggregator",
+                "type": "address"
+            }
+        ],
+        "name": "SetTrustedAggregator",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "newTrustedAggregatorTimeout",
+                "type": "uint64"
+            }
+        ],
+        "name": "SetTrustedAggregatorTimeout",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "newVerifySequenceTimeTarget",
+                "type": "uint64"
+            }
+        ],
+        "name": "SetVerifySequenceTimeTarget",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint32",
+                "name": "newRollupTypeID",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "lastVerifiedSequenceBeforeUpgrade",
+                "type": "uint64"
+            }
+        ],
+        "name": "UpdateRollup",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "sequenceNum",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "stateRoot",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "exitRoot",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "aggregator",
+                "type": "address"
+            }
+        ],
+        "name": "VerifySequences",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "aggregator",
+                "type": "address"
+            }
+        ],
+        "name": "VerifySequencesMultiProof",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "numSequence",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "stateRoot",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "exitRoot",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "aggregator",
+                "type": "address"
+            }
+        ],
+        "name": "VerifySequencesTrustedAggregator",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "aggregator",
+                "type": "address"
+            }
+        ],
+        "name": "VerifySequencesTrustedAggregatorMultiProof",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "DEFAULT_ADMIN_ROLE",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "ZK_GAS_LIMIT_BATCH",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "activateEmergencyState",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract IPolygonRollupBaseFeijoa",
+                "name": "rollupAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IVerifierRollup",
+                "name": "verifier",
+                "type": "address"
+            },
+            {
+                "internalType": "uint64",
+                "name": "forkID",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "chainID",
+                "type": "uint64"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "genesis",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint8",
+                "name": "rollupCompatibilityID",
+                "type": "uint8"
+            }
+        ],
+        "name": "addExistingRollup",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "consensusImplementation",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IVerifierRollup",
+                "name": "verifier",
+                "type": "address"
+            },
+            {
+                "internalType": "uint64",
+                "name": "forkID",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint8",
+                "name": "rollupCompatibilityID",
+                "type": "uint8"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "genesis",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "string",
+                "name": "description",
+                "type": "string"
+            }
+        ],
+        "name": "addNewRollupType",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "aggregateRollupVerifier",
+        "outputs": [
+            {
+                "internalType": "contract IVerifierRollup",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "bridgeAddress",
+        "outputs": [
+            {
+                "internalType": "contract IPolygonZkEVMBridge",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "calculateRewardPerZkGas",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "chainID",
+                "type": "uint64"
+            }
+        ],
+        "name": "chainIDToRollupID",
+        "outputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "pendingStateNum",
+                "type": "uint64"
+            }
+        ],
+        "name": "consolidatePendingState",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupTypeID",
+                "type": "uint32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "chainID",
+                "type": "uint64"
+            },
+            {
+                "internalType": "address",
+                "name": "admin",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "sequencer",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "gasTokenAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "sequencerURL",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "networkName",
+                "type": "string"
+            }
+        ],
+        "name": "createNewRollup",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "deactivateEmergencyState",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getForcedZkGasPrice",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            }
+        ],
+        "name": "getLastVerifiedSequence",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            }
+        ],
+        "name": "getRoleAdmin",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getRollupExitRoot",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "sequenceNum",
+                "type": "uint64"
+            }
+        ],
+        "name": "getRollupPendingStateTransitions",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint64",
+                        "name": "timestamp",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "uint64",
+                        "name": "lastVerifiedSequence",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "exitRoot",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "stateRoot",
+                        "type": "bytes32"
+                    }
+                ],
+                "internalType": "struct PolygonRollupManager.PendingStateSequenceBased",
+                "name": "",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "sequenceNum",
+                "type": "uint64"
+            }
+        ],
+        "name": "getRollupSequencedSequences",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "bytes32",
+                        "name": "accInputHash",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "uint64",
+                        "name": "sequencedTimestamp",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "uint64",
+                        "name": "currentBlobNum",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "uint128",
+                        "name": "accZkGasLimit",
+                        "type": "uint128"
+                    }
+                ],
+                "internalType": "struct PolygonRollupManager.SequencedData",
+                "name": "",
+                "type": "tuple"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "sequenceNum",
+                "type": "uint64"
+            }
+        ],
+        "name": "getRollupsequenceNumToStateRoot",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getZkGasPrice",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "globalExitRootManager",
+        "outputs": [
+            {
+                "internalType": "contract IPolygonZkEVMGlobalExitRootV2",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            }
+        ],
+        "name": "grantRole",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            }
+        ],
+        "name": "hasRole",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "initialize",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "isEmergencyState",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "pendingStateNum",
+                "type": "uint64"
+            }
+        ],
+        "name": "isPendingStateConsolidable",
+        "outputs": [
+            {
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "lastAggregationTimestamp",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "lastDeactivatedEmergencyStateTimestamp",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "multiplierZkGasPrice",
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupTypeID",
+                "type": "uint32"
+            }
+        ],
+        "name": "obsoleteRollupType",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint128",
+                "name": "zkGasLimitSequenced",
+                "type": "uint128"
+            },
+            {
+                "internalType": "uint64",
+                "name": "blobsSequenced",
+                "type": "uint64"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "newAccInputHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "onSequence",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "initPendingStateNum",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "finalPendingStateNum",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "initSequenceNum",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "finalSequenceNum",
+                "type": "uint64"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "newLocalExitRoot",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "newStateRoot",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32[24]",
+                "name": "proof",
+                "type": "bytes32[24]"
+            }
+        ],
+        "name": "overridePendingState",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "pendingStateTimeout",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "pol",
+        "outputs": [
+            {
+                "internalType": "contract IERC20Upgradeable",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "initPendingStateNum",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "finalPendingStateNum",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "initSequenceNum",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "finalSequenceNum",
+                "type": "uint64"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "newLocalExitRoot",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "newStateRoot",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "bytes32[24]",
+                "name": "proof",
+                "type": "bytes32[24]"
+            }
+        ],
+        "name": "proveNonDeterministicPendingState",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            }
+        ],
+        "name": "renounceRole",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes32",
+                "name": "role",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "address",
+                "name": "account",
+                "type": "address"
+            }
+        ],
+        "name": "revokeRole",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "rollupAddress",
+                "type": "address"
+            }
+        ],
+        "name": "rollupAddressToID",
+        "outputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "rollupCount",
+        "outputs": [
+            {
+                "internalType": "uint32",
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupID",
+                "type": "uint32"
+            }
+        ],
+        "name": "rollupIDToRollupData",
+        "outputs": [
+            {
+                "internalType": "contract IPolygonRollupBaseFeijoa",
+                "name": "rollupContract",
+                "type": "address"
+            },
+            {
+                "internalType": "uint64",
+                "name": "chainID",
+                "type": "uint64"
+            },
+            {
+                "internalType": "contract IVerifierRollup",
+                "name": "verifier",
+                "type": "address"
+            },
+            {
+                "internalType": "uint64",
+                "name": "forkID",
+                "type": "uint64"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "lastLocalExitRoot",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "lastSequenceNum",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "lastVerifiedSequenceNum",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "lastPendingState",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "lastPendingStateConsolidated",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "lastVerifiedSequenceBeforeUpgrade",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint64",
+                "name": "rollupTypeID",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint8",
+                "name": "rollupCompatibilityID",
+                "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "rollupTypeCount",
+        "outputs": [
+            {
+                "internalType": "uint32",
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "rollupTypeID",
+                "type": "uint32"
+            }
+        ],
+        "name": "rollupTypeMap",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "consensusImplementation",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IVerifierRollup",
+                "name": "verifier",
+                "type": "address"
+            },
+            {
+                "internalType": "uint64",
+                "name": "forkID",
+                "type": "uint64"
+            },
+            {
+                "internalType": "uint8",
+                "name": "rollupCompatibilityID",
+                "type": "uint8"
+            },
+            {
+                "internalType": "bool",
+                "name": "obsolete",
+                "type": "bool"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "genesis",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract IVerifierRollup",
+                "name": "newAggregateRollupVerifier",
+                "type": "address"
+            }
+        ],
+        "name": "setAggregateRollupVerifier",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint16",
+                "name": "newMultiplierZkGasPrice",
+                "type": "uint16"
+            }
+        ],
+        "name": "setMultiplierZkGasPrice",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "newPendingStateTimeout",
+                "type": "uint64"
+            }
+        ],
+        "name": "setPendingStateTimeout",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "newTrustedAggregatorTimeout",
+                "type": "uint64"
+            }
+        ],
+        "name": "setTrustedAggregatorTimeout",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "newVerifySequenceTimeTarget",
+                "type": "uint64"
+            }
+        ],
+        "name": "setVerifySequenceTimeTarget",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "newZkGasPrice",
+                "type": "uint256"
+            }
+        ],
+        "name": "setZkGasPrice",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "totalVerifiedZkGasLimit",
+        "outputs": [
+            {
+                "internalType": "uint128",
+                "name": "",
+                "type": "uint128"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "totalZkGasLimit",
+        "outputs": [
+            {
+                "internalType": "uint128",
+                "name": "",
+                "type": "uint128"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "trustedAggregatorTimeout",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract ITransparentUpgradeableProxy",
+                "name": "rollupContract",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "newRollupTypeID",
+                "type": "uint32"
+            },
+            {
+                "internalType": "bytes",
+                "name": "upgradeData",
+                "type": "bytes"
+            }
+        ],
+        "name": "updateRollup",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "contract ITransparentUpgradeableProxy",
+                "name": "rollupContract",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "newRollupTypeID",
+                "type": "uint32"
+            }
+        ],
+        "name": "updateRollupByRollupAdmin",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "verifySequenceTimeTarget",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint32",
+                        "name": "rollupID",
+                        "type": "uint32"
+                    },
+                    {
+                        "internalType": "uint64",
+                        "name": "pendingStateNum",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "uint64",
+                        "name": "initSequenceNum",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "uint64",
+                        "name": "finalSequenceNum",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "newLocalExitRoot",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "newStateRoot",
+                        "type": "bytes32"
+                    }
+                ],
+                "internalType": "struct PolygonRollupManager.VerifySequenceData[]",
+                "name": "verifySequencesData",
+                "type": "tuple[]"
+            },
+            {
+                "internalType": "address",
+                "name": "beneficiary",
+                "type": "address"
+            },
+            {
+                "internalType": "bytes32[24]",
+                "name": "proof",
+                "type": "bytes32[24]"
+            }
+        ],
+        "name": "verifySequencesMultiProof",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint32",
+                        "name": "rollupID",
+                        "type": "uint32"
+                    },
+                    {
+                        "internalType": "uint64",
+                        "name": "pendingStateNum",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "uint64",
+                        "name": "initSequenceNum",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "uint64",
+                        "name": "finalSequenceNum",
+                        "type": "uint64"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "newLocalExitRoot",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "bytes32",
+                        "name": "newStateRoot",
+                        "type": "bytes32"
+                    }
+                ],
+                "internalType": "struct PolygonRollupManager.VerifySequenceData[]",
+                "name": "verifySequencesData",
+                "type": "tuple[]"
+            },
+            {
+                "internalType": "address",
+                "name": "beneficiary",
+                "type": "address"
+            },
+            {
+                "internalType": "bytes32[24]",
+                "name": "proof",
+                "type": "bytes32[24]"
+            }
+        ],
+        "name": "verifySequencesTrustedAggregatorMultiProof",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    }
+]

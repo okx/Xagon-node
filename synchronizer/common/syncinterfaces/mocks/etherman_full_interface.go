@@ -87,6 +87,119 @@ func (_c *EthermanFullInterface_EthBlockByNumber_Call) RunAndReturn(run func(con
 	return _c
 }
 
+// GetFinalizedBlockNumber provides a mock function with given fields: ctx
+func (_m *EthermanFullInterface) GetFinalizedBlockNumber(ctx context.Context) (uint64, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetFinalizedBlockNumber")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (uint64, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) uint64); ok {
+		r0 = rf(ctx)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// EthermanFullInterface_GetFinalizedBlockNumber_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetFinalizedBlockNumber'
+type EthermanFullInterface_GetFinalizedBlockNumber_Call struct {
+	*mock.Call
+}
+
+// GetFinalizedBlockNumber is a helper method to define mock.On call
+//   - ctx context.Context
+func (_e *EthermanFullInterface_Expecter) GetFinalizedBlockNumber(ctx interface{}) *EthermanFullInterface_GetFinalizedBlockNumber_Call {
+	return &EthermanFullInterface_GetFinalizedBlockNumber_Call{Call: _e.mock.On("GetFinalizedBlockNumber", ctx)}
+}
+
+func (_c *EthermanFullInterface_GetFinalizedBlockNumber_Call) Run(run func(ctx context.Context)) *EthermanFullInterface_GetFinalizedBlockNumber_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context))
+	})
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetFinalizedBlockNumber_Call) Return(_a0 uint64, _a1 error) *EthermanFullInterface_GetFinalizedBlockNumber_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetFinalizedBlockNumber_Call) RunAndReturn(run func(context.Context) (uint64, error)) *EthermanFullInterface_GetFinalizedBlockNumber_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetL1BlockUpgradeLxLy provides a mock function with given fields: ctx, genesisBlock
+func (_m *EthermanFullInterface) GetL1BlockUpgradeLxLy(ctx context.Context, genesisBlock uint64) (uint64, error) {
+	ret := _m.Called(ctx, genesisBlock)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetL1BlockUpgradeLxLy")
+	}
+
+	var r0 uint64
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) (uint64, error)); ok {
+		return rf(ctx, genesisBlock)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64) uint64); ok {
+		r0 = rf(ctx, genesisBlock)
+	} else {
+		r0 = ret.Get(0).(uint64)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64) error); ok {
+		r1 = rf(ctx, genesisBlock)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// EthermanFullInterface_GetL1BlockUpgradeLxLy_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetL1BlockUpgradeLxLy'
+type EthermanFullInterface_GetL1BlockUpgradeLxLy_Call struct {
+	*mock.Call
+}
+
+// GetL1BlockUpgradeLxLy is a helper method to define mock.On call
+//   - ctx context.Context
+//   - genesisBlock uint64
+func (_e *EthermanFullInterface_Expecter) GetL1BlockUpgradeLxLy(ctx interface{}, genesisBlock interface{}) *EthermanFullInterface_GetL1BlockUpgradeLxLy_Call {
+	return &EthermanFullInterface_GetL1BlockUpgradeLxLy_Call{Call: _e.mock.On("GetL1BlockUpgradeLxLy", ctx, genesisBlock)}
+}
+
+func (_c *EthermanFullInterface_GetL1BlockUpgradeLxLy_Call) Run(run func(ctx context.Context, genesisBlock uint64)) *EthermanFullInterface_GetL1BlockUpgradeLxLy_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64))
+	})
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetL1BlockUpgradeLxLy_Call) Return(_a0 uint64, _a1 error) *EthermanFullInterface_GetL1BlockUpgradeLxLy_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetL1BlockUpgradeLxLy_Call) RunAndReturn(run func(context.Context, uint64) (uint64, error)) *EthermanFullInterface_GetL1BlockUpgradeLxLy_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // GetLatestBatchNumber provides a mock function with given fields:
 func (_m *EthermanFullInterface) GetLatestBatchNumber() (uint64, error) {
 	ret := _m.Called()
@@ -262,6 +375,75 @@ func (_c *EthermanFullInterface_GetRollupInfoByBlockRange_Call) Return(_a0 []eth
 }
 
 func (_c *EthermanFullInterface_GetRollupInfoByBlockRange_Call) RunAndReturn(run func(context.Context, uint64, *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error)) *EthermanFullInterface_GetRollupInfoByBlockRange_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
+// GetRollupInfoByBlockRangePreviousRollupGenesis provides a mock function with given fields: ctx, fromBlock, toBlock
+func (_m *EthermanFullInterface) GetRollupInfoByBlockRangePreviousRollupGenesis(ctx context.Context, fromBlock uint64, toBlock *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error) {
+	ret := _m.Called(ctx, fromBlock, toBlock)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetRollupInfoByBlockRangePreviousRollupGenesis")
+	}
+
+	var r0 []etherman.Block
+	var r1 map[common.Hash][]etherman.Order
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error)); ok {
+		return rf(ctx, fromBlock, toBlock)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *uint64) []etherman.Block); ok {
+		r0 = rf(ctx, fromBlock, toBlock)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]etherman.Block)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, *uint64) map[common.Hash][]etherman.Order); ok {
+		r1 = rf(ctx, fromBlock, toBlock)
+	} else {
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).(map[common.Hash][]etherman.Order)
+		}
+	}
+
+	if rf, ok := ret.Get(2).(func(context.Context, uint64, *uint64) error); ok {
+		r2 = rf(ctx, fromBlock, toBlock)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
+}
+
+// EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetRollupInfoByBlockRangePreviousRollupGenesis'
+type EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call struct {
+	*mock.Call
+}
+
+// GetRollupInfoByBlockRangePreviousRollupGenesis is a helper method to define mock.On call
+//   - ctx context.Context
+//   - fromBlock uint64
+//   - toBlock *uint64
+func (_e *EthermanFullInterface_Expecter) GetRollupInfoByBlockRangePreviousRollupGenesis(ctx interface{}, fromBlock interface{}, toBlock interface{}) *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call {
+	return &EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call{Call: _e.mock.On("GetRollupInfoByBlockRangePreviousRollupGenesis", ctx, fromBlock, toBlock)}
+}
+
+func (_c *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call) Run(run func(ctx context.Context, fromBlock uint64, toBlock *uint64)) *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(uint64), args[2].(*uint64))
+	})
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call) Return(_a0 []etherman.Block, _a1 map[common.Hash][]etherman.Order, _a2 error) *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call {
+	_c.Call.Return(_a0, _a1, _a2)
+	return _c
+}
+
+func (_c *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call) RunAndReturn(run func(context.Context, uint64, *uint64) ([]etherman.Block, map[common.Hash][]etherman.Order, error)) *EthermanFullInterface_GetRollupInfoByBlockRangePreviousRollupGenesis_Call {
 	_c.Call.Return(run)
 	return _c
 }

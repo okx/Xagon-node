@@ -11,7 +11,7 @@ import (
 type Sequence struct {
 	GlobalExitRoot, StateRoot, LocalExitRoot common.Hash
 	AccInputHash                             common.Hash
-	Timestamp                                int64
+	LastL2BLockTimestamp                     int64
 	BatchL2Data                              []byte
 	IsSequenceTooBig                         bool
 	BatchNumber                              uint64

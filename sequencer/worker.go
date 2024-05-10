@@ -22,23 +22,26 @@ type Worker struct {
 	workerMutex      sync.Mutex
 	state            stateInterface
 	batchConstraints state.BatchConstraintsCfg
+	readyTxsCond     *timeoutCond
+	wipTx            *TxTracker
 }
 
 // NewWorker creates an init a worker
-func NewWorker(state stateInterface, constraints state.BatchConstraintsCfg) *Worker {
+func NewWorker(state stateInterface, constraints state.BatchConstraintsCfg, readyTxsCond *timeoutCond) *Worker {
 	w := Worker{
 		pool:             make(map[string]*addrQueue),
 		txSortedList:     newTxSortedList(),
 		state:            state,
 		batchConstraints: constraints,
+		readyTxsCond:     readyTxsCond,
 	}
 
 	return &w
 }
 
 // NewTxTracker creates and inits a TxTracker
-func (w *Worker) NewTxTracker(tx types.Transaction, counters state.ZKCounters, ip string) (*TxTracker, error) {
-	return newTxTracker(tx, counters, ip)
+func (w *Worker) NewTxTracker(tx types.Transaction, usedZKCounters state.ZKCounters, reservedZKCounters state.ZKCounters, ip string) (*TxTracker, error) {
+	return newTxTracker(tx, usedZKCounters, reservedZKCounters, ip)
 }
 
 // AddTxTracker adds a new Tx to the Worker
@@ -51,11 +54,17 @@ func (w *Worker) AddTxTracker(ctx context.Context, tx *TxTracker) (replacedTx *T
 		return nil, pool.ErrInvalidIP
 	}
 
-	// Make sure the transaction's batch resources are within the constraints.
-	if !w.batchConstraints.IsWithinConstraints(tx.BatchResources.ZKCounters) {
+	// Make sure the transaction's reserved ZKCounters are within the constraints.
+	if !w.batchConstraints.IsWithinConstraints(tx.ReservedZKCounters) {
 		log.Errorf("outOfCounters error (node level) for tx %s", tx.Hash.String())
 		w.workerMutex.Unlock()
 		return nil, pool.ErrOutOfCounters
+	}
+
+	if (w.wipTx != nil) && (w.wipTx.FromStr == tx.FromStr) && (w.wipTx.Nonce == tx.Nonce) {
+		log.Infof("adding tx %s (nonce %d) from address %s that matches current processing tx %s (nonce %d), rejecting it as duplicated nonce", tx.Hash, tx.Nonce, tx.From, w.wipTx.Hash, w.wipTx.Nonce)
+		w.workerMutex.Unlock()
+		return nil, ErrDuplicatedNonce
 	}
 
 	addr, found := w.pool[tx.FromStr]
@@ -108,7 +117,7 @@ func (w *Worker) AddTxTracker(ctx context.Context, tx *TxTracker) (replacedTx *T
 	}
 	if newReadyTx != nil {
 		log.Debugf("newReadyTx %s (nonce: %d, gasPrice: %d, addr: %s) added to TxSortedList", newReadyTx.HashStr, newReadyTx.Nonce, newReadyTx.GasPrice, tx.FromStr)
-		w.txSortedList.add(newReadyTx)
+		w.addTxToSortedList(newReadyTx)
 	}
 
 	if repTx != nil {
@@ -132,7 +141,7 @@ func (w *Worker) applyAddressUpdate(from common.Address, fromNonce *uint64, from
 		}
 		if newReadyTx != nil {
 			log.Debugf("newReadyTx %s (nonce: %d, gasPrice: %d) added to TxSortedList", newReadyTx.Hash.String(), newReadyTx.Nonce, newReadyTx.GasPrice)
-			w.txSortedList.add(newReadyTx)
+			w.addTxToSortedList(newReadyTx)
 		}
 
 		return newReadyTx, prevReadyTx, txsToDelete
@@ -172,6 +181,8 @@ func (w *Worker) MoveTxToNotReady(txHash common.Hash, from common.Address, actua
 	defer w.workerMutex.Unlock()
 	log.Debugf("move tx %s to notReady (from: %s, actualNonce: %d, actualBalance: %s)", txHash.String(), from.String(), actualNonce, actualBalance.String())
 
+	w.resetWipTx(txHash)
+
 	addrQueue, found := w.pool[from.String()]
 	if found {
 		// Sanity check. The txHash must be the readyTx
@@ -192,6 +203,8 @@ func (w *Worker) MoveTxToNotReady(txHash common.Hash, from common.Address, actua
 func (w *Worker) DeleteTx(txHash common.Hash, addr common.Address) {
 	w.workerMutex.Lock()
 	defer w.workerMutex.Unlock()
+
+	w.resetWipTx(txHash)
 
 	addrQueue, found := w.pool[addr.String()]
 	if found {
@@ -219,25 +232,26 @@ func (w *Worker) DeleteForcedTx(txHash common.Hash, addr common.Address) {
 }
 
 // UpdateTxZKCounters updates the ZKCounter of a tx
-func (w *Worker) UpdateTxZKCounters(txHash common.Hash, addr common.Address, counters state.ZKCounters) {
+func (w *Worker) UpdateTxZKCounters(txHash common.Hash, addr common.Address, usedZKCounters state.ZKCounters, reservedZKCounters state.ZKCounters) {
 	w.workerMutex.Lock()
 	defer w.workerMutex.Unlock()
 
 	log.Infof("update ZK counters for tx %s addr %s", txHash.String(), addr.String())
-	log.Debugf("counters.CumulativeGasUsed: %d", counters.GasUsed)
-	log.Debugf("counters.UsedKeccakHashes: %d", counters.UsedKeccakHashes)
-	log.Debugf("counters.UsedPoseidonHashes: %d", counters.UsedPoseidonHashes)
-	log.Debugf("counters.UsedPoseidonPaddings: %d", counters.UsedPoseidonPaddings)
-	log.Debugf("counters.UsedMemAligns: %d", counters.UsedMemAligns)
-	log.Debugf("counters.UsedArithmetics: %d", counters.UsedArithmetics)
-	log.Debugf("counters.UsedBinaries: %d", counters.UsedBinaries)
-	log.Debugf("counters.UsedSteps: %d", counters.UsedSteps)
-	log.Debugf("counters.UsedSha256Hashes_V2: %d", counters.UsedSha256Hashes_V2)
+	// TODO: log in a single line, log also reserved resources
+	log.Debugf("counters.CumulativeGasUsed: %d", usedZKCounters.GasUsed)
+	log.Debugf("counters.UsedKeccakHashes: %d", usedZKCounters.KeccakHashes)
+	log.Debugf("counters.UsedPoseidonHashes: %d", usedZKCounters.PoseidonHashes)
+	log.Debugf("counters.UsedPoseidonPaddings: %d", usedZKCounters.PoseidonPaddings)
+	log.Debugf("counters.UsedMemAligns: %d", usedZKCounters.MemAligns)
+	log.Debugf("counters.UsedArithmetics: %d", usedZKCounters.Arithmetics)
+	log.Debugf("counters.UsedBinaries: %d", usedZKCounters.Binaries)
+	log.Debugf("counters.UsedSteps: %d", usedZKCounters.Steps)
+	log.Debugf("counters.UsedSha256Hashes_V2: %d", usedZKCounters.Sha256Hashes_V2)
 
 	addrQueue, found := w.pool[addr.String()]
 
 	if found {
-		addrQueue.UpdateTxZKCounters(txHash, counters)
+		addrQueue.UpdateTxZKCounters(txHash, usedZKCounters, reservedZKCounters)
 	} else {
 		log.Warnf("addrQueue %s not found", addr.String())
 	}
@@ -290,6 +304,8 @@ func (w *Worker) GetBestFittingTx(resources state.BatchResources) (*TxTracker, e
 	w.workerMutex.Lock()
 	defer w.workerMutex.Unlock()
 
+	w.wipTx = nil
+
 	if w.txSortedList.len() == 0 {
 		return nil, ErrTransactionsListEmpty
 	}
@@ -318,7 +334,7 @@ func (w *Worker) GetBestFittingTx(resources state.BatchResources) (*TxTracker, e
 				foundMutex.RUnlock()
 
 				txCandidate := w.txSortedList.getByIndex(i)
-				overflow, _ := bresources.Sub(txCandidate.BatchResources)
+				overflow, _ := bresources.Sub(state.BatchResources{ZKCounters: txCandidate.ReservedZKCounters, Bytes: txCandidate.Bytes})
 				if overflow {
 					// We don't add this Tx
 					continue
@@ -339,6 +355,7 @@ func (w *Worker) GetBestFittingTx(resources state.BatchResources) (*TxTracker, e
 
 	if foundAt != -1 {
 		log.Debugf("best fitting tx %s found at index %d with gasPrice %d", tx.HashStr, foundAt, tx.GasPrice)
+		w.wipTx = tx
 		return tx, nil
 	} else {
 		return nil, ErrNoFittingTransaction
@@ -361,11 +378,27 @@ func (w *Worker) ExpireTransactions(maxTime time.Duration) []*TxTracker {
 			w.txSortedList.delete(prevReadyTx)
 		}
 
-		if addrQueue.IsEmpty() {
+		/*if addrQueue.IsEmpty() {
 			delete(w.pool, addrQueue.fromStr)
-		}
+		}*/
 	}
 	log.Debugf("expire transactions ended, addrQueue length: %d, delete count: %d ", len(w.pool), len(txs))
 
 	return txs
+}
+
+func (w *Worker) addTxToSortedList(readyTx *TxTracker) {
+	w.txSortedList.add(readyTx)
+	if w.txSortedList.len() == 1 {
+		// The txSortedList was empty before to add the new tx, we notify finalizer that we have new ready txs to process
+		w.readyTxsCond.L.Lock()
+		w.readyTxsCond.Signal()
+		w.readyTxsCond.L.Unlock()
+	}
+}
+
+func (w *Worker) resetWipTx(txHash common.Hash) {
+	if (w.wipTx != nil) && (w.wipTx.Hash == txHash) {
+		w.wipTx = nil
+	}
 }

@@ -123,6 +123,50 @@ func (s *PostgresStorage) GetByStatus(ctx context.Context, owner *string, status
 	return mTxs, nil
 }
 
+// GetBySenderAndStatus loads all monitored txs of the given sender that match the provided status
+func (s *PostgresStorage) GetBySenderAndStatus(ctx context.Context, sender common.Address, statuses []MonitoredTxStatus, dbTx pgx.Tx) ([]monitoredTx, error) {
+	hasStatusToFilter := len(statuses) > 0
+
+	conn := s.dbConn(dbTx)
+	cmd := `
+        SELECT owner, id, from_addr, to_addr, nonce, value, data, gas, gas_offset, gas_price, status, block_num, history, created_at, updated_at
+          FROM state.monitored_txs
+         WHERE from_addr = $1`
+	if hasStatusToFilter {
+		cmd += `
+           AND status = ANY($2)`
+	}
+	cmd += `
+         ORDER BY created_at`
+
+	mTxs := []monitoredTx{}
+
+	var rows pgx.Rows
+	var err error
+	if hasStatusToFilter {
+		rows, err = conn.Query(ctx, cmd, sender.String(), statuses)
+	} else {
+		rows, err = conn.Query(ctx, cmd, sender.String())
+	}
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return []monitoredTx{}, nil
+	} else if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		mTx := monitoredTx{}
+		err := s.scanMtx(rows, &mTx)
+		if err != nil {
+			return nil, err
+		}
+		mTxs = append(mTxs, mTx)
+	}
+
+	return mTxs, nil
+}
+
 // GetByBlock loads all monitored tx that have the blockNumber between
 // fromBlock and toBlock
 func (s *PostgresStorage) GetByBlock(ctx context.Context, fromBlock, toBlock *uint64, dbTx pgx.Tx) ([]monitoredTx, error) {

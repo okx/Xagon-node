@@ -6,6 +6,8 @@ import "github.com/0xPolygonHermez/zkevm-node/etherman/etherscan"
 type Config struct {
 	// URL is the URL of the Ethereum node for L1
 	URL string `mapstructure:"URL"`
+	// ConsensusL1URL is the URL of the consensus L1 RPC endpoint
+	ConsensusL1URL string `mapstructure:"ConsensusL1URL"`
 
 	// ForkIDChunkSize is the max interval for each call to L1 provider to get the forkIDs
 	ForkIDChunkSize uint64 `mapstructure:"ForkIDChunkSize"`

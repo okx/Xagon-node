@@ -117,7 +117,7 @@ func TestNewFinalizer(t *testing.T) {
 	poolMock.On("GetLastSentFlushID", context.Background()).Return(uint64(0), nil)
 
 	// arrange and act
-	f = newFinalizer(cfg, poolCfg, workerMock, poolMock, stateMock, ethermanMock, seqAddr, isSynced, bc, eventLog, nil, nil)
+	f = newFinalizer(cfg, poolCfg, workerMock, poolMock, stateMock, ethermanMock, seqAddr, isSynced, bc, eventLog, nil, newTimeoutCond(&sync.Mutex{}), nil)
 
 	// assert
 	assert.NotNil(t, f)
@@ -945,6 +945,9 @@ func TestNewFinalizer(t *testing.T) {
 func TestFinalizer_closeWIPBatch(t *testing.T) {
 	// arrange
 	f = setupFinalizer(true)
+	// set wip batch has at least one L2 block as it can not be closed empty
+	f.wipBatch.countOfL2Blocks++
+
 	usedResources := getUsedBatchResources(f.batchConstraints, f.wipBatch.imRemainingResources)
 
 	receipt := state.ProcessingReceipt{
@@ -1919,7 +1922,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is ready - MaxSteps",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedSteps = f.getConstraintThresholdUint32(bc.MaxSteps) - 1
+				resources.ZKCounters.Steps = f.getConstraintThresholdUint32(bc.MaxSteps) - 1
 				return resources
 			},
 			expectedResult: true,
@@ -1927,7 +1930,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is NOT ready - MaxSteps",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedSteps = f.getConstraintThresholdUint32(bc.MaxSteps) + 1
+				resources.ZKCounters.Steps = f.getConstraintThresholdUint32(bc.MaxSteps) + 1
 				return resources
 			},
 			expectedResult: false,
@@ -1935,7 +1938,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is ready - MaxPoseidonPaddings",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedPoseidonPaddings = f.getConstraintThresholdUint32(bc.MaxPoseidonPaddings) - 1
+				resources.ZKCounters.PoseidonPaddings = f.getConstraintThresholdUint32(bc.MaxPoseidonPaddings) - 1
 				return resources
 			},
 			expectedResult: true,
@@ -1943,7 +1946,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is NOT ready - MaxPoseidonPaddings",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedPoseidonPaddings = f.getConstraintThresholdUint32(bc.MaxPoseidonPaddings) + 1
+				resources.ZKCounters.PoseidonPaddings = f.getConstraintThresholdUint32(bc.MaxPoseidonPaddings) + 1
 				return resources
 			},
 			expectedResult: false,
@@ -1951,7 +1954,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is ready - MaxBinaries",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedBinaries = f.getConstraintThresholdUint32(bc.MaxBinaries) - 1
+				resources.ZKCounters.Binaries = f.getConstraintThresholdUint32(bc.MaxBinaries) - 1
 				return resources
 			},
 			expectedResult: true,
@@ -1959,7 +1962,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is NOT ready - MaxBinaries",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedBinaries = f.getConstraintThresholdUint32(bc.MaxBinaries) + 1
+				resources.ZKCounters.Binaries = f.getConstraintThresholdUint32(bc.MaxBinaries) + 1
 				return resources
 			},
 			expectedResult: false,
@@ -1967,7 +1970,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is ready - MaxKeccakHashes",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedKeccakHashes = f.getConstraintThresholdUint32(bc.MaxKeccakHashes) - 1
+				resources.ZKCounters.KeccakHashes = f.getConstraintThresholdUint32(bc.MaxKeccakHashes) - 1
 				return resources
 			},
 			expectedResult: true,
@@ -1975,7 +1978,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is NOT ready - MaxKeccakHashes",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedKeccakHashes = f.getConstraintThresholdUint32(bc.MaxKeccakHashes) + 1
+				resources.ZKCounters.KeccakHashes = f.getConstraintThresholdUint32(bc.MaxKeccakHashes) + 1
 				return resources
 			},
 			expectedResult: false,
@@ -1983,7 +1986,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is ready - MaxArithmetics",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedArithmetics = f.getConstraintThresholdUint32(bc.MaxArithmetics) - 1
+				resources.ZKCounters.Arithmetics = f.getConstraintThresholdUint32(bc.MaxArithmetics) - 1
 				return resources
 			},
 			expectedResult: true,
@@ -1991,7 +1994,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is NOT ready - MaxArithmetics",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedArithmetics = f.getConstraintThresholdUint32(bc.MaxArithmetics) + 1
+				resources.ZKCounters.Arithmetics = f.getConstraintThresholdUint32(bc.MaxArithmetics) + 1
 				return resources
 			},
 			expectedResult: false,
@@ -1999,7 +2002,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is ready - MaxMemAligns",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedMemAligns = f.getConstraintThresholdUint32(bc.MaxMemAligns) - 1
+				resources.ZKCounters.MemAligns = f.getConstraintThresholdUint32(bc.MaxMemAligns) - 1
 				return resources
 			},
 			expectedResult: true,
@@ -2007,7 +2010,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is NOT ready - MaxMemAligns",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedMemAligns = f.getConstraintThresholdUint32(bc.MaxMemAligns) + 1
+				resources.ZKCounters.MemAligns = f.getConstraintThresholdUint32(bc.MaxMemAligns) + 1
 				return resources
 			},
 			expectedResult: false,
@@ -2015,7 +2018,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is ready - MaxSHA256Hashes",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedSha256Hashes_V2 = f.getConstraintThresholdUint32(bc.MaxSHA256Hashes) - 1
+				resources.ZKCounters.Sha256Hashes_V2 = f.getConstraintThresholdUint32(bc.MaxSHA256Hashes) - 1
 				return resources
 			},
 			expectedResult: true,
@@ -2023,7 +2026,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		{
 			name: "Is NOT ready - MaxSHA256Hashes",
 			modifyResourceFunc: func(resources state.BatchResources) state.BatchResources {
-				resources.ZKCounters.UsedSha256Hashes_V2 = f.getConstraintThresholdUint32(bc.MaxSHA256Hashes) + 1
+				resources.ZKCounters.Sha256Hashes_V2 = f.getConstraintThresholdUint32(bc.MaxSHA256Hashes) + 1
 				return resources
 			},
 			expectedResult: false,
@@ -2099,14 +2102,14 @@ func TestFinalizer_getRemainingResources(t *testing.T) {
 
 	// assert
 	assert.Equal(t, remainingResources.ZKCounters.GasUsed, bc.MaxCumulativeGasUsed)
-	assert.Equal(t, remainingResources.ZKCounters.UsedKeccakHashes, bc.MaxKeccakHashes)
-	assert.Equal(t, remainingResources.ZKCounters.UsedPoseidonHashes, bc.MaxPoseidonHashes)
-	assert.Equal(t, remainingResources.ZKCounters.UsedPoseidonPaddings, bc.MaxPoseidonPaddings)
-	assert.Equal(t, remainingResources.ZKCounters.UsedMemAligns, bc.MaxMemAligns)
-	assert.Equal(t, remainingResources.ZKCounters.UsedArithmetics, bc.MaxArithmetics)
-	assert.Equal(t, remainingResources.ZKCounters.UsedBinaries, bc.MaxBinaries)
-	assert.Equal(t, remainingResources.ZKCounters.UsedSteps, bc.MaxSteps)
-	assert.Equal(t, remainingResources.ZKCounters.UsedSha256Hashes_V2, bc.MaxSHA256Hashes)
+	assert.Equal(t, remainingResources.ZKCounters.KeccakHashes, bc.MaxKeccakHashes)
+	assert.Equal(t, remainingResources.ZKCounters.PoseidonHashes, bc.MaxPoseidonHashes)
+	assert.Equal(t, remainingResources.ZKCounters.PoseidonPaddings, bc.MaxPoseidonPaddings)
+	assert.Equal(t, remainingResources.ZKCounters.MemAligns, bc.MaxMemAligns)
+	assert.Equal(t, remainingResources.ZKCounters.Arithmetics, bc.MaxArithmetics)
+	assert.Equal(t, remainingResources.ZKCounters.Binaries, bc.MaxBinaries)
+	assert.Equal(t, remainingResources.ZKCounters.Steps, bc.MaxSteps)
+	assert.Equal(t, remainingResources.ZKCounters.Sha256Hashes_V2, bc.MaxSHA256Hashes)
 	assert.Equal(t, remainingResources.Bytes, bc.MaxBatchBytesSize)
 }
 

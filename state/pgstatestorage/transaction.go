@@ -15,6 +15,70 @@ import (
 
 const maxTopics = 4
 
+// GetTxsOlderThanNL1BlocksUntilTxHash get txs hashes to delete from tx pool from the oldest processed transaction to the latest
+// txn that has been virtualized.
+// Works like GetTxsOlderThanNL1Blocks but pulls hashes until earliestTxHash
+func (p *PostgresStorage) GetTxsOlderThanNL1BlocksUntilTxHash(ctx context.Context, nL1Blocks uint64, earliestTxHash common.Hash, dbTx pgx.Tx) ([]common.Hash, error) {
+	var earliestBatchNum, latestBatchNum, blockNum uint64
+	const getLatestBatchNumByBlockNumFromVirtualBatch = "SELECT batch_num FROM state.virtual_batch WHERE block_num <= $1 ORDER BY batch_num DESC LIMIT 1"
+	const getTxsHashesBeforeBatchNum = "SELECT hash FROM state.transaction JOIN state.l2block ON state.transaction.l2_block_num = state.l2block.block_num AND state.l2block.batch_num >= $1 AND state.l2block.batch_num <= $2"
+
+	// Get lower bound batch_num which is the batch num from the oldest tx in txpool
+	const getEarliestBatchNumByTxHashFromVirtualBatch = `SELECT batch_num
+	FROM state.transaction
+	JOIN state.l2block ON
+		state.transaction.l2_block_num = state.l2block.block_num AND state.transaction.hash = $1`
+
+	e := p.getExecQuerier(dbTx)
+
+	err := e.QueryRow(ctx, getLastBlockNumSQL).Scan(&blockNum)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, state.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	blockNum = blockNum - nL1Blocks
+	if blockNum <= 0 {
+		return nil, errors.New("blockNumDiff is too big, there are no txs to delete")
+	}
+
+	err = e.QueryRow(ctx, getEarliestBatchNumByTxHashFromVirtualBatch, earliestTxHash.String()).Scan(&earliestBatchNum)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, state.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	err = e.QueryRow(ctx, getLatestBatchNumByBlockNumFromVirtualBatch, blockNum).Scan(&latestBatchNum)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, state.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	rows, err := e.Query(ctx, getTxsHashesBeforeBatchNum, earliestBatchNum, latestBatchNum)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, state.ErrNotFound
+	} else if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	hashes := make([]common.Hash, 0, len(rows.RawValues()))
+	for rows.Next() {
+		var hash string
+		if err := rows.Scan(&hash); err != nil {
+			return nil, err
+		}
+
+		hashes = append(hashes, common.HexToHash(hash))
+	}
+
+	return hashes, nil
+}
+
 // GetTxsOlderThanNL1Blocks get txs hashes to delete from tx pool
 func (p *PostgresStorage) GetTxsOlderThanNL1Blocks(ctx context.Context, nL1Blocks uint64, dbTx pgx.Tx) ([]common.Hash, error) {
 	var batchNum, blockNum uint64
@@ -47,13 +111,16 @@ func (p *PostgresStorage) GetTxsOlderThanNL1Blocks(ctx context.Context, nL1Block
 	} else if err != nil {
 		return nil, err
 	}
+
+	defer rows.Close()
+
 	hashes := make([]common.Hash, 0, len(rows.RawValues()))
 	for rows.Next() {
 		var hash string
-		err := rows.Scan(&hash)
-		if err != nil {
+		if err := rows.Scan(&hash); err != nil {
 			return nil, err
 		}
+
 		hashes = append(hashes, common.HexToHash(hash))
 	}
 
@@ -306,10 +373,11 @@ func (p *PostgresStorage) getTransactionLogs(ctx context.Context, transactionHas
 	q := p.getExecQuerier(dbTx)
 
 	const getTransactionLogsSQL = `
-	SELECT t.l2_block_num, b.block_hash, l.tx_hash, l.log_index, l.address, l.data, l.topic0, l.topic1, l.topic2, l.topic3
+	SELECT t.l2_block_num, b.block_hash, l.tx_hash, r.tx_index, l.log_index, l.address, l.data, l.topic0, l.topic1, l.topic2, l.topic3
 	FROM state.log l
 	INNER JOIN state.transaction t ON t.hash = l.tx_hash
 	INNER JOIN state.l2block b ON b.block_num = t.l2_block_num 
+	INNER JOIN state.receipt r ON r.tx_hash = t.hash
 	WHERE t.hash = $1
 	ORDER BY l.log_index ASC`
 	rows, err := q.Query(ctx, getTransactionLogsSQL, transactionHash.String())
@@ -330,10 +398,11 @@ func scanLogs(rows pgx.Rows) ([]*types.Log, error) {
 		}
 
 		var log types.Log
+		var txIndex uint
 		var blockHash, txHash, logAddress, logData string
 		var topic0, topic1, topic2, topic3 *string
 
-		err := rows.Scan(&log.BlockNumber, &blockHash, &txHash, &log.Index,
+		err := rows.Scan(&log.BlockNumber, &blockHash, &txHash, &txIndex, &log.Index,
 			&logAddress, &logData, &topic0, &topic1, &topic2, &topic3)
 		if err != nil {
 			return nil, err
@@ -342,7 +411,7 @@ func scanLogs(rows pgx.Rows) ([]*types.Log, error) {
 		log.BlockHash = common.HexToHash(blockHash)
 		log.TxHash = common.HexToHash(txHash)
 		log.Address = common.HexToAddress(logAddress)
-		log.TxIndex = uint(0)
+		log.TxIndex = txIndex
 		log.Data, err = hex.DecodeHex(logData)
 		if err != nil {
 			return nil, err
@@ -452,7 +521,7 @@ func (p *PostgresStorage) GetTxsByBatchNumber(ctx context.Context, batchNumber u
 }
 
 // AddReceipt adds a new receipt to the State Store
-func (p *PostgresStorage) AddReceipt(ctx context.Context, receipt *types.Receipt, dbTx pgx.Tx) error {
+func (p *PostgresStorage) AddReceipt(ctx context.Context, receipt *types.Receipt, imStateRoot common.Hash, dbTx pgx.Tx) error {
 	e := p.getExecQuerier(dbTx)
 
 	var effectiveGasPrice *uint64
@@ -463,31 +532,31 @@ func (p *PostgresStorage) AddReceipt(ctx context.Context, receipt *types.Receipt
 	}
 
 	const addReceiptSQL = `
-        INSERT INTO state.receipt (tx_hash, type, post_state, status, cumulative_gas_used, gas_used, effective_gas_price, block_num, tx_index, contract_address)
-                           VALUES (     $1,   $2,         $3,     $4,                  $5,       $6,        		  $7,        $8,       $9,			    $10)`
-	_, err := e.Exec(ctx, addReceiptSQL, receipt.TxHash.String(), receipt.Type, receipt.PostState, receipt.Status, receipt.CumulativeGasUsed, receipt.GasUsed, effectiveGasPrice, receipt.BlockNumber.Uint64(), receipt.TransactionIndex, receipt.ContractAddress.String())
+        INSERT INTO state.receipt (tx_hash, type, post_state, status, cumulative_gas_used, gas_used, effective_gas_price, block_num, tx_index, contract_address, im_state_root)
+                           VALUES (     $1,   $2,         $3,     $4,                  $5,       $6,        		  $7,        $8,       $9,			    $10,           $11)`
+	_, err := e.Exec(ctx, addReceiptSQL, receipt.TxHash.String(), receipt.Type, receipt.PostState, receipt.Status, receipt.CumulativeGasUsed, receipt.GasUsed, effectiveGasPrice, receipt.BlockNumber.Uint64(), receipt.TransactionIndex, receipt.ContractAddress.String(), imStateRoot.Bytes())
 	return err
 }
 
 // AddReceipts adds a list of receipts to the State Store
-func (p *PostgresStorage) AddReceipts(ctx context.Context, receipts []*types.Receipt, dbTx pgx.Tx) error {
+func (p *PostgresStorage) AddReceipts(ctx context.Context, receipts []*types.Receipt, imStateRoots []common.Hash, dbTx pgx.Tx) error {
 	if len(receipts) == 0 {
 		return nil
 	}
 
 	receiptRows := [][]interface{}{}
 
-	for _, receipt := range receipts {
+	for i, receipt := range receipts {
 		var egp uint64
 		if receipt.EffectiveGasPrice != nil {
 			egp = receipt.EffectiveGasPrice.Uint64()
 		}
-		receiptRow := []interface{}{receipt.TxHash.String(), receipt.Type, receipt.PostState, receipt.Status, receipt.CumulativeGasUsed, receipt.GasUsed, egp, receipt.BlockNumber.Uint64(), receipt.TransactionIndex, receipt.ContractAddress.String()}
+		receiptRow := []interface{}{receipt.TxHash.String(), receipt.Type, receipt.PostState, receipt.Status, receipt.CumulativeGasUsed, receipt.GasUsed, egp, receipt.BlockNumber.Uint64(), receipt.TransactionIndex, receipt.ContractAddress.String(), imStateRoots[i].Bytes()}
 		receiptRows = append(receiptRows, receiptRow)
 	}
 
 	_, err := dbTx.CopyFrom(ctx, pgx.Identifier{"state", "receipt"},
-		[]string{"tx_hash", "type", "post_state", "status", "cumulative_gas_used", "gas_used", "effective_gas_price", "block_num", "tx_index", "contract_address"},
+		[]string{"tx_hash", "type", "post_state", "status", "cumulative_gas_used", "gas_used", "effective_gas_price", "block_num", "tx_index", "contract_address", "im_state_root"},
 		pgx.CopyFromRows(receiptRows))
 
 	return err
@@ -562,19 +631,23 @@ func (p *PostgresStorage) GetTransactionEGPLogByHash(ctx context.Context, transa
 }
 
 // GetL2TxHashByTxHash gets the L2 Hash from the tx found by the provided tx hash
-func (p *PostgresStorage) GetL2TxHashByTxHash(ctx context.Context, hash common.Hash, dbTx pgx.Tx) (common.Hash, error) {
+func (p *PostgresStorage) GetL2TxHashByTxHash(ctx context.Context, hash common.Hash, dbTx pgx.Tx) (*common.Hash, error) {
 	const getTransactionByHashSQL = "SELECT transaction.l2_hash FROM state.transaction WHERE hash = $1"
 
-	var l2HashHex string
+	var l2HashHex *string
 	q := p.getExecQuerier(dbTx)
 	err := q.QueryRow(ctx, getTransactionByHashSQL, hash.String()).Scan(&l2HashHex)
 
 	if errors.Is(err, pgx.ErrNoRows) {
-		return common.Hash{}, state.ErrNotFound
+		return nil, state.ErrNotFound
 	} else if err != nil {
-		return common.Hash{}, err
+		return nil, err
 	}
 
-	l2Hash := common.HexToHash(l2HashHex)
-	return l2Hash, nil
+	if l2HashHex == nil {
+		return nil, nil
+	}
+
+	l2Hash := common.HexToHash(*l2HashHex)
+	return &l2Hash, nil
 }

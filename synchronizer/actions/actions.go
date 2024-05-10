@@ -13,14 +13,6 @@ var (
 	ErrInvalidParams = errors.New("invalid params")
 )
 
-// ForkIdType is the type of the forkId
-type ForkIdType uint64
-
-const (
-	// WildcardForkId It match for all forkIds
-	WildcardForkId ForkIdType = 0
-)
-
 // L1EventProcessor is the interface for a processor of L1 events
 // The main function is Process that must execute the event
 type L1EventProcessor interface {

@@ -93,7 +93,7 @@ func LaunchTestForcedBatchesVectorFilesGroup(t *testing.T, vectorFilesDir string
 				}
 
 				log.Info("#######################")
-				log.Info("# Verifying new leafs #")
+				log.Info("# Verifying new leaves #")
 				log.Info("#######################")
 				merkleTree := opsman.State().GetTree()
 				for _, expectedNewLeaf := range testCase.ExpectedNewLeafs {

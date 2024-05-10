@@ -98,9 +98,11 @@ func TestStateTransition(t *testing.T) {
 			if len(txs) > 0 {
 				// Generate batchdata from the txs in the test and compared with the vector
 				l2block := state.L2BlockRaw{
-					DeltaTimestamp:  uint32(timestampLimit.Uint64()),
-					IndexL1InfoTree: testCase.Txs[0].IndexL1InfoTree,
-					Transactions:    txs,
+					ChangeL2BlockHeader: state.ChangeL2BlockHeader{
+						DeltaTimestamp:  uint32(timestampLimit.Uint64()),
+						IndexL1InfoTree: testCase.Txs[0].IndexL1InfoTree,
+					},
+					Transactions: txs,
 				}
 
 				batch := state.BatchRawV2{

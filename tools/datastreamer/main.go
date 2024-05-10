@@ -63,6 +63,13 @@ var (
 		Required: true,
 	}
 
+	batchFlag = cli.Uint64Flag{
+		Name:     "batch",
+		Aliases:  []string{"bn"},
+		Usage:    "batch `NUMBER`",
+		Required: true,
+	}
+
 	updateFileFlag = cli.BoolFlag{
 		Name:     "update",
 		Aliases:  []string{"u"},
@@ -119,6 +126,16 @@ func main() {
 			},
 		},
 		{
+			Name:    "decode-batch-offline",
+			Aliases: []string{},
+			Usage:   "Decodes a batch offline",
+			Action:  decodeBatchOffline,
+			Flags: []cli.Flag{
+				&configFileFlag,
+				&batchFlag,
+			},
+		},
+		{
 			Name:    "decode-entry",
 			Aliases: []string{},
 			Usage:   "Decodes an entry",
@@ -136,6 +153,16 @@ func main() {
 			Flags: []cli.Flag{
 				&configFileFlag,
 				&l2blockFlag,
+			},
+		},
+		{
+			Name:    "decode-batch",
+			Aliases: []string{},
+			Usage:   "Decodes a batch",
+			Action:  decodeBatch,
+			Flags: []cli.Flag{
+				&configFileFlag,
+				&batchFlag,
 			},
 		},
 		{
@@ -207,7 +234,7 @@ func generate(cliCtx *cli.Context) error {
 	stateTree := merkletree.NewStateTree(mtDBServiceClient)
 	log.Debug("Connected to the merkle tree")
 
-	stateDB := state.NewState(state.Config{}, stateDBStorage, nil, stateTree, nil, nil)
+	stateDB := state.NewState(state.Config{}, stateDBStorage, nil, stateTree, nil, nil, nil)
 
 	// Calculate intermediate state roots
 	var imStateRoots map[uint64][]byte
@@ -256,7 +283,7 @@ func generate(cliCtx *cli.Context) error {
 		go func(i int) {
 			defer wg.Done()
 			log.Debugf("Thread %d: Start: %d, End: %d, Total: %d", i, start, end, end-start)
-			getImStateRoots(cliCtx.Context, start, end, &imStateRoots, imStateRootsMux, stateDB, lastL2BlockHeader.Root)
+			getImStateRoots(cliCtx.Context, start, end, &imStateRoots, imStateRootsMux, stateDB)
 		}(x)
 	}
 
@@ -283,8 +310,15 @@ func generate(cliCtx *cli.Context) error {
 	return nil
 }
 
-func getImStateRoots(ctx context.Context, start, end uint64, isStateRoots *map[uint64][]byte, imStateRootMux *sync.Mutex, stateDB *state.State, stateRoot common.Hash) {
+func getImStateRoots(ctx context.Context, start, end uint64, isStateRoots *map[uint64][]byte, imStateRootMux *sync.Mutex, stateDB *state.State) {
 	for x := start; x <= end; x++ {
+		l2Block, err := stateDB.GetL2BlockByNumber(ctx, x, nil)
+		if err != nil {
+			log.Errorf("Error: %v\n", err)
+			os.Exit(1)
+		}
+
+		stateRoot := l2Block.Root()
 		// Populate intermediate state root
 		position := state.GetSystemSCPosition(x)
 		imStateRoot, err := stateDB.GetStorageAt(ctx, common.HexToAddress(state.SystemSC), big.NewInt(0).SetBytes(position), stateRoot)
@@ -292,6 +326,11 @@ func getImStateRoots(ctx context.Context, start, end uint64, isStateRoots *map[u
 			log.Errorf("Error: %v\n", err)
 			os.Exit(1)
 		}
+
+		if common.BytesToHash(imStateRoot.Bytes()) == state.ZeroHash && x != 0 {
+			break
+		}
+
 		imStateRootMux.Lock()
 		(*isStateRoots)[x] = imStateRoot.Bytes()
 		imStateRootMux.Unlock()
@@ -551,14 +590,13 @@ func decodeEntry(cliCtx *cli.Context) error {
 		os.Exit(1)
 	}
 
-	client.FromEntry = cliCtx.Uint64("entry")
-	err = client.ExecCommand(datastreamer.CmdEntry)
+	entry, err := client.ExecCommandGetEntry(cliCtx.Uint64("entry"))
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
 	}
 
-	printEntry(client.Entry)
+	printEntry(entry)
 	return nil
 }
 
@@ -590,35 +628,93 @@ func decodeL2Block(cliCtx *cli.Context) error {
 		Value: l2BlockNumber,
 	}
 
-	client.FromBookmark = bookMark.Encode()
-	err = client.ExecCommand(datastreamer.CmdBookmark)
+	firstEntry, err := client.ExecCommandGetBookmark(bookMark.Encode())
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
 	}
-
-	firstEntry := client.Entry
 	printEntry(firstEntry)
 
-	client.FromEntry = firstEntry.Number + 1
-	err = client.ExecCommand(datastreamer.CmdEntry)
+	secondEntry, err := client.ExecCommandGetEntry(firstEntry.Number + 1)
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
 	}
-
-	secondEntry := client.Entry
 	printEntry(secondEntry)
 
 	i := uint64(2) //nolint:gomnd
 	for secondEntry.Type == state.EntryTypeL2Tx {
-		client.FromEntry = firstEntry.Number + i
-		err = client.ExecCommand(datastreamer.CmdEntry)
+		entry, err := client.ExecCommandGetEntry(firstEntry.Number + i)
 		if err != nil {
 			log.Error(err)
 			os.Exit(1)
 		}
-		secondEntry = client.Entry
+		secondEntry = entry
+		printEntry(secondEntry)
+		i++
+	}
+
+	return nil
+}
+
+func decodeBatch(cliCtx *cli.Context) error {
+	c, err := config.Load(cliCtx)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	log.Init(c.Log)
+
+	client, err := datastreamer.NewClient(c.Online.URI, c.Online.StreamType)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	err = client.Start()
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	batchNumber := cliCtx.Uint64("batch")
+
+	bookMark := state.DSBookMark{
+		Type:  state.BookMarkTypeBatch,
+		Value: batchNumber,
+	}
+
+	firstEntry, err := client.ExecCommandGetBookmark(bookMark.Encode())
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+	printEntry(firstEntry)
+
+	secondEntry, err := client.ExecCommandGetEntry(firstEntry.Number + 1)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+	printEntry(secondEntry)
+
+	i := uint64(2) //nolint:gomnd
+	for {
+		entry, err := client.ExecCommandGetEntry(firstEntry.Number + i)
+		if err != nil {
+			log.Error(err)
+			os.Exit(1)
+		}
+
+		if entry.Type == state.EntryTypeBookMark {
+			bookMark := state.DSBookMark{}.Decode(entry.Data)
+			if bookMark.Type == state.BookMarkTypeBatch {
+				break
+			}
+		}
+
+		secondEntry = entry
 		printEntry(secondEntry)
 		i++
 	}
@@ -695,6 +791,64 @@ func decodeL2BlockOffline(cliCtx *cli.Context) error {
 			log.Error(err)
 			os.Exit(1)
 		}
+		printEntry(secondEntry)
+		i++
+	}
+
+	return nil
+}
+
+func decodeBatchOffline(cliCtx *cli.Context) error {
+	c, err := config.Load(cliCtx)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	log.Init(c.Log)
+
+	streamServer, err := initializeStreamServer(c)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	batchNumber := cliCtx.Uint64("batch")
+
+	bookMark := state.DSBookMark{
+		Type:  state.BookMarkTypeL2Block,
+		Value: batchNumber,
+	}
+
+	firstEntry, err := streamServer.GetFirstEventAfterBookmark(bookMark.Encode())
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+	printEntry(firstEntry)
+
+	secondEntry, err := streamServer.GetEntry(firstEntry.Number + 1)
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
+
+	i := uint64(2) //nolint:gomnd
+	printEntry(secondEntry)
+	for {
+		secondEntry, err = streamServer.GetEntry(firstEntry.Number + i)
+		if err != nil {
+			log.Error(err)
+			os.Exit(1)
+		}
+
+		if secondEntry.Type == state.EntryTypeBookMark {
+			bookMark := state.DSBookMark{}.Decode(secondEntry.Data)
+			if bookMark.Type == state.BookMarkTypeBatch {
+				break
+			}
+		}
+
 		printEntry(secondEntry)
 		i++
 	}
@@ -781,7 +935,7 @@ func printEntry(entry datastreamer.FileEntry) {
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", dsTx.EffectiveGasPricePercentage))
 		printColored(color.FgGreen, "Is Valid........: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%t\n", dsTx.IsValid == 1))
-		printColored(color.FgGreen, "State Root......: ")
+		printColored(color.FgGreen, "IM State Root...: ")
 		printColored(color.FgHiWhite, fmt.Sprint(dsTx.StateRoot.Hex()+"\n"))
 		printColored(color.FgGreen, "Encoded Length..: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%d\n", dsTx.EncodedLength))
@@ -793,13 +947,13 @@ func printEntry(entry datastreamer.FileEntry) {
 			log.Error(err)
 			os.Exit(1)
 		}
-		printColored(color.FgGreen, "Decoded.........: ")
-		printColored(color.FgHiWhite, fmt.Sprintf("%+v\n", tx))
+
 		sender, err := state.GetSender(*tx)
 		if err != nil {
 			log.Error(err)
 			os.Exit(1)
 		}
+
 		printColored(color.FgGreen, "Sender..........: ")
 		printColored(color.FgHiWhite, fmt.Sprintf("%s\n", sender))
 		nonce := tx.Nonce()

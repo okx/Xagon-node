@@ -1114,7 +1114,7 @@ func newState(sqlDB *pgxpool.Pool, eventLog *event.EventLog) *state.State {
 	stateDBClient, _, _ := merkletree.NewMTDBServiceClient(ctx, mtDBServerConfig)
 	stateTree := merkletree.NewStateTree(stateDBClient)
 
-	st := state.NewState(stCfg, stateDb, executorClient, stateTree, eventLog, nil)
+	st := state.NewState(stCfg, stateDb, executorClient, stateTree, eventLog, nil, nil)
 	return st
 }
 

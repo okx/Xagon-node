@@ -3,7 +3,12 @@
 package mocks
 
 import (
+	context "context"
+
 	common "github.com/ethereum/go-ethereum/common"
+
+	coretypes "github.com/ethereum/go-ethereum/core/types"
+
 	mock "github.com/stretchr/testify/mock"
 
 	types "github.com/0xPolygonHermez/zkevm-node/etherman/types"
@@ -51,6 +56,36 @@ func (_m *Etherman) BuildTrustedVerifyBatchesTxData(lastVerifiedBatch uint64, ne
 	}
 
 	return r0, r1, r2
+}
+
+// GetLatestBlockHeader provides a mock function with given fields: ctx
+func (_m *Etherman) GetLatestBlockHeader(ctx context.Context) (*coretypes.Header, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetLatestBlockHeader")
+	}
+
+	var r0 *coretypes.Header
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) (*coretypes.Header, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) *coretypes.Header); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*coretypes.Header)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // GetLatestVerifiedBatchNum provides a mock function with given fields:

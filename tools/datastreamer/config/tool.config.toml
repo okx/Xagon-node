@@ -5,7 +5,7 @@ StreamType = 1
 [Offline]
 Port = 6901
 Filename = "datastream.bin"
-Version = 1
+Version = 3
 ChainID = 1440
 UpgradeEtrogBatchNumber = 0
 

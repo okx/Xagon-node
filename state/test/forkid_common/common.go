@@ -53,7 +53,7 @@ func InitTestState(stateCfg state.Config) *state.State {
 		panic(err)
 	}
 
-	zkProverURI := testutils.GetEnv("ZKPROVER_URI", "zkevm-prover")
+	zkProverURI := testutils.GetEnv("ZKPROVER_URI", "localhost")
 
 	executorServerConfig := executor.Config{URI: fmt.Sprintf("%s:50071", zkProverURI), MaxGRPCMessageSize: 100000000}
 	ExecutorClient, executorClientConn, executorCancel = executor.NewExecutorClient(ctx, executorServerConfig)
@@ -76,7 +76,11 @@ func InitTestState(stateCfg state.Config) *state.State {
 	if err != nil {
 		panic(err)
 	}
-	return state.NewState(stateCfg, pgstatestorage.NewPostgresStorage(stateCfg, stateDb), ExecutorClient, stateTree, eventLog, mt)
+	mtr, err := l1infotree.NewL1InfoTreeRecursive(32)
+	if err != nil {
+		panic(err)
+	}
+	return state.NewState(stateCfg, pgstatestorage.NewPostgresStorage(stateCfg, stateDb), ExecutorClient, stateTree, eventLog, mt, mtr)
 }
 
 func InitOrResetDB(cfg db.Config) {

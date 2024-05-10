@@ -70,7 +70,7 @@ In case some vector doesn't use the default genesis:
 ```bash
 make run-db
 make run-zkprover
-docker-compose up -d zkevm-sync
+docker compose up -d zkevm-sync
 ```
 
 2. Get the entries of the merkletree in JSON format: `PGPASSWORD=prover_pass psql -h 127.0.0.1 -p 5432 -U prover_user -d prover_db -c "select row_to_json(t) from (select encode(hash, 'hex') as hash, encode(data, 'hex') as data from state.merkletree) t" > newGenesis.json`

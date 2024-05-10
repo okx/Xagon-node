@@ -3,13 +3,15 @@ package l1_parallel_sync
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
-	"github.com/ethereum/go-ethereum/common"
+	syncCommon "github.com/0xPolygonHermez/zkevm-node/synchronizer/common"
+	"github.com/0xPolygonHermez/zkevm-node/synchronizer/common/syncinterfaces"
 	types "github.com/ethereum/go-ethereum/core/types"
 )
 
@@ -22,7 +24,6 @@ var (
 	errContextCanceled                      = errors.New("consumer:context canceled")
 	errConsumerStopped                      = errors.New("consumer:stopped by request")
 	errConsumerStoppedBecauseIsSynchronized = errors.New("consumer:stopped because is synchronized")
-	errL1Reorg                              = errors.New("consumer: L1 reorg detected")
 	errConsumerAndProducerDesynchronized    = errors.New("consumer: consumer and producer are desynchronized")
 )
 
@@ -32,16 +33,10 @@ type ConfigConsumer struct {
 	AceptableInacctivityTime    time.Duration
 }
 
-// synchronizerProcessBlockRangeInterface is the interface with synchronizer
-// to execute blocks. This interface is used to mock the synchronizer in the tests
-type synchronizerProcessBlockRangeInterface interface {
-	ProcessBlockRange(blocks []etherman.Block, order map[common.Hash][]etherman.Order) error
-}
-
 // l1RollupInfoConsumer is the object that process the rollup info data incomming from channel chIncommingRollupInfo
 type l1RollupInfoConsumer struct {
 	mutex                 sync.Mutex
-	synchronizer          synchronizerProcessBlockRangeInterface
+	synchronizer          syncinterfaces.BlockRangeProcessor
 	chIncommingRollupInfo chan L1SyncMessage
 	ctx                   context.Context
 	statistics            l1RollupInfoConsumerStatistics
@@ -52,7 +47,7 @@ type l1RollupInfoConsumer struct {
 
 // NewL1RollupInfoConsumer creates a new l1RollupInfoConsumer
 func NewL1RollupInfoConsumer(cfg ConfigConsumer,
-	synchronizer synchronizerProcessBlockRangeInterface, ch chan L1SyncMessage) *l1RollupInfoConsumer {
+	synchronizer syncinterfaces.BlockRangeProcessor, ch chan L1SyncMessage) *l1RollupInfoConsumer {
 	if cfg.AceptableInacctivityTime < minAcceptableTimeWaitingForNewRollupInfoData {
 		log.Warnf("consumer: the AceptableInacctivityTime is too low (%s) minimum recommended %s", cfg.AceptableInacctivityTime, minAcceptableTimeWaitingForNewRollupInfoData)
 	}
@@ -155,13 +150,12 @@ func checkPreviousBlocks(rollupInfo rollupInfoByBlockRangeResult, cachedBlock *s
 	}
 	if cachedBlock.BlockNumber == rollupInfo.previousBlockOfRange.NumberU64() {
 		if cachedBlock.BlockHash != rollupInfo.previousBlockOfRange.Hash() {
-			log.Errorf("consumer: Previous block %d hash is not the same", cachedBlock.BlockNumber)
-			return errL1Reorg
+			err := fmt.Errorf("consumer: Previous block %d hash is not the same. state.Hash:%s != l1.Hash:%s",
+				cachedBlock.BlockNumber, cachedBlock.BlockHash, rollupInfo.previousBlockOfRange.Hash())
+			log.Errorf(err.Error())
+			return syncCommon.NewReorgError(cachedBlock.BlockNumber, err)
 		}
-		if cachedBlock.ParentHash != rollupInfo.previousBlockOfRange.ParentHash() {
-			log.Errorf("consumer: Previous block %d parentHash is not the same", cachedBlock.BlockNumber)
-			return errL1Reorg
-		}
+
 		log.Infof("consumer: Verified previous block %d  not the same: OK", cachedBlock.BlockNumber)
 	}
 	return nil
@@ -237,7 +231,7 @@ func (l *l1RollupInfoConsumer) processUnsafe(rollupInfo rollupInfoByBlockRangeRe
 			return nil, nil
 		}
 		b := convertL1BlockToEthBlock(lb)
-		err := l.synchronizer.ProcessBlockRange([]etherman.Block{b}, order)
+		err := l.synchronizer.ProcessBlockRange(l.ctx, []etherman.Block{b}, order)
 		if err != nil {
 			log.Error("consumer: Error processing last block of range: ", rollupInfo.blockRange, " err:", err)
 			return nil, err
@@ -249,7 +243,7 @@ func (l *l1RollupInfoConsumer) processUnsafe(rollupInfo rollupInfoByBlockRangeRe
 		tmpStateBlock := convertEthmanBlockToStateBlock(&blocks[len(blocks)-1])
 		lastEthBlockSynced = &tmpStateBlock
 		logBlocks(blocks)
-		err := l.synchronizer.ProcessBlockRange(blocks, order)
+		err := l.synchronizer.ProcessBlockRange(l.ctx, blocks, order)
 		if err != nil {
 			log.Info("consumer: Error processing block range: ", rollupInfo.blockRange, " err:", err)
 			return nil, err

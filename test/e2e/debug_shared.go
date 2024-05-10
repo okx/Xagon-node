@@ -26,6 +26,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/Depth"
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/ERC20"
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/EmitLog"
+	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/Log0"
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/Memory"
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/OpCallAux"
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/Revert2"
@@ -882,4 +883,73 @@ func sendEthTransfersWithoutWaiting(t *testing.T, ctx context.Context, client *e
 		require.NoError(t, err)
 		log.Debugf("sending eth transfer: %v", signedTx.Hash().String())
 	}
+}
+
+func prepareLog0(t *testing.T, ctx context.Context, auth *bind.TransactOpts, client *ethclient.Client) (map[string]interface{}, error) {
+	_, tx, sc, err := Log0.DeployLog0(auth, client)
+	require.NoError(t, err)
+
+	err = operations.WaitTxToBeMined(ctx, client, tx, operations.DefaultTimeoutTxToBeMined)
+	require.NoError(t, err)
+
+	return map[string]interface{}{
+		"sc": sc,
+	}, nil
+}
+
+func createLog0AllZeros(t *testing.T, ctx context.Context, auth *bind.TransactOpts, client *ethclient.Client, customData map[string]interface{}) (*ethTypes.Transaction, error) {
+	scInterface := customData["sc"]
+	sc := scInterface.(*Log0.Log0)
+
+	gasPrice, err := client.SuggestGasPrice(ctx)
+	require.NoError(t, err)
+
+	opts := *auth
+	opts.NoSend = true
+	opts.Value = big.NewInt(0).SetUint64(txValue)
+	opts.GasPrice = gasPrice
+	opts.GasLimit = fixedTxGasLimit
+
+	tx, err := sc.OpLog0(&opts)
+	require.NoError(t, err)
+
+	return tx, nil
+}
+
+func createLog0Empty(t *testing.T, ctx context.Context, auth *bind.TransactOpts, client *ethclient.Client, customData map[string]interface{}) (*ethTypes.Transaction, error) {
+	scInterface := customData["sc"]
+	sc := scInterface.(*Log0.Log0)
+
+	gasPrice, err := client.SuggestGasPrice(ctx)
+	require.NoError(t, err)
+
+	opts := *auth
+	opts.NoSend = true
+	opts.Value = big.NewInt(0).SetUint64(txValue)
+	opts.GasPrice = gasPrice
+	opts.GasLimit = fixedTxGasLimit
+
+	tx, err := sc.OpLog00(&opts)
+	require.NoError(t, err)
+
+	return tx, nil
+}
+
+func createLog0Short(t *testing.T, ctx context.Context, auth *bind.TransactOpts, client *ethclient.Client, customData map[string]interface{}) (*ethTypes.Transaction, error) {
+	scInterface := customData["sc"]
+	sc := scInterface.(*Log0.Log0)
+
+	gasPrice, err := client.SuggestGasPrice(ctx)
+	require.NoError(t, err)
+
+	opts := *auth
+	opts.NoSend = true
+	opts.Value = big.NewInt(0).SetUint64(txValue)
+	opts.GasPrice = gasPrice
+	opts.GasLimit = fixedTxGasLimit
+
+	tx, err := sc.OpLog01(&opts)
+	require.NoError(t, err)
+
+	return tx, nil
 }

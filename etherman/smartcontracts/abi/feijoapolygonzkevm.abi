@@ -1,0 +1,1096 @@
+[
+    {
+        "inputs": [
+            {
+                "internalType": "contract IPolygonZkEVMGlobalExitRootV2",
+                "name": "_globalExitRootManager",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IERC20Upgradeable",
+                "name": "_pol",
+                "type": "address"
+            },
+            {
+                "internalType": "contract IPolygonZkEVMBridgeV2",
+                "name": "_bridgeAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "contract PolygonRollupManager",
+                "name": "_rollupManager",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+    },
+    {
+        "inputs": [],
+        "name": "BlobHashNotFound",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "BlobTypeNotSupported",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "FinalAccInputHashDoesNotMatch",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ForceBlobNotAllowed",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ForceBlobTimeoutNotExpired",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ForceBlobsAlreadyActive",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ForceBlobsDecentralized",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ForceBlobsNotAllowedOnEmergencyState",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ForceBlobsOverflow",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "ForcedDataDoesNotMatch",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "GasTokenNetworkMustBeZeroOnEther",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "HaltTimeoutNotExpiredAfterEmergencyState",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "HugeTokenMetadataNotSupported",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InvalidCommitmentAndProofLength",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InvalidInitializeTransaction",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "InvalidRangeForceBlobTimeout",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "Invalidl1InfoLeafIndex",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "MaxTimestampSequenceInvalid",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NotEnoughMaticAmount",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "NotEnoughPOLAmount",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "OnlyAdmin",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "OnlyPendingAdmin",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "OnlyRollupManager",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "OnlyTrustedSequencer",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "PointEvalutionPrecompiledFail",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "SequenceZeroBlobs",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "SequencedTimestampBelowForcedTimestamp",
+        "type": "error"
+    },
+    {
+        "inputs": [],
+        "name": "TransactionsLengthAboveMax",
+        "type": "error"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "newAdmin",
+                "type": "address"
+            }
+        ],
+        "name": "AcceptAdminRole",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint64",
+                "name": "forceBlobNum",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "lastGlobalExitRoot",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "sequencer",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "zkGasLimit",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes",
+                "name": "transactions",
+                "type": "bytes"
+            }
+        ],
+        "name": "ForceBlob",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "bytes",
+                "name": "transactions",
+                "type": "bytes"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "lastGlobalExitRoot",
+                "type": "bytes32"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "sequencer",
+                "type": "address"
+            }
+        ],
+        "name": "InitialSequenceBlobs",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint8",
+                "name": "version",
+                "type": "uint8"
+            }
+        ],
+        "name": "Initialized",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint64",
+                "name": "lastBlobSequenced",
+                "type": "uint64"
+            }
+        ],
+        "name": "SequenceBlobs",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint64",
+                "name": "numBlob",
+                "type": "uint64"
+            }
+        ],
+        "name": "SequenceForceBlobs",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "newForceBlobAddress",
+                "type": "address"
+            }
+        ],
+        "name": "SetForceBlobAddress",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint64",
+                "name": "newforceBlobTimeout",
+                "type": "uint64"
+            }
+        ],
+        "name": "SetForceBlobTimeout",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "newNetworkName",
+                "type": "string"
+            }
+        ],
+        "name": "SetNetworkName",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "newTrustedSequencer",
+                "type": "address"
+            }
+        ],
+        "name": "SetTrustedSequencer",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "string",
+                "name": "newTrustedSequencerURL",
+                "type": "string"
+            }
+        ],
+        "name": "SetTrustedSequencerURL",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "newPendingAdmin",
+                "type": "address"
+            }
+        ],
+        "name": "TransferAdminRole",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint64",
+                "name": "sequneceNum",
+                "type": "uint64"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes32",
+                "name": "stateRoot",
+                "type": "bytes32"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "aggregator",
+                "type": "address"
+            }
+        ],
+        "name": "VerifyBlobs",
+        "type": "event"
+    },
+    {
+        "inputs": [],
+        "name": "GLOBAL_EXIT_ROOT_MANAGER_L2",
+        "outputs": [
+            {
+                "internalType": "contract IBasePolygonZkEVMGlobalExitRoot",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "INITIALIZE_TX_BRIDGE_LIST_LEN_LEN",
+        "outputs": [
+            {
+                "internalType": "uint8",
+                "name": "",
+                "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "INITIALIZE_TX_BRIDGE_PARAMS",
+        "outputs": [
+            {
+                "internalType": "bytes",
+                "name": "",
+                "type": "bytes"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "INITIALIZE_TX_BRIDGE_PARAMS_AFTER_BRIDGE_ADDRESS",
+        "outputs": [
+            {
+                "internalType": "bytes",
+                "name": "",
+                "type": "bytes"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "INITIALIZE_TX_BRIDGE_PARAMS_AFTER_BRIDGE_ADDRESS_EMPTY_METADATA",
+        "outputs": [
+            {
+                "internalType": "bytes",
+                "name": "",
+                "type": "bytes"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "INITIALIZE_TX_CONSTANT_BYTES",
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "INITIALIZE_TX_CONSTANT_BYTES_EMPTY_METADATA",
+        "outputs": [
+            {
+                "internalType": "uint16",
+                "name": "",
+                "type": "uint16"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "INITIALIZE_TX_DATA_LEN_EMPTY_METADATA",
+        "outputs": [
+            {
+                "internalType": "uint8",
+                "name": "",
+                "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "INITIALIZE_TX_EFFECTIVE_PERCENTAGE",
+        "outputs": [
+            {
+                "internalType": "bytes1",
+                "name": "",
+                "type": "bytes1"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "MAX_SEQUENCE_TIMESTAMP_FORCED",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "POINT_EVALUATION_PRECOMPILE_ADDRESS",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "SIGNATURE_INITIALIZE_TX_R",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "SIGNATURE_INITIALIZE_TX_S",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "SIGNATURE_INITIALIZE_TX_V",
+        "outputs": [
+            {
+                "internalType": "uint8",
+                "name": "",
+                "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "TIMESTAMP_RANGE",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "ZK_GAS_LIMIT_BATCH",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "acceptAdminRole",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "admin",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "bridgeAddress",
+        "outputs": [
+            {
+                "internalType": "contract IPolygonZkEVMBridgeV2",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "calculatePolPerForcedZkGas",
+        "outputs": [
+            {
+                "internalType": "uint256",
+                "name": "",
+                "type": "uint256"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes",
+                "name": "blobData",
+                "type": "bytes"
+            },
+            {
+                "internalType": "uint256",
+                "name": "polAmount",
+                "type": "uint256"
+            }
+        ],
+        "name": "forceBlob",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "forceBlobAddress",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "forceBlobTimeout",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "name": "forcedBlobs",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "hashedForcedBlobData",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint64",
+                "name": "forcedTimestamp",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "gasTokenAddress",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "gasTokenNetwork",
+        "outputs": [
+            {
+                "internalType": "uint32",
+                "name": "",
+                "type": "uint32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint32",
+                "name": "networkID",
+                "type": "uint32"
+            },
+            {
+                "internalType": "address",
+                "name": "_gasTokenAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "_gasTokenNetwork",
+                "type": "uint32"
+            },
+            {
+                "internalType": "bytes",
+                "name": "_gasTokenMetadata",
+                "type": "bytes"
+            }
+        ],
+        "name": "generateInitializeTransaction",
+        "outputs": [
+            {
+                "internalType": "bytes",
+                "name": "",
+                "type": "bytes"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "globalExitRootManager",
+        "outputs": [
+            {
+                "internalType": "contract IPolygonZkEVMGlobalExitRootV2",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "_admin",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "sequencer",
+                "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "networkID",
+                "type": "uint32"
+            },
+            {
+                "internalType": "address",
+                "name": "_gasTokenAddress",
+                "type": "address"
+            },
+            {
+                "internalType": "string",
+                "name": "sequencerURL",
+                "type": "string"
+            },
+            {
+                "internalType": "string",
+                "name": "_networkName",
+                "type": "string"
+            }
+        ],
+        "name": "initialize",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "lastAccInputHash",
+        "outputs": [
+            {
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "lastForceBlob",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "lastForceBlobSequenced",
+        "outputs": [
+            {
+                "internalType": "uint64",
+                "name": "",
+                "type": "uint64"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "networkName",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "lastVerifiedSequenceNum",
+                "type": "uint64"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "newStateRoot",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "address",
+                "name": "aggregator",
+                "type": "address"
+            }
+        ],
+        "name": "onVerifySequences",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "pendingAdmin",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "pol",
+        "outputs": [
+            {
+                "internalType": "contract IERC20Upgradeable",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "rollupManager",
+        "outputs": [
+            {
+                "internalType": "contract PolygonRollupManager",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint8",
+                        "name": "blobType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "blobTypeParams",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct PolygonRollupBaseFeijoa.BlobData[]",
+                "name": "blobs",
+                "type": "tuple[]"
+            },
+            {
+                "internalType": "address",
+                "name": "l2Coinbase",
+                "type": "address"
+            },
+            {
+                "internalType": "bytes32",
+                "name": "finalAccInputHash",
+                "type": "bytes32"
+            }
+        ],
+        "name": "sequenceBlobs",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "uint8",
+                        "name": "blobType",
+                        "type": "uint8"
+                    },
+                    {
+                        "internalType": "bytes",
+                        "name": "blobTypeParams",
+                        "type": "bytes"
+                    }
+                ],
+                "internalType": "struct PolygonRollupBaseFeijoa.BlobData[]",
+                "name": "blobs",
+                "type": "tuple[]"
+            }
+        ],
+        "name": "sequenceForceBlobs",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newForceBlobAddress",
+                "type": "address"
+            }
+        ],
+        "name": "setForceBlobAddress",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint64",
+                "name": "newforceBlobTimeout",
+                "type": "uint64"
+            }
+        ],
+        "name": "setForceBlobTimeout",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "newNetworkName",
+                "type": "string"
+            }
+        ],
+        "name": "setNetworkName",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newTrustedSequencer",
+                "type": "address"
+            }
+        ],
+        "name": "setTrustedSequencer",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "string",
+                "name": "newTrustedSequencerURL",
+                "type": "string"
+            }
+        ],
+        "name": "setTrustedSequencerURL",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newPendingAdmin",
+                "type": "address"
+            }
+        ],
+        "name": "transferAdminRole",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "trustedSequencer",
+        "outputs": [
+            {
+                "internalType": "address",
+                "name": "",
+                "type": "address"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "trustedSequencerURL",
+        "outputs": [
+            {
+                "internalType": "string",
+                "name": "",
+                "type": "string"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    }
+]

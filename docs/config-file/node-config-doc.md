@@ -150,6 +150,7 @@ Outputs=["stderr"]
 | Property                                          | Pattern | Type    | Deprecated | Definition | Title/Description                                                                       |
 | ------------------------------------------------- | ------- | ------- | ---------- | ---------- | --------------------------------------------------------------------------------------- |
 | - [URL](#Etherman_URL )                           | No      | string  | No         | -          | URL is the URL of the Ethereum node for L1                                              |
+| - [ConsensusL1URL](#Etherman_ConsensusL1URL )     | No      | string  | No         | -          | ConsensusL1URL is the URL of the consensus L1 RPC endpoint                              |
 | - [ForkIDChunkSize](#Etherman_ForkIDChunkSize )   | No      | integer | No         | -          | ForkIDChunkSize is the max interval for each call to L1 provider to get the forkIDs     |
 | - [MultiGasProvider](#Etherman_MultiGasProvider ) | No      | boolean | No         | -          | allow that L1 gas price calculation use multiples sources                               |
 | - [Etherscan](#Etherman_Etherscan )               | No      | object  | No         | -          | Configuration for use Etherscan as used as gas provider, basically it needs the API-KEY |
@@ -168,7 +169,21 @@ Outputs=["stderr"]
 URL="http://localhost:8545"
 ```
 
-### <a name="Etherman_ForkIDChunkSize"></a>5.2. `Etherman.ForkIDChunkSize`
+### <a name="Etherman_ConsensusL1URL"></a>5.2. `Etherman.ConsensusL1URL`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Description:** ConsensusL1URL is the URL of the consensus L1 RPC endpoint
+
+**Example setting the default value** (""):
+```
+[Etherman]
+ConsensusL1URL=""
+```
+
+### <a name="Etherman_ForkIDChunkSize"></a>5.3. `Etherman.ForkIDChunkSize`
 
 **Type:** : `integer`
 
@@ -182,7 +197,7 @@ URL="http://localhost:8545"
 ForkIDChunkSize=20000
 ```
 
-### <a name="Etherman_MultiGasProvider"></a>5.3. `Etherman.MultiGasProvider`
+### <a name="Etherman_MultiGasProvider"></a>5.4. `Etherman.MultiGasProvider`
 
 **Type:** : `boolean`
 
@@ -196,7 +211,7 @@ ForkIDChunkSize=20000
 MultiGasProvider=false
 ```
 
-### <a name="Etherman_Etherscan"></a>5.4. `[Etherman.Etherscan]`
+### <a name="Etherman_Etherscan"></a>5.5. `[Etherman.Etherscan]`
 
 **Type:** : `object`
 **Description:** Configuration for use Etherscan as used as gas provider, basically it needs the API-KEY
@@ -206,7 +221,7 @@ MultiGasProvider=false
 | - [ApiKey](#Etherman_Etherscan_ApiKey ) | No      | string | No         | -          | Need API key to use etherscan, if it's empty etherscan is not used                                                                    |
 | - [Url](#Etherman_Etherscan_Url )       | No      | string | No         | -          | URL of the etherscan API. Overwritten with a hardcoded URL: "https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=" |
 
-#### <a name="Etherman_Etherscan_ApiKey"></a>5.4.1. `Etherman.Etherscan.ApiKey`
+#### <a name="Etherman_Etherscan_ApiKey"></a>5.5.1. `Etherman.Etherscan.ApiKey`
 
 **Type:** : `string`
 
@@ -220,7 +235,7 @@ MultiGasProvider=false
 ApiKey=""
 ```
 
-#### <a name="Etherman_Etherscan_Url"></a>5.4.2. `Etherman.Etherscan.Url`
+#### <a name="Etherman_Etherscan_Url"></a>5.5.2. `Etherman.Etherscan.Url`
 
 **Type:** : `string`
 
@@ -913,6 +928,7 @@ ForkID=0
 | - [MaxLogsBlockRange](#RPC_MaxLogsBlockRange )                               | No      | integer          | No         | -          | MaxLogsBlockRange is a configuration to set the max range for block number when querying TXs<br />logs in a single call to the state, if zero it means no limit                       |
 | - [MaxNativeBlockHashBlockRange](#RPC_MaxNativeBlockHashBlockRange )         | No      | integer          | No         | -          | MaxNativeBlockHashBlockRange is a configuration to set the max range for block number when querying<br />native block hashes in a single call to the state, if zero it means no limit |
 | - [EnableHttpLog](#RPC_EnableHttpLog )                                       | No      | boolean          | No         | -          | EnableHttpLog allows the user to enable or disable the logs related to the HTTP<br />requests to be captured by the server.                                                           |
+| - [ZKCountersLimits](#RPC_ZKCountersLimits )                                 | No      | object           | No         | -          | ZKCountersLimits defines the ZK Counter limits                                                                                                                                        |
 
 ### <a name="RPC_Host"></a>8.1. `RPC.Host`
 
@@ -1215,19 +1231,136 @@ requests to be captured by the server.
 EnableHttpLog=true
 ```
 
+### <a name="RPC_ZKCountersLimits"></a>8.17. `[RPC.ZKCountersLimits]`
+
+**Type:** : `object`
+**Description:** ZKCountersLimits defines the ZK Counter limits
+
+| Property                                                            | Pattern | Type    | Deprecated | Definition | Title/Description |
+| ------------------------------------------------------------------- | ------- | ------- | ---------- | ---------- | ----------------- |
+| - [MaxKeccakHashes](#RPC_ZKCountersLimits_MaxKeccakHashes )         | No      | integer | No         | -          | -                 |
+| - [MaxPoseidonHashes](#RPC_ZKCountersLimits_MaxPoseidonHashes )     | No      | integer | No         | -          | -                 |
+| - [MaxPoseidonPaddings](#RPC_ZKCountersLimits_MaxPoseidonPaddings ) | No      | integer | No         | -          | -                 |
+| - [MaxMemAligns](#RPC_ZKCountersLimits_MaxMemAligns )               | No      | integer | No         | -          | -                 |
+| - [MaxArithmetics](#RPC_ZKCountersLimits_MaxArithmetics )           | No      | integer | No         | -          | -                 |
+| - [MaxBinaries](#RPC_ZKCountersLimits_MaxBinaries )                 | No      | integer | No         | -          | -                 |
+| - [MaxSteps](#RPC_ZKCountersLimits_MaxSteps )                       | No      | integer | No         | -          | -                 |
+| - [MaxSHA256Hashes](#RPC_ZKCountersLimits_MaxSHA256Hashes )         | No      | integer | No         | -          | -                 |
+
+#### <a name="RPC_ZKCountersLimits_MaxKeccakHashes"></a>8.17.1. `RPC.ZKCountersLimits.MaxKeccakHashes`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Example setting the default value** (0):
+```
+[RPC.ZKCountersLimits]
+MaxKeccakHashes=0
+```
+
+#### <a name="RPC_ZKCountersLimits_MaxPoseidonHashes"></a>8.17.2. `RPC.ZKCountersLimits.MaxPoseidonHashes`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Example setting the default value** (0):
+```
+[RPC.ZKCountersLimits]
+MaxPoseidonHashes=0
+```
+
+#### <a name="RPC_ZKCountersLimits_MaxPoseidonPaddings"></a>8.17.3. `RPC.ZKCountersLimits.MaxPoseidonPaddings`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Example setting the default value** (0):
+```
+[RPC.ZKCountersLimits]
+MaxPoseidonPaddings=0
+```
+
+#### <a name="RPC_ZKCountersLimits_MaxMemAligns"></a>8.17.4. `RPC.ZKCountersLimits.MaxMemAligns`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Example setting the default value** (0):
+```
+[RPC.ZKCountersLimits]
+MaxMemAligns=0
+```
+
+#### <a name="RPC_ZKCountersLimits_MaxArithmetics"></a>8.17.5. `RPC.ZKCountersLimits.MaxArithmetics`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Example setting the default value** (0):
+```
+[RPC.ZKCountersLimits]
+MaxArithmetics=0
+```
+
+#### <a name="RPC_ZKCountersLimits_MaxBinaries"></a>8.17.6. `RPC.ZKCountersLimits.MaxBinaries`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Example setting the default value** (0):
+```
+[RPC.ZKCountersLimits]
+MaxBinaries=0
+```
+
+#### <a name="RPC_ZKCountersLimits_MaxSteps"></a>8.17.7. `RPC.ZKCountersLimits.MaxSteps`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Example setting the default value** (0):
+```
+[RPC.ZKCountersLimits]
+MaxSteps=0
+```
+
+#### <a name="RPC_ZKCountersLimits_MaxSHA256Hashes"></a>8.17.8. `RPC.ZKCountersLimits.MaxSHA256Hashes`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Example setting the default value** (0):
+```
+[RPC.ZKCountersLimits]
+MaxSHA256Hashes=0
+```
+
 ## <a name="Synchronizer"></a>9. `[Synchronizer]`
 
 **Type:** : `object`
 **Description:** Configuration of service `Syncrhonizer`. For this service is also really important the value of `IsTrustedSequencer`
 because depending of this values is going to ask to a trusted node for trusted transactions or not
 
-| Property                                                                | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                                                                                                                                                       |
-| ----------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| - [SyncInterval](#Synchronizer_SyncInterval )                           | No      | string           | No         | -          | Duration                                                                                                                                                                                                                                                |
-| - [SyncChunkSize](#Synchronizer_SyncChunkSize )                         | No      | integer          | No         | -          | SyncChunkSize is the number of blocks to sync on each chunk                                                                                                                                                                                             |
-| - [TrustedSequencerURL](#Synchronizer_TrustedSequencerURL )             | No      | string           | No         | -          | TrustedSequencerURL is the rpc url to connect and sync the trusted state                                                                                                                                                                                |
-| - [L1SynchronizationMode](#Synchronizer_L1SynchronizationMode )         | No      | enum (of string) | No         | -          | L1SynchronizationMode define how to synchronize with L1:<br />- parallel: Request data to L1 in parallel, and process sequentially. The advantage is that executor is not blocked waiting for L1 data<br />- sequential: Request data to L1 and execute |
-| - [L1ParallelSynchronization](#Synchronizer_L1ParallelSynchronization ) | No      | object           | No         | -          | L1ParallelSynchronization Configuration for parallel mode (if L1SynchronizationMode equal to 'parallel')                                                                                                                                                |
+| Property                                                                            | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                                                                                                                                                       |
+| ----------------------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| - [SyncInterval](#Synchronizer_SyncInterval )                                       | No      | string           | No         | -          | Duration                                                                                                                                                                                                                                                |
+| - [SyncChunkSize](#Synchronizer_SyncChunkSize )                                     | No      | integer          | No         | -          | SyncChunkSize is the number of blocks to sync on each chunk                                                                                                                                                                                             |
+| - [TrustedSequencerURL](#Synchronizer_TrustedSequencerURL )                         | No      | string           | No         | -          | TrustedSequencerURL is the rpc url to connect and sync the trusted state                                                                                                                                                                                |
+| - [SyncBlockProtection](#Synchronizer_SyncBlockProtection )                         | No      | string           | No         | -          | SyncBlockProtection specify the state to sync (lastest, finalized or safe)                                                                                                                                                                              |
+| - [L1SyncCheckL2BlockHash](#Synchronizer_L1SyncCheckL2BlockHash )                   | No      | boolean          | No         | -          | L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)                                                                                                            |
+| - [L1SyncCheckL2BlockNumberModulus](#Synchronizer_L1SyncCheckL2BlockNumberModulus ) | No      | integer          | No         | -          | L1SyncCheckL2BlockNumberModulus is the modulus used to choose the l2block to check<br />a modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)                                                                                |
+| - [L1BlockCheck](#Synchronizer_L1BlockCheck )                                       | No      | object           | No         | -          | -                                                                                                                                                                                                                                                       |
+| - [L1SynchronizationMode](#Synchronizer_L1SynchronizationMode )                     | No      | enum (of string) | No         | -          | L1SynchronizationMode define how to synchronize with L1:<br />- parallel: Request data to L1 in parallel, and process sequentially. The advantage is that executor is not blocked waiting for L1 data<br />- sequential: Request data to L1 and execute |
+| - [L1ParallelSynchronization](#Synchronizer_L1ParallelSynchronization )             | No      | object           | No         | -          | L1ParallelSynchronization Configuration for parallel mode (if L1SynchronizationMode equal to 'parallel')                                                                                                                                                |
+| - [L2Synchronization](#Synchronizer_L2Synchronization )                             | No      | object           | No         | -          | L2Synchronization Configuration for L2 synchronization                                                                                                                                                                                                  |
 
 ### <a name="Synchronizer_SyncInterval"></a>9.1. `Synchronizer.SyncInterval`
 
@@ -1283,27 +1416,198 @@ SyncChunkSize=100
 TrustedSequencerURL=""
 ```
 
-### <a name="Synchronizer_L1SynchronizationMode"></a>9.4. `Synchronizer.L1SynchronizationMode`
+### <a name="Synchronizer_SyncBlockProtection"></a>9.4. `Synchronizer.SyncBlockProtection`
+
+**Type:** : `string`
+
+**Default:** `"safe"`
+
+**Description:** SyncBlockProtection specify the state to sync (lastest, finalized or safe)
+
+**Example setting the default value** ("safe"):
+```
+[Synchronizer]
+SyncBlockProtection="safe"
+```
+
+### <a name="Synchronizer_L1SyncCheckL2BlockHash"></a>9.5. `Synchronizer.L1SyncCheckL2BlockHash`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)
+
+**Example setting the default value** (true):
+```
+[Synchronizer]
+L1SyncCheckL2BlockHash=true
+```
+
+### <a name="Synchronizer_L1SyncCheckL2BlockNumberModulus"></a>9.6. `Synchronizer.L1SyncCheckL2BlockNumberModulus`
+
+**Type:** : `integer`
+
+**Default:** `600`
+
+**Description:** L1SyncCheckL2BlockNumberModulus is the modulus used to choose the l2block to check
+a modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)
+
+**Example setting the default value** (600):
+```
+[Synchronizer]
+L1SyncCheckL2BlockNumberModulus=600
+```
+
+### <a name="Synchronizer_L1BlockCheck"></a>9.7. `[Synchronizer.L1BlockCheck]`
+
+**Type:** : `object`
+
+| Property                                                                     | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                                                                                                                                                       |
+| ---------------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| - [Enable](#Synchronizer_L1BlockCheck_Enable )                               | No      | boolean          | No         | -          | Enable if is true then the check l1 Block Hash is active                                                                                                                                                                                                |
+| - [L1SafeBlockPoint](#Synchronizer_L1BlockCheck_L1SafeBlockPoint )           | No      | enum (of string) | No         | -          | L1SafeBlockPoint is the point that a block is considered safe enough to be checked<br />it can be: finalized, safe,pending or latest                                                                                                                    |
+| - [L1SafeBlockOffset](#Synchronizer_L1BlockCheck_L1SafeBlockOffset )         | No      | integer          | No         | -          | L1SafeBlockOffset is the offset to add to L1SafeBlockPoint as a safe point<br />it can be positive or negative<br />Example: L1SafeBlockPoint= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block             |
+| - [ForceCheckBeforeStart](#Synchronizer_L1BlockCheck_ForceCheckBeforeStart ) | No      | boolean          | No         | -          | ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks                                                                                                                                    |
+| - [PreCheckEnable](#Synchronizer_L1BlockCheck_PreCheckEnable )               | No      | boolean          | No         | -          | PreCheckEnable if is true then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock                                                                                                                                        |
+| - [L1PreSafeBlockPoint](#Synchronizer_L1BlockCheck_L1PreSafeBlockPoint )     | No      | enum (of string) | No         | -          | L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked<br />it can be: finalized, safe,pending or latest                                                                                                                 |
+| - [L1PreSafeBlockOffset](#Synchronizer_L1BlockCheck_L1PreSafeBlockOffset )   | No      | integer          | No         | -          | L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point<br />it can be positive or negative<br />Example: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block |
+
+#### <a name="Synchronizer_L1BlockCheck_Enable"></a>9.7.1. `Synchronizer.L1BlockCheck.Enable`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** Enable if is true then the check l1 Block Hash is active
+
+**Example setting the default value** (true):
+```
+[Synchronizer.L1BlockCheck]
+Enable=true
+```
+
+#### <a name="Synchronizer_L1BlockCheck_L1SafeBlockPoint"></a>9.7.2. `Synchronizer.L1BlockCheck.L1SafeBlockPoint`
 
 **Type:** : `enum (of string)`
 
-**Default:** `"parallel"`
+**Default:** `"finalized"`
+
+**Description:** L1SafeBlockPoint is the point that a block is considered safe enough to be checked
+it can be: finalized, safe,pending or latest
+
+**Example setting the default value** ("finalized"):
+```
+[Synchronizer.L1BlockCheck]
+L1SafeBlockPoint="finalized"
+```
+
+Must be one of:
+* "finalized"
+* "safe"
+* "latest"
+
+#### <a name="Synchronizer_L1BlockCheck_L1SafeBlockOffset"></a>9.7.3. `Synchronizer.L1BlockCheck.L1SafeBlockOffset`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Description:** L1SafeBlockOffset is the offset to add to L1SafeBlockPoint as a safe point
+it can be positive or negative
+Example: L1SafeBlockPoint= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block
+
+**Example setting the default value** (0):
+```
+[Synchronizer.L1BlockCheck]
+L1SafeBlockOffset=0
+```
+
+#### <a name="Synchronizer_L1BlockCheck_ForceCheckBeforeStart"></a>9.7.4. `Synchronizer.L1BlockCheck.ForceCheckBeforeStart`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks
+
+**Example setting the default value** (true):
+```
+[Synchronizer.L1BlockCheck]
+ForceCheckBeforeStart=true
+```
+
+#### <a name="Synchronizer_L1BlockCheck_PreCheckEnable"></a>9.7.5. `Synchronizer.L1BlockCheck.PreCheckEnable`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** PreCheckEnable if is true then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock
+
+**Example setting the default value** (true):
+```
+[Synchronizer.L1BlockCheck]
+PreCheckEnable=true
+```
+
+#### <a name="Synchronizer_L1BlockCheck_L1PreSafeBlockPoint"></a>9.7.6. `Synchronizer.L1BlockCheck.L1PreSafeBlockPoint`
+
+**Type:** : `enum (of string)`
+
+**Default:** `"safe"`
+
+**Description:** L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked
+it can be: finalized, safe,pending or latest
+
+**Example setting the default value** ("safe"):
+```
+[Synchronizer.L1BlockCheck]
+L1PreSafeBlockPoint="safe"
+```
+
+Must be one of:
+* "finalized"
+* "safe"
+* "latest"
+
+#### <a name="Synchronizer_L1BlockCheck_L1PreSafeBlockOffset"></a>9.7.7. `Synchronizer.L1BlockCheck.L1PreSafeBlockOffset`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Description:** L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point
+it can be positive or negative
+Example: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block
+
+**Example setting the default value** (0):
+```
+[Synchronizer.L1BlockCheck]
+L1PreSafeBlockOffset=0
+```
+
+### <a name="Synchronizer_L1SynchronizationMode"></a>9.8. `Synchronizer.L1SynchronizationMode`
+
+**Type:** : `enum (of string)`
+
+**Default:** `"sequential"`
 
 **Description:** L1SynchronizationMode define how to synchronize with L1:
 - parallel: Request data to L1 in parallel, and process sequentially. The advantage is that executor is not blocked waiting for L1 data
 - sequential: Request data to L1 and execute
 
-**Example setting the default value** ("parallel"):
+**Example setting the default value** ("sequential"):
 ```
 [Synchronizer]
-L1SynchronizationMode="parallel"
+L1SynchronizationMode="sequential"
 ```
 
 Must be one of:
 * "sequential"
 * "parallel"
 
-### <a name="Synchronizer_L1ParallelSynchronization"></a>9.5. `[Synchronizer.L1ParallelSynchronization]`
+### <a name="Synchronizer_L1ParallelSynchronization"></a>9.9. `[Synchronizer.L1ParallelSynchronization]`
 
 **Type:** : `object`
 **Description:** L1ParallelSynchronization Configuration for parallel mode (if L1SynchronizationMode equal to 'parallel')
@@ -1321,7 +1625,7 @@ Must be one of:
 | - [RollupInfoRetriesSpacing](#Synchronizer_L1ParallelSynchronization_RollupInfoRetriesSpacing )                             | No      | string  | No         | -          | Duration                                                                                                                                                                                      |
 | - [FallbackToSequentialModeOnSynchronized](#Synchronizer_L1ParallelSynchronization_FallbackToSequentialModeOnSynchronized ) | No      | boolean | No         | -          | FallbackToSequentialModeOnSynchronized if true switch to sequential mode if the system is synchronized                                                                                        |
 
-#### <a name="Synchronizer_L1ParallelSynchronization_MaxClients"></a>9.5.1. `Synchronizer.L1ParallelSynchronization.MaxClients`
+#### <a name="Synchronizer_L1ParallelSynchronization_MaxClients"></a>9.9.1. `Synchronizer.L1ParallelSynchronization.MaxClients`
 
 **Type:** : `integer`
 
@@ -1335,7 +1639,7 @@ Must be one of:
 MaxClients=10
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_MaxPendingNoProcessedBlocks"></a>9.5.2. `Synchronizer.L1ParallelSynchronization.MaxPendingNoProcessedBlocks`
+#### <a name="Synchronizer_L1ParallelSynchronization_MaxPendingNoProcessedBlocks"></a>9.9.2. `Synchronizer.L1ParallelSynchronization.MaxPendingNoProcessedBlocks`
 
 **Type:** : `integer`
 
@@ -1350,7 +1654,7 @@ sugested twice of NumberOfParallelOfEthereumClients
 MaxPendingNoProcessedBlocks=25
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockPeriod"></a>9.5.3. `Synchronizer.L1ParallelSynchronization.RequestLastBlockPeriod`
+#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockPeriod"></a>9.9.3. `Synchronizer.L1ParallelSynchronization.RequestLastBlockPeriod`
 
 **Title:** Duration
 
@@ -1378,7 +1682,7 @@ This value only apply when the system is synchronized
 RequestLastBlockPeriod="5s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning"></a>9.5.4. `[Synchronizer.L1ParallelSynchronization.PerformanceWarning]`
+#### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning"></a>9.9.4. `[Synchronizer.L1ParallelSynchronization.PerformanceWarning]`
 
 **Type:** : `object`
 **Description:** Consumer Configuration for the consumer of rollup information from L1
@@ -1388,7 +1692,7 @@ RequestLastBlockPeriod="5s"
 | - [AceptableInacctivityTime](#Synchronizer_L1ParallelSynchronization_PerformanceWarning_AceptableInacctivityTime )       | No      | string  | No         | -          | Duration                                                                                                                 |
 | - [ApplyAfterNumRollupReceived](#Synchronizer_L1ParallelSynchronization_PerformanceWarning_ApplyAfterNumRollupReceived ) | No      | integer | No         | -          | ApplyAfterNumRollupReceived is the number of iterations to<br />start checking the time waiting for new rollup info data |
 
-##### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning_AceptableInacctivityTime"></a>9.5.4.1. `Synchronizer.L1ParallelSynchronization.PerformanceWarning.AceptableInacctivityTime`
+##### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning_AceptableInacctivityTime"></a>9.9.4.1. `Synchronizer.L1ParallelSynchronization.PerformanceWarning.AceptableInacctivityTime`
 
 **Title:** Duration
 
@@ -1417,7 +1721,7 @@ fast enought then you could increse the number of parallel clients to sync with 
 AceptableInacctivityTime="5s"
 ```
 
-##### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning_ApplyAfterNumRollupReceived"></a>9.5.4.2. `Synchronizer.L1ParallelSynchronization.PerformanceWarning.ApplyAfterNumRollupReceived`
+##### <a name="Synchronizer_L1ParallelSynchronization_PerformanceWarning_ApplyAfterNumRollupReceived"></a>9.9.4.2. `Synchronizer.L1ParallelSynchronization.PerformanceWarning.ApplyAfterNumRollupReceived`
 
 **Type:** : `integer`
 
@@ -1432,7 +1736,7 @@ start checking the time waiting for new rollup info data
 ApplyAfterNumRollupReceived=10
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockTimeout"></a>9.5.5. `Synchronizer.L1ParallelSynchronization.RequestLastBlockTimeout`
+#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockTimeout"></a>9.9.5. `Synchronizer.L1ParallelSynchronization.RequestLastBlockTimeout`
 
 **Title:** Duration
 
@@ -1458,7 +1762,7 @@ ApplyAfterNumRollupReceived=10
 RequestLastBlockTimeout="5s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockMaxRetries"></a>9.5.6. `Synchronizer.L1ParallelSynchronization.RequestLastBlockMaxRetries`
+#### <a name="Synchronizer_L1ParallelSynchronization_RequestLastBlockMaxRetries"></a>9.9.6. `Synchronizer.L1ParallelSynchronization.RequestLastBlockMaxRetries`
 
 **Type:** : `integer`
 
@@ -1472,7 +1776,7 @@ RequestLastBlockTimeout="5s"
 RequestLastBlockMaxRetries=3
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_StatisticsPeriod"></a>9.5.7. `Synchronizer.L1ParallelSynchronization.StatisticsPeriod`
+#### <a name="Synchronizer_L1ParallelSynchronization_StatisticsPeriod"></a>9.9.7. `Synchronizer.L1ParallelSynchronization.StatisticsPeriod`
 
 **Title:** Duration
 
@@ -1498,7 +1802,7 @@ RequestLastBlockMaxRetries=3
 StatisticsPeriod="5m0s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_TimeOutMainLoop"></a>9.5.8. `Synchronizer.L1ParallelSynchronization.TimeOutMainLoop`
+#### <a name="Synchronizer_L1ParallelSynchronization_TimeOutMainLoop"></a>9.9.8. `Synchronizer.L1ParallelSynchronization.TimeOutMainLoop`
 
 **Title:** Duration
 
@@ -1524,7 +1828,7 @@ StatisticsPeriod="5m0s"
 TimeOutMainLoop="5m0s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_RollupInfoRetriesSpacing"></a>9.5.9. `Synchronizer.L1ParallelSynchronization.RollupInfoRetriesSpacing`
+#### <a name="Synchronizer_L1ParallelSynchronization_RollupInfoRetriesSpacing"></a>9.9.9. `Synchronizer.L1ParallelSynchronization.RollupInfoRetriesSpacing`
 
 **Title:** Duration
 
@@ -1550,7 +1854,7 @@ TimeOutMainLoop="5m0s"
 RollupInfoRetriesSpacing="5s"
 ```
 
-#### <a name="Synchronizer_L1ParallelSynchronization_FallbackToSequentialModeOnSynchronized"></a>9.5.10. `Synchronizer.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized`
+#### <a name="Synchronizer_L1ParallelSynchronization_FallbackToSequentialModeOnSynchronized"></a>9.9.10. `Synchronizer.L1ParallelSynchronization.FallbackToSequentialModeOnSynchronized`
 
 **Type:** : `boolean`
 
@@ -1562,6 +1866,60 @@ RollupInfoRetriesSpacing="5s"
 ```
 [Synchronizer.L1ParallelSynchronization]
 FallbackToSequentialModeOnSynchronized=false
+```
+
+### <a name="Synchronizer_L2Synchronization"></a>9.10. `[Synchronizer.L2Synchronization]`
+
+**Type:** : `object`
+**Description:** L2Synchronization Configuration for L2 synchronization
+
+| Property                                                                                                | Pattern | Type    | Deprecated | Definition | Title/Description                                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------- | ------- | ------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| - [AcceptEmptyClosedBatches](#Synchronizer_L2Synchronization_AcceptEmptyClosedBatches )                 | No      | boolean | No         | -          | AcceptEmptyClosedBatches is a flag to enable or disable the acceptance of empty batches.<br />if true, the synchronizer will accept empty batches and process them. |
+| - [ReprocessFullBatchOnClose](#Synchronizer_L2Synchronization_ReprocessFullBatchOnClose )               | No      | boolean | No         | -          | ReprocessFullBatchOnClose if is true when a batch is closed is force to reprocess again                                                                             |
+| - [CheckLastL2BlockHashOnCloseBatch](#Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch ) | No      | boolean | No         | -          | CheckLastL2BlockHashOnCloseBatch if is true when a batch is closed is force to check the last L2Block hash                                                          |
+
+#### <a name="Synchronizer_L2Synchronization_AcceptEmptyClosedBatches"></a>9.10.1. `Synchronizer.L2Synchronization.AcceptEmptyClosedBatches`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** AcceptEmptyClosedBatches is a flag to enable or disable the acceptance of empty batches.
+if true, the synchronizer will accept empty batches and process them.
+
+**Example setting the default value** (false):
+```
+[Synchronizer.L2Synchronization]
+AcceptEmptyClosedBatches=false
+```
+
+#### <a name="Synchronizer_L2Synchronization_ReprocessFullBatchOnClose"></a>9.10.2. `Synchronizer.L2Synchronization.ReprocessFullBatchOnClose`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** ReprocessFullBatchOnClose if is true when a batch is closed is force to reprocess again
+
+**Example setting the default value** (true):
+```
+[Synchronizer.L2Synchronization]
+ReprocessFullBatchOnClose=true
+```
+
+#### <a name="Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch"></a>9.10.3. `Synchronizer.L2Synchronization.CheckLastL2BlockHashOnCloseBatch`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** CheckLastL2BlockHashOnCloseBatch if is true when a batch is closed is force to check the last L2Block hash
+
+**Example setting the default value** (true):
+```
+[Synchronizer.L2Synchronization]
+CheckLastL2BlockHashOnCloseBatch=true
 ```
 
 ## <a name="Sequencer"></a>10. `[Sequencer]`
@@ -1743,6 +2101,7 @@ StateConsistencyCheckInterval="5s"
 | - [HaltOnBatchNumber](#Sequencer_Finalizer_HaltOnBatchNumber )                                 | No      | integer | No         | -          | HaltOnBatchNumber specifies the batch number where the Sequencer will stop to process more transactions and generate new batches.<br />The Sequencer will halt after it closes the batch equal to this number |
 | - [SequentialBatchSanityCheck](#Sequencer_Finalizer_SequentialBatchSanityCheck )               | No      | boolean | No         | -          | SequentialBatchSanityCheck indicates if the reprocess of a closed batch (sanity check) must be done in a<br />sequential way (instead than in parallel)                                                       |
 | - [SequentialProcessL2Block](#Sequencer_Finalizer_SequentialProcessL2Block )                   | No      | boolean | No         | -          | SequentialProcessL2Block indicates if the processing of a L2 Block must be done in the same finalizer go func instead<br />in the processPendingL2Blocks go func                                              |
+| - [Metrics](#Sequencer_Finalizer_Metrics )                                                     | No      | object  | No         | -          | Metrics is the config for the sequencer metrics                                                                                                                                                               |
 
 #### <a name="Sequencer_Finalizer_ForcedBatchesTimeout"></a>10.7.1. `Sequencer.Finalizer.ForcedBatchesTimeout`
 
@@ -1985,6 +2344,56 @@ in the processPendingL2Blocks go func
 ```
 [Sequencer.Finalizer]
 SequentialProcessL2Block=true
+```
+
+#### <a name="Sequencer_Finalizer_Metrics"></a>10.7.13. `[Sequencer.Finalizer.Metrics]`
+
+**Type:** : `object`
+**Description:** Metrics is the config for the sequencer metrics
+
+| Property                                               | Pattern | Type    | Deprecated | Definition | Title/Description                                  |
+| ------------------------------------------------------ | ------- | ------- | ---------- | ---------- | -------------------------------------------------- |
+| - [Interval](#Sequencer_Finalizer_Metrics_Interval )   | No      | string  | No         | -          | Duration                                           |
+| - [EnableLog](#Sequencer_Finalizer_Metrics_EnableLog ) | No      | boolean | No         | -          | EnableLog is a flag to enable/disable metrics logs |
+
+##### <a name="Sequencer_Finalizer_Metrics_Interval"></a>10.7.13.1. `Sequencer.Finalizer.Metrics.Interval`
+
+**Title:** Duration
+
+**Type:** : `string`
+
+**Default:** `"1h0m0s"`
+
+**Description:** Interval is the interval of time to calculate sequencer metrics
+
+**Examples:** 
+
+```json
+"1m"
+```
+
+```json
+"300ms"
+```
+
+**Example setting the default value** ("1h0m0s"):
+```
+[Sequencer.Finalizer.Metrics]
+Interval="1h0m0s"
+```
+
+##### <a name="Sequencer_Finalizer_Metrics_EnableLog"></a>10.7.13.2. `Sequencer.Finalizer.Metrics.EnableLog`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** EnableLog is a flag to enable/disable metrics logs
+
+**Example setting the default value** (true):
+```
+[Sequencer.Finalizer.Metrics]
+EnableLog=true
 ```
 
 ### <a name="Sequencer_StreamServer"></a>10.8. `[Sequencer.StreamServer]`
@@ -2370,6 +2779,7 @@ GasOffset=80000
 | - [GeneratingProofCleanupThreshold](#Aggregator_GeneratingProofCleanupThreshold )                   | No      | string  | No         | -          | GeneratingProofCleanupThreshold represents the time interval after<br />which a proof in generating state is considered to be stuck and<br />allowed to be cleared.                                                                                                                                                                                                                                                           |
 | - [GasOffset](#Aggregator_GasOffset )                                                               | No      | integer | No         | -          | GasOffset is the amount of gas to be added to the gas estimation in order<br />to provide an amount that is higher than the estimated one. This is used<br />to avoid the TX getting reverted in case something has changed in the network<br />state after the estimation which can cause the TX to require more gas to be<br />executed.<br /><br />ex:<br />gas estimation: 1000<br />gas offset: 100<br />final gas: 1100 |
 | - [UpgradeEtrogBatchNumber](#Aggregator_UpgradeEtrogBatchNumber )                                   | No      | integer | No         | -          | UpgradeEtrogBatchNumber is the number of the first batch after upgrading to etrog                                                                                                                                                                                                                                                                                                                                             |
+| - [BatchProofL1BlockConfirmations](#Aggregator_BatchProofL1BlockConfirmations )                     | No      | integer | No         | -          | BatchProofL1BlockConfirmations is number of L1 blocks to consider we can generate the proof for a virtual batch                                                                                                                                                                                                                                                                                                               |
 
 ### <a name="Aggregator_Host"></a>12.1. `Aggregator.Host`
 
@@ -2645,6 +3055,20 @@ GasOffset=0
 ```
 [Aggregator]
 UpgradeEtrogBatchNumber=0
+```
+
+### <a name="Aggregator_BatchProofL1BlockConfirmations"></a>12.16. `Aggregator.BatchProofL1BlockConfirmations`
+
+**Type:** : `integer`
+
+**Default:** `2`
+
+**Description:** BatchProofL1BlockConfirmations is number of L1 blocks to consider we can generate the proof for a virtual batch
+
+**Example setting the default value** (2):
+```
+[Aggregator]
+BatchProofL1BlockConfirmations=2
 ```
 
 ## <a name="NetworkConfig"></a>13. `[NetworkConfig]`
@@ -3420,6 +3844,7 @@ MaxConns=200
 | - [MaxLogsCount](#State_MaxLogsCount )                                 | No      | integer         | No         | -          | MaxLogsCount is a configuration to set the max number of logs that can be returned<br />in a single call to the state, if zero it means no limit                                      |
 | - [MaxLogsBlockRange](#State_MaxLogsBlockRange )                       | No      | integer         | No         | -          | MaxLogsBlockRange is a configuration to set the max range for block number when querying TXs<br />logs in a single call to the state, if zero it means no limit                       |
 | - [MaxNativeBlockHashBlockRange](#State_MaxNativeBlockHashBlockRange ) | No      | integer         | No         | -          | MaxNativeBlockHashBlockRange is a configuration to set the max range for block number when querying<br />native block hashes in a single call to the state, if zero it means no limit |
+| - [AvoidForkIDInMemory](#State_AvoidForkIDInMemory )                   | No      | boolean         | No         | -          | AvoidForkIDInMemory is a configuration that forces the ForkID information to be loaded<br />from the DB every time it's needed                                                        |
 
 ### <a name="State_MaxCumulativeGasUsed"></a>20.1. `State.MaxCumulativeGasUsed`
 
@@ -3735,12 +4160,12 @@ MaxBatchBytesSize=120000
 
 **Type:** : `integer`
 
-**Default:** `30000000`
+**Default:** `1125899906842624`
 
-**Example setting the default value** (30000000):
+**Example setting the default value** (1125899906842624):
 ```
 [State.Batch.Constraints]
-MaxCumulativeGasUsed=30000000
+MaxCumulativeGasUsed=1125899906842624
 ```
 
 ##### <a name="State_Batch_Constraints_MaxKeccakHashes"></a>20.9.1.4. `State.Batch.Constraints.MaxKeccakHashes`
@@ -3882,6 +4307,21 @@ native block hashes in a single call to the state, if zero it means no limit
 ```
 [State]
 MaxNativeBlockHashBlockRange=0
+```
+
+### <a name="State_AvoidForkIDInMemory"></a>20.13. `State.AvoidForkIDInMemory`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** AvoidForkIDInMemory is a configuration that forces the ForkID information to be loaded
+from the DB every time it's needed
+
+**Example setting the default value** (false):
+```
+[State]
+AvoidForkIDInMemory=false
 ```
 
 ----------------------------------------------------------------------------------------------------------------------------

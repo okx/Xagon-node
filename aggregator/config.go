@@ -88,4 +88,7 @@ type Config struct {
 
 	// UpgradeEtrogBatchNumber is the number of the first batch after upgrading to etrog
 	UpgradeEtrogBatchNumber uint64 `mapstructure:"UpgradeEtrogBatchNumber"`
+
+	// BatchProofL1BlockConfirmations is number of L1 blocks to consider we can generate the proof for a virtual batch
+	BatchProofL1BlockConfirmations uint64 `mapstructure:"BatchProofL1BlockConfirmations"`
 }

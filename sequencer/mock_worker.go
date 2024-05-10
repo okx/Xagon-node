@@ -125,9 +125,9 @@ func (_m *WorkerMock) MoveTxToNotReady(txHash common.Hash, from common.Address, 
 	return r0
 }
 
-// NewTxTracker provides a mock function with given fields: tx, counters, ip
-func (_m *WorkerMock) NewTxTracker(tx types.Transaction, counters state.ZKCounters, ip string) (*TxTracker, error) {
-	ret := _m.Called(tx, counters, ip)
+// NewTxTracker provides a mock function with given fields: tx, usedZKcounters, reservedZKCouners, ip
+func (_m *WorkerMock) NewTxTracker(tx types.Transaction, usedZKcounters state.ZKCounters, reservedZKCouners state.ZKCounters, ip string) (*TxTracker, error) {
+	ret := _m.Called(tx, usedZKcounters, reservedZKCouners, ip)
 
 	if len(ret) == 0 {
 		panic("no return value specified for NewTxTracker")
@@ -135,19 +135,19 @@ func (_m *WorkerMock) NewTxTracker(tx types.Transaction, counters state.ZKCounte
 
 	var r0 *TxTracker
 	var r1 error
-	if rf, ok := ret.Get(0).(func(types.Transaction, state.ZKCounters, string) (*TxTracker, error)); ok {
-		return rf(tx, counters, ip)
+	if rf, ok := ret.Get(0).(func(types.Transaction, state.ZKCounters, state.ZKCounters, string) (*TxTracker, error)); ok {
+		return rf(tx, usedZKcounters, reservedZKCouners, ip)
 	}
-	if rf, ok := ret.Get(0).(func(types.Transaction, state.ZKCounters, string) *TxTracker); ok {
-		r0 = rf(tx, counters, ip)
+	if rf, ok := ret.Get(0).(func(types.Transaction, state.ZKCounters, state.ZKCounters, string) *TxTracker); ok {
+		r0 = rf(tx, usedZKcounters, reservedZKCouners, ip)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*TxTracker)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(types.Transaction, state.ZKCounters, string) error); ok {
-		r1 = rf(tx, counters, ip)
+	if rf, ok := ret.Get(1).(func(types.Transaction, state.ZKCounters, state.ZKCounters, string) error); ok {
+		r1 = rf(tx, usedZKcounters, reservedZKCouners, ip)
 	} else {
 		r1 = ret.Error(1)
 	}
@@ -175,9 +175,9 @@ func (_m *WorkerMock) UpdateAfterSingleSuccessfulTxExecution(from common.Address
 	return r0
 }
 
-// UpdateTxZKCounters provides a mock function with given fields: txHash, from, ZKCounters
-func (_m *WorkerMock) UpdateTxZKCounters(txHash common.Hash, from common.Address, ZKCounters state.ZKCounters) {
-	_m.Called(txHash, from, ZKCounters)
+// UpdateTxZKCounters provides a mock function with given fields: txHash, from, usedZKCounters, reservedZKCounters
+func (_m *WorkerMock) UpdateTxZKCounters(txHash common.Hash, from common.Address, usedZKCounters state.ZKCounters, reservedZKCounters state.ZKCounters) {
+	_m.Called(txHash, from, usedZKCounters, reservedZKCounters)
 }
 
 // NewWorkerMock creates a new instance of WorkerMock. It also registers a testing interface on the mock and a cleanup function to assert the mocks expectations.

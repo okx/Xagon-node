@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonzkevm"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-node/hex"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/test/operations"
@@ -98,8 +98,8 @@ func sendForcedBatches(cliCtx *cli.Context) error {
 		return err
 	}
 	// Create smc client
-	poeAddr := common.HexToAddress(cliCtx.String(flagSmcAddrName))
-	poe, err := polygonzkevm.NewPolygonzkevm(poeAddr, ethClient)
+	zkevmAddr := common.HexToAddress(cliCtx.String(flagSmcAddrName))
+	zkevm, err := etrogpolygonzkevm.NewEtrogpolygonzkevm(zkevmAddr, ethClient)
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func sendForcedBatches(cliCtx *cli.Context) error {
 
 	log.Info("Using address: ", auth.From)
 
-	num, err := poe.LastForceBatch(&bind.CallOpts{Pending: false})
+	num, err := zkevm.LastForceBatch(&bind.CallOpts{Pending: false})
 	if err != nil {
 		log.Error("error getting lastForBatch number. Error : ", err)
 		return err
@@ -130,14 +130,14 @@ func sendForcedBatches(cliCtx *cli.Context) error {
 		log.Error("error decoding txs. Error: ", err)
 		return err
 	}
-	fbData := []polygonzkevm.PolygonRollupBaseEtrogBatchData{{
+	fbData := []etrogpolygonzkevm.PolygonRollupBaseEtrogBatchData{{
 		Transactions:       transactions,
 		ForcedGlobalExitRoot:     common.HexToHash(cliCtx.String(flagGerName)),
 		ForcedTimestamp: cliCtx.Uint64(flagTimestampName),
 	}}
 	log.Warnf("%v, %+v", cliCtx.String(flagTransactionsName), fbData)
 	// Send forceBatch
-	tx, err := poe.SequenceForceBatches(auth, fbData)
+	tx, err := zkevm.SequenceForceBatches(auth, fbData)
 	if err != nil {
 		log.Error("error sending forceBatch. Error: ", err)
 		return err

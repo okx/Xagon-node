@@ -24,7 +24,7 @@ Outputs = ["stderr"]
 		[State.Batch.Constraints]
 		MaxTxsPerBatch = 300
 		MaxBatchBytesSize = 120000
-		MaxCumulativeGasUsed = 30000000
+		MaxCumulativeGasUsed = 1125899906842624
 		MaxKeccakHashes = 2145
 		MaxPoseidonHashes = 252357
 		MaxPoseidonPaddings = 135191
@@ -102,7 +102,18 @@ EnableHttpLog = true
 SyncInterval = "1s"
 SyncChunkSize = 100
 TrustedSequencerURL = "" # If it is empty or not specified, then the value is read from the smc
-L1SynchronizationMode = "parallel"
+SyncBlockProtection = "safe" # latest, finalized, safe
+L1SynchronizationMode = "sequential"
+L1SyncCheckL2BlockHash = true
+L1SyncCheckL2BlockNumberModulus = 600
+	[Synchronizer.L1BlockCheck]
+		Enable = true
+		L1SafeBlockPoint = "finalized"
+		L1SafeBlockOffset = 0
+		ForceCheckBeforeStart = true
+		PreCheckEnable = true
+		L1PreSafeBlockPoint = "safe"
+		L1PreSafeBlockOffset = 0
 	[Synchronizer.L1ParallelSynchronization]
 		MaxClients = 10
 		MaxPendingNoProcessedBlocks = 25
@@ -116,6 +127,10 @@ L1SynchronizationMode = "parallel"
 		[Synchronizer.L1ParallelSynchronization.PerformanceWarning]
 			AceptableInacctivityTime = "5s"
 			ApplyAfterNumRollupReceived = 10
+	[Synchronizer.L2Synchronization]
+		AcceptEmptyClosedBatches = false
+		ReprocessFullBatchOnClose = true
+		CheckLastL2BlockHashOnCloseBatch = true
 
 [Sequencer]
 DeletePoolTxsL1BlockConfirmations = 100
@@ -137,6 +152,9 @@ StateConsistencyCheckInterval = "5s"
 		HaltOnBatchNumber = 0
 		SequentialBatchSanityCheck = false
 		SequentialProcessL2Block = true
+	[Sequencer.Finalizer.Metrics]
+		Interval = "60m"
+		EnableLog = true
 	[Sequencer.StreamServer]
 		Port = 0
 		Filename = ""
@@ -164,6 +182,7 @@ CleanupLockedProofsInterval = "2m"
 GeneratingProofCleanupThreshold = "10m"
 GasOffset = 0
 UpgradeEtrogBatchNumber = 0
+BatchProofL1BlockConfirmations = 2
 
 [L2GasPriceSuggester]
 Type = "follower"

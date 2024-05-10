@@ -3,14 +3,13 @@ package sequencer
 import (
 	"context"
 	"fmt"
-	"math/big"
+	"sync"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-data-streamer/datastreamer"
 	"github.com/0xPolygonHermez/zkevm-node/event"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/pool"
-	"github.com/0xPolygonHermez/zkevm-node/sequencer/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/ethereum/go-ethereum/common"
 )
@@ -28,9 +27,11 @@ type Sequencer struct {
 	pool      txPool
 	stateIntf stateInterface
 	eventLog  *event.EventLog
-	etherman  etherman
+	etherman  ethermanInterface
 	worker    *Worker
 	finalizer *finalizer
+
+	workerReadyTxsCond *timeoutCond
 
 	streamServer *datastreamer.StreamServer
 	dataToStream chan interface{}
@@ -41,7 +42,7 @@ type Sequencer struct {
 }
 
 // New init sequencer
-func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txPool, stateIntf stateInterface, etherman etherman, eventLog *event.EventLog) (*Sequencer, error) {
+func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txPool, stateIntf stateInterface, etherman ethermanInterface, eventLog *event.EventLog) (*Sequencer, error) {
 	addr, err := etherman.TrustedSequencer()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get trusted sequencer address, error: %v", err)
@@ -71,7 +72,6 @@ func (s *Sequencer) Start(ctx context.Context) {
 		log.Infof("waiting for synchronizer to sync...")
 		time.Sleep(time.Second)
 	}
-	metrics.Register()
 
 	err := s.pool.MarkWIPTxsAsPending(ctx)
 	if err != nil {
@@ -99,8 +99,9 @@ func (s *Sequencer) Start(ctx context.Context) {
 		go s.sendDataToStreamer(s.cfg.StreamServer.ChainID)
 	}
 
-	s.worker = NewWorker(s.stateIntf, s.batchCfg.Constraints)
-	s.finalizer = newFinalizer(s.cfg.Finalizer, s.poolCfg, s.worker, s.pool, s.stateIntf, s.etherman, s.address, s.isSynced, s.batchCfg.Constraints, s.eventLog, s.streamServer, s.dataToStream)
+	s.workerReadyTxsCond = newTimeoutCond(&sync.Mutex{})
+	s.worker = NewWorker(s.stateIntf, s.batchCfg.Constraints, s.workerReadyTxsCond)
+	s.finalizer = newFinalizer(s.cfg.Finalizer, s.poolCfg, s.worker, s.pool, s.stateIntf, s.etherman, s.address, s.isSynced, s.batchCfg.Constraints, s.eventLog, s.streamServer, s.workerReadyTxsCond, s.dataToStream)
 	go s.finalizer.Start(ctx)
 
 	go s.deleteOldPoolTxs(ctx)
@@ -115,8 +116,12 @@ func (s *Sequencer) Start(ctx context.Context) {
 
 // checkStateInconsistency checks if state inconsistency happened
 func (s *Sequencer) checkStateInconsistency(ctx context.Context) {
+	var err error
+	s.numberOfStateInconsistencies, err = s.stateIntf.CountReorgs(ctx, nil)
+	if err != nil {
+		log.Error("failed to get initial number of reorgs, error: %v", err)
+	}
 	for {
-		time.Sleep(s.cfg.StateConsistencyCheckInterval.Duration)
 		stateInconsistenciesDetected, err := s.stateIntf.CountReorgs(ctx, nil)
 		if err != nil {
 			log.Error("failed to get number of reorgs, error: %v", err)
@@ -124,8 +129,10 @@ func (s *Sequencer) checkStateInconsistency(ctx context.Context) {
 		}
 
 		if stateInconsistenciesDetected != s.numberOfStateInconsistencies {
-			s.finalizer.Halt(ctx, fmt.Errorf("state inconsistency detected, halting finalizer"))
+			s.finalizer.Halt(ctx, fmt.Errorf("state inconsistency detected, halting finalizer"), false)
 		}
+
+		time.Sleep(s.cfg.StateConsistencyCheckInterval.Duration)
 	}
 }
 
@@ -141,7 +148,13 @@ func (s *Sequencer) deleteOldPoolTxs(ctx context.Context) {
 	for {
 		time.Sleep(s.cfg.DeletePoolTxsCheckInterval.Duration)
 		log.Infof("trying to get txs to delete from the pool...")
-		txHashes, err := s.stateIntf.GetTxsOlderThanNL1Blocks(ctx, s.cfg.DeletePoolTxsL1BlockConfirmations, nil)
+		earliestTxHash, err := s.pool.GetEarliestProcessedTx(ctx)
+		if err != nil {
+			log.Errorf("failed to get earliest tx hash to delete, err: %v", err)
+			continue
+		}
+
+		txHashes, err := s.stateIntf.GetTxsOlderThanNL1BlocksUntilTxHash(ctx, s.cfg.DeletePoolTxsL1BlockConfirmations, earliestTxHash, nil)
 		if err != nil {
 			log.Errorf("failed to get txs hashes to delete, error: %v", err)
 			continue
@@ -172,7 +185,6 @@ func (s *Sequencer) expireOldWorkerTxs(ctx context.Context) {
 		failedReason := ErrExpiredTransaction.Error()
 		for _, txTracker := range txTrackers {
 			err := s.pool.UpdateTxStatus(ctx, txTracker.Hash, pool.TxStatusFailed, false, &failedReason)
-			metrics.TxProcessed(metrics.TxProcessedLabelFailed, 1)
 			if err != nil {
 				log.Errorf("failed to update tx status, error: %v", err)
 			}
@@ -183,8 +195,6 @@ func (s *Sequencer) expireOldWorkerTxs(ctx context.Context) {
 // loadFromPool keeps loading transactions from the pool
 func (s *Sequencer) loadFromPool(ctx context.Context) {
 	for {
-		time.Sleep(s.cfg.LoadPoolTxsCheckInterval.Duration)
-
 		poolTransactions, err := s.pool.GetNonWIPPendingTxs(ctx)
 		if err != nil && err != pool.ErrNotFound {
 			log.Errorf("error loading txs from pool, error: %v", err)
@@ -196,11 +206,15 @@ func (s *Sequencer) loadFromPool(ctx context.Context) {
 				log.Errorf("error adding transaction to worker, error: %v", err)
 			}
 		}
+
+		if len(poolTransactions) == 0 {
+			time.Sleep(s.cfg.LoadPoolTxsCheckInterval.Duration)
+		}
 	}
 }
 
 func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) error {
-	txTracker, err := s.worker.NewTxTracker(tx.Transaction, tx.ZKCounters, tx.IP)
+	txTracker, err := s.worker.NewTxTracker(tx.Transaction, tx.ZKCounters, tx.ReservedZKCounters, tx.IP)
 	if err != nil {
 		return err
 	}
@@ -296,14 +310,6 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 				}
 
 				for _, l2Transaction := range l2Block.Txs {
-					// Populate intermediate state root
-					position := state.GetSystemSCPosition(blockStart.L2BlockNumber)
-					imStateRoot, err := s.stateIntf.GetStorageAt(context.Background(), common.HexToAddress(state.SystemSC), big.NewInt(0).SetBytes(position), l2Block.StateRoot)
-					if err != nil {
-						log.Errorf("failed to get storage at for l2block %d, error: %v", l2Block.L2BlockNumber, err)
-					}
-					l2Transaction.StateRoot = common.BigToHash(imStateRoot)
-
 					_, err = s.streamServer.AddStreamEntry(state.EntryTypeL2Tx, l2Transaction.Encode())
 					if err != nil {
 						log.Errorf("failed to add l2tx stream entry for l2block %d, error: %v", l2Block.L2BlockNumber, err)

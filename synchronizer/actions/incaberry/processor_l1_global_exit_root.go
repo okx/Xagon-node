@@ -24,9 +24,9 @@ type ProcessorL1GlobalExitRoot struct {
 // NewProcessorL1GlobalExitRoot new processor for GlobalExitRootsOrder
 func NewProcessorL1GlobalExitRoot(state stateProcessorL1GlobalExitRootInterface) *ProcessorL1GlobalExitRoot {
 	return &ProcessorL1GlobalExitRoot{
-		ProcessorBase: actions.ProcessorBase[ProcessorL1GlobalExitRoot]{
-			SupportedEvent:    []etherman.EventOrder{etherman.GlobalExitRootsOrder},
-			SupportedForkdIds: &actions.ForksIdToIncaberry},
+		ProcessorBase: *actions.NewProcessorBase[ProcessorL1GlobalExitRoot](
+			[]etherman.EventOrder{etherman.GlobalExitRootsOrder},
+			actions.ForksIdToIncaberry),
 		state: state}
 }
 

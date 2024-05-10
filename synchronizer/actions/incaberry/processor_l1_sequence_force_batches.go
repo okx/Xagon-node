@@ -39,9 +39,9 @@ type ProcessL1SequenceForcedBatches struct {
 func NewProcessL1SequenceForcedBatches(state stateProcessL1SequenceForcedBatchesInterface,
 	sync syncProcessL1SequenceForcedBatchesInterface) *ProcessL1SequenceForcedBatches {
 	return &ProcessL1SequenceForcedBatches{
-		ProcessorBase: actions.ProcessorBase[ProcessL1SequenceForcedBatches]{
-			SupportedEvent:    []etherman.EventOrder{etherman.SequenceForceBatchesOrder},
-			SupportedForkdIds: &actions.ForksIdAll},
+		ProcessorBase: *actions.NewProcessorBase[ProcessL1SequenceForcedBatches](
+			[]etherman.EventOrder{etherman.SequenceForceBatchesOrder},
+			actions.ForksIdAll),
 		state: state,
 		sync:  sync}
 }
