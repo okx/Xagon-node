@@ -178,6 +178,7 @@ func start(cliCtx *cli.Context) error {
 			if poolInstance == nil {
 				poolInstance = createPool(c.Pool, c.State.Batch.Constraints, l2ChainID, st, eventLog)
 			}
+			setEthermanDaXLayer(*c, st, etherman, false)
 			seq := createSequencer(*c, poolInstance, st, etherman, eventLog)
 			go seq.Start(cliCtx.Context)
 		case SEQUENCE_SENDER:
