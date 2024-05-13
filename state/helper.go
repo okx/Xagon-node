@@ -1,6 +1,7 @@
 package state
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/big"
 	"sort"
@@ -278,6 +279,7 @@ func DecodeTx(encodedTx string) (*types.Transaction, error) {
 
 // GenerateReceipt generates a receipt from a processed transaction
 func GenerateReceipt(blockNumber *big.Int, processedTx *ProcessTransactionResponse, txIndex uint, forkID uint64) *types.Receipt {
+	log.Infof("GenerateReceipt start forkID:%v, block num:%v", forkID, blockNumber)
 	receipt := &types.Receipt{
 		Type:             uint8(processedTx.Type),
 		BlockNumber:      blockNumber,
@@ -296,6 +298,7 @@ func GenerateReceipt(blockNumber *big.Int, processedTx *ProcessTransactionRespon
 		receipt.PostState = []byte{}
 		receipt.CumulativeGasUsed = processedTx.CumulativeGasUsed
 	}
+	log.Infof("ForkId:%v, PostState:%v, CumulativeGasUsed:%v", forkID, receipt.PostState, receipt.CumulativeGasUsed)
 	if processedTx.EffectiveGasPrice != "" {
 		effectiveGasPrice, ok := big.NewInt(0).SetString(processedTx.EffectiveGasPrice, 0)
 		if !ok {
@@ -323,6 +326,11 @@ func GenerateReceipt(blockNumber *big.Int, processedTx *ProcessTransactionRespon
 		}
 	} else {
 		receipt.Status = uint64(processedTx.Status)
+	}
+	log.Infof("ForkID:%v, Status:%v,Bloom:%v", forkID, receipt.Status, receipt.Bloom)
+	for LogsIndex, logV := range receipt.Logs {
+		jsonData, _ := json.Marshal(logV)
+		log.Infof("ForkID:%v, BlockNumber:%v, Index:%v, json:%v", forkID, logV.BlockNumber, LogsIndex, jsonData)
 	}
 
 	return receipt
