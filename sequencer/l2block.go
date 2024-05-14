@@ -118,6 +118,7 @@ func (f *finalizer) processPendingL2Blocks(ctx context.Context) {
 				continue
 			}
 
+			time.Sleep(5 * time.Second)
 			err := f.processL2Block(ctx, l2Block)
 
 			if err != nil {
@@ -164,9 +165,6 @@ func (f *finalizer) storePendingL2Blocks(ctx context.Context) {
 			if !ok {
 				// Channel is closed
 				return
-			}
-			if l2Block.trackingNum > 30 {
-				time.Sleep(5 * time.Second)
 			}
 			err := f.storeL2Block(ctx, l2Block)
 
@@ -267,11 +265,11 @@ func (f *finalizer) processL2Block(ctx context.Context, l2Block *L2Block) error 
 
 	f.updateFlushIDs(batchResponse.FlushID, batchResponse.StoredFlushID)
 
-	//	if f.pendingL2BlocksToStoreWG.Count() > 0 {
-	//		startWait := time.Now()
-	//		f.pendingL2BlocksToStoreWG.Wait()
-	//		log.Debugf("waiting for previous L2 block to be stored took: %v", time.Since(startWait))
-	//	}
+	if f.pendingL2BlocksToStoreWG.Count() > 0 {
+		startWait := time.Now()
+		f.pendingL2BlocksToStoreWG.Wait()
+		log.Debugf("waiting for previous L2 block to be stored took: %v", time.Since(startWait))
+	}
 	f.addPendingL2BlockToStore(ctx, l2Block)
 
 	// metrics
@@ -718,6 +716,7 @@ func (f *finalizer) executeNewWIPL2Block(ctx context.Context) (*state.ProcessBat
 		Transactions:              f.stateIntf.BuildChangeL2Block(f.wipL2Block.deltaTimestamp, f.wipL2Block.getL1InfoTreeIndex()),
 		L1InfoTreeData_V2:         map[uint32]state.L1DataV2{},
 	}
+	log.Infof("execute new wip L2 block [%d], batch: %d, deltaTimestamp: %d, timestamp: %d, l1InfoTreeIndex: %d, l1InfoTreeIndexChanged: %v")
 
 	batchRequest.L1InfoTreeData_V2[f.wipL2Block.l1InfoTreeExitRoot.L1InfoTreeIndex] = state.L1DataV2{
 		GlobalExitRoot: f.wipL2Block.l1InfoTreeExitRoot.GlobalExitRoot.GlobalExitRoot,
