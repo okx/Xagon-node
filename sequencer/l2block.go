@@ -165,8 +165,12 @@ func (f *finalizer) storePendingL2Blocks(ctx context.Context) {
 				// Channel is closed
 				return
 			}
+			log.Infof("giskook storing L2 block %d [%d]", l2Block.batchResponse.BlockResponses[0].BlockNumber, l2Block.trackingNum)
 
-			err := f.storeL2Block(ctx, l2Block)
+			var err error
+			if l2Block.trackingNum != 30 {
+				err = f.storeL2Block(ctx, l2Block)
+			}
 
 			if err != nil {
 				// Dump L2Block info
