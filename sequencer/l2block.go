@@ -165,6 +165,7 @@ func (f *finalizer) storePendingL2Blocks(ctx context.Context) {
 				// Channel is closed
 				return
 			}
+			time.Sleep(500 * time.Millisecond)
 
 			err := f.storeL2Block(ctx, l2Block)
 
