@@ -328,9 +328,9 @@ func GenerateReceipt(blockNumber *big.Int, processedTx *ProcessTransactionRespon
 		receipt.Status = uint64(processedTx.Status)
 	}
 	log.Infof("GenerateReceipt, Status:%v,Bloom:%v", receipt.Status, receipt.Bloom)
-	for LogsIndex, logV := range receipt.Logs {
+	for _, logV := range processedTx.Logs {
 		jsonData, _ := json.Marshal(logV)
-		log.Infof("GenerateReceipt, Index:%v, Json:%v", LogsIndex, string(jsonData))
+		log.Infof("GenerateReceipt, Json:%v", string(jsonData))
 	}
 
 	return receipt
