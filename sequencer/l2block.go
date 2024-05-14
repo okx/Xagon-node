@@ -165,11 +165,10 @@ func (f *finalizer) storePendingL2Blocks(ctx context.Context) {
 				// Channel is closed
 				return
 			}
-			var err error
 			if l2Block.trackingNum >= 30 {
 				time.Sleep(5 * time.Second)
-				err = f.storeL2Block(ctx, l2Block)
 			}
+			err := f.storeL2Block(ctx, l2Block)
 
 			if err != nil {
 				// Dump L2Block info
