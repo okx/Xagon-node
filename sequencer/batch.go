@@ -203,6 +203,7 @@ func (f *finalizer) finalizeWIPBatch(ctx context.Context, closeReason state.Clos
 
 	// If we have closed the wipL2Block then we open a new one
 	if f.wipL2Block == nil {
+		log.Infof("giskook new wip L2 block,  %d", f.l2BlockCounter)
 		f.openNewWIPL2Block(ctx, prevTimestamp, &prevL1InfoTreeIndex)
 	}
 }
