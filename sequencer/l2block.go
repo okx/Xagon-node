@@ -119,6 +119,7 @@ func (f *finalizer) processPendingL2Blocks(ctx context.Context) {
 			}
 
 			time.Sleep(5 * time.Second)
+			log.Infof("giskook processing L2 block [%d], batch: %d", l2Block.trackingNum, l2Block.batch.batchNumber)
 			err := f.processL2Block(ctx, l2Block)
 
 			if err != nil {
