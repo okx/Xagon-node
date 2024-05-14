@@ -165,9 +165,6 @@ func (f *finalizer) storePendingL2Blocks(ctx context.Context) {
 				// Channel is closed
 				return
 			}
-			if l2Block.trackingNum >= 30 {
-				time.Sleep(5 * time.Second)
-			}
 			err := f.storeL2Block(ctx, l2Block)
 
 			if err != nil {
@@ -267,11 +264,11 @@ func (f *finalizer) processL2Block(ctx context.Context, l2Block *L2Block) error 
 
 	f.updateFlushIDs(batchResponse.FlushID, batchResponse.StoredFlushID)
 
-	if f.pendingL2BlocksToStoreWG.Count() > 0 {
-		startWait := time.Now()
-		f.pendingL2BlocksToStoreWG.Wait()
-		log.Debugf("waiting for previous L2 block to be stored took: %v", time.Since(startWait))
-	}
+	//	if f.pendingL2BlocksToStoreWG.Count() > 0 {
+	//		startWait := time.Now()
+	//		f.pendingL2BlocksToStoreWG.Wait()
+	//		log.Debugf("waiting for previous L2 block to be stored took: %v", time.Since(startWait))
+	//	}
 	f.addPendingL2BlockToStore(ctx, l2Block)
 
 	// metrics
