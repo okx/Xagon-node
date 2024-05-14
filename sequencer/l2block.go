@@ -165,7 +165,8 @@ func (f *finalizer) storePendingL2Blocks(ctx context.Context) {
 				// Channel is closed
 				return
 			}
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(1 * time.Second)
+			log.Infof("giskook storing L2 block")
 
 			err := f.storeL2Block(ctx, l2Block)
 
