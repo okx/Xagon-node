@@ -195,7 +195,7 @@ func (f *finalizer) finalizeWIPBatch(ctx context.Context, closeReason state.Clos
 		f.setWIPL2BlockCloseReason(getReasonFromBatch(closeReason))
 		var skip bool
 		if f.wipL2Block.trackingNum >= 20 {
-			// skip = true
+			skip = true
 			log.Infof("giskook skip---,  %d", f.wipL2Block.trackingNum)
 		}
 		f.closeWIPL2Block(ctx, skip)
