@@ -525,6 +525,7 @@ func (f *finalizer) finalizeWIPL2Block(ctx context.Context) {
 
 	f.setWIPL2BlockCloseReason(BlockMaxDeltaTimestamp)
 	f.closeWIPL2Block(ctx)
+	f.waitL2BlocksProcessed()
 
 	f.openNewWIPL2Block(ctx, prevTimestamp, &prevL1InfoTreeIndex)
 }
