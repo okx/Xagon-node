@@ -80,6 +80,7 @@ func (f *finalizer) addPendingL2BlockToProcess(ctx context.Context, l2Block *L2B
 	case <-ctx.Done():
 		// If context is cancelled before we can send to the channel, we must decrement the WaitGroup count and
 		// delete the pending TxToStore added in the worker
+		log.Infof("context cancelled, deleting pending L2 block [%d]", l2Block.trackingNum)
 		f.pendingL2BlocksToProcessWG.Done()
 	}
 }
@@ -114,6 +115,7 @@ func (f *finalizer) processPendingL2Blocks(ctx context.Context) {
 
 			// if l2BlockReorg we need to "flush" the channel to discard pending L2Blocks
 			if f.l2BlockReorg.Load() {
+				log.Infof("discarding pending L2 block [%d] due to reorg", l2Block.trackingNum)
 				f.pendingL2BlocksToProcessWG.Done()
 				continue
 			}
