@@ -18,6 +18,5 @@ func (f *finalizer) waitL2BlocksProcessed() {
 		f.pendingL2BlocksToProcessWG.Wait()
 		waitTime := time.Since(startWait)
 		log.Debugf("waiting for previous L2 block to be processed took: %v", waitTime)
-		f.wipL2Block.metrics.waitl2BlockTime = waitTime
 	}
 }
