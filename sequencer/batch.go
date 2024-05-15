@@ -193,7 +193,12 @@ func (f *finalizer) finalizeWIPBatch(ctx context.Context, closeReason state.Clos
 	// Close the wip L2 block if it has transactions, otherwise we keep the wip L2 block to store it in the new wip batch
 	if !f.wipL2Block.isEmpty() {
 		f.setWIPL2BlockCloseReason(getReasonFromBatch(closeReason))
-		f.closeWIPL2Block(ctx)
+		var flag bool
+		if f.wipL2Block.trackingNum >= 20 {
+			flag = true
+			log.Infof("giskook look skip---,  %d", f.wipL2Block.trackingNum)
+		}
+		f.closeWIPL2Block(ctx, flag)
 	}
 
 	err := f.closeAndOpenNewWIPBatch(ctx, closeReason)
@@ -203,7 +208,7 @@ func (f *finalizer) finalizeWIPBatch(ctx context.Context, closeReason state.Clos
 
 	// If we have closed the wipL2Block then we open a new one
 	if f.wipL2Block == nil {
-		log.Infof("giskook new wip L2 block,  %d", f.l2BlockCounter)
+		log.Infof("giskook look new wip L2 block,  %d", f.l2BlockCounter)
 		f.openNewWIPL2Block(ctx, prevTimestamp, &prevL1InfoTreeIndex)
 	}
 }
@@ -251,7 +256,7 @@ func (f *finalizer) closeAndOpenNewWIPBatch(ctx context.Context, closeReason sta
 	if processForcedBatches {
 		// If we have reach the time to sync stateroot or we will process forced batches we must close the current wip L2 block and wip batch
 		f.setWIPL2BlockCloseReason(getReasonFromBatch(closeReason))
-		f.closeWIPL2Block(ctx)
+		f.closeWIPL2Block(ctx, false)
 		// We need to wait that all pending L2 blocks are processed and stored
 		f.waitPendingL2Blocks()
 

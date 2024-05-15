@@ -118,10 +118,7 @@ func (f *finalizer) processPendingL2Blocks(ctx context.Context) {
 				continue
 			}
 
-			var err error
-			if l2Block.trackingNum != 20 {
-				err = f.processL2Block(ctx, l2Block)
-			}
+			err := f.processL2Block(ctx, l2Block)
 			log.Infof("giskook processing L2 block [%d], batch: %d", l2Block.trackingNum, l2Block.batch.batchNumber)
 
 			if err != nil {
@@ -527,13 +524,13 @@ func (f *finalizer) finalizeWIPL2Block(ctx context.Context) {
 	prevL1InfoTreeIndex := f.wipL2Block.l1InfoTreeExitRoot.L1InfoTreeIndex
 
 	f.setWIPL2BlockCloseReason(BlockMaxDeltaTimestamp)
-	f.closeWIPL2Block(ctx)
+	f.closeWIPL2Block(ctx, false)
 
 	f.openNewWIPL2Block(ctx, prevTimestamp, &prevL1InfoTreeIndex)
 }
 
 // closeWIPL2Block closes the wip L2 block
-func (f *finalizer) closeWIPL2Block(ctx context.Context) {
+func (f *finalizer) closeWIPL2Block(ctx context.Context, flag bool) {
 	log.Debugf("closing wip L2 block [%d]", f.wipL2Block.trackingNum)
 	start := time.Now()
 	defer func() {
@@ -560,7 +557,9 @@ func (f *finalizer) closeWIPL2Block(ctx context.Context) {
 			f.wipL2Block.metrics.waitl2BlockTime = waitTime
 		}
 
-		f.addPendingL2BlockToProcess(ctx, f.wipL2Block)
+		if flag {
+			f.addPendingL2BlockToProcess(ctx, f.wipL2Block)
+		}
 
 		f.wipL2Block.metrics.close(f.wipL2Block.createdAt, int64(len(f.wipL2Block.transactions)), f.cfg.SequentialProcessL2Block)
 
