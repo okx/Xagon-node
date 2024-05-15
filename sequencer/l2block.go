@@ -726,6 +726,8 @@ func (f *finalizer) executeNewWIPL2Block(ctx context.Context) (*state.ProcessBat
 		MinTimestamp:   uint64(f.wipL2Block.l1InfoTreeExitRoot.GlobalExitRoot.Timestamp.Unix()),
 	}
 
+	log.Infof("executing new wip L2 block batch [%d], old state root: %s",
+		batchRequest.BatchNumber, batchRequest.OldStateRoot.String())
 	executorTime := time.Now()
 	batchResponse, contextId, err := f.stateIntf.ProcessBatchV2(ctx, batchRequest, false)
 	f.wipL2Block.metrics.newL2BlockTimes.executor = time.Since(executorTime)
