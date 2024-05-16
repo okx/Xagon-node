@@ -405,6 +405,7 @@ func (f *finalizer) finalizeBatches(ctx context.Context) {
 
 		// If we have txs pending to process but none of them fits into the wip batch, we close the wip batch and open a new one
 		if err == ErrNoFittingTransaction {
+			log.Infof("no transactions fit into the current batch, closing the current batch")
 			f.finalizeWIPBatch(ctx, state.NoTxFitsClosingReason)
 			continue
 		}
