@@ -19,6 +19,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/0xPolygonHermez/zkevm-node/sequencesender"
 	"github.com/0xPolygonHermez/zkevm-node/state"
+	openrpc "github.com/celestiaorg/celestia-openrpc"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/crypto"
 )
@@ -129,9 +130,9 @@ func newDataAvailability(c config.Config, st *state.State, etherman *etherman.Cl
 	case string(dataavailability.Celestia):
 		// TODO load Celestia config
 		conf := celestia.Config{
-			GasPrice:    100,
-			Rpc:         "",
-			NamespaceId: "",
+			GasPrice:    float64(openrpc.DefaultGasPrice()),
+			Rpc:         "http://rpc-celestia-mocha.architectnodes.com",
+			NamespaceId: "NamespaceId",
 			AuthToken:   "",
 		}
 		daBackend, err = celestia.New(conf)
