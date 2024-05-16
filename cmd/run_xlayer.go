@@ -3,6 +3,7 @@ package main
 import (
 	"crypto/ecdsa"
 	"fmt"
+	"github.com/0xPolygonHermez/zkevm-node/dataavailability/celestia"
 
 	dataCommitteeClient "github.com/0xPolygon/cdk-data-availability/client"
 	"github.com/0xPolygonHermez/zkevm-node/config"
@@ -95,6 +96,9 @@ func newDataAvailability(c config.Config, st *state.State, etherman *etherman.Cl
 	if err != nil {
 		return nil, fmt.Errorf("error getting data availability protocol name: %v", err)
 	}
+	// TODO hard code
+	daProtocolName = string(dataavailability.Celestia)
+
 	var daBackend dataavailability.DABackender
 	switch daProtocolName {
 	case string(dataavailability.DataAvailabilityCommittee):
@@ -119,6 +123,18 @@ func newDataAvailability(c config.Config, st *state.State, etherman *etherman.Cl
 			pk,
 			dataCommitteeClient.NewFactory(),
 		)
+		if err != nil {
+			return nil, err
+		}
+	case string(dataavailability.Celestia):
+		// TODO load Celestia config
+		conf := celestia.Config{
+			GasPrice:    100,
+			Rpc:         "",
+			NamespaceId: "",
+			AuthToken:   "",
+		}
+		daBackend, err = celestia.New(conf)
 		if err != nil {
 			return nil, err
 		}
