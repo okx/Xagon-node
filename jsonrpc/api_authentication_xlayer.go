@@ -72,20 +72,7 @@ func apiAuthHandlerFunc(handlerFunc http.HandlerFunc) http.HandlerFunc {
 }
 
 func apiAuthHandler(next http.Handler) http.Handler {
-	middle := func(w http.ResponseWriter, r *http.Request) {
-		if al.enable {
-			base := path.Base(r.URL.Path)
-			if base == "" || !check(base) {
-				err := handleNoAuthErr(w)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-				}
-				return
-			}
-		}
-		next.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(middle)
+	return apiAuthHandlerFunc(next.ServeHTTP)
 }
 
 func handleNoAuthErr(w http.ResponseWriter) error {
