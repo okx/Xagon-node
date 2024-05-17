@@ -825,6 +825,37 @@
 					"maxItems": 20,
 					"minItems": 20,
 					"description": "BridgeAddress is the address of the bridge contract"
+				},
+				"ApiAuthentication": {
+					"properties": {
+						"Enabled": {
+							"type": "boolean",
+							"description": "Enabled defines if the api authentication is enabled",
+							"default": false
+						},
+						"ApiKeys": {
+							"items": {
+								"properties": {
+									"Project": {
+										"type": "string",
+										"description": "Name defines the name of the key"
+									},
+									"Key": {
+										"type": "string",
+										"description": "Key defines the key"
+									}
+								},
+								"additionalProperties": false,
+								"type": "object",
+								"description": "KeyItem is the api key item"
+							},
+							"type": "array",
+							"description": "ApiKeys defines the api keys"
+						}
+					},
+					"additionalProperties": false,
+					"type": "object",
+					"description": "ApiAuthentication defines the authentication configuration for the API"
 				}
 			},
 			"additionalProperties": false,
