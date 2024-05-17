@@ -193,12 +193,14 @@ func (f *finalizer) processL2Block(ctx context.Context, l2Block *L2Block) error 
 
 	if f.pipBatch == nil {
 		f.pipBatch = l2Block.batch
+		log.Infof("pip batch is nil processing L2 block [%d], batch: %s", l2Block.trackingNum, l2Block.batch.finalStateRoot)
 	} else if f.pipBatch.batchNumber != l2Block.batch.batchNumber {
 		// We have received the first L2 block of the next batch to process
 		// We need to "propagate" finalStateRoot to the new batch as initalStateRoot/finalStateRoot and set it as the current pipBatch
 		l2Block.batch.initialStateRoot = f.pipBatch.finalStateRoot
 		l2Block.batch.finalStateRoot = f.pipBatch.finalStateRoot
 		f.pipBatch = l2Block.batch
+		log.Infof("pip batch is not nil processing L2 block[%d], batch: %s", l2Block.trackingNum, l2Block.batch.finalStateRoot)
 	}
 
 	initialStateRoot := f.pipBatch.finalStateRoot
@@ -687,6 +689,7 @@ func (f *finalizer) openNewWIPL2Block(ctx context.Context, prevTimestamp uint64,
 	// If reserved WIP L2 block resources don't fit in the remaining batch resources (or we got an overflow when trying to subtract the used resources)
 	// we close the WIP batch and we create a new one
 	if !fits || subOverflow {
+		log.Infof("overflow new wip L2 block [%d], !fits: %v, subOverlfow: %v", f.wipL2Block.trackingNum, !fits, subOverflow)
 		err := f.closeAndOpenNewWIPBatch(ctx, state.ResourceExhaustedClosingReason)
 		if err != nil {
 			f.Halt(ctx, fmt.Errorf("failed to create new wip batch [%d], error: %v", f.wipL2Block.trackingNum, err), true)
