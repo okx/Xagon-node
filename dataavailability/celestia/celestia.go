@@ -96,14 +96,7 @@ func (c *CelestiaBackend) PostSequence(ctx context.Context, batchesData [][]byte
 		aggregatedBatch = append(aggregatedBatch, batchData...)
 	}
 
-	// TODO tmp
-	// let's post to 0xDEADBEEF namespace
-	namespace, err := share.NewBlobNamespaceV0([]byte{0xDE, 0xAD, 0xBE, 0xEF})
-	if err != nil {
-		return nil, err
-	}
-
-	dataBlob, err := blob.NewBlobV0(namespace, aggregatedBatch)
+	dataBlob, err := blob.NewBlobV0(c.Namespace, aggregatedBatch)
 	//dataBlob, err := blob.NewBlobV0(c.Namespace, aggregatedBatch)
 	if err != nil {
 		log.Warn("Error creating blob", "err", err)
