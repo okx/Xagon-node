@@ -135,6 +135,8 @@ DisableAPIs = []
         MaxPrice = 20000000000
         MinPrice = 2000000000
         UpdatePeriod = "10s"
+	[RPC.ApiAuthentication]
+		Enabled = false
 
 [Synchronizer]
 SyncInterval = "1s"
