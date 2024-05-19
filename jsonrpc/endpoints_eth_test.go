@@ -503,7 +503,7 @@ func TestCall(t *testing.T) {
 				latest,
 			},
 			expectedResult: nil,
-			expectedError:  types.NewRPCError(types.RevertedErrorCode, "execution reverted"),
+			expectedError:  types.NewRPCError(types.DefaultErrorCode, "execution reverted"),
 			setupMocks: func(c Config, m *mocksWrapper, testCase *testCase) {
 				nonce := uint64(7)
 				m.DbTx.On("Rollback", context.Background()).Return(nil).Once()

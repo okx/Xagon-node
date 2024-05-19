@@ -19,9 +19,24 @@ var (
 	requestWsMethodDurationName = wsRequestPrefix + "method_duration"
 	requestMethodLabelName      = "method"
 
-	start         = 0.1
-	width         = 0.1
-	count         = 10
+	start = 0.1
+	width = 0.1
+	count = 10
+
+	lastDynamicGasPriceName = prefix + "dynamic_gas_price"
+	lastRawGasPriceName     = prefix + "raw_gas_price"
+
+	gauges = []prometheus.GaugeOpts{
+		{
+			Name: lastDynamicGasPriceName,
+			Help: "[JSONRPC] dynamic gas price",
+		},
+		{
+			Name: lastRawGasPriceName,
+			Help: "[JSONRPC] raw gas price",
+		},
+	}
+
 	histogramVecs = []metrics.HistogramVecOpts{
 		{
 			HistogramOpts: prometheus.HistogramOpts{
@@ -116,4 +131,14 @@ func RequestInnerTxCachedCount() {
 // RequestInnerTxAddErrorCount increments the inner tx add error counter vector by one.
 func RequestInnerTxAddErrorCount() {
 	metrics.CounterVecInc(requestInnerTxAddErrorCount, "add_error")
+}
+
+// DynamicGasPrice sets the gauge vector to the given batch number and dynamic gas price.
+func DynamicGasPrice(dgp int64) {
+	metrics.GaugeSet(lastDynamicGasPriceName, float64(dgp))
+}
+
+// RawGasPrice sets the gauge vector to the given batch number and raw gas price.
+func RawGasPrice(gp int64) {
+	metrics.GaugeSet(lastRawGasPriceName, float64(gp))
 }

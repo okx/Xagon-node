@@ -18,10 +18,15 @@ func (s *State) Reset(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) erro
 		log.Error("error resetting L1BlockNumber. Error: ", err)
 		return err
 	}
+	s.ResetL1InfoTree()
+	return nil
+}
+
+// ResetL1InfoTree resets the L1InfoTree
+func (s *State) ResetL1InfoTree() {
 	// Discard L1InfoTree cache
 	// We can't rebuild cache, because we are inside a transaction, so we dont known
 	// is going to be a commit or a rollback. So is going to be rebuild on the next
 	// request that needs it.
 	s.l1InfoTree = nil
-	return nil
 }

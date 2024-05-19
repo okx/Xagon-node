@@ -36,13 +36,16 @@ type CheckL2BlockHash struct {
 func NewCheckL2BlockHash(state stateGetL2Block,
 	trustedClient trustedRPCGetL2Block,
 	initialL2BlockNumber uint64,
-	modulusBlockNumber uint64) *CheckL2BlockHash {
+	modulusBlockNumber uint64) (*CheckL2BlockHash, error) {
+	if modulusBlockNumber == 0 {
+		return nil, fmt.Errorf("error: modulusBlockNumber is zero")
+	}
 	return &CheckL2BlockHash{
 		state:                 state,
 		trustedClient:         trustedClient,
 		lastL2BlockChecked:    initialL2BlockNumber,
 		modulusL2BlockToCheck: modulusBlockNumber,
-	}
+	}, nil
 }
 
 // CheckL2Block checks the  L2Block hash between the local and the trusted
@@ -74,6 +77,9 @@ func (p *CheckL2BlockHash) GetNextL2BlockToCheck(lastLocalL2BlockNumber, minL2Bl
 		log.Infof("checkL2block: skip check L2block (next to check: %d) currently LastL2BlockNumber: %d", minL2BlockNumberToCheck, lastLocalL2BlockNumber)
 		return false, 0
 	}
+	if l2BlockNumber%p.modulusL2BlockToCheck != 0 {
+		return false, 0
+	}
 	return true, l2BlockNumber
 }
 
@@ -95,7 +101,7 @@ func (p *CheckL2BlockHash) GetL2Blocks(ctx context.Context, blockNumber uint64, 
 	trustedL2Block, err := p.trustedClient.BlockByNumber(ctx, big.NewInt(int64(blockNumber)))
 	if err != nil {
 		log.Errorf("checkL2block: Error getting L2Block %d from the Trusted RPC. err:%s", blockNumber, err.Error())
-		return nil, nil, err
+		return nil, nil, nil
 	}
 	return localL2Block, trustedL2Block, nil
 }

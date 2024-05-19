@@ -45,7 +45,7 @@ func TestPermissionlessJRPC(t *testing.T) {
 
 	nTxsStep1 := 10
 	// Load account with balance on local genesis
-	auth, err := operations.GetAuth("0xde3ca643a52f5543e84ba984c4419ff40dbabd0e483c31c1d09fee8168d68e38", operations.DefaultL2ChainID)
+	auth, err := operations.GetAuth("0x815405dddb0e2a99b12af775fd2929e526704e1d1aea6a0b4e74dc33e2f7fcd2", operations.DefaultL2ChainID)
 	require.NoError(t, err)
 	// Load eth client (permissionless RPC)
 	client, err := ethclient.Dial(operations.PermissionlessL2NetworkURL)

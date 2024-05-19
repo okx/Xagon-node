@@ -42,6 +42,8 @@ type storage interface {
 	GetEarliestProcessedTx(ctx context.Context) (common.Hash, error)
 	AddInnerTx(ctx context.Context, txHash common.Hash, innerTx []byte) error
 	GetInnerTx(ctx context.Context, txHash common.Hash) (string, error)
+	UpdateReadyTxCount(ctx context.Context, count uint64) error
+	GetReadyTxCount(ctx context.Context) (uint64, error)
 }
 
 type stateInterface interface {

@@ -1,6 +1,7 @@
 package sequencer
 
 import (
+	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 )
 
@@ -42,6 +43,7 @@ func (f *finalizer) DSSendL2Block(batchNumber uint64, blockResponse *state.Proce
 			l2Transactions = append(l2Transactions, l2Transaction)
 		}
 
+		log.Infof("[ds-debug] sending l2block %d to datastream channel", blockResponse.BlockNumber)
 		f.dataToStream <- state.DSL2FullBlock{
 			DSL2Block: l2Block,
 			Txs:       l2Transactions,

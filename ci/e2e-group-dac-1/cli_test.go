@@ -35,7 +35,7 @@ func TestSetDataAvailabilityProtocol(t *testing.T) {
 	clientL1, err := ethclient.Dial(operations.DefaultL1NetworkURL)
 	require.NoError(t, err)
 
-	auth, err := operations.GetAuth("0xde3ca643a52f5543e84ba984c4419ff40dbabd0e483c31c1d09fee8168d68e38", operations.DefaultL1ChainID)
+	auth, err := operations.GetAuth("0x815405dddb0e2a99b12af775fd2929e526704e1d1aea6a0b4e74dc33e2f7fcd2", operations.DefaultL1ChainID)
 	require.NoError(t, err)
 
 	// New DAC Setup

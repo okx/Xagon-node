@@ -8,6 +8,7 @@ import (
 	"time"
 
 	zktypes "github.com/0xPolygonHermez/zkevm-node/config/types"
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/core/types"
 )
@@ -156,25 +157,29 @@ func (e *EthEndpoints) calcDynamicGP(ctx context.Context) {
 		return
 	}
 
-	if !isCongested {
-		log.Debug("there is no congestion for L2")
-		gasPrices, err := e.pool.GetGasPrices(ctx)
-		if err != nil {
-			log.Errorf("failed to get raw gas prices when it is not congested: ", err)
-			return
-		}
-
-		rawGP := new(big.Int).SetUint64(gasPrices.L2GasPrice)
-		e.dgpMan.cacheLock.Lock()
-		e.dgpMan.lastPrice = getAvgPrice(rawGP, price)
-		e.dgpMan.lastL2BatchNumber = l2BatchNumber
-		e.dgpMan.cacheLock.Unlock()
+	isLastBlockEmpty, err := e.isLastBlockEmpty(ctx)
+	if err != nil {
+		log.Errorf("failed to judge if the last block is empty: ", err)
 		return
+	}
+
+	gasPrices, err := e.pool.GetGasPrices(ctx)
+	if err != nil {
+		log.Errorf("failed to get raw gas prices: ", err)
+		return
+	}
+	metrics.RawGasPrice(int64(gasPrices.L2GasPrice))
+
+	if !isCongested || isLastBlockEmpty {
+		log.Debug("there is no congestion for L2")
+		rawGP := new(big.Int).SetUint64(gasPrices.L2GasPrice)
+		price = getAvgPrice(rawGP, price)
 	}
 
 	e.dgpMan.cacheLock.Lock()
 	e.dgpMan.lastPrice = price
 	e.dgpMan.lastL2BatchNumber = l2BatchNumber
+	metrics.DynamicGasPrice(e.dgpMan.lastPrice.Int64())
 	e.dgpMan.cacheLock.Unlock()
 }
 
@@ -209,11 +214,23 @@ func (e *EthEndpoints) getL2BatchTxsTips(ctx context.Context, l2BlockNumber uint
 }
 
 func (e *EthEndpoints) isCongested(ctx context.Context) (bool, error) {
-	txCount, err := e.pool.CountPendingTransactions(ctx)
+	txCount, err := e.pool.GetReadyTxCount(ctx)
 	if err != nil {
 		return false, err
 	}
+
 	if txCount >= e.cfg.DynamicGP.CongestionTxThreshold {
+		return true, nil
+	}
+	return false, nil
+}
+
+func (e *EthEndpoints) isLastBlockEmpty(ctx context.Context) (bool, error) {
+	block, err := e.state.GetLastL2Block(ctx, nil)
+	if err != nil {
+		return true, err
+	}
+	if len(block.Transactions()) == 0 {
 		return true, nil
 	}
 	return false, nil

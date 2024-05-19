@@ -39,8 +39,8 @@ MaxTxDataBytesSize=100000
 DefaultMinGasPriceAllowed = 1000000000
 MinAllowedGasPriceInterval = "5m"
 PollMinAllowedGasPriceInterval = "15s"
-AccountQueue = 64
-GlobalQueue = 1024
+AccountQueue = 0
+GlobalQueue = 0
 	[Pool.EffectiveGasPrice]
 		Enabled = false
 		L1GasPriceFactor = 0.25
@@ -119,9 +119,10 @@ StateConsistencyCheckInterval = "5s"
 		BatchMaxDeltaTimestamp = "20s"
 		L2BlockMaxDeltaTimestamp = "4s"
 		ResourceExhaustedMarginPct = 10
+		StateRootSyncInterval = "60s"
 		HaltOnBatchNumber = 0
 		SequentialBatchSanityCheck = false
-		SequentialProcessL2Block = true
+		SequentialProcessL2Block = false
 	[Sequencer.Finalizer.Metrics]
 		Interval = "60m"
 		EnableLog = true		

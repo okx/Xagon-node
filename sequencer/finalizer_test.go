@@ -941,21 +941,8 @@ func TestNewFinalizer(t *testing.T) {
 	}
 }*/
 
-// TestFinalizer_closeBatch tests the closeBatch method.
-func TestFinalizer_closeWIPBatch(t *testing.T) {
-	// arrange
-	f = setupFinalizer(true)
-	// set wip batch has at least one L2 block as it can not be closed empty
-	f.wipBatch.countOfL2Blocks++
-
-	usedResources := getUsedBatchResources(f.batchConstraints, f.wipBatch.imRemainingResources)
-
-	receipt := state.ProcessingReceipt{
-		BatchNumber:    f.wipBatch.batchNumber,
-		BatchResources: usedResources,
-		ClosingReason:  f.wipBatch.closingReason,
-	}
-
+// TestFinalizer_finalizeSIPBatch tests the finalizeSIPBatch method.
+func TestFinalizer_finalizeSIPBatch(t *testing.T) {
 	managerErr := fmt.Errorf("some err")
 
 	testCases := []struct {
@@ -979,22 +966,39 @@ func TestFinalizer_closeWIPBatch(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			// arrange
-			stateMock.Mock.On("CloseWIPBatch", ctx, receipt, mock.Anything).Return(tc.managerErr).Once()
+			f = setupFinalizer(true)
+			// set wip batch has at least one L2 block as it can not be closed empty
+			f.sipBatch.countOfL2Blocks++
+
+			usedResources := getUsedBatchResources(f.batchConstraints, f.wipBatch.imRemainingResources)
+
+			receipt := state.ProcessingReceipt{
+				BatchNumber:    f.wipBatch.batchNumber,
+				BatchResources: usedResources,
+				ClosingReason:  f.wipBatch.closingReason,
+			}
+
+			// arrange
 			stateMock.On("BeginStateTransaction", ctx).Return(dbTxMock, nilErr).Once()
+			stateMock.On("CloseWIPBatch", ctx, receipt, mock.Anything).Return(tc.managerErr).Once()
+
 			if tc.managerErr == nil {
+				stateMock.On("GetBatchByNumber", ctx, f.sipBatch.batchNumber, nil).Return(&state.Batch{BatchNumber: f.sipBatch.batchNumber}, nilErr).Once()
+				stateMock.On("GetForkIDByBatchNumber", f.wipBatch.batchNumber).Return(uint64(9)).Once()
+				stateMock.On("GetL1InfoTreeDataFromBatchL2Data", ctx, mock.Anything, nil).Return(map[uint32]state.L1DataV2{}, state.ZeroHash, state.ZeroHash, nil)
+				stateMock.On("ProcessBatchV2", ctx, mock.Anything, false).Return(&state.ProcessBatchResponse{}, "", nil)
+				stateMock.On("UpdateBatchAsChecked", ctx, f.sipBatch.batchNumber, nil).Return(nil)
 				dbTxMock.On("Commit", ctx).Return(nilErr).Once()
 			} else {
 				dbTxMock.On("Rollback", ctx).Return(nilErr).Once()
 			}
 
 			// act
-			err := f.closeWIPBatch(ctx)
+			err := f.finalizeSIPBatch(ctx)
 
 			// assert
 			if tc.expectedErr != nil {
-				assert.Error(t, err)
-				assert.EqualError(t, err, tc.expectedErr.Error())
-				assert.ErrorIs(t, err, tc.managerErr)
+				assert.ErrorContains(t, err, tc.expectedErr.Error())
 			} else {
 				assert.NoError(t, err)
 			}
@@ -1745,7 +1749,7 @@ func TestFinalizer_updateWorkerAfterSuccessfulProcessing(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// arrange
 			finalizerInstance := setupFinalizer(false)
-			workerMock.On("DeleteTx", tc.txTracker.Hash, tc.txTracker.From).Times(tc.expectedDeleteTxCount)
+			workerMock.On("MoveTxPendingToStore", tc.txTracker.Hash, tc.txTracker.From).Times(tc.expectedDeleteTxCount)
 			txsToDelete := make([]*TxTracker, 0, len(tc.processBatchResponse.ReadWriteAddresses))
 			for _, infoReadWrite := range tc.processBatchResponse.ReadWriteAddresses {
 				txsToDelete = append(txsToDelete, &TxTracker{
@@ -2037,7 +2041,7 @@ func TestFinalizer_isBatchAlmostFull(t *testing.T) {
 		t.Run(tc.name, func(t *testing.T) {
 			// arrange
 			f = setupFinalizer(true)
-			maxRemainingResource := getMaxRemainingResources(bc)
+			maxRemainingResource := getMaxBatchResources(bc)
 			f.wipBatch.imRemainingResources = tc.modifyResourceFunc(maxRemainingResource)
 
 			// act
@@ -2098,7 +2102,7 @@ func TestFinalizer_getConstraintThresholdUint32(t *testing.T) {
 
 func TestFinalizer_getRemainingResources(t *testing.T) {
 	// act
-	remainingResources := getMaxRemainingResources(bc)
+	remainingResources := getMaxBatchResources(bc)
 
 	// assert
 	assert.Equal(t, remainingResources.ZKCounters.GasUsed, bc.MaxCumulativeGasUsed)
@@ -2196,7 +2200,7 @@ func setupFinalizer(withWipBatch bool) *finalizer {
 			initialStateRoot:     oldHash,
 			imStateRoot:          newHash,
 			timestamp:            now(),
-			imRemainingResources: getMaxRemainingResources(bc),
+			imRemainingResources: getMaxBatchResources(bc),
 			closingReason:        state.EmptyClosingReason,
 		}
 	}
@@ -2213,6 +2217,7 @@ func setupFinalizer(withWipBatch bool) *finalizer {
 		poolIntf:                   poolMock,
 		stateIntf:                  stateMock,
 		wipBatch:                   wipBatch,
+		sipBatch:                   wipBatch,
 		batchConstraints:           bc,
 		nextForcedBatches:          make([]state.ForcedBatch, 0),
 		nextForcedBatchDeadline:    0,
@@ -2220,9 +2225,9 @@ func setupFinalizer(withWipBatch bool) *finalizer {
 		effectiveGasPrice:          pool.NewEffectiveGasPrice(poolCfg.EffectiveGasPrice),
 		eventLog:                   eventLog,
 		pendingL2BlocksToProcess:   make(chan *L2Block, pendingL2BlocksBufferSize),
-		pendingL2BlocksToProcessWG: new(sync.WaitGroup),
+		pendingL2BlocksToProcessWG: new(WaitGroupCount),
 		pendingL2BlocksToStore:     make(chan *L2Block, pendingL2BlocksBufferSize),
-		pendingL2BlocksToStoreWG:   new(sync.WaitGroup),
+		pendingL2BlocksToStoreWG:   new(WaitGroupCount),
 		storedFlushID:              0,
 		storedFlushIDCond:          sync.NewCond(new(sync.Mutex)),
 		proverID:                   "",

@@ -29,7 +29,7 @@ type Sequencer struct {
 	pool      txPool
 	stateIntf stateInterface
 	eventLog  *event.EventLog
-	etherman  etherman
+	etherman  ethermanInterface
 	worker    *Worker
 	finalizer *finalizer
 
@@ -44,7 +44,7 @@ type Sequencer struct {
 }
 
 // New init sequencer
-func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txPool, stateIntf stateInterface, etherman etherman, eventLog *event.EventLog) (*Sequencer, error) {
+func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txPool, stateIntf stateInterface, etherman ethermanInterface, eventLog *event.EventLog) (*Sequencer, error) {
 	addr, err := etherman.TrustedSequencer()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get trusted sequencer address, error: %v", err)
@@ -78,7 +78,7 @@ func (s *Sequencer) Start(ctx context.Context) {
 
 	err := s.pool.MarkWIPTxsAsPending(ctx)
 	if err != nil {
-		log.Fatalf("failed to mark WIP txs as pending, error: %v", err)
+		log.Fatalf("failed to mark wip txs as pending, error: %v", err)
 	}
 
 	// Start stream server if enabled
@@ -96,10 +96,6 @@ func (s *Sequencer) Start(ctx context.Context) {
 		s.updateDataStreamerFile(ctx, s.cfg.StreamServer.ChainID)
 	}
 
-	go s.loadFromPool(ctx)
-
-	go s.countPendingTx()
-
 	if s.streamServer != nil {
 		go s.sendDataToStreamer(s.cfg.StreamServer.ChainID)
 	}
@@ -109,11 +105,17 @@ func (s *Sequencer) Start(ctx context.Context) {
 	s.finalizer = newFinalizer(s.cfg.Finalizer, s.poolCfg, s.worker, s.pool, s.stateIntf, s.etherman, s.address, s.isSynced, s.batchCfg.Constraints, s.eventLog, s.streamServer, s.workerReadyTxsCond, s.dataToStream)
 	go s.finalizer.Start(ctx)
 
+	go s.loadFromPool(ctx)
+
 	go s.deleteOldPoolTxs(ctx)
 
 	go s.expireOldWorkerTxs(ctx)
 
 	go s.checkStateInconsistency(ctx)
+
+	// X Layer handler
+	go s.countPendingTx()
+	go s.countReadyTx()
 
 	// Wait until context is done
 	<-ctx.Done()
@@ -152,6 +154,11 @@ func (s *Sequencer) updateDataStreamerFile(ctx context.Context, chainID uint64) 
 func (s *Sequencer) deleteOldPoolTxs(ctx context.Context) {
 	for {
 		time.Sleep(s.cfg.DeletePoolTxsCheckInterval.Duration)
+
+		if s.finalizer.haltFinalizer.Load() {
+			return
+		}
+
 		log.Infof("trying to get txs to delete from the pool...")
 		earliestTxHash, err := s.pool.GetEarliestProcessedTx(ctx)
 		if err != nil {
@@ -186,6 +193,11 @@ func (s *Sequencer) deleteOldPoolTxs(ctx context.Context) {
 func (s *Sequencer) expireOldWorkerTxs(ctx context.Context) {
 	for {
 		time.Sleep(s.cfg.TxLifetimeCheckInterval.Duration)
+
+		if s.finalizer.haltFinalizer.Load() {
+			return
+		}
+
 		txTrackers := s.worker.ExpireTransactions(s.cfg.TxLifetimeMax.Duration)
 		failedReason := ErrExpiredTransaction.Error()
 		for _, txTracker := range txTrackers {
@@ -200,6 +212,9 @@ func (s *Sequencer) expireOldWorkerTxs(ctx context.Context) {
 // loadFromPool keeps loading transactions from the pool
 func (s *Sequencer) loadFromPool(ctx context.Context) {
 	for {
+		if s.finalizer.haltFinalizer.Load() {
+			return
+		}
 		poolTransactions, err := s.pool.GetNonWIPPendingTxs(ctx, getQueryPendingTxsLimit(s.cfg.QueryPendingTxsLimit))
 		if err != nil && err != pool.ErrNotFound {
 			log.Errorf("error loading txs from pool, error: %v", err)
@@ -226,9 +241,12 @@ func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) erro
 
 	addrs := getPackBatchSpacialList(s.cfg.PackBatchSpacialList)
 	if addrs[txTracker.FromStr] {
+		txTracker.IsClaimTx = true
 		_, l2gp := s.pool.GetL1AndL2GasPrice()
-		newGp := uint64(float64(l2gp) * getGasPriceMultiple(s.cfg.GasPriceMultiple))
-		txTracker.GasPrice = new(big.Int).SetUint64(newGp)
+		defaultGp := new(big.Int).SetUint64(l2gp)
+		baseGp := s.worker.getBaseClaimGp(defaultGp)
+		copyBaseGp := new(big.Int).Set(baseGp)
+		txTracker.GasPrice = copyBaseGp.Mul(copyBaseGp, new(big.Int).SetUint64(uint64(getGasPriceMultiple(s.cfg.GasPriceMultiple))))
 	}
 
 	replacedTx, dropReason := s.worker.AddTxTracker(ctx, txTracker)
@@ -269,6 +287,8 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 			case state.DSL2FullBlock:
 				l2Block := data
 
+				//TODO: remove this log
+				log.Infof("[ds-debug] start atomic op for l2block %d", l2Block.L2BlockNumber)
 				err = s.streamServer.StartAtomicOp()
 				if err != nil {
 					log.Errorf("failed to start atomic op for l2block %d, error: %v ", l2Block.L2BlockNumber, err)
@@ -280,6 +300,8 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 					Value: l2Block.L2BlockNumber,
 				}
 
+				//TODO: remove this log
+				log.Infof("[ds-debug] add stream bookmark for l2block %d", l2Block.L2BlockNumber)
 				_, err = s.streamServer.AddStreamBookmark(bookMark.Encode())
 				if err != nil {
 					log.Errorf("failed to add stream bookmark for l2block %d, error: %v", l2Block.L2BlockNumber, err)
@@ -294,6 +316,8 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 						Value: l2Block.L2BlockNumber - 1,
 					}
 
+					//TODO: remove this log
+					log.Infof("[ds-debug] get previous l2block %d", l2Block.L2BlockNumber-1)
 					previousL2BlockEntry, err := s.streamServer.GetFirstEventAfterBookmark(bookMark.Encode())
 					if err != nil {
 						log.Errorf("failed to get previous l2block %d, error: %v", l2Block.L2BlockNumber-1, err)
@@ -316,12 +340,16 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 					ChainID:         uint32(chainID),
 				}
 
+				//TODO: remove this log
+				log.Infof("[ds-debug] add l2blockStart stream entry for l2block %d", l2Block.L2BlockNumber)
 				_, err = s.streamServer.AddStreamEntry(state.EntryTypeL2BlockStart, blockStart.Encode())
 				if err != nil {
 					log.Errorf("failed to add stream entry for l2block %d, error: %v", l2Block.L2BlockNumber, err)
 					continue
 				}
 
+				//TODO: remove this log
+				log.Infof("[ds-debug] adding l2tx stream entries for l2block %d", l2Block.L2BlockNumber)
 				for _, l2Transaction := range l2Block.Txs {
 					_, err = s.streamServer.AddStreamEntry(state.EntryTypeL2Tx, l2Transaction.Encode())
 					if err != nil {
@@ -336,17 +364,24 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 					StateRoot:     l2Block.StateRoot,
 				}
 
+				//TODO: remove this log
+				log.Infof("[ds-debug] add l2blockEnd stream entry for l2block %d", l2Block.L2BlockNumber)
 				_, err = s.streamServer.AddStreamEntry(state.EntryTypeL2BlockEnd, blockEnd.Encode())
 				if err != nil {
 					log.Errorf("failed to add stream entry for l2block %d, error: %v", l2Block.L2BlockNumber, err)
 					continue
 				}
 
+				//TODO: remove this log
+				log.Infof("[ds-debug] commit atomic op for l2block %d", l2Block.L2BlockNumber)
 				err = s.streamServer.CommitAtomicOp()
 				if err != nil {
 					log.Errorf("failed to commit atomic op for l2block %d, error: %v ", l2Block.L2BlockNumber, err)
 					continue
 				}
+
+				//TODO: remove this log
+				log.Infof("[ds-debug] l2block %d sent to datastream", l2Block.L2BlockNumber)
 
 			// Stream a bookmark
 			case state.DSBookMark:

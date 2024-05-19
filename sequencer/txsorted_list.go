@@ -58,7 +58,8 @@ func (e *txSortedList) delete(tx *TxTracker) bool {
 
 			if (e.sorted[i].GasPrice.Cmp(tx.GasPrice)) != 0 {
 				// we have a tx with different (lower) GasPrice than the tx we are looking for, therefore we haven't found the tx
-				log.Warnf("error deleting tx %s from txSortedList, not found in the list of txs with same gasPrice: %s", tx.HashStr)
+				log.Warnf("error deleting tx %s from txSortedList %s, not found in the list of txs with same gasPrice: %s - %s",
+					tx.HashStr, e.sorted[i].HashStr, tx.GasPrice.String(), e.sorted[i].GasPrice.String())
 				return false
 			}
 

@@ -3,12 +3,14 @@ package l1_parallel_sync
 import (
 	"context"
 	"errors"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
+	syncCommon "github.com/0xPolygonHermez/zkevm-node/synchronizer/common"
 	"github.com/ethereum/go-ethereum/common"
 	types "github.com/ethereum/go-ethereum/core/types"
 )
@@ -22,7 +24,6 @@ var (
 	errContextCanceled                      = errors.New("consumer:context canceled")
 	errConsumerStopped                      = errors.New("consumer:stopped by request")
 	errConsumerStoppedBecauseIsSynchronized = errors.New("consumer:stopped because is synchronized")
-	errL1Reorg                              = errors.New("consumer: L1 reorg detected")
 	errConsumerAndProducerDesynchronized    = errors.New("consumer: consumer and producer are desynchronized")
 )
 
@@ -155,13 +156,12 @@ func checkPreviousBlocks(rollupInfo rollupInfoByBlockRangeResult, cachedBlock *s
 	}
 	if cachedBlock.BlockNumber == rollupInfo.previousBlockOfRange.NumberU64() {
 		if cachedBlock.BlockHash != rollupInfo.previousBlockOfRange.Hash() {
-			log.Errorf("consumer: Previous block %d hash is not the same", cachedBlock.BlockNumber)
-			return errL1Reorg
+			err := fmt.Errorf("consumer: Previous block %d hash is not the same. state.Hash:%s != l1.Hash:%s",
+				cachedBlock.BlockNumber, cachedBlock.BlockHash, rollupInfo.previousBlockOfRange.Hash())
+			log.Errorf(err.Error())
+			return syncCommon.NewReorgError(cachedBlock.BlockNumber, err)
 		}
-		if cachedBlock.ParentHash != rollupInfo.previousBlockOfRange.ParentHash() {
-			log.Errorf("consumer: Previous block %d parentHash is not the same", cachedBlock.BlockNumber)
-			return errL1Reorg
-		}
+
 		log.Infof("consumer: Verified previous block %d  not the same: OK", cachedBlock.BlockNumber)
 	}
 	return nil

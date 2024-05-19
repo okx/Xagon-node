@@ -982,7 +982,7 @@ func (_m *StateMock) OpenWIPBatch(ctx context.Context, batch state.Batch, dbTx p
 }
 
 // ProcessBatchV2 provides a mock function with given fields: ctx, request, updateMerkleTree
-func (_m *StateMock) ProcessBatchV2(ctx context.Context, request state.ProcessRequest, updateMerkleTree bool) (*state.ProcessBatchResponse, error) {
+func (_m *StateMock) ProcessBatchV2(ctx context.Context, request state.ProcessRequest, updateMerkleTree bool) (*state.ProcessBatchResponse, string, error) {
 	ret := _m.Called(ctx, request, updateMerkleTree)
 
 	if len(ret) == 0 {
@@ -990,8 +990,9 @@ func (_m *StateMock) ProcessBatchV2(ctx context.Context, request state.ProcessRe
 	}
 
 	var r0 *state.ProcessBatchResponse
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, state.ProcessRequest, bool) (*state.ProcessBatchResponse, error)); ok {
+	var r1 string
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, state.ProcessRequest, bool) (*state.ProcessBatchResponse, string, error)); ok {
 		return rf(ctx, request, updateMerkleTree)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, state.ProcessRequest, bool) *state.ProcessBatchResponse); ok {
@@ -1002,13 +1003,19 @@ func (_m *StateMock) ProcessBatchV2(ctx context.Context, request state.ProcessRe
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, state.ProcessRequest, bool) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, state.ProcessRequest, bool) string); ok {
 		r1 = rf(ctx, request, updateMerkleTree)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(string)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, state.ProcessRequest, bool) error); ok {
+		r2 = rf(ctx, request, updateMerkleTree)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // StoreL2Block provides a mock function with given fields: ctx, batchNumber, l2Block, txsEGPLog, dbTx

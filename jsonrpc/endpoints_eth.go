@@ -75,8 +75,6 @@ func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash
 	return e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		if arg == nil {
 			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 0", nil, false)
-		} else if blockArg == nil {
-			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 1", nil, false)
 		}
 		block, respErr := e.getBlockByArg(ctx, blockArg, dbTx)
 		if respErr != nil {
@@ -120,6 +118,9 @@ func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash
 		if result.Reverted() {
 			data := make([]byte, len(result.ReturnValue))
 			copy(data, result.ReturnValue)
+			if len(data) == 0 {
+				return nil, types.NewRPCError(types.DefaultErrorCode, result.Err.Error())
+			}
 			return nil, types.NewRPCErrorWithData(types.RevertedErrorCode, result.Err.Error(), data)
 		} else if result.Failed() {
 			return nil, types.NewRPCError(types.DefaultErrorCode, result.Err.Error())
@@ -172,10 +173,14 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 0", nil, false)
 		}
 
+		t0 := time.Now()
 		block, respErr := e.getBlockByArg(ctx, blockArg, dbTx)
 		if respErr != nil {
 			return nil, respErr
 		}
+
+		t1 := time.Now()
+		getBlockTime := t1.Sub(t0)
 
 		var blockToProcess *uint64
 		if blockArg != nil {
@@ -194,19 +199,31 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 			return RPCErrorResponse(types.DefaultErrorCode, "failed to convert arguments into an unsigned transaction", err, false)
 		}
 
+		t2 := time.Now()
+		toTxTime := t2.Sub(t1)
+
 		gasEstimation, returnValue, err := e.state.EstimateGas(tx, sender, blockToProcess, dbTx)
 		if errors.Is(err, runtime.ErrExecutionReverted) {
 			data := make([]byte, len(returnValue))
 			copy(data, returnValue)
+			if len(data) == 0 {
+				return nil, types.NewRPCError(types.DefaultErrorCode, err.Error())
+			}
 			return nil, types.NewRPCErrorWithData(types.RevertedErrorCode, err.Error(), data)
 		} else if err != nil {
 			return nil, types.NewRPCError(types.DefaultErrorCode, err.Error())
 		}
 
+		t3 := time.Now()
+		stateEstimateGasTime := t3.Sub(t2)
+
 		// XLayer handler
 		gasEstimation = e.getGasEstimationWithFactorXLayer(gasEstimation)
+		hexGasEstimation := hex.EncodeUint64(gasEstimation)
 
-		return hex.EncodeUint64(gasEstimation), nil
+		log.Infof("EstimateGas time. getBlock:%vms, toTx:%vms, stateEstimateGas:%vms", getBlockTime.Milliseconds(), toTxTime.Milliseconds(), stateEstimateGasTime.Milliseconds())
+
+		return hexGasEstimation, nil
 	})
 }
 

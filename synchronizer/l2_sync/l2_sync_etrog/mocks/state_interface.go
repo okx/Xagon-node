@@ -423,7 +423,7 @@ func (_c *StateInterface_OpenBatch_Call) RunAndReturn(run func(context.Context, 
 }
 
 // ProcessBatchV2 provides a mock function with given fields: ctx, request, updateMerkleTree
-func (_m *StateInterface) ProcessBatchV2(ctx context.Context, request state.ProcessRequest, updateMerkleTree bool) (*state.ProcessBatchResponse, error) {
+func (_m *StateInterface) ProcessBatchV2(ctx context.Context, request state.ProcessRequest, updateMerkleTree bool) (*state.ProcessBatchResponse, string, error) {
 	ret := _m.Called(ctx, request, updateMerkleTree)
 
 	if len(ret) == 0 {
@@ -431,8 +431,9 @@ func (_m *StateInterface) ProcessBatchV2(ctx context.Context, request state.Proc
 	}
 
 	var r0 *state.ProcessBatchResponse
-	var r1 error
-	if rf, ok := ret.Get(0).(func(context.Context, state.ProcessRequest, bool) (*state.ProcessBatchResponse, error)); ok {
+	var r1 string
+	var r2 error
+	if rf, ok := ret.Get(0).(func(context.Context, state.ProcessRequest, bool) (*state.ProcessBatchResponse, string, error)); ok {
 		return rf(ctx, request, updateMerkleTree)
 	}
 	if rf, ok := ret.Get(0).(func(context.Context, state.ProcessRequest, bool) *state.ProcessBatchResponse); ok {
@@ -443,13 +444,19 @@ func (_m *StateInterface) ProcessBatchV2(ctx context.Context, request state.Proc
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(context.Context, state.ProcessRequest, bool) error); ok {
+	if rf, ok := ret.Get(1).(func(context.Context, state.ProcessRequest, bool) string); ok {
 		r1 = rf(ctx, request, updateMerkleTree)
 	} else {
-		r1 = ret.Error(1)
+		r1 = ret.Get(1).(string)
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(context.Context, state.ProcessRequest, bool) error); ok {
+		r2 = rf(ctx, request, updateMerkleTree)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // StateInterface_ProcessBatchV2_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'ProcessBatchV2'
@@ -472,12 +479,12 @@ func (_c *StateInterface_ProcessBatchV2_Call) Run(run func(ctx context.Context, 
 	return _c
 }
 
-func (_c *StateInterface_ProcessBatchV2_Call) Return(_a0 *state.ProcessBatchResponse, _a1 error) *StateInterface_ProcessBatchV2_Call {
-	_c.Call.Return(_a0, _a1)
+func (_c *StateInterface_ProcessBatchV2_Call) Return(_a0 *state.ProcessBatchResponse, _a1 string, _a2 error) *StateInterface_ProcessBatchV2_Call {
+	_c.Call.Return(_a0, _a1, _a2)
 	return _c
 }
 
-func (_c *StateInterface_ProcessBatchV2_Call) RunAndReturn(run func(context.Context, state.ProcessRequest, bool) (*state.ProcessBatchResponse, error)) *StateInterface_ProcessBatchV2_Call {
+func (_c *StateInterface_ProcessBatchV2_Call) RunAndReturn(run func(context.Context, state.ProcessRequest, bool) (*state.ProcessBatchResponse, string, error)) *StateInterface_ProcessBatchV2_Call {
 	_c.Call.Return(run)
 	return _c
 }

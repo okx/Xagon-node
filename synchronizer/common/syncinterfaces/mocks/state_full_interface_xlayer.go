@@ -4,6 +4,7 @@ package mock_syncinterfaces
 
 import (
 	context "context"
+
 	"github.com/jackc/pgx/v4"
 )
 

@@ -3,8 +3,8 @@ PrivateKey = {Path = "/pk/test-member.keystore", Password = "testonly"}
 [L1]
 WsURL = "ws://xlayer-mock-l1-network:8546"
 RpcURL = "http://xlayer-mock-l1-network:8545"
-PolygonValidiumAddress = "0x975725832B4909Aab87D3604A0b501569dbBE7A9"
-DataCommitteeAddress = "0x2f08F654B896208dD968aFdAEf733edC5FF62c03"
+PolygonValidiumAddress = "0xeb173087729c88a47568AF87b17C653039377BA6"
+DataCommitteeAddress = "0x3bFa19E4588962D1834B2e4007F150f4447Aa9fe"
 Timeout = "3m"
 RetryPeriod = "5s"
 BlockBatchSize = 32

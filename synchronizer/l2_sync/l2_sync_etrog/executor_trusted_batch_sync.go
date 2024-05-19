@@ -36,7 +36,7 @@ type StateInterface interface {
 	UpdateWIPBatch(ctx context.Context, receipt state.ProcessingReceipt, dbTx pgx.Tx) error
 	ResetTrustedState(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) error
 	OpenBatch(ctx context.Context, processingContext state.ProcessingContext, dbTx pgx.Tx) error
-	ProcessBatchV2(ctx context.Context, request state.ProcessRequest, updateMerkleTree bool) (*state.ProcessBatchResponse, error)
+	ProcessBatchV2(ctx context.Context, request state.ProcessRequest, updateMerkleTree bool) (*state.ProcessBatchResponse, string, error)
 	StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *state.ProcessBlockResponse, txsEGPLog []*state.EffectiveGasPriceLog, dbTx pgx.Tx) error
 	GetL1InfoTreeDataFromBatchL2Data(ctx context.Context, batchL2Data []byte, dbTx pgx.Tx) (map[uint32]state.L1DataV2, common.Hash, common.Hash, error)
 	GetLastVirtualBatchNum(ctx context.Context, dbTx pgx.Tx) (uint64, error)
@@ -218,19 +218,18 @@ func (b *SyncTrustedBatchExecutorForEtrog) IncrementalProcess(ctx context.Contex
 		log.Errorf("%s error batchResultSanityCheck. Error: %s", data.DebugPrefix, err.Error())
 		return nil, err
 	}
+	log.Debugf("%s updateWIPBatch ", data.DebugPrefix)
+	err = b.updateWIPBatch(ctx, data, processBatchResp.NewStateRoot, dbTx)
+	if err != nil {
+		log.Errorf("%s error updateWIPBatch. Error: ", data.DebugPrefix, err)
+		return nil, err
+	}
 
 	if data.BatchMustBeClosed {
 		log.Debugf("%s Closing batch", data.DebugPrefix)
 		err = b.CloseBatch(ctx, data.TrustedBatch, dbTx, data.DebugPrefix)
 		if err != nil {
 			log.Errorf("%s error closing batch. Error: ", data.DebugPrefix, err)
-			return nil, err
-		}
-	} else {
-		log.Debugf("%s updateWIPBatch", data.DebugPrefix)
-		err = b.updateWIPBatch(ctx, data, processBatchResp.NewStateRoot, dbTx)
-		if err != nil {
-			log.Errorf("%s error updateWIPBatch. Error: ", data.DebugPrefix, err)
 			return nil, err
 		}
 	}
@@ -376,7 +375,7 @@ func (b *SyncTrustedBatchExecutorForEtrog) processAndStoreTxs(ctx context.Contex
 	if request.OldStateRoot == state.ZeroHash {
 		log.Warnf("%s Processing batch with oldStateRoot == zero....", debugPrefix)
 	}
-	processBatchResp, err := b.state.ProcessBatchV2(ctx, request, true)
+	processBatchResp, _, err := b.state.ProcessBatchV2(ctx, request, true)
 	if err != nil {
 		log.Errorf("%s error processing sequencer batch for batch: %v error:%v ", debugPrefix, request.BatchNumber, err)
 		return nil, err

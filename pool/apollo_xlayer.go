@@ -14,6 +14,7 @@ type apolloConfig struct {
 	AccountQueue       uint64
 	EnableWhitelist    bool
 	BridgeClaimMethods []string
+	EnablePendingStat  bool
 
 	sync.RWMutex
 }
@@ -56,6 +57,7 @@ func (c *apolloConfig) setBridgeClaimMethods(bridgeClaimMethods []string) {
 // AccountQueue
 // FreeGasAddress
 // EnableWhitelist
+// EnablePendingStat
 func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().Lock()
 	getApolloConfig().EnableApollo = true

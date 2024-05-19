@@ -120,6 +120,8 @@ type Config struct {
 	State state.Config
 	// Apollo configuration
 	Apollo types.ApolloConfig
+	// ForceBatchAddress Address of the L1 ForceBatch contract
+	Fork9UpgradeBatch uint64 `mapstructure:"Fork9UpgradeBatch"`
 }
 
 // Default parses the default configuration values.

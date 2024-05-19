@@ -208,6 +208,8 @@ type Client struct {
 	auth  map[common.Address]bind.TransactOpts // empty in case of read-only client
 
 	da dataavailability.BatchDataProvider
+
+	fork9UpgradeBatch uint64
 }
 
 // NewClient creates a new etherman.
@@ -280,7 +282,7 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 	rollupID, err := rollupManager.RollupAddressToID(&bind.CallOpts{Pending: false}, l1Config.ZkEVMAddr)
 	if err != nil {
 		log.Debugf("error rollupManager.RollupAddressToID(%s). Error: %w", l1Config.RollupManagerAddr, err)
-		// TODO return error after the upgrade
+		return nil, err
 	}
 	log.Debug("rollupID: ", rollupID)
 
@@ -827,6 +829,11 @@ func (etherMan *Client) updateForkId(ctx context.Context, vLog types.Log, blocks
 		log.Debug("ignoring this event because it is related to another rollup %d, we are rollupID %d", affectedRollupID, etherMan.RollupID)
 		return nil
 	}
+	if forkID == state.FORKID_9 && etherMan.fork9UpgradeBatch != 0 {
+		batchNum = etherMan.fork9UpgradeBatch
+	}
+	log.Infof("updateForkId: %d, %d, %s", batchNum, forkID, version)
+
 	fork := ForkID{
 		BatchNumber: batchNum,
 		ForkID:      forkID,
@@ -1596,7 +1603,7 @@ func (etherMan *Client) forceSequencedBatchesEvent(ctx context.Context, vLog typ
 	if err != nil {
 		return err
 	}
-	// TODO completar los datos de forcedBlockHas, forcedGer y forcedTimestamp
+	// TODO complete data forcedBlockHash, forcedGer y forcedTimestamp
 
 	// Read the tx for this batch.
 	tx, err := etherMan.EthClient.TransactionInBlock(ctx, vLog.BlockHash, vLog.TxIndex)
@@ -1901,6 +1908,17 @@ func (etherMan *Client) EstimateGas(ctx context.Context, from common.Address, to
 	})
 }
 
+// DepositCount returns deposits count
+func (etherman *Client) DepositCount(ctx context.Context, blockNumber *uint64) (*big.Int, error) {
+	var opts *bind.CallOpts
+	if blockNumber != nil {
+		opts = new(bind.CallOpts)
+		opts.BlockNumber = new(big.Int).SetUint64(*blockNumber)
+	}
+
+	return etherman.GlobalExitRootManager.DepositCount(opts)
+}
+
 // CheckTxWasMined check if a tx was already mined
 func (etherMan *Client) CheckTxWasMined(ctx context.Context, txHash common.Hash) (bool, *types.Receipt, error) {
 	receipt, err := etherMan.EthClient.TransactionReceipt(ctx, txHash)
@@ -2069,6 +2087,12 @@ func (etherMan *Client) GetDAProtocolName() (string, error) {
 func (etherMan *Client) SetDataProvider(da dataavailability.BatchDataProvider) {
 	log.Infof("setting data provider")
 	etherMan.da = da
+}
+
+// SetFork9UpgradeBatch sets the fork9 upgrade batch
+func (etherMan *Client) SetFork9UpgradeBatch(fork9UpgradeBatch uint64) {
+	log.Infof("SetFork9UpgradeBatch:%v", fork9UpgradeBatch)
+	etherMan.fork9UpgradeBatch = fork9UpgradeBatch
 }
 
 // SetDataAvailabilityProtocol sets the address for the new data availability protocol

@@ -3,6 +3,7 @@ package pgpoolstorage
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jackc/pgx/v4"
@@ -64,4 +65,36 @@ func (p *PostgresPoolStorage) GetInnerTx(ctx context.Context, txHash common.Hash
 	}
 
 	return innerTx, nil
+}
+
+// CREATE TABLE pool.readytx(
+// id SERIAL PRIMARY KEY NOT NULL,
+// count INT,
+// updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+// );
+// insert into pool.readytx(id, count) values(1, 0);
+
+// UpdateReadyTxCount update ready tx count
+func (p *PostgresPoolStorage) UpdateReadyTxCount(ctx context.Context, count uint64) error {
+	sql := `UPDATE pool.readytx SET count = $1, updated_at = $2 WHERE id=1`
+
+	_, err := p.db.Exec(ctx, sql, count, time.Now())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// GetReadyTxCount get ready tx count
+func (p *PostgresPoolStorage) GetReadyTxCount(ctx context.Context) (uint64, error) {
+	sql := `SELECT count FROM pool.readytx where id=1`
+
+	var count uint64
+	err := p.db.QueryRow(ctx, sql).Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }
