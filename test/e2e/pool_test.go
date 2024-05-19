@@ -297,13 +297,13 @@ func TestSpeedTx(t *testing.T) {
 	require.Equal(t, levelCount*txPerAddr*addrPerLevel, int(count))
 
 	finishedCh := make(chan int, 1)
-	cfg.Sequencer.QueryPendingTxsLimit = 10000
+	cfg.Sequencer.QueryPendingTxsLimit = 20
 	seq, err := sequencer.New(cfg.Sequencer, cfg.State.Batch, poolInstance)
 	require.NoError(t, err)
 	go seq.Start(ctx, levelCount, addrPerLevel*txPerAddr, finishedCh)
 
 	//time.Sleep(1 * time.Second)
-	//go poolInstance.Speed(ctx)
+	go poolInstance.Speed(ctx)
 
 	finishedLevel := levelCount - 1
 	for {
