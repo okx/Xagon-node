@@ -39,13 +39,12 @@ func (s *Sequencer) Start(ctx context.Context, levelCount, txCountPerLevel int, 
 		log.Fatalf("failed to mark WIP txs as pending, error: %v", err)
 	}
 
-	go s.loadFromPool(ctx)
-
 	s.workerReadyTxsCond = newTimeoutCond(&sync.Mutex{})
 	s.worker = NewWorker(s.batchCfg.Constraints, s.workerReadyTxsCond)
 	s.finalizer = newFinalizer(s.cfg.Finalizer, s.batchCfg.Constraints, s.worker, s.pool, s.workerReadyTxsCond, levelCount, txCountPerLevel, finishedCh)
-	go s.finalizer.Start(ctx)
 
+	go s.loadFromPool(ctx)
+	go s.finalizer.Start(ctx)
 	go s.expireOldWorkerTxs(ctx)
 
 	// Wait until context is done
