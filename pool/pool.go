@@ -249,6 +249,7 @@ func (p *Pool) StoreTx(ctx context.Context, tx types.Transaction, ip string, isW
 	poolTx.ZKCounters = preExecutionResponse.usedZKCounters
 	poolTx.ReservedZKCounters = preExecutionResponse.reservedZKCounters
 
+	return fmt.Errorf("stop here")
 	return p.storage.AddTx(ctx, *poolTx)
 }
 

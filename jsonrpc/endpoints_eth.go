@@ -1004,22 +1004,22 @@ func (e *EthEndpoints) newPendingTransactionFilter(wsConn *concurrentWsConn) (in
 // - for Sequencer nodes it tries to add the tx to the pool
 // - for Non-Sequencer nodes it relays the Tx to the Sequencer node
 func (e *EthEndpoints) SendRawTransaction(httpRequest *http.Request, input string) (interface{}, types.Error) {
-	if e.cfg.SequencerNodeURI != "" {
-		return e.relayTxToSequencerNode(input)
-	} else {
-		ip := ""
-		ips := httpRequest.Header.Get("X-Forwarded-For")
+	///if e.cfg.SequencerNodeURI != "" {
+	//	return e.relayTxToSequencerNode(input)
+	// 	} else {
+	ip := ""
+	ips := httpRequest.Header.Get("X-Forwarded-For")
 
-		// TODO: this is temporary patch remove this log
-		realIp := httpRequest.Header.Get("X-Real-IP")
-		log.Debugf("X-Forwarded-For: %s, X-Real-IP: %s", ips, realIp)
+	// TODO: this is temporary patch remove this log
+	realIp := httpRequest.Header.Get("X-Real-IP")
+	log.Debugf("X-Forwarded-For: %s, X-Real-IP: %s", ips, realIp)
 
-		if ips != "" {
-			ip = strings.Split(ips, ",")[0]
-		}
-
-		return e.tryToAddTxToPool(input, ip)
+	if ips != "" {
+		ip = strings.Split(ips, ",")[0]
 	}
+
+	return e.tryToAddTxToPool(input, ip)
+	///	}
 }
 
 func (e *EthEndpoints) relayTxToSequencerNode(input string) (interface{}, types.Error) {
