@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"runtime/debug"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/event"
@@ -340,6 +341,16 @@ func (s *State) ProcessUnsignedTransaction(ctx context.Context, tx *types.Transa
 
 // internalProcessUnsignedTransaction processes the given unsigned transaction.
 func (s *State) internalProcessUnsignedTransaction(ctx context.Context, tx *types.Transaction, senderAddress common.Address, l2BlockNumber *uint64, noZKEVMCounters bool, dbTx pgx.Tx) (*ProcessBatchResponse, error) {
+	log.Infof("giskook Processing unsigned transaction %s", tx.Hash().String())
+	log.Infof("giskook Processing unsigned transaction data len %d", len(tx.Data()))
+	log.Infof("giskook Processing unsigned transaction data %s", hex.EncodeToHex(tx.Data())
+	log.Infof("giskook Processing unsigned transaction sender %s", senderAddress.String())
+	log.Infof("giskook Processing unsigned transaction l2BlockNumber %d", l2BlockNumber)
+	log.Infof("giskook Processing unsigned transaction noZKEVMCounters %v", noZKEVMCounters)
+	log.Infof("giskook Processing --------------------")
+	debug.PrintStack()
+	log.Infof("giskook Processing --------------------")
+
 	var l2Block *L2Block
 	var err error
 	if l2BlockNumber == nil {
