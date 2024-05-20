@@ -111,6 +111,16 @@ var (
 	}
 )
 
+// RequestAuthErrorType request auth error type
+type RequestAuthErrorType string
+
+const (
+	// RequestAuthErrorTypeKeyExpired represents an auth request that has expired.
+	RequestAuthErrorTypeKeyExpired RequestAuthErrorType = "key_expired"
+	// RequestAuthErrorTypeNoAuth represents an auth request that is invalid.
+	RequestAuthErrorTypeNoAuth RequestAuthErrorType = "no_auth"
+)
+
 // WsRequestMethodDuration observes (histogram) the duration of a ws request from the
 // provided starting time.
 func WsRequestMethodDuration(method string, start time.Time) {
@@ -166,6 +176,6 @@ func RequestAuthCount(project string) {
 }
 
 // RequestAuthErrorCount increments the requests handled counter vector by one for the given project.
-func RequestAuthErrorCount() {
-	metrics.CounterVecInc(requestAuthErrorCountName, "error")
+func RequestAuthErrorCount(tp RequestAuthErrorType) {
+	metrics.CounterVecInc(requestAuthErrorCountName, string(tp))
 }

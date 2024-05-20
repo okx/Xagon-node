@@ -1,11 +1,17 @@
 package jsonrpc
 
 import (
+	"crypto/md5"
+	"errors"
+	"fmt"
 	"net/http"
 	"path"
+	"strings"
+	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
+	"github.com/0xPolygonHermez/zkevm-node/log"
 )
 
 // ApiAuthConfig is the api authentication config
@@ -22,11 +28,18 @@ type KeyItem struct {
 	Project string `mapstructure:"Project"`
 	// Key defines the key
 	Key string `mapstructure:"Key"`
+	// Timeout defines the timeout
+	Timeout string `mapstructure:"Timeout"`
 }
 
 type apiAllow struct {
-	allowKeys map[string]string
+	allowKeys map[string]keyItem
 	enable    bool
+}
+
+type keyItem struct {
+	project string
+	timeout time.Time
 }
 
 var al apiAllow
@@ -39,28 +52,42 @@ func InitApiAuth(a ApiAuthConfig) {
 // setApiAuth sets the api authentication
 func setApiAuth(a ApiAuthConfig) {
 	al.enable = a.Enabled
-	var tmp = make(map[string]string)
+	var tmp = make(map[string]keyItem)
 	for _, k := range a.ApiKeys {
-		tmp[k.Key] = k.Project
+		k.Key = strings.ToLower(k.Key)
+		parse, err := time.Parse("2006-01-02", k.Timeout)
+		if err != nil {
+			log.Warnf("parse key [%+v], error parsing timeout: %v", k, err)
+			continue
+		}
+		if strings.ToLower(fmt.Sprintf("%x", md5.Sum([]byte(k.Project+k.Timeout)))) != k.Key {
+			log.Warnf("project [%s], key [%s] is invalid, key = md5(Project+Timeout)", k.Project, k.Key)
+			continue
+		}
+		tmp[k.Key] = keyItem{project: k.Project, timeout: parse}
 	}
 	al.allowKeys = tmp
 }
 
-func check(key string) bool {
-	if _, ok := al.allowKeys[key]; ok {
-		metrics.RequestAuthCount(al.allowKeys[key])
-		return true
+func check(key string) error {
+	key = strings.ToLower(key)
+	if item, ok := al.allowKeys[key]; ok && time.Now().Before(item.timeout) {
+		metrics.RequestAuthCount(al.allowKeys[key].project)
+		return nil
+	} else if ok && time.Now().After(item.timeout) {
+		log.Warnf("project [%s], key [%s] has expired, ", item.project, key)
+		metrics.RequestAuthErrorCount(metrics.RequestAuthErrorTypeKeyExpired)
+		return errors.New("key has expired")
 	}
-	metrics.RequestAuthErrorCount()
-	return false
+	metrics.RequestAuthErrorCount(metrics.RequestAuthErrorTypeNoAuth)
+	return errors.New("no authentication")
 }
 
 func apiAuthHandlerFunc(handlerFunc http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if al.enable {
-			base := path.Base(r.URL.Path)
-			if base == "" || !check(base) {
-				err := handleNoAuthErr(w)
+			if er := check(path.Base(r.URL.Path)); er != nil {
+				err := handleNoAuthErr(w, er)
 				if err != nil {
 					http.Error(w, err.Error(), http.StatusInternalServerError)
 				}
@@ -75,8 +102,8 @@ func apiAuthHandler(next http.Handler) http.Handler {
 	return apiAuthHandlerFunc(next.ServeHTTP)
 }
 
-func handleNoAuthErr(w http.ResponseWriter) error {
-	respbytes, err := types.NewResponse(types.Request{JSONRPC: "2.0", ID: 0}, nil, types.NewRPCError(types.InvalidParamsErrorCode, "no authentication")).Bytes()
+func handleNoAuthErr(w http.ResponseWriter, err error) error {
+	respbytes, err := types.NewResponse(types.Request{JSONRPC: "2.0", ID: 0}, nil, types.NewRPCError(types.InvalidParamsErrorCode, err.Error())).Bytes()
 	if err != nil {
 		return err
 	}

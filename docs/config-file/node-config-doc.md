@@ -2192,7 +2192,16 @@ Enabled=false
 #### <a name="RPC_ApiAuthentication_ApiKeys"></a>8.27.2. `RPC.ApiAuthentication.ApiKeys`
 
 **Type:** : `array of object`
+
+**Default:** `[]`
+
 **Description:** ApiKeys defines the api keys
+
+**Example setting the default value** ([]):
+```
+[RPC.ApiAuthentication]
+ApiKeys=[]
+```
 
 |                      | Array restrictions |
 | -------------------- | ------------------ |
@@ -2215,6 +2224,7 @@ Enabled=false
 | ---------------------------------------------------------- | ------- | ------ | ---------- | ---------- | -------------------------------- |
 | - [Project](#RPC_ApiAuthentication_ApiKeys_items_Project ) | No      | string | No         | -          | Name defines the name of the key |
 | - [Key](#RPC_ApiAuthentication_ApiKeys_items_Key )         | No      | string | No         | -          | Key defines the key              |
+| - [Timeout](#RPC_ApiAuthentication_ApiKeys_items_Timeout ) | No      | string | No         | -          | Timeout defines the timeout      |
 
 ##### <a name="RPC_ApiAuthentication_ApiKeys_items_Project"></a>8.27.2.1.1. `RPC.ApiAuthentication.ApiKeys.ApiKeys items.Project`
 
@@ -2225,6 +2235,11 @@ Enabled=false
 
 **Type:** : `string`
 **Description:** Key defines the key
+
+##### <a name="RPC_ApiAuthentication_ApiKeys_items_Timeout"></a>8.27.2.1.3. `RPC.ApiAuthentication.ApiKeys.ApiKeys items.Timeout`
+
+**Type:** : `string`
+**Description:** Timeout defines the timeout
 
 ## <a name="Synchronizer"></a>9. `[Synchronizer]`
 
