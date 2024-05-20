@@ -137,8 +137,7 @@ DisableAPIs = []
         UpdatePeriod = "10s"
 	[RPC.ApiAuthentication]
 		Enabled = false
-		ApiKeys = [
-		]
+		ApiKeys = []
 
 [Synchronizer]
 SyncInterval = "1s"
