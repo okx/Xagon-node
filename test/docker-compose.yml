@@ -97,6 +97,8 @@ services:
       - ZKEVM_NODE_SEQUENCER_SENDER_ADDRESS=0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266
       - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI:-}
       - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI:-}
+      - ZKEVM_NODE_CELESTIA_URI=http://xlayer-data-availability:26658
+      - ZKEVM_NODE_CELESTIA_NAMESPACEID="08e5f679bf7116cb"
     volumes:
       - ./sequencer.keystore:/pk/sequencer.keystore
       - ./config/test.node.config.toml:/app/config.toml
@@ -684,18 +686,30 @@ services:
     command:
       - "/bin/sh"
 
+#  xlayer-data-availability:
+#    container_name: xlayer-data-availability
+#    image: okexchain/x1-data-availability:origin_zjg_rebranding-xlayer_20240320035927_022e6a8
+#    ports:
+#      - 8444:8444
+#    volumes:
+#      - ./config/test.da.toml:/app/config.toml
+#      - ./config/test-member.keystore:/pk/test-member.keystore
+#    command:
+#      - "/bin/sh"
+#      - "-c"
+#      - "/app/xlayer-data-availability run --cfg /app/config.toml"
   xlayer-data-availability:
     container_name: xlayer-data-availability
-    image: okexchain/x1-data-availability:origin_zjg_rebranding-xlayer_20240320035927_022e6a8
+#    image: ghcr.io/rollkit/local-celestia-devnet:v0.13.1
+    image: okexchain/celestia-local-devnet
     ports:
-      - 8444:8444
-    volumes:
-      - ./config/test.da.toml:/app/config.toml
-      - ./config/test-member.keystore:/pk/test-member.keystore
-    command:
-      - "/bin/sh"
-      - "-c"
-      - "/app/xlayer-data-availability run --cfg /app/config.toml"
+      - "26658:26658"
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:26659/header/1" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   xlayer-data-availability-db:
     container_name: xlayer-data-availability-db

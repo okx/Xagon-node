@@ -4,6 +4,7 @@ import (
 	"crypto/ecdsa"
 	"fmt"
 	"github.com/0xPolygonHermez/zkevm-node/dataavailability/celestia"
+	"os"
 
 	dataCommitteeClient "github.com/0xPolygon/cdk-data-availability/client"
 	"github.com/0xPolygonHermez/zkevm-node/config"
@@ -97,9 +98,7 @@ func newDataAvailability(c config.Config, st *state.State, etherman *etherman.Cl
 	if err != nil {
 		return nil, fmt.Errorf("error getting data availability protocol name: %v", err)
 	}
-	// TODO hard code
-	daProtocolName = string(dataavailability.Celestia)
-
+	
 	var daBackend dataavailability.DABackender
 	switch daProtocolName {
 	case string(dataavailability.DataAvailabilityCommittee):
@@ -131,9 +130,9 @@ func newDataAvailability(c config.Config, st *state.State, etherman *etherman.Cl
 		// TODO load Celestia config
 		conf := celestia.Config{
 			GasPrice:    float64(openrpc.DefaultGasPrice()),
-			Rpc:         "http://172.31.35.52:26658",
-			NamespaceId: "08e5f679bf7116cb",
-			AuthToken:   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJBbGxvdyI6WyJwdWJsaWMiLCJyZWFkIiwid3JpdGUiLCJhZG1pbiJdfQ.u_L7RA9dgNMzmW67FwtlJxTmKxHRDpT5dNONuB0MA7Q",
+			Rpc:         os.Getenv("ZKEVM_NODE_CELESTIA_URI"),
+			NamespaceId: os.Getenv("ZKEVM_NODE_CELESTIA_NAMESPACEID"),
+			AuthToken:   "",
 		}
 		daBackend, err = celestia.New(conf)
 		if err != nil {

@@ -97,41 +97,40 @@ func (c *CelestiaBackend) PostSequence(ctx context.Context, batchesData [][]byte
 	}
 
 	dataBlob, err := blob.NewBlobV0(c.Namespace, aggregatedBatch)
-	//dataBlob, err := blob.NewBlobV0(c.Namespace, aggregatedBatch)
 	if err != nil {
-		log.Warn("Error creating blob", "err", err)
+		log.Warnf("Error creating blob, error: %s", err)
 		return nil, err
 	}
 
 	commitment, err := blob.CreateCommitment(dataBlob)
 	if err != nil {
-		log.Warn("Error creating commitment", "err", err)
+		log.Warnf("Error creating commitment, error: %s", err)
 		return nil, err
 	}
 
 	height, err := c.Client.Blob.Submit(ctx, []*blob.Blob{dataBlob}, openrpc.GasPrice(c.Cfg.GasPrice))
 	if err != nil {
-		log.Warn("Blob Submission error", "err", err)
+		log.Warnf("Blob Submission error, error: %s", err)
 		return nil, err
 	}
 
 	if height == 0 {
-		log.Warn("Unexpected height from blob response", "height", height)
+		log.Warnf("Unexpected height from blob response, height: %d", height)
 		return nil, errors.New("unexpected response code")
 	}
 
 	proofs, err := c.Client.Blob.GetProof(ctx, height, c.Namespace, commitment)
 	if err != nil {
-		log.Warn("Error retrieving proof", "err", err)
+		log.Warnf("Error retrieving proof, error: %s", err)
 		return nil, err
 	}
 
 	included, err := c.Client.Blob.Included(ctx, height, c.Namespace, proofs, commitment)
 	if err != nil || !included {
-		log.Warn("Error checking for inclusion", "err", err, "proof", proofs)
+		log.Warnf("Error checking for inclusion, error: %s, proof: %v", err, proofs)
 		return nil, err
 	}
-	log.Info("Successfully posted blob", "height", height, "commitment", hex.EncodeToString(commitment))
+	log.Infof("Successfully posted blob, height: %d, commitment: %s", height, hex.EncodeToString(commitment))
 
 	txCommitment := [32]byte{}
 	copy(txCommitment[:], commitment)
@@ -143,14 +142,14 @@ func (c *CelestiaBackend) PostSequence(ctx context.Context, batchesData [][]byte
 
 	blobPointerData, err := blobPointer.MarshalBinary()
 	if err != nil {
-		log.Warn("BlobPointer MashalBinary error", "err", err)
+		log.Warnf("BlobPointer Marshal Binary error: %s", err)
 		return nil, err
 	}
 
 	buf := new(bytes.Buffer)
 	err = binary.Write(buf, binary.BigEndian, blobPointerData)
 	if err != nil {
-		log.Warn("blob pointer data serialization failed", "err", err)
+		log.Warnf("blob pointer data serialization failed, error: %s", err)
 		return nil, err
 	}
 
@@ -189,7 +188,7 @@ func (c *CelestiaBackend) GetSequence(ctx context.Context, batchHashes []common.
 				unexpectedHashTemplate, batchHashes[i], actualTransactionsHash,
 			)
 			log.Warnf(
-				"error getting data from Celestia node at hegith %s with commitment %s: %s",
+				"error getting data from Celestia node at height %s with commitment %s: %s",
 				blobPointer.BlockHeight, blobPointer.TxCommitment, unexpectedHash,
 			)
 		}
