@@ -1,11 +1,11 @@
 Port = 7001
 
 [L1]
-ChainId = 1337
+ChainId = 11155111
 RPC = "http://xlayer-mock-l1-network:8545"
-PolygonZkEVMAddress = "0x0D9088C72Cd4F08e9dDe474D8F5394147f64b22C"
+PolygonZkEVMAddress = "0xeb173087729c88a47568AF87b17C653039377BA6"
 GlobalExitRootManagerAddr = "0xEd236da21Ff62bC7B62608AdB818da49E8549fa7"
-DataCommitteeAddr = "0x6Ae5b0863dBF3477335c0102DBF432aFf04ceb22"
+DataCommitteeAddr = "0x3bFa19E4588962D1834B2e4007F150f4447Aa9fe"
 PolygonMaticAddress = "0xcFE6D77a653b988203BfAc9C6a69eA9D583bdC2b"
 SeqPrivateKey = {Path = "/pk/sequencer.keystore", Password = "testonly"}
 AggPrivateKey = {Path = "/pk/aggregator.keystore", Password = "testonly"}
