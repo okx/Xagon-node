@@ -6,8 +6,8 @@
 		"polTokenAddress": "0xe223519d64C0A49e7C08303c2220251be6b70e1d",
 		"polygonZkEVMGlobalExitRootAddress": "0xB8cedD4B9eF683f0887C44a6E4312dC7A6e2fcdB"
 	},
-	"rollupCreationBlockNum":  317,
-	"rollupManagerCreationBlockNumber":  311,
+	"rollupCreationBlockNum":  334,
+	"rollupManagerCreationBlockNumber":  328,
 	"root": "0x27db2f4ebd2fff5594afe01b90118b1df44ebbe6224687d96fe00bf0f9118c1e",
 	"genesis": [
 		{
