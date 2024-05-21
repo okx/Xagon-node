@@ -454,7 +454,7 @@ services:
 
   xlayer-mock-l1-network:
     container_name: xlayer-mock-l1-network
-    image: giskook/elderberry-v0.3.9-geth1.13.11
+    image: okexchain/xlayer-geth:celestia
     ports:
       - 8545:8545
       - 8546:8546
