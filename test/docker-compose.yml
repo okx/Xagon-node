@@ -456,7 +456,7 @@ services:
 
   xlayer-mock-l1-network:
     container_name: xlayer-mock-l1-network
-    image: okexchain/xlayer-geth:celestia
+    image: okexchain/xlayer-geth:celestia2
     ports:
       - 8545:8545
       - 8546:8546
