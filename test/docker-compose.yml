@@ -216,6 +216,8 @@ services:
       - ZKEVM_NODE_STATE_DB_HOST=xlayer-state-db
       - ZKEVM_NODE_MTCLIENT_URI=${ZKEVM_NODE_MTCLIENT_URI:-}
       - ZKEVM_NODE_EXECUTOR_URI=${ZKEVM_NODE_EXECUTOR_URI:-}
+      - ZKEVM_NODE_CELESTIA_URI=http://xlayer-data-availability:26658
+      - ZKEVM_NODE_CELESTIA_NAMESPACEID=08e5f679bf7116cb
     volumes:
       - ./config/test.node.config.toml:/app/config.toml
       - ./config/test.genesis.config.json:/app/genesis.json
