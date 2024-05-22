@@ -130,7 +130,7 @@ StateConsistencyCheckInterval = "5s"
 		Port = 6900
 		Filename = "/datastreamer/datastream.bin"
 		Version = 1
-		ChainID = 11155111
+		ChainID = 1337
 		Enabled = false
 
 [SequenceSender]

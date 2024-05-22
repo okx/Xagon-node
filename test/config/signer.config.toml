@@ -1,7 +1,7 @@
 Port = 7001
 
 [L1]
-ChainId = 11155111
+ChainId = 1337
 RPC = "http://xlayer-mock-l1-network:8545"
 PolygonZkEVMAddress = "0xeb173087729c88a47568AF87b17C653039377BA6"
 GlobalExitRootManagerAddr = "0xEd236da21Ff62bC7B62608AdB818da49E8549fa7"

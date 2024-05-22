@@ -1,6 +1,6 @@
 {
 	"l1Config": {
-		"chainId": 11155111,
+		"chainId": 1337,
 		"polygonZkEVMAddress": "0xeb173087729c88a47568AF87b17C653039377BA6",
 		"polygonRollupManagerAddress": "0x2d42E2899662EFf08b13eeb65b154b904C7a1c8a",
 		"polTokenAddress": "0xe223519d64C0A49e7C08303c2220251be6b70e1d",
