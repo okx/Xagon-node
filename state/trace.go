@@ -31,18 +31,21 @@ import (
 func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Hash, traceConfig TraceConfig, dbTx pgx.Tx) (*runtime.ExecutionResult, error) {
 	var err error
 
+	tGetTransactionByHash := time.Now()
 	// gets the transaction
 	tx, err := s.GetTransactionByHash(ctx, transactionHash, dbTx)
 	if err != nil {
 		return nil, err
 	}
 
+	tGetTranactionReceipt := time.Now()
 	// gets the tx receipt
 	receipt, err := s.GetTransactionReceipt(ctx, transactionHash, dbTx)
 	if err != nil {
 		return nil, err
 	}
 
+	tGetL2BlockByNumber := time.Now()
 	// gets the l2 l2Block including the transaction
 	l2Block, err := s.GetL2BlockByNumber(ctx, receipt.BlockNumber.Uint64(), dbTx)
 	if err != nil {
@@ -55,12 +58,14 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 	if receipt.BlockNumber.Uint64() > 0 {
 		previousL2BlockNumber = receipt.BlockNumber.Uint64() - 1
 	}
+	tPreGetL2BlockByNumber := time.Now()
 	previousL2Block, err := s.GetL2BlockByNumber(ctx, previousL2BlockNumber, dbTx)
 	if err != nil {
 		return nil, err
 	}
 	oldStateRoot = previousL2Block.Root()
 
+	tGetTranactionsReceipt := time.Now()
 	count := 0
 	for _, tx := range l2Block.Transactions() {
 		checkReceipt, err := s.GetTransactionReceipt(ctx, tx.Hash(), dbTx)
@@ -90,12 +95,14 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 		log.Debugf("trace will reprocess tx: %v", l2Block.Transactions()[i].Hash().String())
 	}
 
+	tGetBatchByL2BlockNumber := time.Now()
 	// gets batch that including the l2 block
 	batch, err := s.GetBatchByL2BlockNumber(ctx, l2Block.NumberU64(), dbTx)
 	if err != nil {
 		return nil, err
 	}
 
+	tGetForkIDByBatchNumber := time.Now()
 	forkId := s.GetForkIDByBatchNumber(batch.BatchNumber)
 
 	var response *ProcessTransactionResponse
@@ -456,11 +463,32 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 	fakeDB := &FakeDB{State: s, stateRoot: batch.StateRoot.Bytes()}
 	evm := fakevm.NewFakeEVM(fakevm.BlockContext{BlockNumber: big.NewInt(1)}, fakevm.TxContext{GasPrice: gasPrice}, fakeDB, params.TestChainConfig, fakevm.Config{Debug: true, Tracer: tracer})
 
+	tBuildTrace := time.Now()
 	traceResult, err := s.buildTrace(evm, result, tracer)
 	if err != nil {
 		log.Errorf("debug transaction: failed parse the trace using the tracer: %v", err)
 		return nil, fmt.Errorf("failed parse the trace using the tracer: %v", err)
 	}
+	tFinished := time.Now()
+	log.Infof("debug transaction: "+
+		"getTransactionByHash: %v,"+
+		" getTransactionReceipt: %v,"+
+		" getL2BlockByNumber: %v,"+
+		" getBatchByL2BlockNumber: %v,"+
+		" getForkIDByBatchNumber: %v,"+
+		" getTransactionsReceipt: %v,"+
+		" processBatch %v,"+
+		" buildTrace: %v"+
+		"total: %v",
+		tGetTranactionReceipt.Sub(tGetTransactionByHash),
+		tGetL2BlockByNumber.Sub(tGetTranactionReceipt),
+		tGetBatchByL2BlockNumber.Sub(tGetL2BlockByNumber),
+		tGetForkIDByBatchNumber.Sub(tGetBatchByL2BlockNumber),
+		tGetTranactionsReceipt.Sub(tGetForkIDByBatchNumber),
+		startTime.Sub(tGetTranactionsReceipt),
+		endTime.Sub(startTime),
+		tFinished.Sub(tBuildTrace),
+		tFinished.Sub(tGetTransactionByHash))
 
 	result.TraceResult = traceResult
 
