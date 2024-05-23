@@ -516,22 +516,22 @@ func (s *State) buildTrace(evm *fakevm.FakeEVM, result *runtime.ExecutionResult,
 	memory := fakevm.NewMemory()
 
 	tSteps := time.Now()
-	var tSleep time.Duration
+	var counter int
 	for i, step := range trace.Steps {
-		tSleepStart := time.Now()
 		if step.OpCode == "SSTORE" {
+			counter++
 			time.Sleep(time.Millisecond)
 		}
 
 		if step.OpCode == "SLOAD" {
+			counter++
 			time.Sleep(time.Millisecond)
 		}
 
 		if step.OpCode == "RETURN" {
+			counter++
 			time.Sleep(time.Millisecond)
 		}
-		tSleepEnd := time.Now()
-		tSleep += tSleepEnd.Sub(tSleepStart)
 
 		// set Stack
 		stack := fakevm.NewStack()
@@ -671,7 +671,7 @@ func (s *State) buildTrace(evm *fakevm.FakeEVM, result *runtime.ExecutionResult,
 		tCaptureStart.Sub(tBegin),
 		tSteps.Sub(tCaptureStart),
 		tCaptureEnd.Sub(tSteps),
-		tSleep,
+		time.Duration(counter)*time.Millisecond,
 		tCaptureEnd.Sub(tBegin))
 
 	return tracer.GetResult()
