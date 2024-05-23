@@ -160,6 +160,9 @@ func (h *Handler) HandleWs(reqBody []byte, wsConn *concurrentWsConn, httpReq *ht
 		wsConn:      wsConn,
 		HttpRequest: httpReq,
 	}
+	if !methodRateLimitAllow(req.Method) {
+		return types.NewResponse(req, nil, types.NewRPCError(types.InvalidParamsErrorCode, "server is too busy")).Bytes()
+	}
 
 	return h.Handle(handleReq).Bytes()
 }

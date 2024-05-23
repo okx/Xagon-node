@@ -103,6 +103,9 @@ type Config struct {
 
 	// BridgeAddress is the address of the bridge contract
 	BridgeAddress common.Address `mapstructure:"BridgeAddress"`
+
+	// ApiAuthentication defines the authentication configuration for the API
+	ApiAuthentication ApiAuthConfig `mapstructure:"ApiAuthentication"`
 }
 
 // ZKCountersLimits defines the ZK Counter limits

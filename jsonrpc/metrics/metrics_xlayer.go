@@ -13,6 +13,8 @@ var (
 	requestInnerTxCachedName    = requestPrefix + "inner_tx_cached"
 	requestInnerTxExecutedName  = requestPrefix + "inner_tx_executed"
 	requestInnerTxAddErrorCount = requestPrefix + "inner_tx_error_count"
+	requestAuthCountName        = requestPrefix + "auth_count"
+	requestAuthErrorCountName   = requestPrefix + "auth_error_count"
 
 	wsRequestPrefix             = prefix + "ws_request_"
 	requestWsMethodName         = wsRequestPrefix + "method"
@@ -55,6 +57,7 @@ var (
 			Labels: []string{requestMethodLabelName},
 		},
 	}
+
 	counterVecsXLayer = []metrics.CounterVecOpts{
 		{
 			CounterOpts: prometheus.CounterOpts{
@@ -91,7 +94,31 @@ var (
 			},
 			Labels: []string{"type"},
 		},
+		{
+			CounterOpts: prometheus.CounterOpts{
+				Name: requestAuthCountName,
+				Help: "[JSONRPC] number of auth requests",
+			},
+			Labels: []string{"project"},
+		},
+		{
+			CounterOpts: prometheus.CounterOpts{
+				Name: requestAuthErrorCountName,
+				Help: "[JSONRPC] number of auth error requests",
+			},
+			Labels: []string{"type"},
+		},
 	}
+)
+
+// RequestAuthErrorType request auth error type
+type RequestAuthErrorType string
+
+const (
+	// RequestAuthErrorTypeKeyExpired represents an auth request that has expired.
+	RequestAuthErrorTypeKeyExpired RequestAuthErrorType = "key_expired"
+	// RequestAuthErrorTypeNoAuth represents an auth request that is invalid.
+	RequestAuthErrorTypeNoAuth RequestAuthErrorType = "no_auth"
 )
 
 // WsRequestMethodDuration observes (histogram) the duration of a ws request from the
@@ -141,4 +168,14 @@ func DynamicGasPrice(dgp int64) {
 // RawGasPrice sets the gauge vector to the given batch number and raw gas price.
 func RawGasPrice(gp int64) {
 	metrics.GaugeSet(lastRawGasPriceName, float64(gp))
+}
+
+// RequestAuthCount increments the requests handled counter vector by one for the given project.
+func RequestAuthCount(project string) {
+	metrics.CounterVecInc(requestAuthCountName, project)
+}
+
+// RequestAuthErrorCount increments the requests handled counter vector by one for the given project.
+func RequestAuthErrorCount(tp RequestAuthErrorType) {
+	metrics.CounterVecInc(requestAuthErrorCountName, string(tp))
 }

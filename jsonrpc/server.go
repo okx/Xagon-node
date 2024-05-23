@@ -123,7 +123,7 @@ func (s *Server) startHTTP() error {
 	mux := http.NewServeMux()
 
 	lmt := tollbooth.NewLimiter(s.config.MaxRequestsPerIPAndSecond, nil)
-	mux.Handle("/", tollbooth.LimitFuncHandler(lmt, s.handle))
+	mux.Handle("/", apiAuthHandler(tollbooth.LimitFuncHandler(lmt, s.handle)))
 
 	s.srv = &http.Server{
 		Handler:           mux,
@@ -161,7 +161,7 @@ func (s *Server) startWS() {
 	}
 
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", s.handleWs)
+	mux.HandleFunc("/", apiAuthHandlerFunc(s.handleWs))
 
 	s.wsSrv = &http.Server{
 		Handler:           mux,
@@ -307,8 +307,17 @@ func (s *Server) handleSingleRequest(httpRequest *http.Request, w http.ResponseW
 	// XLayer handler
 	st := time.Now()
 	if !methodRateLimitAllow(request.Method) {
-		handleInvalidRequest(w, errors.New("server is too busy"), http.StatusTooManyRequests)
-		return 0
+		respbytes, er := types.NewResponse(request, nil, types.NewRPCError(types.InvalidParamsErrorCode, "server is too busy")).Bytes()
+		if er != nil {
+			handleError(w, er)
+			return 0
+		}
+		_, er = w.Write(respbytes)
+		if er != nil {
+			handleError(w, er)
+			return 0
+		}
+		return len(respbytes)
 	}
 	defer metrics.RequestMethodCount(request.Method)
 	defer metrics.RequestMethodDuration(request.Method, st)

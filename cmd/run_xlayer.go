@@ -67,6 +67,7 @@ func initRunForXLayer(c *config.Config, components []string) {
 		switch component {
 		case RPC:
 			jsonrpc.InitRateLimit(c.RPC.RateLimit)
+			jsonrpc.InitApiAuth(c.RPC.ApiAuthentication)
 		}
 	}
 }
