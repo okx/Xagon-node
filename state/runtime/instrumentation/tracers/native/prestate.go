@@ -21,7 +21,9 @@ import (
 	"encoding/json"
 	"math/big"
 	"sync/atomic"
+	"time"
 
+	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime/fakevm"
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime/instrumentation/tracers"
 	"github.com/ethereum/go-ethereum/common"
@@ -176,6 +178,7 @@ func (t *prestateTracer) CaptureTxEnd(restGas uint64) {
 		return
 	}
 
+	tStart := time.Now()
 	for addr, state := range t.pre {
 		// The deleted account's state is pruned from `post` but kept in `pre`
 		if _, ok := t.deleted[addr]; ok {
@@ -225,6 +228,8 @@ func (t *prestateTracer) CaptureTxEnd(restGas uint64) {
 			delete(t.pre, addr)
 		}
 	}
+	tEnd := time.Now()
+	log.Infof("CaptureTxEnd took %v", tEnd.Sub(tStart))
 	// the new created contracts' prestate were empty, so delete them
 	for a := range t.created {
 		// the created contract maybe exists in statedb before the creating tx
