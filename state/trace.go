@@ -479,7 +479,7 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 		" getForkIDByBatchNumber: %v,"+
 		" getTransactionsReceipt: %v,"+
 		" processBatch %v,"+
-		" buildTrace: %v"+
+		" buildTrace: %v,"+
 		"total: %v",
 		tGetTranactionReceipt.Sub(tGetTransactionByHash),
 		tGetL2BlockByNumber.Sub(tGetTranactionReceipt),
@@ -499,12 +499,14 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 
 // ParseTheTraceUsingTheTracer parses the given trace with the given tracer.
 func (s *State) buildTrace(evm *fakevm.FakeEVM, result *runtime.ExecutionResult, tracer tracers.Tracer) (json.RawMessage, error) {
+	tBegin := time.Now()
 	trace := result.FullTrace
 	tracer.CaptureTxStart(trace.Context.Gas)
 	contextGas := trace.Context.Gas - trace.Context.GasUsed
 	if len(trace.Steps) > 0 {
 		contextGas = trace.Steps[0].Gas
 	}
+	tCaptureStart := time.Now()
 	tracer.CaptureStart(evm, common.HexToAddress(trace.Context.From), common.HexToAddress(trace.Context.To), trace.Context.Type == "CREATE", trace.Context.Input, contextGas, trace.Context.Value)
 	evm.StateDB.SetStateRoot(trace.Context.OldStateRoot.Bytes())
 
@@ -513,7 +515,10 @@ func (s *State) buildTrace(evm *fakevm.FakeEVM, result *runtime.ExecutionResult,
 	internalTxSteps := NewStack[instrumentation.InternalTxContext]()
 	memory := fakevm.NewMemory()
 
+	tSteps := time.Now()
+	var tSleep time.Duration
 	for i, step := range trace.Steps {
+		tSleepStart := time.Now()
 		if step.OpCode == "SSTORE" {
 			time.Sleep(time.Millisecond)
 		}
@@ -525,6 +530,8 @@ func (s *State) buildTrace(evm *fakevm.FakeEVM, result *runtime.ExecutionResult,
 		if step.OpCode == "RETURN" {
 			time.Sleep(time.Millisecond)
 		}
+		tSleepEnd := time.Now()
+		tSleep += tSleepEnd.Sub(tSleepStart)
 
 		// set Stack
 		stack := fakevm.NewStack()
@@ -643,6 +650,7 @@ func (s *State) buildTrace(evm *fakevm.FakeEVM, result *runtime.ExecutionResult,
 		// set previous step
 		previousStep = step
 	}
+	tCaptureEnd := time.Now()
 
 	var err error
 	if reverted {
@@ -653,6 +661,18 @@ func (s *State) buildTrace(evm *fakevm.FakeEVM, result *runtime.ExecutionResult,
 	tracer.CaptureEnd(trace.Context.Output, trace.Context.GasUsed, err)
 	restGas := trace.Context.Gas - trace.Context.GasUsed
 	tracer.CaptureTxEnd(restGas)
+
+	log.Infof("buildTrace: "+
+		"captureStart: %v,"+
+		" steps: %v,"+
+		" captureEnd: %v,"+
+		" sleep: %v,"+
+		" total: %v",
+		tCaptureStart.Sub(tBegin),
+		tSteps.Sub(tCaptureStart),
+		tCaptureEnd.Sub(tSteps),
+		tSleep,
+		tCaptureEnd.Sub(tBegin))
 
 	return tracer.GetResult()
 }
