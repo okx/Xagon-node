@@ -179,6 +179,8 @@ func (t *prestateTracer) CaptureTxEnd(restGas uint64) {
 	}
 
 	tStart := time.Now()
+	var tAcc time.Duration
+	var tStorage time.Duration
 	for addr, state := range t.pre {
 		// The deleted account's state is pruned from `post` but kept in `pre`
 		if _, ok := t.deleted[addr]; ok {
@@ -186,9 +188,11 @@ func (t *prestateTracer) CaptureTxEnd(restGas uint64) {
 		}
 		modified := false
 		postAccount := &account{Storage: make(map[common.Hash]common.Hash)}
+		tAccStart := time.Now()
 		newBalance := t.env.StateDB.GetBalance(addr)
 		newNonce := t.env.StateDB.GetNonce(addr)
 		newCode := t.env.StateDB.GetCode(addr)
+		tAcc += time.Since(tAccStart)
 
 		if newBalance.Cmp(t.pre[addr].Balance) != 0 {
 			modified = true
@@ -203,6 +207,7 @@ func (t *prestateTracer) CaptureTxEnd(restGas uint64) {
 			postAccount.Code = newCode
 		}
 
+		tStorageStart := time.Now()
 		for key, val := range state.Storage {
 			// don't include the empty slot
 			if val == (common.Hash{}) {
@@ -220,6 +225,8 @@ func (t *prestateTracer) CaptureTxEnd(restGas uint64) {
 				}
 			}
 		}
+		tStorageEnd := time.Now()
+		tStorage += tStorageEnd.Sub(tStorageStart)
 
 		if modified {
 			t.post[addr] = postAccount
@@ -229,7 +236,7 @@ func (t *prestateTracer) CaptureTxEnd(restGas uint64) {
 		}
 	}
 	tEnd := time.Now()
-	log.Infof("CaptureTxEnd took %v", tEnd.Sub(tStart))
+	log.Infof("CaptureTxEnd took %v, tAcc %v, tStorage %v", tEnd.Sub(tStart), tAcc, tStorage)
 	// the new created contracts' prestate were empty, so delete them
 	for a := range t.created {
 		// the created contract maybe exists in statedb before the creating tx
