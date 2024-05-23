@@ -474,6 +474,7 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 		"getTransactionByHash: %v,"+
 		" getTransactionReceipt: %v,"+
 		" getL2BlockByNumber: %v,"+
+		" getL2BlockByNumber: %v,"+
 		" getBatchByL2BlockNumber: %v,"+
 		" getForkIDByBatchNumber: %v,"+
 		" getTransactionsReceipt: %v,"+
@@ -482,7 +483,8 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 		"total: %v",
 		tGetTranactionReceipt.Sub(tGetTransactionByHash),
 		tGetL2BlockByNumber.Sub(tGetTranactionReceipt),
-		tGetBatchByL2BlockNumber.Sub(tGetL2BlockByNumber),
+		tPreGetL2BlockByNumber.Sub(tGetL2BlockByNumber),
+		tGetBatchByL2BlockNumber.Sub(tPreGetL2BlockByNumber),
 		tGetForkIDByBatchNumber.Sub(tGetBatchByL2BlockNumber),
 		tGetTranactionsReceipt.Sub(tGetForkIDByBatchNumber),
 		startTime.Sub(tGetTranactionsReceipt),
