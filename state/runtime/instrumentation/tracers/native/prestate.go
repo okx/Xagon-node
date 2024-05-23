@@ -245,8 +245,8 @@ func (t *prestateTracer) CaptureTxEnd(restGas uint64) {
 		}
 	}
 	tEnd := time.Now()
-	log.Infof("CaptureTxEnd took %v, tAccBalance %v, tAccNonce %v, tAccCode %v, tStorage %v",
-		tEnd.Sub(tStart), tAccBalance, tAccNonce, tAccCode, tStorage)
+	log.Infof("CaptureTxEnd took %v, tAccBalance %v, tAccNonce %v, tAccCode %v, tStorage %v counter %v",
+		tEnd.Sub(tStart), tAccBalance, tAccNonce, tAccCode, tStorage, accCount)
 	// the new created contracts' prestate were empty, so delete them
 	for a := range t.created {
 		// the created contract maybe exists in statedb before the creating tx
