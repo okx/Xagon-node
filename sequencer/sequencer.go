@@ -233,20 +233,44 @@ func (s *Sequencer) loadFromPool(ctx context.Context) {
 	}
 }
 
+func (s *Sequencer) checkFreeGas(tx pool.Transaction, txTracker *TxTracker) (freeGp, priorPack bool) {
+	// check if tx is bridge-claim
+	addrs := getPackBatchSpacialList(s.cfg.PackBatchSpacialList)
+	if addrs[txTracker.FromStr] {
+		return true, true
+	}
+
+	to := tx.To()
+	if to == nil {
+		return false, false
+	}
+	// check if tx is init-free-gas and if it can be prior pack
+	freeGp = tx.GasPrice().Cmp(big.NewInt(0)) == 0
+	// todo address of to(swap) should be config
+	if to.String() == "swap-address(0x*******)" {
+		priorPack = true
+	}
+	return
+}
+
 func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) error {
 	txTracker, err := s.worker.NewTxTracker(tx, tx.ZKCounters, tx.ReservedZKCounters, tx.IP)
 	if err != nil {
 		return err
 	}
 
-	addrs := getPackBatchSpacialList(s.cfg.PackBatchSpacialList)
-	if addrs[txTracker.FromStr] {
-		txTracker.IsClaimTx = true
-		_, l2gp := s.pool.GetL1AndL2GasPrice()
-		defaultGp := new(big.Int).SetUint64(l2gp)
+	freeGp, priorPack := s.checkFreeGas(tx, txTracker)
+	_, l2gp := s.pool.GetL1AndL2GasPrice()
+	defaultGp := new(big.Int).SetUint64(l2gp)
+	if freeGp && priorPack {
+		txTracker.IsPriorPackTx = true
 		baseGp := s.worker.getBaseClaimGp(defaultGp)
 		copyBaseGp := new(big.Int).Set(baseGp)
 		txTracker.GasPrice = copyBaseGp.Mul(copyBaseGp, new(big.Int).SetUint64(uint64(getGasPriceMultiple(s.cfg.GasPriceMultiple))))
+	} else if freeGp {
+		// only free gas, but not swap tx, so not prior pack
+		// todo gp should be lowest suggest gp
+		txTracker.GasPrice = defaultGp
 	}
 
 	replacedTx, dropReason := s.worker.AddTxTracker(ctx, txTracker)

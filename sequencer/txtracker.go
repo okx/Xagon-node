@@ -32,7 +32,7 @@ type TxTracker struct {
 	EGPLog             state.EffectiveGasPriceLog
 	L1GasPrice         uint64
 	L2GasPrice         uint64
-	IsClaimTx          bool
+	IsPriorPackTx      bool
 }
 
 // newTxTracker creates and inti a TxTracker

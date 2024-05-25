@@ -487,7 +487,7 @@ func (w *Worker) GetBestFittingTx(remainingResources state.BatchResources, highR
 	if foundAt != -1 {
 		log.Infof("best fitting tx %s found at index %d with gasPrice %d", tx.HashStr, foundAt, tx.GasPrice)
 		w.wipTx = tx
-		if !tx.IsClaimTx {
+		if !tx.IsPriorPackTx {
 			w.claimGp = tx.GasPrice
 		}
 		return tx, nil
