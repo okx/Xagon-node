@@ -51,6 +51,7 @@ type Pool struct {
 	gasPrices               GasPrices
 	gasPricesMux            *sync.RWMutex
 	effectiveGasPrice       *EffectiveGasPrice
+	initFreeAddress         map[string]bool
 }
 
 type preExecutionResponse struct {
@@ -535,16 +536,33 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		}
 	}
 
-	// Reject transactions with a gas price lower than the minimum gas price
-	if !isFreeGasAddress(p.cfg.FreeGasAddress, from) || !poolTx.IsClaims { // XLayer handle
-		p.minSuggestedGasPriceMux.RLock()
-		gasPriceCmp := poolTx.GasPrice().Cmp(p.minSuggestedGasPrice)
-		if gasPriceCmp == -1 {
-			log.Debugf("low gas price: minSuggestedGasPrice %v got %v", p.minSuggestedGasPrice, poolTx.GasPrice())
+	if isFreeGasAddress(p.cfg.FreeGasAddress, from) && !poolTx.IsClaims {
+		// check the address of to can be free-gas
+		poolTx.To()
+		if to := poolTx.To(); to != nil {
+			nonce, err := p.state.GetNonce(ctx, *to, lastL2Block.Root())
+			if err != nil {
+				log.Errorf("failed to get nonce while check init free address", err)
+			}
+			// todo 3 should be config
+			if nonce < 3 {
+				// todo add db of init-free addresses
+				p.initFreeAddress[to.String()] = true
+			}
 		}
-		p.minSuggestedGasPriceMux.RUnlock()
-		if gasPriceCmp == -1 {
-			return ErrGasPrice
+	} else {
+		// check tx is not init free-gas
+		if !p.initFreeAddress[from.String()] || currentNonce >= 3 {
+			// Reject transactions with a gas price lower than the minimum gas price
+			p.minSuggestedGasPriceMux.RLock()
+			gasPriceCmp := poolTx.GasPrice().Cmp(p.minSuggestedGasPrice)
+			if gasPriceCmp == -1 {
+				log.Debugf("low gas price: minSuggestedGasPrice %v got %v", p.minSuggestedGasPrice, poolTx.GasPrice())
+			}
+			p.minSuggestedGasPriceMux.RUnlock()
+			if gasPriceCmp == -1 {
+				return ErrGasPrice
+			}
 		}
 	}
 
