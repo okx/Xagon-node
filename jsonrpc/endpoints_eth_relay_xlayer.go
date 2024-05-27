@@ -6,7 +6,7 @@ import (
 )
 
 func (e *EthEndpoints) relayCall(method string, arg *types.TxArgs, blockArg *types.BlockNumberOrHash) (interface{}, types.Error) {
-	dstURI := getRelayDestURI(e.cfg.ApiRelayCfg.DestURI)
+	dstURI := getRelayDestURI(e.cfg.ApiRelay.DestURI)
 
 	res, err := client.JSONRPCCall(dstURI, method, arg, blockArg)
 	if err != nil {

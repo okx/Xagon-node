@@ -67,7 +67,7 @@ func UpdateConfig(apolloConfig Config) {
 	setRateLimit(apolloConfig.RateLimit)
 	setApiAuth(apolloConfig.ApiAuthentication)
 	getApolloConfig().DynamicGP = apolloConfig.DynamicGP
-	getApolloConfig().setApiRelayCfg(apolloConfig.ApiRelayCfg)
+	getApolloConfig().setApiRelayCfg(apolloConfig.ApiRelay)
 	getApolloConfig().Unlock()
 }
 

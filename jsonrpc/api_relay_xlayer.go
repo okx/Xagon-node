@@ -45,7 +45,7 @@ func (e *EthEndpoints) shouldRelay(name string, subCall string) bool {
 		return getApolloConfig().ApiRelay.shouldRelay(name, subCall)
 	}
 
-	return e.cfg.ApiRelayCfg.shouldRelay(name, subCall)
+	return e.cfg.ApiRelay.shouldRelay(name, subCall)
 }
 
 func getRelayDestURI(localDestURI string) string {
