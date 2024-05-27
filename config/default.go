@@ -139,7 +139,7 @@ DisableAPIs = []
 		Enabled = false
 		ApiKeys = []
 	[RPC.ApiRelay]
-		Enable = false
+		Enabled = false
 		DestURI = "" 
 		RPCs = []
 
