@@ -42,7 +42,7 @@ func (e *EthEndpoints) shouldRelay(name string, subCall string) bool {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
 
-		return getApolloConfig().ApiRelayCfg.shouldRelay(name, subCall)
+		return getApolloConfig().ApiRelay.shouldRelay(name, subCall)
 	}
 
 	return e.cfg.ApiRelayCfg.shouldRelay(name, subCall)
@@ -54,7 +54,7 @@ func getRelayDestURI(localDestURI string) string {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
 
-		ret = getApolloConfig().ApiRelayCfg.DestURI
+		ret = getApolloConfig().ApiRelay.DestURI
 	}
 
 	return ret

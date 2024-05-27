@@ -16,7 +16,7 @@ type ApolloConfig struct {
 	RateLimit            RateLimitConfig
 	DynamicGP            DynamicGPConfig
 	ApiAuthentication    ApiAuthConfig
-	ApiRelayCfg          apiRelayConfig
+	ApiRelay             apiRelayConfig
 
 	sync.RWMutex
 }
@@ -50,10 +50,10 @@ func (c *ApolloConfig) setApiRelayCfg(apiRelayCfg apiRelayConfig) {
 	if c == nil || !c.EnableApollo {
 		return
 	}
-	c.ApiRelayCfg.Enabled = apiRelayCfg.Enabled
-	c.ApiRelayCfg.DestURI = apiRelayCfg.DestURI
-	c.ApiRelayCfg.RPCs = make([]rpcMethod, len(apiRelayCfg.RPCs))
-	copy(c.ApiRelayCfg.RPCs, apiRelayCfg.RPCs)
+	c.ApiRelay.Enabled = apiRelayCfg.Enabled
+	c.ApiRelay.DestURI = apiRelayCfg.DestURI
+	c.ApiRelay.RPCs = make([]rpcMethod, len(apiRelayCfg.RPCs))
+	copy(c.ApiRelay.RPCs, apiRelayCfg.RPCs)
 }
 
 // UpdateConfig updates the apollo config
