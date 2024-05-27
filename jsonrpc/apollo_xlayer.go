@@ -16,7 +16,7 @@ type ApolloConfig struct {
 	RateLimit            RateLimitConfig
 	DynamicGP            DynamicGPConfig
 	ApiAuthentication    ApiAuthConfig
-	ApiRelay             apiRelayConfig
+	ApiRelay             ApiRelayConfig
 
 	sync.RWMutex
 }
@@ -46,7 +46,7 @@ func (c *ApolloConfig) setDisableAPIs(disableAPIs []string) {
 	copy(c.DisableAPIs, disableAPIs)
 }
 
-func (c *ApolloConfig) setApiRelayCfg(apiRelayCfg apiRelayConfig) {
+func (c *ApolloConfig) setApiRelayCfg(apiRelayCfg ApiRelayConfig) {
 	if c == nil || !c.EnableApollo {
 		return
 	}

@@ -4,7 +4,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 )
 
-type apiRelayConfig struct {
+type ApiRelayConfig struct {
 	Enabled bool     `mapstructure:"Enabled"`
 	DestURI string   `mapstructure:"DestURI"`
 	RPCs    []string `mapstructure:"RPCs"`
