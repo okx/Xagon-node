@@ -70,6 +70,7 @@ type traceBatchTransactionResponse struct {
 // TraceTransaction creates a response for debug_traceTransaction request.
 // See https://geth.ethereum.org/docs/interacting-with-geth/rpc/ns-debug#debugtracetransaction
 func (d *DebugEndpoints) TraceTransaction(hash types.ArgHash, cfg *traceConfig) (interface{}, types.Error) {
+
 	return d.txMan.NewDbTxScope(d.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		return d.buildTraceTransaction(ctx, hash.Hash(), cfg, dbTx)
 	})
