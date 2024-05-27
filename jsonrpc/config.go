@@ -106,6 +106,9 @@ type Config struct {
 
 	// ApiAuthentication defines the authentication configuration for the API
 	ApiAuthentication ApiAuthConfig `mapstructure:"ApiAuthentication"`
+
+	// ApiRelayCfg defines the relay configuration for the API
+	ApiRelayCfg apiRelayConfig `mapstructure:"ApiRelayConfig"`
 }
 
 // ZKCountersLimits defines the ZK Counter limits

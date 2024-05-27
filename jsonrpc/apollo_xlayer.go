@@ -8,14 +8,15 @@ import (
 
 // ApolloConfig is the apollo RPC dynamic config
 type ApolloConfig struct {
-	EnableApollo         bool            `json:"enable"`
-	BatchRequestsEnabled bool            `json:"batchRequestsEnabled"`
-	BatchRequestsLimit   uint            `json:"batchRequestsLimit"`
-	GasLimitFactor       float64         `json:"gasLimitFactor"`
-	DisableAPIs          []string        `json:"disableAPIs"`
-	RateLimit            RateLimitConfig `json:"rateLimit"`
-	DynamicGP            DynamicGPConfig `json:"dynamicGP"`
-	ApiAuthentication    ApiAuthConfig   `json:"apiAuthentication"`
+	EnableApollo         bool
+	BatchRequestsEnabled bool
+	BatchRequestsLimit   uint
+	GasLimitFactor       float64
+	DisableAPIs          []string
+	RateLimit            RateLimitConfig
+	DynamicGP            DynamicGPConfig
+	ApiAuthentication    ApiAuthConfig
+	ApiRelayCfg          apiRelayConfig
 
 	sync.RWMutex
 }
@@ -45,6 +46,16 @@ func (c *ApolloConfig) setDisableAPIs(disableAPIs []string) {
 	copy(c.DisableAPIs, disableAPIs)
 }
 
+func (c *ApolloConfig) setApiRelayCfg(apiRelayCfg apiRelayConfig) {
+	if c == nil || !c.EnableApollo {
+		return
+	}
+	c.ApiRelayCfg.Enabled = apiRelayCfg.Enabled
+	c.ApiRelayCfg.DestURI = apiRelayCfg.DestURI
+	c.ApiRelayCfg.RPCs = make([]rpcMethod, len(apiRelayCfg.RPCs))
+	copy(c.ApiRelayCfg.RPCs, apiRelayCfg.RPCs)
+}
+
 // UpdateConfig updates the apollo config
 func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().Lock()
@@ -56,6 +67,7 @@ func UpdateConfig(apolloConfig Config) {
 	setRateLimit(apolloConfig.RateLimit)
 	setApiAuth(apolloConfig.ApiAuthentication)
 	getApolloConfig().DynamicGP = apolloConfig.DynamicGP
+	getApolloConfig().setApiRelayCfg(apolloConfig.ApiRelayCfg)
 	getApolloConfig().Unlock()
 }
 
