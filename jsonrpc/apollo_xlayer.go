@@ -52,7 +52,7 @@ func (c *ApolloConfig) setApiRelayCfg(apiRelayCfg apiRelayConfig) {
 	}
 	c.ApiRelay.Enabled = apiRelayCfg.Enabled
 	c.ApiRelay.DestURI = apiRelayCfg.DestURI
-	c.ApiRelay.RPCs = make([]rpcMethod, len(apiRelayCfg.RPCs))
+	c.ApiRelay.RPCs = make([]string, len(apiRelayCfg.RPCs))
 	copy(c.ApiRelay.RPCs, apiRelayCfg.RPCs)
 }
 
