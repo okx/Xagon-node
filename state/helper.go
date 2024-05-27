@@ -331,6 +331,7 @@ func GenerateReceipt(blockNumber *big.Int, processedTx *ProcessTransactionRespon
 		log.Infof("GenerateReceipt, Json:%v", string(jsonData))
 	}
 
+	log.Infof("Status:%v,CumulativeGasUsed:%v,PostState:%v", receipt.Status, receipt.CumulativeGasUsed, receipt.PostState)
 	return receipt
 }
 
