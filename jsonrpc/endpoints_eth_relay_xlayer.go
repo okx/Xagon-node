@@ -40,3 +40,21 @@ func toString(blockArg *types.BlockNumberOrHash) string {
 	}
 	return blockArg.Number().StringOrHex()
 }
+
+func (e *EthEndpoints) relayInternalTransactions(method string, hash string) (interface{}, types.Error) {
+	dstURI := getRelayDestURI(e.cfg.ApiRelay.DestURI)
+
+	res, err := client.JSONRPCCall(dstURI, method, hash)
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, "failed to relay tx to "+dstURI, err, true)
+	}
+	if res.Error != nil {
+		if res.Error.Data == nil {
+			return RPCErrorResponse(res.Error.Code, res.Error.Message, nil, false)
+		}
+
+		return RPCErrorResponseWithData(res.Error.Code, res.Error.Message, *res.Error.Data, nil, false)
+	}
+
+	return res.Result, nil
+}
