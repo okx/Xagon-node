@@ -72,7 +72,7 @@ func (e *EthEndpoints) BlockNumber() (interface{}, types.Error) {
 // Note, this function doesn't make any changes in the state/blockchain and is
 // useful to execute view/pure methods and retrieve values.
 func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash) (interface{}, types.Error) {
-	if e.shouldRelay("eth_call") {
+	if shouldRelay(e.cfg.ApiRelay, "eth_call") {
 		return e.relayCall("eth_call", arg, blockArg)
 	}
 	return e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
@@ -171,7 +171,7 @@ func (e *EthEndpoints) getCoinbaseFromSequencerNode() (interface{}, types.Error)
 // used by the transaction, for a variety of reasons including EVM mechanics and
 // node performance.
 func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumberOrHash) (interface{}, types.Error) {
-	if e.shouldRelay("eth_estimateGas") {
+	if shouldRelay(e.cfg.ApiRelay, "eth_estimateGas") {
 		return e.relayCall("eth_estimateGas", arg, blockArg)
 	}
 	return e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {

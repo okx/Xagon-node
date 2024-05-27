@@ -10,19 +10,17 @@ type ApiRelayConfig struct {
 	RPCs    []string `mapstructure:"RPCs"`
 }
 
-func (e *EthEndpoints) shouldRelay(name string) bool {
-	if !e.cfg.ApiRelay.Enabled || e.cfg.ApiRelay.DestURI == "" {
-		return false
-	}
-
+func shouldRelay(localCfg ApiRelayConfig, name string) bool {
+	enable := localCfg.Enabled && localCfg.DestURI != ""
+	contained := types.Contains(localCfg.RPCs, name)
 	if getApolloConfig().Enable() {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
-
-		return types.Contains(getApolloConfig().ApiRelay.RPCs, name)
+		enable = getApolloConfig().ApiRelay.Enabled && getApolloConfig().ApiRelay.DestURI != ""
+		contained = types.Contains(getApolloConfig().ApiRelay.RPCs, name)
 	}
 
-	return types.Contains(e.cfg.ApiRelay.RPCs, name)
+	return enable && contained
 }
 
 func getRelayDestURI(localDestURI string) string {
