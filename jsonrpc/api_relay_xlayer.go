@@ -4,6 +4,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 )
 
+// ApiRelayConfig is the api relay config
 type ApiRelayConfig struct {
 	Enabled bool     `mapstructure:"Enabled"`
 	DestURI string   `mapstructure:"DestURI"`
