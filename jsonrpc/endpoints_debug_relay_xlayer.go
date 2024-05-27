@@ -5,7 +5,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 )
 
-func (d *DebugEndpoints) relayDebugTransaction(method string, hash types.ArgHash, cfg *traceConfig) (interface{}, types.Error) {
+func (d *DebugEndpoints) relayDebugTransaction(method string, hash string, cfg *traceConfig) (interface{}, types.Error) {
 	dstURI := getRelayDestURI(d.cfg.ApiRelay.DestURI)
 
 	res, err := client.JSONRPCCall(dstURI, method, hash, cfg)
