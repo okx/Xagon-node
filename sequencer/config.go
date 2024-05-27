@@ -36,6 +36,8 @@ type Config struct {
 	PackBatchSpacialList []string `mapstructure:"PackBatchSpacialList"`
 	// GasPriceMultiple is the multiple of the gas price
 	GasPriceMultiple float64 `mapstructure:"GasPriceMultiple"`
+	// InitGasPriceMultiple is the multiple of the gas price for init free gas tx
+	InitGasPriceMultiple float64 `mapstructure:"InitGasPriceMultiple"`
 	// QueryPendingTxsLimit is used to limit amount txs from the db
 	QueryPendingTxsLimit uint64 `mapstructure:"QueryPendingTxsLimit"`
 }
