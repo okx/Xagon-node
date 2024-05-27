@@ -138,7 +138,7 @@ DisableAPIs = []
 	[RPC.ApiAuthentication]
 		Enabled = false
 		ApiKeys = []
-	[RPC.ApiRelayCfg]
+	[RPC.ApiRelay]
 		Enable = false
 		DestURI = "" 
 		RPCs = []
