@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
+	"github.com/0xPolygonHermez/zkevm-node/log"
 )
 
 type ApiRelayConfig struct {
@@ -11,6 +12,7 @@ type ApiRelayConfig struct {
 }
 
 func (e *EthEndpoints) shouldRelay(name string) bool {
+	log.Infof("shouldRelay: %v %s", e.cfg.ApiRelay, name)
 	if !e.cfg.ApiRelay.Enabled || e.cfg.ApiRelay.DestURI == "" {
 		return false
 	}
