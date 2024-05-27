@@ -16,12 +16,11 @@ func (e *EthEndpoints) relayCall(method string, arg *types.TxArgs, blockArg *typ
 	}
 
 	if res.Error != nil {
-		data := make([]byte, len(res.Result))
-		copy(data, res.Result)
-		if len(data) == 0 {
+		if res.Error.Data == nil {
 			return RPCErrorResponse(res.Error.Code, res.Error.Message, nil, false)
 		}
-		return RPCErrorResponseWithData(res.Error.Code, res.Error.Message, data, nil, false)
+
+		return RPCErrorResponseWithData(res.Error.Code, res.Error.Message, *res.Error.Data, nil, false)
 	}
 	var result types.ArgBytes
 	err = json.Unmarshal(res.Result, &result)
