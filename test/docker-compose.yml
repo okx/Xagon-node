@@ -368,7 +368,7 @@ services:
 
   xlayer-explorer-l1:
     container_name: xlayer-explorer-l1
-    image: hermeznetwork/xlayer-explorer:latest
+    image: hermeznetwork/zkevm-explorer:latest
     ports:
       - 4000:4000
     environment:
@@ -401,7 +401,7 @@ services:
 
   xlayer-explorer-l2:
     container_name: xlayer-explorer-l2
-    image: hermeznetwork/xlayer-explorer:latest
+    image: hermeznetwork/zkevm-explorer:latest
     ports:
       - 4001:4000
     environment:
@@ -735,10 +735,8 @@ services:
           memory: 2G
         reservations:
           memory: 1G
-    expose:
-      - 5436
     ports:
-      - 5436:5432
+      - 5439:5432
     environment:
       - POSTGRES_USER=test_user
       - POSTGRES_PASSWORD=test_password
