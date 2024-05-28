@@ -805,3 +805,27 @@ services:
       - "/bin/sh"
       - "-c"
       - "/app/xlayer-bridge run --cfg /app/config.toml"
+
+  xlayer-bridge-ui-fork9:
+    container_name: xlayer-bridge-ui
+    image: hermeznetwork/zkevm-bridge-ui:etrog-v2
+    ports:
+      - 8090:80
+    environment:
+      - ETHEREUM_RPC_URL=http://xlayer-mock-l1-network:8545
+      - ETHEREUM_EXPLORER_URL=http://xlayer-explorer-l1:4000
+      - ETHEREUM_ROLLUP_MANAGER_ADDRESS=0x2d42E2899662EFf08b13eeb65b154b904C7a1c8a
+      - ETHEREUM_BRIDGE_CONTRACT_ADDRESS=0x1089Af36bD72553008FAd0A1240B4D5641208494
+      - ETHEREUM_FORCE_UPDATE_GLOBAL_EXIT_ROOT=true
+      - ETHEREUM_PROOF_OF_EFFICIENCY_CONTRACT_ADDRESS=0xeb173087729c88a47568AF87b17C653039377BA6
+      - POLYGON_ZK_EVM_RPC_URL=http://xlayer-json-rpc:8123
+      - POLYGON_ZK_EVM_EXPLORER_URL=http://xlayer-explorer-l2:4000
+      - POLYGON_ZK_EVM_BRIDGE_CONTRACT_ADDRESS=0x1089Af36bD72553008FAd0A1240B4D5641208494
+      - POLYGON_ZK_EVM_NETWORK_ID=1
+      - BRIDGE_API_URL=http://xlayer-bridge-service:8080
+      - ENABLE_FIAT_EXCHANGE_RATES=false
+      - ENABLE_OUTDATED_NETWORK_MODAL=false
+      - ENABLE_DEPOSIT_WARNING=true
+      - ENABLE_REPORT_FORM=false
+      - USE_FIAT_EXCHANGE_RATES=false
+      - SHOW_OUTDATED_NETWORK_MODAL=false

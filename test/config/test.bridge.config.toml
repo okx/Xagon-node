@@ -32,8 +32,8 @@ AuthorizedClaimMessageAddresses = ["0x90F79bf6EB2c4f870365E785982E1f101E93b906"]
 [Etherman]
 L1URL = "http://xlayer-mock-l1-network:8545"
 L2URLs = ["http://xlayer-json-rpc:8123"]
-L1ChainId = 5
-L2ChainIds = [1001]
+L1ChainId = 1337
+L2ChainIds = [195]
 
 [Synchronizer]
 SyncInterval = "1s"
@@ -81,7 +81,7 @@ RootCAPath = "/app/root-ca-cert"
 Enabled = false
 
 [NetworkConfig]
-GenBlockNumber = 1
+GenBlockNumber = 374
 PolygonBridgeAddress = "0x1089Af36bD72553008FAd0A1240B4D5641208494"
 PolygonZkEVMGlobalExitRootAddress = "0xB8cedD4B9eF683f0887C44a6E4312dC7A6e2fcdB"
 PolygonRollupManagerAddress = "0x2d42E2899662EFf08b13eeb65b154b904C7a1c8a"
