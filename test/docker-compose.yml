@@ -788,7 +788,7 @@ services:
     container_name: xlayer-bridge-service
     image: xlayer-bridge-service
     ports:
-      - 8080:8080
+      - 18080:8080
       - 9090:9090
     environment:
       - ZKEVM_BRIDGE_DATABASE_USER=test_user
@@ -806,11 +806,11 @@ services:
       - "-c"
       - "/app/xlayer-bridge run --cfg /app/config.toml"
 
-  xlayer-bridge-ui-fork9:
+  xlayer-bridge-ui:
     container_name: xlayer-bridge-ui
     image: hermeznetwork/zkevm-bridge-ui:etrog-v2
     ports:
-      - 8090:80
+      - 8080:80
     environment:
       - ETHEREUM_RPC_URL=http://xlayer-mock-l1-network:8545
       - ETHEREUM_EXPLORER_URL=http://xlayer-explorer-l1:4000
