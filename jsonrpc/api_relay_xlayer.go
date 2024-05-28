@@ -42,7 +42,7 @@ func getRelayDestURI(localDestURI string) string {
 func tryRelay(localCfg ApiRelayConfig, request types.Request) (types.Response, bool) {
 	if shouldRelay(localCfg, request.Method) {
 		destURI := getRelayDestURI(localCfg.DestURI)
-		res, err := client.JSONRPCCallEx(destURI, request)
+		res, err := client.JSONRPCRelay(destURI, request)
 		if err != nil {
 			log.Errorf("failed to relay %v to %s: %v", request.Method, destURI, err)
 			metrics.RequestRelayFailCount(request.Method)

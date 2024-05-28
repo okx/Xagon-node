@@ -9,10 +9,10 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 )
 
-// JSONRPCCallEx executes a 2.0 JSON RPC HTTP Post Request to the provided URL with
+// JSONRPCRelay executes a 2.0 JSON RPC HTTP Post Request to the provided URL with
 // types.Request, which is compatible with the Ethereum
 // JSON RPC Server.
-func JSONRPCCallEx(url string, request types.Request) (types.Response, error) {
+func JSONRPCRelay(url string, request types.Request) (types.Response, error) {
 	httpRes, err := sendJSONRPC_HTTPRequest(url, request)
 	if err != nil {
 		return types.Response{}, err
