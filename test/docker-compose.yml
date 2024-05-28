@@ -725,3 +725,83 @@ services:
       - "/bin/sh"
       - "-c"
       - "/app/xlayer-signer http -cfg /app/config.toml"
+
+  xlayer-bridge-db:
+    container_name: xlayer-bridge-db
+    image: postgres
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    expose:
+      - 5435
+    ports:
+      - 5435:5432
+    environment:
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test_password
+      - POSTGRES_DB=test_db
+    command: [ "postgres", "-N", "500" ]
+
+  xlayer-bridge-redis:
+    container_name: xlayer-bridge-redis
+    image: redis
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    expose:
+      - 6379
+    ports:
+      - 6379:6379
+    environment:
+      - REDIS_PASSWORD=my_password
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=8
+
+  kafka-zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: kafka-zookeeper
+    ports:
+      - "2181:2181"
+    expose:
+      - 2181
+
+  xlayer-bridge-coin-kafka:
+    image: wurstmeister/kafka
+    container_name: xlayer-bridge-coin-kafka
+    expose:
+      - 9092
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://localhost:9123
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9123
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: kafka-zookeeper:2181
+      KAFKA_CREATE_TOPICS: "explorer_chainAddressPrice_push:1:1"
+
+  xlayer-bridge-service:
+    container_name: xlayer-bridge-service
+    image: xlayer-bridge-service
+    ports:
+      - 8080:8080
+      - 9090:9090
+    environment:
+      - ZKEVM_BRIDGE_DATABASE_USER=test_user
+      - ZKEVM_BRIDGE_DATABASE_PASSWORD=test_password
+      - ZKEVM_BRIDGE_DATABASE_NAME=test_db
+      - ZKEVM_BRIDGE_DATABASE_HOST=xlayer-bridge-db
+      - ZKEVM_BRIDGE_DATABASE_PORT=5432
+    volumes:
+      - ./sequencer.keystore:/pk/keystore.claimtxmanager
+      - ./config/test.bridge.config.toml:/app/config.toml
+      - ./config/test.sentinel.config.json:/app/sentinel_config.json
+      - ./config/root-ca-cert:/app/root-ca-cert
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "/app/xlayer-bridge run --cfg /app/config.toml"
