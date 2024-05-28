@@ -637,7 +637,7 @@ func Test_OOCErrors(t *testing.T) {
 				})
 				return err.Error()
 			},
-			expectedError: "gas limit intrinsic error",
+			expectedError: "not enough poseidon counters to continue the execution",
 		},
 		{
 			name: "estimate gas OOG",
