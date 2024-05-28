@@ -735,10 +735,8 @@ services:
           memory: 2G
         reservations:
           memory: 1G
-    expose:
-      - 5436
     ports:
-      - 5436:5432
+      - 5439:5432
     environment:
       - POSTGRES_USER=test_user
       - POSTGRES_PASSWORD=test_password
