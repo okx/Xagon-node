@@ -653,6 +653,8 @@ run: ## Runs a full node
 	$(RUN_COIN_KAFKA)
 	$(RUN_ZOOKEEPER)
 	$(RUNL1NETWORK)
+	$(RUNEXPLORERL1DB)
+	$(RUNEXPLORERL2DB)
 	sleep 1
 	$(RUNZKPROVER)
 	$(RUNAPPROVE)
@@ -669,6 +671,8 @@ run: ## Runs a full node
 	$(RUNJSONRPC)
 	$(RUN_BRIDGE)
 	$(RUN_BRIDGE_UI)
+	$(RUNEXPLORERL1)
+	$(RUNEXPLORERL2)
 
 .PHONY: run-v1tov2
 run-v1tov2: ## Runs a full node using v1tov2 network
