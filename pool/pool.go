@@ -51,7 +51,6 @@ type Pool struct {
 	gasPrices               GasPrices
 	gasPricesMux            *sync.RWMutex
 	effectiveGasPrice       *EffectiveGasPrice
-	initFreeAddress         map[string]bool
 }
 
 type preExecutionResponse struct {
@@ -88,7 +87,6 @@ func NewPool(cfg Config, batchConstraintsCfg state.BatchConstraintsCfg, s storag
 		gasPrices:               GasPrices{0, 0},
 		gasPricesMux:            new(sync.RWMutex),
 		effectiveGasPrice:       NewEffectiveGasPrice(cfg.EffectiveGasPrice),
-		initFreeAddress:         map[string]bool{},
 	}
 	p.refreshGasPrices()
 	go func(cfg *Config, p *Pool) {
@@ -538,10 +536,15 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	}
 
 	freeGp := false
-	if (isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims) || // claim tx
-		(p.initFreeAddress[from.String()] && currentNonce < getFreeGasNonce(p.cfg.FreeGasNonce)) { // init free-gas tx
+	if isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims { // claim tx
 		freeGp = true
+	} else if currentNonce < getFreeGasNonce(p.cfg.FreeGasNonce) { // init free-gas tx
+		freeGp, err = p.storage.IsFreeGasAddr(ctx, from)
+		if err != nil {
+			return err
+		}
 	}
+
 	if !freeGp { // XLayer handle
 		p.minSuggestedGasPriceMux.RLock()
 		gasPriceCmp := poolTx.GasPrice().Cmp(p.minSuggestedGasPrice)
@@ -618,8 +621,9 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 				log.Errorf("failed to get nonce while check init free address", err)
 			}
 			if nonce < getFreeGasNonce(p.cfg.FreeGasNonce) {
-				// todo add db of init-free addresses
-				p.initFreeAddress[to.String()] = true
+				if err = p.storage.AddFreeGasAddr(ctx, *to); err != nil {
+					return err
+				}
 			}
 		}
 	}
