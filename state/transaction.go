@@ -935,7 +935,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 // before ETROG
 func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batch *Batch, l2Block *L2Block, latestL2BlockNumber uint64,
 	transaction *types.Transaction, forkID uint64, senderAddress common.Address,
-	gas uint64, nonce uint64, shouldOmitErr bool) (*testGasEstimationResult, err error) {
+	gas uint64, nonce uint64, shouldOmitErr bool) (*testGasEstimationResult, error) {
 	timestamp := l2Block.Time()
 	if l2Block.NumberU64() == latestL2BlockNumber {
 		timestamp = uint64(time.Now().Unix())
