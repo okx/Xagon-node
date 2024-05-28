@@ -539,7 +539,7 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 
 	freeGp := false
 	if (isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims) || // claim tx
-		(p.initFreeAddress[from.String()] && currentNonce < 3) { // init free-gas tx
+		(p.initFreeAddress[from.String()] && currentNonce < getFreeGasNonce(p.cfg.FreeGasNonce)) { // init free-gas tx
 		freeGp = true
 	}
 	if !freeGp { // XLayer handle
@@ -617,8 +617,7 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 			if err != nil {
 				log.Errorf("failed to get nonce while check init free address", err)
 			}
-			// todo 3 should be config
-			if nonce < 3 {
+			if nonce < getFreeGasNonce(p.cfg.FreeGasNonce) {
 				// todo add db of init-free addresses
 				p.initFreeAddress[to.String()] = true
 			}
