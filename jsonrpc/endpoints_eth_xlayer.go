@@ -31,9 +31,6 @@ func (e *EthEndpoints) GetInternalTransactions(hash types.ArgHash) (interface{},
 	if e.isDisabled("eth_getInternalTransactions") {
 		return RPCErrorResponse(types.DefaultErrorCode, "not supported yet", nil, true)
 	}
-	if shouldRelay(e.cfg.ApiRelay, "eth_getInternalTransactions") {
-		return e.relayInternalTransactions("eth_getInternalTransactions", hash.Hash().String())
-	}
 	once.Do(func() {
 		debugEndPoints = &DebugEndpoints{
 			state: e.state,

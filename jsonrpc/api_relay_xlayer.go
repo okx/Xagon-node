@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/client"
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 )
@@ -43,7 +44,8 @@ func tryRelay(localCfg ApiRelayConfig, request types.Request) (types.Response, b
 		destURI := getRelayDestURI(localCfg.DestURI)
 		res, err := client.JSONRPCCallEx(destURI, request)
 		if err != nil {
-			log.Errorf("failed to relay tx to %s: %v", destURI, err)
+			log.Errorf("failed to relay %v to %s: %v", request.Method, destURI, err)
+			metrics.RequestRelayFailCount(request.Method)
 			return types.Response{}, false
 		}
 

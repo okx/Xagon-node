@@ -79,6 +79,7 @@ func NewServer(
 	}
 
 	handler := newJSONRpcHandler()
+	handler.setCfg(cfg)
 
 	for _, service := range services {
 		handler.registerService(service)
@@ -376,8 +377,11 @@ func (s *Server) handleBatchRequest(httpRequest *http.Request, w http.ResponseWr
 		}
 		st := time.Now()
 		metrics.RequestMethodCount(request.Method)
-		req := handleRequest{Request: request, HttpRequest: httpRequest}
-		response := s.handler.Handle(req)
+		response, relayed := tryRelay(s.config.ApiRelay, request)
+		if !relayed {
+			req := handleRequest{Request: request, HttpRequest: httpRequest}
+			response = s.handler.Handle(req)
+		}
 		responses = append(responses, response)
 		metrics.RequestMethodDuration(request.Method, st)
 	}
