@@ -10,6 +10,7 @@ import (
 type apolloConfig struct {
 	EnableApollo       bool
 	FreeGasAddresses   []string
+	FreeGasNonce       uint64
 	GlobalQueue        uint64
 	AccountQueue       uint64
 	EnableWhitelist    bool
@@ -44,6 +45,13 @@ func (c *apolloConfig) setFreeGasAddresses(freeGasAddrs []string) {
 	copy(c.FreeGasAddresses, freeGasAddrs)
 }
 
+func (c *apolloConfig) setFreeGasNonce(freeGasNonce uint64) {
+	if c == nil || !c.EnableApollo {
+		return
+	}
+	c.FreeGasNonce = freeGasNonce
+}
+
 func (c *apolloConfig) setBridgeClaimMethods(bridgeClaimMethods []string) {
 	if c == nil || !c.EnableApollo {
 		return
@@ -64,6 +72,7 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().GlobalQueue = apolloConfig.GlobalQueue
 	getApolloConfig().AccountQueue = apolloConfig.AccountQueue
 	getApolloConfig().setFreeGasAddresses(apolloConfig.FreeGasAddress)
+	getApolloConfig().setFreeGasNonce(apolloConfig.FreeGasNonce)
 	getApolloConfig().EnableWhitelist = apolloConfig.EnableWhitelist
 	getApolloConfig().setBridgeClaimMethods(apolloConfig.BridgeClaimMethodSigs)
 	getApolloConfig().Unlock()
@@ -93,6 +102,15 @@ func isFreeGasAddress(localFreeGasAddrs []string, address common.Address) bool {
 	}
 
 	return contains(localFreeGasAddrs, address)
+}
+
+func getFreeGasNonce(localFreeGasNonce uint64) uint64 {
+	if getApolloConfig().enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		return getApolloConfig().FreeGasNonce
+	}
+	return localFreeGasNonce
 }
 
 func getGlobalQueue(globalQueue uint64) uint64 {
