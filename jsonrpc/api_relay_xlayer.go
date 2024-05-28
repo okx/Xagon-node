@@ -1,7 +1,9 @@
 package jsonrpc
 
 import (
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/client"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
+	"github.com/0xPolygonHermez/zkevm-node/log"
 )
 
 // ApiRelayConfig is the api relay config
@@ -34,4 +36,19 @@ func getRelayDestURI(localDestURI string) string {
 	}
 
 	return ret
+}
+
+func tryRelay(localCfg ApiRelayConfig, request types.Request) (types.Response, bool) {
+	if shouldRelay(localCfg, request.Method) {
+		destURI := getRelayDestURI(localCfg.DestURI)
+		res, err := client.JSONRPCCallEx(destURI, request)
+		if err != nil {
+			log.Errorf("failed to relay tx to %s: %v", destURI, err)
+			return types.Response{}, false
+		}
+
+		return res, true
+	}
+
+	return types.Response{}, false
 }
