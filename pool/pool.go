@@ -537,33 +537,20 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		}
 	}
 
-	if isFreeGasAddress(p.cfg.FreeGasAddress, from) && !poolTx.IsClaims {
-		// check the address of to can be free-gas
-		poolTx.To()
-		if to := poolTx.To(); to != nil {
-			nonce, err := p.state.GetNonce(ctx, *to, lastL2Block.Root())
-			if err != nil {
-				log.Errorf("failed to get nonce while check init free address", err)
-			}
-			// todo 3 should be config
-			if nonce < 3 {
-				// todo add db of init-free addresses
-				p.initFreeAddress[to.String()] = true
-			}
+	freeGp := false
+	if (isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims) || // claim tx
+		(p.initFreeAddress[from.String()] && currentNonce < 3) { // init free-gas tx
+		freeGp = true
+	}
+	if !freeGp { // XLayer handle
+		p.minSuggestedGasPriceMux.RLock()
+		gasPriceCmp := poolTx.GasPrice().Cmp(p.minSuggestedGasPrice)
+		if gasPriceCmp == -1 {
+			log.Debugf("low gas price: minSuggestedGasPrice %v got %v", p.minSuggestedGasPrice, poolTx.GasPrice())
 		}
-	} else {
-		// check tx is not init free-gas
-		if !p.initFreeAddress[from.String()] || currentNonce >= 3 {
-			// Reject transactions with a gas price lower than the minimum gas price
-			p.minSuggestedGasPriceMux.RLock()
-			gasPriceCmp := poolTx.GasPrice().Cmp(p.minSuggestedGasPrice)
-			if gasPriceCmp == -1 {
-				log.Debugf("low gas price: minSuggestedGasPrice %v got %v", p.minSuggestedGasPrice, poolTx.GasPrice())
-			}
-			p.minSuggestedGasPriceMux.RUnlock()
-			if gasPriceCmp == -1 {
-				return ErrGasPrice
-			}
+		p.minSuggestedGasPriceMux.RUnlock()
+		if gasPriceCmp == -1 {
+			return ErrGasPrice
 		}
 	}
 
@@ -621,6 +608,21 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	// Executor field size requirements check
 	if err := p.checkTxFieldCompatibilityWithExecutor(ctx, poolTx.Transaction); err != nil {
 		return err
+	}
+
+	if poolTx.IsClaims {
+		// check the address of to can be free-gas
+		if to := poolTx.To(); to != nil {
+			nonce, err := p.state.GetNonce(ctx, *to, lastL2Block.Root())
+			if err != nil {
+				log.Errorf("failed to get nonce while check init free address", err)
+			}
+			// todo 3 should be config
+			if nonce < 3 {
+				// todo add db of init-free addresses
+				p.initFreeAddress[to.String()] = true
+			}
+		}
 	}
 
 	return nil

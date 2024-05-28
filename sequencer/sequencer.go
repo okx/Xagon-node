@@ -261,7 +261,7 @@ func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) erro
 		if isClaimTx {
 			txTracker.IsClaimTx = true
 			txTracker.GasPrice = copyBaseGp.Mul(copyBaseGp, new(big.Int).SetUint64(uint64(getGasPriceMultiple(s.cfg.GasPriceMultiple))))
-		} else if freeGp {
+		} else {
 			txTracker.GasPrice = copyBaseGp.Mul(copyBaseGp, new(big.Int).SetUint64(uint64(getInitGasPriceMultiple(s.cfg.InitGasPriceMultiple))))
 		}
 	}
