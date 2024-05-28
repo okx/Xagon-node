@@ -406,8 +406,8 @@ services:
       - 4001:4000
     environment:
       - NETWORK=POE
-      - SUBNETWORK=Polygon Hermez
-      - COIN=ETH
+      - SUBNETWORK=Local XLayer
+      - COIN=OKB
       - ETHEREUM_JSONRPC_VARIANT=geth
       - ETHEREUM_JSONRPC_HTTP_URL=http://xlayer-explorer-json-rpc:8124
       - DATABASE_URL=postgres://l2_explorer_user:l2_explorer_password@xlayer-explorer-l2-db:5432/l2_explorer_db
