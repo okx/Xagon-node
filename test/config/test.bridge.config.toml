@@ -16,7 +16,7 @@ Database = "postgres"
 User = "test_user"
 Password = "test_password"
 Name = "test_db"
-Host = "bridge-bridge-db"
+Host = "xlayer-bridge-db"
 Port = "5432"
 MaxConns = 20
 

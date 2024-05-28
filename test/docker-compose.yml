@@ -699,7 +699,7 @@ services:
 
   xlayer-data-availability-db:
     container_name: xlayer-data-availability-db
-    image: postgres
+    image: postgres:15
     ports:
       - 5438:5432
     environment:
@@ -728,7 +728,7 @@ services:
 
   xlayer-bridge-db:
     container_name: xlayer-bridge-db
-    image: postgres
+    image: postgres:15
     deploy:
       resources:
         limits:
