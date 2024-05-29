@@ -8,14 +8,14 @@ import (
 
 // apolloConfig is the apollo pool dynamic config
 type apolloConfig struct {
-	EnableApollo       bool
-	FreeGasAddresses   []string
-	FreeGasNonce       uint64
-	GlobalQueue        uint64
-	AccountQueue       uint64
-	EnableWhitelist    bool
-	BridgeClaimMethods []string
-	EnablePendingStat  bool
+	EnableApollo        bool
+	FreeGasAddresses    []string
+	FreeGasCountPerAddr uint64
+	GlobalQueue         uint64
+	AccountQueue        uint64
+	EnableWhitelist     bool
+	BridgeClaimMethods  []string
+	EnablePendingStat   bool
 
 	sync.RWMutex
 }
@@ -45,11 +45,11 @@ func (c *apolloConfig) setFreeGasAddresses(freeGasAddrs []string) {
 	copy(c.FreeGasAddresses, freeGasAddrs)
 }
 
-func (c *apolloConfig) setFreeGasNonce(freeGasNonce uint64) {
+func (c *apolloConfig) setFreeGasCountPerAddr(freeGasPerAddr uint64) {
 	if c == nil || !c.EnableApollo {
 		return
 	}
-	c.FreeGasNonce = freeGasNonce
+	c.FreeGasCountPerAddr = freeGasPerAddr
 }
 
 func (c *apolloConfig) setBridgeClaimMethods(bridgeClaimMethods []string) {
@@ -72,7 +72,7 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().GlobalQueue = apolloConfig.GlobalQueue
 	getApolloConfig().AccountQueue = apolloConfig.AccountQueue
 	getApolloConfig().setFreeGasAddresses(apolloConfig.FreeGasAddress)
-	getApolloConfig().setFreeGasNonce(apolloConfig.FreeGasNonce)
+	getApolloConfig().setFreeGasCountPerAddr(apolloConfig.FreeGasCountPerAddr)
 	getApolloConfig().EnableWhitelist = apolloConfig.EnableWhitelist
 	getApolloConfig().setBridgeClaimMethods(apolloConfig.BridgeClaimMethodSigs)
 	getApolloConfig().Unlock()
@@ -104,13 +104,13 @@ func isFreeGasAddress(localFreeGasAddrs []string, address common.Address) bool {
 	return contains(localFreeGasAddrs, address)
 }
 
-func getFreeGasNonce(localFreeGasNonce uint64) uint64 {
+func getFreeGasCountPerAddr(localFreeGasCountPerAddr uint64) uint64 {
 	if getApolloConfig().enable() {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
-		return getApolloConfig().FreeGasNonce
+		return getApolloConfig().FreeGasCountPerAddr
 	}
-	return localFreeGasNonce
+	return localFreeGasCountPerAddr
 }
 
 func getGlobalQueue(globalQueue uint64) uint64 {

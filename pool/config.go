@@ -53,8 +53,8 @@ type Config struct {
 	// XLayer config
 	// FreeGasAddress is the default free gas address
 	FreeGasAddress []string `mapstructure:"FreeGasAddress"`
-	// FreeGasNonce is the nonce limit of init free gas tx
-	FreeGasNonce uint64 `mapstructure:"FreeGasNonce"`
+	// FreeGasCountPerAddr is the count limit of free gas tx per address
+	FreeGasCountPerAddr uint64 `mapstructure:"FreeGasCountPerAddr"`
 	// FreeClaimGasLimit is the max gas allowed use to do a free claim
 	FreeClaimGasLimit uint64 `mapstructure:"FreeClaimGasLimit"`
 	// BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method
