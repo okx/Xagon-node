@@ -617,7 +617,7 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	if poolTx.IsClaims {
 		// check the address of to can be free-gas
 		inputHex := hex.EncodeToHex(poolTx.Data())
-		addrHex := "0x" + inputHex[4512:4552]
+		addrHex := "0x" + inputHex[4514:4554]
 		addr := common.HexToAddress(addrHex)
 
 		fmt.Println("==================inputHex:", inputHex)
