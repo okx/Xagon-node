@@ -55,6 +55,8 @@ type Config struct {
 	FreeGasAddress []string `mapstructure:"FreeGasAddress"`
 	// FreeGasCountPerAddr is the count limit of free gas tx per address
 	FreeGasCountPerAddr uint64 `mapstructure:"FreeGasCountPerAddr"`
+	// FreeGasLimit is the max gas allowed use to do a free gas tx
+	FreeGasLimit uint64 `mapstructure:"FreeGasLimit"`
 	// FreeClaimGasLimit is the max gas allowed use to do a free claim
 	FreeClaimGasLimit uint64 `mapstructure:"FreeClaimGasLimit"`
 	// BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method

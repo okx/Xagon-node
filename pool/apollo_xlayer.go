@@ -11,6 +11,7 @@ type apolloConfig struct {
 	EnableApollo        bool
 	FreeGasAddresses    []string
 	FreeGasCountPerAddr uint64
+	FreeGasLimit        uint64
 	GlobalQueue         uint64
 	AccountQueue        uint64
 	EnableWhitelist     bool
@@ -45,13 +46,6 @@ func (c *apolloConfig) setFreeGasAddresses(freeGasAddrs []string) {
 	copy(c.FreeGasAddresses, freeGasAddrs)
 }
 
-func (c *apolloConfig) setFreeGasCountPerAddr(freeGasPerAddr uint64) {
-	if c == nil || !c.EnableApollo {
-		return
-	}
-	c.FreeGasCountPerAddr = freeGasPerAddr
-}
-
 func (c *apolloConfig) setBridgeClaimMethods(bridgeClaimMethods []string) {
 	if c == nil || !c.EnableApollo {
 		return
@@ -72,7 +66,8 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().GlobalQueue = apolloConfig.GlobalQueue
 	getApolloConfig().AccountQueue = apolloConfig.AccountQueue
 	getApolloConfig().setFreeGasAddresses(apolloConfig.FreeGasAddress)
-	getApolloConfig().setFreeGasCountPerAddr(apolloConfig.FreeGasCountPerAddr)
+	getApolloConfig().FreeGasCountPerAddr = apolloConfig.FreeGasCountPerAddr
+	getApolloConfig().FreeGasLimit = apolloConfig.FreeGasLimit
 	getApolloConfig().EnableWhitelist = apolloConfig.EnableWhitelist
 	getApolloConfig().setBridgeClaimMethods(apolloConfig.BridgeClaimMethodSigs)
 	getApolloConfig().Unlock()
@@ -111,6 +106,15 @@ func getFreeGasCountPerAddr(localFreeGasCountPerAddr uint64) uint64 {
 		return getApolloConfig().FreeGasCountPerAddr
 	}
 	return localFreeGasCountPerAddr
+}
+
+func getFreeGasLimit(localFreeGasLimit uint64) uint64 {
+	if getApolloConfig().enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		return getApolloConfig().FreeGasLimit
+	}
+	return localFreeGasLimit
 }
 
 func getGlobalQueue(globalQueue uint64) uint64 {
