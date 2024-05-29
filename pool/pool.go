@@ -4,12 +4,12 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/0xPolygonHermez/zkevm-node/hex"
 	"math/big"
 	"sync"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/event"
+	"github.com/0xPolygonHermez/zkevm-node/hex"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime"
@@ -634,7 +634,6 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 				return err
 			}
 		}
-
 	}
 
 	return nil

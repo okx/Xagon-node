@@ -707,6 +707,8 @@ SecretKey=""
 | - [EffectiveGasPrice](#Pool_EffectiveGasPrice )                                 | No      | object          | No         | -          | EffectiveGasPrice is the config for the effective gas price calculation                              |
 | - [ForkID](#Pool_ForkID )                                                       | No      | integer         | No         | -          | ForkID is the current fork ID of the chain                                                           |
 | - [FreeGasAddress](#Pool_FreeGasAddress )                                       | No      | array of string | No         | -          | XLayer config<br />FreeGasAddress is the default free gas address                                    |
+| - [FreeGasCountPerAddr](#Pool_FreeGasCountPerAddr )                             | No      | integer         | No         | -          | FreeGasCountPerAddr is the count limit of free gas tx per address                                    |
+| - [FreeGasLimit](#Pool_FreeGasLimit )                                           | No      | integer         | No         | -          | FreeGasLimit is the max gas allowed use to do a free gas tx                                          |
 | - [FreeClaimGasLimit](#Pool_FreeClaimGasLimit )                                 | No      | integer         | No         | -          | FreeClaimGasLimit is the max gas allowed use to do a free claim                                      |
 | - [BridgeClaimMethodSigs](#Pool_BridgeClaimMethodSigs )                         | No      | array of string | No         | -          | BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method                            |
 
@@ -1229,7 +1231,35 @@ FreeGasAddress is the default free gas address
 FreeGasAddress=["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]
 ```
 
-### <a name="Pool_FreeClaimGasLimit"></a>7.16. `Pool.FreeClaimGasLimit`
+### <a name="Pool_FreeGasCountPerAddr"></a>7.16. `Pool.FreeGasCountPerAddr`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Description:** FreeGasCountPerAddr is the count limit of free gas tx per address
+
+**Example setting the default value** (0):
+```
+[Pool]
+FreeGasCountPerAddr=0
+```
+
+### <a name="Pool_FreeGasLimit"></a>7.17. `Pool.FreeGasLimit`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Description:** FreeGasLimit is the max gas allowed use to do a free gas tx
+
+**Example setting the default value** (0):
+```
+[Pool]
+FreeGasLimit=0
+```
+
+### <a name="Pool_FreeClaimGasLimit"></a>7.18. `Pool.FreeClaimGasLimit`
 
 **Type:** : `integer`
 
@@ -1243,7 +1273,7 @@ FreeGasAddress=["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]
 FreeClaimGasLimit=150000
 ```
 
-### <a name="Pool_BridgeClaimMethodSigs"></a>7.17. `Pool.BridgeClaimMethodSigs`
+### <a name="Pool_BridgeClaimMethodSigs"></a>7.19. `Pool.BridgeClaimMethodSigs`
 
 **Type:** : `array of string`
 **Description:** BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method
@@ -2760,6 +2790,7 @@ CheckLastL2BlockHashOnCloseBatch=true
 | - [StreamServer](#Sequencer_StreamServer )                                           | No      | object          | No         | -          | StreamServerCfg is the config for the stream server                                                 |
 | - [PackBatchSpacialList](#Sequencer_PackBatchSpacialList )                           | No      | array of string | No         | -          | XLayer config<br />PackBatchSpacialList is the list of addresses that will have a special gas price |
 | - [GasPriceMultiple](#Sequencer_GasPriceMultiple )                                   | No      | number          | No         | -          | GasPriceMultiple is the multiple of the gas price                                                   |
+| - [InitGasPriceMultiple](#Sequencer_InitGasPriceMultiple )                           | No      | number          | No         | -          | InitGasPriceMultiple is the multiple of the gas price for init free gas tx                          |
 | - [QueryPendingTxsLimit](#Sequencer_QueryPendingTxsLimit )                           | No      | integer         | No         | -          | QueryPendingTxsLimit is used to limit amount txs from the db                                        |
 
 ### <a name="Sequencer_DeletePoolTxsL1BlockConfirmations"></a>10.1. `Sequencer.DeletePoolTxsL1BlockConfirmations`
@@ -3447,7 +3478,21 @@ PackBatchSpacialList is the list of addresses that will have a special gas price
 GasPriceMultiple=0
 ```
 
-### <a name="Sequencer_QueryPendingTxsLimit"></a>10.11. `Sequencer.QueryPendingTxsLimit`
+### <a name="Sequencer_InitGasPriceMultiple"></a>10.11. `Sequencer.InitGasPriceMultiple`
+
+**Type:** : `number`
+
+**Default:** `0`
+
+**Description:** InitGasPriceMultiple is the multiple of the gas price for init free gas tx
+
+**Example setting the default value** (0):
+```
+[Sequencer]
+InitGasPriceMultiple=0
+```
+
+### <a name="Sequencer_QueryPendingTxsLimit"></a>10.12. `Sequencer.QueryPendingTxsLimit`
 
 **Type:** : `integer`
 

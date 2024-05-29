@@ -460,6 +460,16 @@
 						"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 					]
 				},
+				"FreeGasCountPerAddr": {
+					"type": "integer",
+					"description": "FreeGasCountPerAddr is the count limit of free gas tx per address",
+					"default": 0
+				},
+				"FreeGasLimit": {
+					"type": "integer",
+					"description": "FreeGasLimit is the max gas allowed use to do a free gas tx",
+					"default": 0
+				},
 				"FreeClaimGasLimit": {
 					"type": "integer",
 					"description": "FreeClaimGasLimit is the max gas allowed use to do a free claim",
@@ -1331,6 +1341,11 @@
 				"GasPriceMultiple": {
 					"type": "number",
 					"description": "GasPriceMultiple is the multiple of the gas price",
+					"default": 0
+				},
+				"InitGasPriceMultiple": {
+					"type": "number",
+					"description": "InitGasPriceMultiple is the multiple of the gas price for init free gas tx",
 					"default": 0
 				},
 				"QueryPendingTxsLimit": {
