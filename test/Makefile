@@ -642,8 +642,8 @@ stop-approve-pol: ## Stops approve in node container
 stop-approve-pol-v1tov2: ## Stops approve in node container
 	$(STOPV1TOV2APPROVE)
 
-.PHONY: run
-run: ## Runs a full node
+.PHONY: run-bridge
+run-bridge: ## Runs a full node whit bridge services
 	$(RUNSTATEDB)
 	$(RUNPOOLDB)
 	$(RUNEVENTDB)
@@ -664,7 +664,6 @@ run: ## Runs a full node
 	$(RUNDACNODE)
 	$(RUNETHTXMANAGER)
 	$(RUNSEQUENCER)
-	#$(RUNSIGNER)
 	$(RUNSEQUENCESENDER)
 	$(RUNL2GASPRICER)
 	$(RUNAGGREGATOR)
@@ -675,11 +674,34 @@ run: ## Runs a full node
 	$(RUNEXPLORERL1)
 	$(RUNEXPLORERL2)
 
+.PHONY: run
+run: ## Runs a full node
+	$(RUNSTATEDB)
+	$(RUNPOOLDB)
+	$(RUNEVENTDB)
+	$(RUNDACDB)
+	$(RUNL1NETWORK)
+	sleep 1
+	$(RUNZKPROVER)
+	$(RUNAPPROVE)
+	sleep 3
+	$(RUNSYNC)
+	sleep 4
+	$(RUNDACNODE)
+	$(RUNETHTXMANAGER)
+	$(RUNSEQUENCER)
+	#$(RUNSIGNER)
+	$(RUNSEQUENCESENDER)
+	$(RUNL2GASPRICER)
+	$(RUNAGGREGATOR)
+	$(RUNJSONRPC)
+
 .PHONY: run-v1tov2
 run-v1tov2: ## Runs a full node using v1tov2 network
 	$(RUNSTATEDB)
 	$(RUNPOOLDB)
 	$(RUNEVENTDB)
+	$(RUNV1TOV2L1NETWORK)
 	sleep 1
 	$(RUNZKPROVER)
 	$(RUNV1TOV2APPROVE)

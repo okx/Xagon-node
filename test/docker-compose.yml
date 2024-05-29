@@ -456,7 +456,7 @@ services:
     container_name: xlayer-mock-l1-network
     image: giskook/elderberry-v0.3.9-geth1.13.11
     ports:
-      - 18545:8545
+      - 8545:8545
       - 8546:8546
     command:
       - "--http"
@@ -486,7 +486,7 @@ services:
     container_name: xlayer-v1tov2-l1-network
     image: hermeznetwork/geth-xlayer-contracts:v2.1.1-lxly-updateV1ToV2-etrog-geth1.12.0
     ports:
-      - 18545:8545
+      - 8545:8545
       - 8546:8546
     command:
       - "--http"
