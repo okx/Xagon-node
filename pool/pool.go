@@ -544,10 +544,8 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		if err != nil {
 			return err
 		}
-		if freeGp {
-			if poolTx.Gas() > getFreeGasLimit(p.cfg.FreeGasLimit) {
-				return fmt.Errorf("free gas tx with too high gas limit")
-			}
+		if freeGp && poolTx.Gas() > getFreeGasLimit(p.cfg.FreeGasLimit) {
+			return fmt.Errorf("free gas tx with too high gas limit")
 		}
 	}
 
