@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/0xPolygonHermez/zkevm-node/hex"
 	"math/big"
 	"sync"
 	"time"
@@ -615,17 +616,23 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 
 	if poolTx.IsClaims {
 		// check the address of to can be free-gas
-		if to := poolTx.To(); to != nil {
-			nonce, err := p.state.GetNonce(ctx, *to, lastL2Block.Root())
-			if err != nil {
-				log.Errorf("failed to getcount while check free address", err)
-			}
-			if nonce < getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr) {
-				if err = p.storage.AddFreeGasAddr(ctx, *to); err != nil {
-					return err
-				}
+		inputHex := hex.EncodeToHex(poolTx.Data())
+		addrHex := "0x" + inputHex[4512:4552]
+		addr := common.HexToAddress(addrHex)
+
+		fmt.Println("==================inputHex:", inputHex)
+		fmt.Println("==================addr:", addr)
+
+		nonce, err := p.state.GetNonce(ctx, addr, lastL2Block.Root())
+		if err != nil {
+			log.Errorf("failed to getcount while check free address", err)
+		}
+		if nonce < getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr) {
+			if err = p.storage.AddFreeGasAddr(ctx, addr); err != nil {
+				return err
 			}
 		}
+
 	}
 
 	return nil
