@@ -107,6 +107,7 @@ L1SynchronizationMode = "sequential"
 			ApplyAfterNumRollupReceived = 10
 
 [Sequencer]
+InitGasPriceMultiple = 1
 DeletePoolTxsL1BlockConfirmations = 100
 DeletePoolTxsCheckInterval = "12h"
 TxLifetimeCheckInterval = "10m"
