@@ -30,6 +30,7 @@ Outputs = ["stderr"]
 
 [Pool]
 FreeGasCountPerAddr = 3
+FreeGasLimit = 1500000
 FreeClaimGasLimit = 1500000
 IntervalToRefreshBlockedAddresses = "5m"
 EnableWhitelist = false
