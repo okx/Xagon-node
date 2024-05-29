@@ -29,6 +29,7 @@ Outputs = ["stderr"]
 		MaxSHA256Hashes = 1596
 
 [Pool]
+FreeGasCountPerAddr = 3
 FreeClaimGasLimit = 1500000
 IntervalToRefreshBlockedAddresses = "5m"
 EnableWhitelist = false
