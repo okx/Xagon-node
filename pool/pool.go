@@ -620,9 +620,6 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		addrHex := "0x" + inputHex[4514:4554]
 		addr := common.HexToAddress(addrHex)
 
-		fmt.Println("==================inputHex:", inputHex)
-		fmt.Println("==================addr:", addr)
-
 		nonce, err := p.state.GetNonce(ctx, addr, lastL2Block.Root())
 		if err != nil {
 			log.Errorf("failed to getcount while check free address", err)
