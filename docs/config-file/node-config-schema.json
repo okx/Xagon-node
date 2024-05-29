@@ -460,16 +460,6 @@
 						"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 					]
 				},
-				"FreeGasCountPerAddr": {
-					"type": "integer",
-					"description": "FreeGasCountPerAddr is the count limit of free gas tx per address",
-					"default": 0
-				},
-				"FreeGasLimit": {
-					"type": "integer",
-					"description": "FreeGasLimit is the max gas allowed use to do a free gas tx",
-					"default": 0
-				},
 				"FreeClaimGasLimit": {
 					"type": "integer",
 					"description": "FreeClaimGasLimit is the max gas allowed use to do a free claim",
@@ -481,6 +471,28 @@
 					},
 					"type": "array",
 					"description": "BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method"
+				},
+				"EnableFreeGasByNonce": {
+					"type": "boolean",
+					"description": "EnableFreeGasByNonce enable free gas",
+					"default": false
+				},
+				"FreeGasExAddress": {
+					"items": {
+						"type": "string"
+					},
+					"type": "array",
+					"description": "FreeGasExAddress is the ex address which can be free gas for the transfer receiver"
+				},
+				"FreeGasCountPerAddr": {
+					"type": "integer",
+					"description": "FreeGasCountPerAddr is the count limit of free gas tx per address",
+					"default": 0
+				},
+				"FreeGasLimit": {
+					"type": "integer",
+					"description": "FreeGasLimit is the max gas allowed use to do a free gas tx",
+					"default": 0
 				}
 			},
 			"additionalProperties": false,

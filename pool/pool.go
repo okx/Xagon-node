@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strings"
 	"sync"
 	"time"
 
@@ -539,7 +540,8 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	freeGp := false
 	if isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims { // claim tx
 		freeGp = true
-	} else if currentNonce < getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr) { // free-gas tx by count
+	} else if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) &&
+		currentNonce < getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr) { // free-gas tx by count
 		freeGp, err = p.storage.IsFreeGasAddr(ctx, from)
 		if err != nil {
 			return err
@@ -617,19 +619,32 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		return err
 	}
 
-	if poolTx.IsClaims {
-		// check the address of to can be free-gas
+	if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) {
+		// check and store the free gas address
+		var freeGpAddr common.Address
 		inputHex := hex.EncodeToHex(poolTx.Data())
-		addrHex := "0x" + inputHex[4514:4554]
-		addr := common.HexToAddress(addrHex)
-
-		nonce, err := p.state.GetNonce(ctx, addr, lastL2Block.Root())
-		if err != nil {
-			log.Errorf("failed to getcount while check free address", err)
+		// hard code
+		if isFreeGasExAddress(p.cfg.FreeGasExAddress, from) &&
+			strings.HasPrefix(inputHex, "0xa9059cbb") &&
+			len(inputHex) > 74 { // erc20 contract transfer(address recipient, uint256 amount)
+			addrHex := "0x" + inputHex[10:74]
+			freeGpAddr = common.HexToAddress(addrHex)
+		} else if poolTx.IsClaims &&
+			strings.HasPrefix(inputHex, "0xccaa2d11") &&
+			len(inputHex) > 4554 { // bridge contract claimAsset(...)
+			addrHex := "0x" + inputHex[4490:4554]
+			freeGpAddr = common.HexToAddress(addrHex)
 		}
-		if nonce < getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr) {
-			if err = p.storage.AddFreeGasAddr(ctx, addr); err != nil {
+
+		if freeGpAddr.Cmp(common.Address{}) == 0 {
+			nonce, err := p.state.GetNonce(ctx, freeGpAddr, lastL2Block.Root())
+			if err != nil {
 				return err
+			}
+			if nonce < getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr) {
+				if err = p.storage.AddFreeGasAddr(ctx, freeGpAddr); err != nil {
+					return err
+				}
 			}
 		}
 	}
