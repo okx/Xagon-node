@@ -1282,6 +1282,7 @@ FreeClaimGasLimit=150000
 | - [EnableInnerTxCacheDB](#RPC_EnableInnerTxCacheDB )                         | No      | boolean          | No         | -          | EnableInnerTxCacheDB enables the inner tx cache db                                                                                                                                                                                                                                                                                                 |
 | - [BridgeAddress](#RPC_BridgeAddress )                                       | No      | array of integer | No         | -          | BridgeAddress is the address of the bridge contract                                                                                                                                                                                                                                                                                                |
 | - [ApiAuthentication](#RPC_ApiAuthentication )                               | No      | object           | No         | -          | ApiAuthentication defines the authentication configuration for the API                                                                                                                                                                                                                                                                             |
+| - [ApiRelay](#RPC_ApiRelay )                                                 | No      | object           | No         | -          | ApiRelay defines the relay configuration for the API                                                                                                                                                                                                                                                                                               |
 
 ### <a name="RPC_Host"></a>8.1. `RPC.Host`
 
@@ -2240,6 +2241,53 @@ ApiKeys=[]
 
 **Type:** : `string`
 **Description:** Timeout defines the timeout
+
+### <a name="RPC_ApiRelay"></a>8.28. `[RPC.ApiRelay]`
+
+**Type:** : `object`
+**Description:** ApiRelay defines the relay configuration for the API
+
+| Property                            | Pattern | Type            | Deprecated | Definition | Title/Description |
+| ----------------------------------- | ------- | --------------- | ---------- | ---------- | ----------------- |
+| - [Enabled](#RPC_ApiRelay_Enabled ) | No      | boolean         | No         | -          | -                 |
+| - [DestURI](#RPC_ApiRelay_DestURI ) | No      | string          | No         | -          | -                 |
+| - [RPCs](#RPC_ApiRelay_RPCs )       | No      | array of string | No         | -          | -                 |
+
+#### <a name="RPC_ApiRelay_Enabled"></a>8.28.1. `RPC.ApiRelay.Enabled`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Example setting the default value** (false):
+```
+[RPC.ApiRelay]
+Enabled=false
+```
+
+#### <a name="RPC_ApiRelay_DestURI"></a>8.28.2. `RPC.ApiRelay.DestURI`
+
+**Type:** : `string`
+
+**Default:** `""`
+
+**Example setting the default value** (""):
+```
+[RPC.ApiRelay]
+DestURI=""
+```
+
+#### <a name="RPC_ApiRelay_RPCs"></a>8.28.3. `RPC.ApiRelay.RPCs`
+
+**Type:** : `array of string`
+
+**Default:** `[]`
+
+**Example setting the default value** ([]):
+```
+[RPC.ApiRelay]
+RPCs=[]
+```
 
 ## <a name="Synchronizer"></a>9. `[Synchronizer]`
 

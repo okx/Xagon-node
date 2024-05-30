@@ -138,6 +138,10 @@ DisableAPIs = []
 	[RPC.ApiAuthentication]
 		Enabled = false
 		ApiKeys = []
+	[RPC.ApiRelay]
+		Enabled = false
+		DestURI = "" 
+		RPCs = []
 
 [Synchronizer]
 SyncInterval = "1s"

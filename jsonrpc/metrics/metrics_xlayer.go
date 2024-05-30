@@ -15,6 +15,7 @@ var (
 	requestInnerTxAddErrorCount = requestPrefix + "inner_tx_error_count"
 	requestAuthCountName        = requestPrefix + "auth_count"
 	requestAuthErrorCountName   = requestPrefix + "auth_error_count"
+	requestRelayFailCountName   = requestPrefix + "relay_fail_count"
 
 	wsRequestPrefix             = prefix + "ws_request_"
 	requestWsMethodName         = wsRequestPrefix + "method"
@@ -108,6 +109,13 @@ var (
 			},
 			Labels: []string{"type"},
 		},
+		{
+			CounterOpts: prometheus.CounterOpts{
+				Name: requestRelayFailCountName,
+				Help: "[JSONRPC] number of relay fail requests",
+			},
+			Labels: []string{"type"},
+		},
 	}
 )
 
@@ -178,4 +186,9 @@ func RequestAuthCount(project string) {
 // RequestAuthErrorCount increments the requests handled counter vector by one for the given project.
 func RequestAuthErrorCount(tp RequestAuthErrorType) {
 	metrics.CounterVecInc(requestAuthErrorCountName, string(tp))
+}
+
+// RequestRelayFailCount increments the requests handled counter vector by one for the given project.
+func RequestRelayFailCount(method string) {
+	metrics.CounterVecInc(requestRelayFailCountName, method)
 }
