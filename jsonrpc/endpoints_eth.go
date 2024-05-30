@@ -1052,16 +1052,6 @@ func (e *EthEndpoints) getDynamicGp() *big.Int {
 	}
 
 	return result
-	//if !e.cfg.DynamicGP.Enabled {
-	//	return big.NewInt(0)
-	//}
-	//e.dgpMan.cacheLock.RLock()
-	//dgp := e.dgpMan.lastPrice
-	//e.dgpMan.cacheLock.RUnlock()
-	//if dgp == nil {
-	//	return big.NewInt(0)
-	//}
-	//return dgp
 }
 func (e *EthEndpoints) tryToAddTxToPool(input, ip string) (interface{}, types.Error) {
 	tx, err := hexToTx(input)
