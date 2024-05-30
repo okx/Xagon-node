@@ -625,18 +625,17 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		inputHex := hex.EncodeToHex(poolTx.Data())
 		// hard code
 		if isFreeGasExAddress(p.cfg.FreeGasExAddress, from) &&
-			strings.HasPrefix(inputHex, "0xa9059cbb") &&
-			len(inputHex) > 74 { // erc20 contract transfer(address recipient, uint256 amount)
+			strings.HasPrefix(inputHex, ExWithdrawalMethodSignature) &&
+			len(inputHex) > 74 { // erc20 contract transfer
 			addrHex := "0x" + inputHex[10:74]
 			freeGpAddr = common.HexToAddress(addrHex)
 		} else if poolTx.IsClaims &&
-			strings.HasPrefix(inputHex, "0xccaa2d11") &&
-			len(inputHex) > 4554 { // bridge contract claimAsset(...)
+			len(inputHex) > 4554 { // bridge contract claim
 			addrHex := "0x" + inputHex[4490:4554]
 			freeGpAddr = common.HexToAddress(addrHex)
 		}
 
-		if freeGpAddr.Cmp(common.Address{}) == 0 {
+		if freeGpAddr.Cmp(common.Address{}) != 0 {
 			nonce, err := p.state.GetNonce(ctx, freeGpAddr, lastL2Block.Root())
 			if err != nil {
 				return err
