@@ -1038,10 +1038,16 @@ func (e *EthEndpoints) relayTxToSequencerNode(input string) (interface{}, types.
 }
 
 func (e *EthEndpoints) getDynamicGp() *big.Int {
-	if !e.cfg.DynamicGP.Enabled || e.dgpMan.lastPrice == nil {
+	if !e.cfg.DynamicGP.Enabled {
 		return big.NewInt(0)
 	}
-	return e.dgpMan.lastPrice
+	e.dgpMan.cacheLock.RLock()
+	dgp := e.dgpMan.lastPrice
+	e.dgpMan.cacheLock.RUnlock()
+	if dgp == nil {
+		return big.NewInt(0)
+	}
+	return dgp
 }
 func (e *EthEndpoints) tryToAddTxToPool(input, ip string) (interface{}, types.Error) {
 	tx, err := hexToTx(input)
