@@ -141,6 +141,8 @@ STOPV1TOV2APPROVE := $(DOCKERCOMPOSE) stop $(DOCKERCOMPOSENODEAPPROVEV1TOV2) && 
 
 STOPMETRICS := $(DOCKERCOMPOSE) stop $(DOCKERCOMPOSEMETRICS) && $(DOCKERCOMPOSE) rm -f $(DOCKERCOMPOSEMETRICS)
 
+STOPDSDATA := rm -rf datastream.bin && rm -rf datastream.db
+
 STOP := $(DOCKERCOMPOSE) down --remove-orphans
 
 .PHONY: test-full-non-e2e
@@ -693,6 +695,7 @@ run-v1tov2: ## Runs a full node using v1tov2 network
 .PHONY: stop
 stop: ## Stops all services
 	$(STOP)
+	$(STOPDSDATA)
 
 .PHONY: ship
 ship: ## Builds docker images and run them

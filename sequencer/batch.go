@@ -130,7 +130,7 @@ func (f *finalizer) initWIPBatch(ctx context.Context) {
 
 	if isClosed { //if the last batch is close then open a new wip batch
 		if lastStateBatch.BatchNumber+1 == f.cfg.HaltOnBatchNumber {
-			f.Halt(ctx, fmt.Errorf("finalizer reached stop sequencer on batch number: %d", f.cfg.HaltOnBatchNumber), false)
+			f.keepHalting(ctx, fmt.Errorf("finalizer reached stop sequencer on batch number: %d", f.cfg.HaltOnBatchNumber))
 		}
 		f.wipBatch = f.openNewWIPBatch(lastStateBatch.BatchNumber+1, lastStateBatch.StateRoot)
 		f.pipBatch = nil
@@ -278,7 +278,7 @@ func (f *finalizer) closeAndOpenNewWIPBatch(ctx context.Context, closeReason sta
 			return fmt.Errorf("error finalizing sip batch %d when halting on batch %d", f.sipBatch.batchNumber, f.cfg.HaltOnBatchNumber)
 		}
 
-		f.Halt(ctx, fmt.Errorf("finalizer reached stop sequencer on batch number: %d", f.cfg.HaltOnBatchNumber), false)
+		f.keepHalting(ctx, fmt.Errorf("finalizer reached stop sequencer on batch number: %d", f.cfg.HaltOnBatchNumber))
 	}
 
 	// Process forced batches

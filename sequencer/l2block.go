@@ -289,7 +289,7 @@ func (f *finalizer) processL2Block(ctx context.Context, l2Block *L2Block) error 
 			blockResponse.BlockNumber, l2Block.trackingNum, l2Block.metrics.log(), f.metrics.startsAt().Unix(), f.metrics.log())
 	}
 
-	log.Infof("%v", l2Block.metrics.Summary(blockResponse.BlockNumber, f.wipBatch.batchNumber, l2Block.timestamp))
+	log.Infof("%v", l2Block.metrics.Summary(blockResponse.BlockNumber, l2Block.batch.batchNumber, l2Block.timestamp))
 	return nil
 }
 
