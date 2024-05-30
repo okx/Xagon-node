@@ -544,6 +544,7 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		currentNonce < getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr) { // free-gas tx by count
 		freeGp, err = p.storage.IsFreeGasAddr(ctx, from)
 		if err != nil {
+			log.Errorf("failed to check free gas address from storage: %v", err)
 			return err
 		}
 		if freeGp && poolTx.Gas() > getFreeGasLimit(p.cfg.FreeGasLimit) {
@@ -638,10 +639,12 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		if freeGpAddr.Cmp(common.Address{}) != 0 {
 			nonce, err := p.state.GetNonce(ctx, freeGpAddr, lastL2Block.Root())
 			if err != nil {
+				log.Errorf("failed to get nonce while adding tx to the pool", err)
 				return err
 			}
 			if nonce < getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr) {
 				if err = p.storage.AddFreeGasAddr(ctx, freeGpAddr); err != nil {
+					log.Errorf("failed to save free gas address to the storage", err)
 					return err
 				}
 			}
