@@ -14,6 +14,8 @@ const (
 	BridgeClaimMethodSignature = "0xccaa2d11"
 	// BridgeClaimMessageMethodSignature for tracking BridgeClaimMethodSignature method
 	BridgeClaimMessageMethodSignature = "0xf5efcd79"
+	//ExWithdrawalMethodSignature erc20 contract transfer(address recipient, uint256 amount)
+	ExWithdrawalMethodSignature = "0xa9059cbb"
 )
 
 func contains(s []string, ele common.Address) bool {

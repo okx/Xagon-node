@@ -53,14 +53,19 @@ type Config struct {
 	// XLayer config
 	// FreeGasAddress is the default free gas address
 	FreeGasAddress []string `mapstructure:"FreeGasAddress"`
-	// FreeGasCountPerAddr is the count limit of free gas tx per address
-	FreeGasCountPerAddr uint64 `mapstructure:"FreeGasCountPerAddr"`
-	// FreeGasLimit is the max gas allowed use to do a free gas tx
-	FreeGasLimit uint64 `mapstructure:"FreeGasLimit"`
 	// FreeClaimGasLimit is the max gas allowed use to do a free claim
 	FreeClaimGasLimit uint64 `mapstructure:"FreeClaimGasLimit"`
 	// BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method
 	BridgeClaimMethodSigs []string `mapstructure:"BridgeClaimMethodSigs"`
+
+	// EnableFreeGasByNonce enable free gas
+	EnableFreeGasByNonce bool `mapstructure:"EnableFreeGasByNonce"`
+	// FreeGasExAddress is the ex address which can be free gas for the transfer receiver
+	FreeGasExAddress []string `mapstructure:"FreeGasExAddress"`
+	// FreeGasCountPerAddr is the count limit of free gas tx per address
+	FreeGasCountPerAddr uint64 `mapstructure:"FreeGasCountPerAddr"`
+	// FreeGasLimit is the max gas allowed use to do a free gas tx
+	FreeGasLimit uint64 `mapstructure:"FreeGasLimit"`
 }
 
 // EffectiveGasPriceCfg contains the configuration properties for the effective gas price

@@ -8,15 +8,18 @@ import (
 
 // apolloConfig is the apollo pool dynamic config
 type apolloConfig struct {
-	EnableApollo        bool
-	FreeGasAddresses    []string
-	FreeGasCountPerAddr uint64
-	FreeGasLimit        uint64
-	GlobalQueue         uint64
-	AccountQueue        uint64
-	EnableWhitelist     bool
-	BridgeClaimMethods  []string
-	EnablePendingStat   bool
+	EnableApollo       bool
+	FreeGasAddresses   []string
+	GlobalQueue        uint64
+	AccountQueue       uint64
+	EnableWhitelist    bool
+	BridgeClaimMethods []string
+	EnablePendingStat  bool
+
+	EnableFreeGasByNonce bool
+	FreeGasExAddress     []string
+	FreeGasCountPerAddr  uint64
+	FreeGasLimit         uint64
 
 	sync.RWMutex
 }
@@ -46,6 +49,14 @@ func (c *apolloConfig) setFreeGasAddresses(freeGasAddrs []string) {
 	copy(c.FreeGasAddresses, freeGasAddrs)
 }
 
+func (c *apolloConfig) setFreeGasExAddresses(freeGasExAddrs []string) {
+	if c == nil || !c.EnableApollo {
+		return
+	}
+	c.FreeGasExAddress = make([]string, len(freeGasExAddrs))
+	copy(c.FreeGasExAddress, freeGasExAddrs)
+}
+
 func (c *apolloConfig) setBridgeClaimMethods(bridgeClaimMethods []string) {
 	if c == nil || !c.EnableApollo {
 		return
@@ -66,10 +77,14 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().GlobalQueue = apolloConfig.GlobalQueue
 	getApolloConfig().AccountQueue = apolloConfig.AccountQueue
 	getApolloConfig().setFreeGasAddresses(apolloConfig.FreeGasAddress)
-	getApolloConfig().FreeGasCountPerAddr = apolloConfig.FreeGasCountPerAddr
-	getApolloConfig().FreeGasLimit = apolloConfig.FreeGasLimit
 	getApolloConfig().EnableWhitelist = apolloConfig.EnableWhitelist
 	getApolloConfig().setBridgeClaimMethods(apolloConfig.BridgeClaimMethodSigs)
+
+	getApolloConfig().EnableFreeGasByNonce = apolloConfig.EnableFreeGasByNonce
+	getApolloConfig().setFreeGasExAddresses(apolloConfig.FreeGasExAddress)
+	getApolloConfig().FreeGasCountPerAddr = apolloConfig.FreeGasCountPerAddr
+	getApolloConfig().FreeGasLimit = apolloConfig.FreeGasLimit
+
 	getApolloConfig().Unlock()
 }
 
@@ -97,6 +112,26 @@ func isFreeGasAddress(localFreeGasAddrs []string, address common.Address) bool {
 	}
 
 	return contains(localFreeGasAddrs, address)
+}
+
+func getEnableFreeGasByNonce(enableFreeGasByNonce bool) bool {
+	if getApolloConfig().enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		return getApolloConfig().EnableFreeGasByNonce
+	}
+
+	return enableFreeGasByNonce
+}
+
+func isFreeGasExAddress(localFreeGasExAddrs []string, address common.Address) bool {
+	if getApolloConfig().enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		return contains(getApolloConfig().FreeGasExAddress, address)
+	}
+
+	return contains(localFreeGasExAddrs, address)
 }
 
 func getFreeGasCountPerAddr(localFreeGasCountPerAddr uint64) uint64 {
