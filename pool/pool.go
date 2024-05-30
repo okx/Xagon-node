@@ -185,9 +185,11 @@ func (p *Pool) StartPollingMinSuggestedGasPrice(ctx context.Context) {
 func (p *Pool) AddDynamicGp(dgp *big.Int) {
 	_, l2Gp := p.GetL1AndL2GasPrice()
 	result := new(big.Int).SetUint64(l2Gp)
-	if result.Cmp(dgp) < 0 {
-		result = new(big.Int).Set(dgp)
-	}
+	fmt.Println("=============l2Gp:", l2Gp)
+	fmt.Println("=============res:", result)
+	//if result.Cmp(dgp) < 0 {
+	//	result = new(big.Int).Set(dgp)
+	//}
 
 	p.dgpMux.Lock()
 	p.dynamicGasPrice = result
