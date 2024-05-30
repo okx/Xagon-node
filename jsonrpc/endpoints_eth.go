@@ -1045,7 +1045,8 @@ func (e *EthEndpoints) getDynamicGp() *big.Int {
 
 	result := new(big.Int).SetUint64(gasPrices.L2GasPrice)
 	if e.cfg.DynamicGP.Enabled {
-		dgp := e.dgpMan.lastPrice
+		//dgp := e.dgpMan.lastPrice
+		dgp := big.NewInt(0)
 		if result.Cmp(dgp) < 0 {
 			result = new(big.Int).Set(dgp)
 		}
