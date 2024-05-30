@@ -53,6 +53,7 @@ type Pool struct {
 	gasPrices               GasPrices
 	gasPricesMux            *sync.RWMutex
 	effectiveGasPrice       *EffectiveGasPrice
+	dynamicGasPrice         *big.Int
 }
 
 type preExecutionResponse struct {
@@ -177,6 +178,10 @@ func (p *Pool) StartPollingMinSuggestedGasPrice(ctx context.Context) {
 			}
 		}
 	}()
+}
+
+func (p *Pool) AddDynamicGp(dgp *big.Int) {
+	p.dynamicGasPrice = dgp
 }
 
 // AddTx adds a transaction to the pool with the pending state

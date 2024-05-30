@@ -227,6 +227,23 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 	})
 }
 
+func (e *EthEndpoints) gasPrice() *big.Int {
+	ctx := context.Background()
+	gasPrices, err := e.pool.GetGasPrices(ctx)
+	if err != nil {
+		return big.NewInt(0)
+	}
+
+	result := new(big.Int).SetUint64(gasPrices.L2GasPrice)
+	if e.cfg.DynamicGP.Enabled {
+		dgp := e.dgpMan.lastPrice
+		if result.Cmp(dgp) < 0 {
+			result = new(big.Int).Set(dgp)
+		}
+	}
+	return result
+}
+
 // GasPrice returns the average gas price based on the last x blocks
 func (e *EthEndpoints) GasPrice() (interface{}, types.Error) {
 	ctx := context.Background()
@@ -1043,6 +1060,8 @@ func (e *EthEndpoints) tryToAddTxToPool(input, ip string) (interface{}, types.Er
 		return RPCErrorResponse(types.InvalidParamsErrorCode, "invalid tx input", err, false)
 	}
 	log.Infof("adding TX to the pool: %v", tx.Hash().Hex())
+	dgp := e.gasPrice()
+	e.pool.AddDynamicGp(dgp)
 	if err := e.pool.AddTx(context.Background(), *tx, ip); err != nil {
 		// it's not needed to log the error here, because we check and log if needed
 		// for each specific case during the "pool.AddTx" internal steps
