@@ -1037,21 +1037,11 @@ func (e *EthEndpoints) relayTxToSequencerNode(input string) (interface{}, types.
 	return txHash, nil
 }
 
-func (e *EthEndpoints) getDynamicGp() *big.Int {
-	gasPrices, err := e.pool.GetGasPrices(context.Background())
-	if err != nil {
+func getDynamicGp(enableDgp bool, dgp *big.Int) *big.Int {
+	if !enableDgp || dgp == nil {
 		return big.NewInt(0)
 	}
-
-	result := new(big.Int).SetUint64(gasPrices.L2GasPrice)
-	if e.cfg.DynamicGP.Enabled {
-		dgp := e.dgpMan.lastPrice
-		if result.Cmp(dgp) < 0 {
-			result = new(big.Int).Set(dgp)
-		}
-	}
-
-	return result
+	return dgp
 }
 func (e *EthEndpoints) tryToAddTxToPool(input, ip string) (interface{}, types.Error) {
 	tx, err := hexToTx(input)
@@ -1060,7 +1050,7 @@ func (e *EthEndpoints) tryToAddTxToPool(input, ip string) (interface{}, types.Er
 	}
 	log.Infof("adding TX to the pool: %v", tx.Hash().Hex())
 
-	dgp := e.getDynamicGp()
+	dgp := getDynamicGp(e.cfg.DynamicGP.Enabled, e.dgpMan.lastPrice)
 	e.pool.AddDynamicGp(dgp)
 	if err := e.pool.AddTx(context.Background(), *tx, ip); err != nil {
 		// it's not needed to log the error here, because we check and log if needed
