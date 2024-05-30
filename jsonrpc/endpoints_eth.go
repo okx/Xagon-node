@@ -1038,19 +1038,18 @@ func (e *EthEndpoints) relayTxToSequencerNode(input string) (interface{}, types.
 }
 
 func (e *EthEndpoints) getDynamicGp() *big.Int {
-	//gasPrices, err := e.pool.GetGasPrices(context.Background())
-	//if err != nil {
-	//	return big.NewInt(0)
-	//}
+	gasPrices, err := e.pool.GetGasPrices(context.Background())
+	if err != nil {
+		return big.NewInt(0)
+	}
 
-	result := new(big.Int).SetUint64(0)
-	//if e.cfg.DynamicGP.Enabled {
-	//	//dgp := e.dgpMan.lastPrice
-	//	dgp := big.NewInt(0)
-	//	if result.Cmp(dgp) < 0 {
-	//		result = new(big.Int).Set(dgp)
-	//	}
-	//}
+	result := new(big.Int).SetUint64(gasPrices.L2GasPrice)
+	if e.cfg.DynamicGP.Enabled {
+		dgp := e.dgpMan.lastPrice
+		if result.Cmp(dgp) < 0 {
+			result = new(big.Int).Set(dgp)
+		}
+	}
 
 	return result
 	//if !e.cfg.DynamicGP.Enabled {
@@ -1071,8 +1070,8 @@ func (e *EthEndpoints) tryToAddTxToPool(input, ip string) (interface{}, types.Er
 	}
 	log.Infof("adding TX to the pool: %v", tx.Hash().Hex())
 
-	//dgp := e.getDynamicGp()
-	//e.pool.AddDynamicGp(big.NewInt(0))
+	dgp := e.getDynamicGp()
+	e.pool.AddDynamicGp(dgp)
 	if err := e.pool.AddTx(context.Background(), *tx, ip); err != nil {
 		// it's not needed to log the error here, because we check and log if needed
 		// for each specific case during the "pool.AddTx" internal steps
