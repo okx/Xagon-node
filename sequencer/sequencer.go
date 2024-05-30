@@ -254,15 +254,14 @@ func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) erro
 
 	freeGp, isClaimTx := s.checkFreeGas(tx, txTracker)
 	if freeGp {
-		_, l2gp := s.pool.GetL1AndL2GasPrice()
-		defaultGp := new(big.Int).SetUint64(l2gp)
+		defaultGp := s.pool.GetDynamicGasPrice()
 		baseGp := s.worker.getBaseClaimGp(defaultGp)
 		copyBaseGp := new(big.Int).Set(baseGp)
 		if isClaimTx {
 			txTracker.IsClaimTx = true
 			txTracker.GasPrice = copyBaseGp.Mul(copyBaseGp, new(big.Int).SetUint64(uint64(getGasPriceMultiple(s.cfg.GasPriceMultiple))))
 		} else {
-			txTracker.GasPrice = copyBaseGp.Mul(copyBaseGp, new(big.Int).SetUint64(uint64(getInitGasPriceMultiple(s.cfg.InitGasPriceMultiple))))
+			txTracker.GasPrice = defaultGp.Mul(defaultGp, new(big.Int).SetUint64(uint64(getInitGasPriceMultiple(s.cfg.InitGasPriceMultiple))))
 		}
 	}
 

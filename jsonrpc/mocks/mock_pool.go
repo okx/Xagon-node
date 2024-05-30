@@ -40,6 +40,8 @@ func (_m *PoolMock) AddTx(ctx context.Context, tx types.Transaction, ip string) 
 	return r0
 }
 
+func (_m *PoolMock) AddDynamicGp(_ *big.Int) {}
+
 // CalculateEffectiveGasPrice provides a mock function with given fields: rawTx, txGasPrice, txGasUsed, l1GasPrice, l2GasPrice
 func (_m *PoolMock) CalculateEffectiveGasPrice(rawTx []byte, txGasPrice *big.Int, txGasUsed uint64, l1GasPrice uint64, l2GasPrice uint64) (*big.Int, error) {
 	ret := _m.Called(rawTx, txGasPrice, txGasUsed, l1GasPrice, l2GasPrice)
