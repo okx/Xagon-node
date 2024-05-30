@@ -1038,12 +1038,12 @@ func (e *EthEndpoints) relayTxToSequencerNode(input string) (interface{}, types.
 }
 
 func (e *EthEndpoints) getDynamicGp() *big.Int {
-	gasPrices, err := e.pool.GetGasPrices(context.Background())
-	if err != nil {
-		return big.NewInt(0)
-	}
+	//gasPrices, err := e.pool.GetGasPrices(context.Background())
+	//if err != nil {
+	//	return big.NewInt(0)
+	//}
 
-	result := new(big.Int).SetUint64(gasPrices.L2GasPrice)
+	result := new(big.Int).SetUint64(0)
 	//if e.cfg.DynamicGP.Enabled {
 	//	//dgp := e.dgpMan.lastPrice
 	//	dgp := big.NewInt(0)
