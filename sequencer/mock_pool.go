@@ -4,6 +4,7 @@ package sequencer
 
 import (
 	context "context"
+	"math/big"
 
 	common "github.com/ethereum/go-ethereum/common"
 
@@ -121,6 +122,11 @@ func (_m *PoolMock) GetEarliestProcessedTx(ctx context.Context) (common.Hash, er
 	}
 
 	return r0, r1
+}
+
+// GetDynamicGasPrice returns the current L2 dynamic gas price
+func (_m *PoolMock) GetDynamicGasPrice() *big.Int{
+	return big.NewInt(0)
 }
 
 // GetGasPrices provides a mock function with given fields: ctx

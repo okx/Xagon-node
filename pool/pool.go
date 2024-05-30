@@ -54,6 +54,7 @@ type Pool struct {
 	gasPricesMux            *sync.RWMutex
 	effectiveGasPrice       *EffectiveGasPrice
 	dynamicGasPrice         *big.Int
+	dgpMux                  *sync.RWMutex
 }
 
 type preExecutionResponse struct {
@@ -187,7 +188,10 @@ func (p *Pool) AddDynamicGp(dgp *big.Int) {
 	if result.Cmp(dgp) < 0 {
 		result = new(big.Int).Set(dgp)
 	}
+
+	p.dgpMux.Lock()
 	p.dynamicGasPrice = result
+	p.dgpMux.Unlock()
 }
 
 // AddTx adds a transaction to the pool with the pending state
@@ -413,6 +417,18 @@ func (p *Pool) DeleteGasPricesHistoryOlderThan(ctx context.Context, date time.Ti
 func (p *Pool) GetGasPrices(ctx context.Context) (GasPrices, error) {
 	l2GasPrice, l1GasPrice, err := p.storage.GetGasPrices(ctx)
 	return GasPrices{L1GasPrice: l1GasPrice, L2GasPrice: l2GasPrice}, err
+}
+
+// GetDynamicGasPrice returns the current L2 dynamic gas price
+func (p *Pool) GetDynamicGasPrice() *big.Int {
+	p.dgpMux.RLock()
+	dgp := p.dynamicGasPrice
+	p.dgpMux.RUnlock()
+	if dgp == nil || dgp.Cmp(big.NewInt(0)) == 0 {
+		_, l2Gp := p.GetL1AndL2GasPrice()
+		dgp = new(big.Int).SetUint64(l2Gp)
+	}
+	return dgp
 }
 
 // CountPendingTransactions get number of pending transactions
