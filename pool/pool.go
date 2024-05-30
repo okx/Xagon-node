@@ -181,7 +181,12 @@ func (p *Pool) StartPollingMinSuggestedGasPrice(ctx context.Context) {
 }
 
 func (p *Pool) AddDynamicGp(dgp *big.Int) {
-	p.dynamicGasPrice = dgp
+	_, l2Gp := p.GetL1AndL2GasPrice()
+	result := new(big.Int).SetUint64(l2Gp)
+	if result.Cmp(dgp) < 0 {
+		result = new(big.Int).Set(dgp)
+	}
+	p.dynamicGasPrice = result
 }
 
 // AddTx adds a transaction to the pool with the pending state
