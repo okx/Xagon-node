@@ -114,7 +114,7 @@ func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.
 		}
 
 		freeGasCountPerAddrConfig := getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr)
-		if is && poolTx.Nonce() < freeGasCountPerAddrConfig {
+		if is && poolTx.Nonce() < freeGasCountPerAddrConfig && poolTx.GasPrice().Cmp(big.NewInt(0)) == 0 {
 			if poolTx.Gas() > getFreeGasLimit(p.cfg.FreeGasLimit) {
 				return false, fmt.Errorf("free gas tx with too high gas limit")
 			}
