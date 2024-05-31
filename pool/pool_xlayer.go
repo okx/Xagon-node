@@ -20,6 +20,11 @@ const (
 	BridgeClaimMessageMethodSignature = "0xf5efcd79"
 	//ExWithdrawalMethodSignature erc20 contract transfer(address recipient, uint256 amount)
 	ExWithdrawalMethodSignature = "0xa9059cbb"
+
+	TestnetChainID   = 195
+	MainnetChainID   = 196
+	TestnetBridgeURL = "https://www.okx.com/xlayer/bridge-test"
+	MainnetBridgeURL = "https://www.okx.com/xlayer/bridge"
 )
 
 func contains(s []string, ele common.Address) bool {
@@ -124,7 +129,15 @@ func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.
 				freeGasCountPerAddrConfig,
 				freeGasCountPerAddrConfig)
 		} else if !isFreeAddr {
-			return false, fmt.Errorf("you are unable to initiate a gas-free transaction from this address unless you have previously transferred funds to this address via the X Layer Bridge (https://www.okx.com/xlayer/bridge) or the OKX Exchange, and only the first %d transactions(address nonce less than %d)",
+			bridgeURL := ""
+			switch p.chainID {
+			case TestnetChainID:
+				bridgeURL = TestnetBridgeURL
+			case MainnetChainID:
+				bridgeURL = MainnetBridgeURL
+			}
+			return false, fmt.Errorf("you are unable to initiate a gas-free transaction from this address unless you have previously transferred funds to this address via the X Layer Bridge (%s) or the OKX Exchange, and only the first %d transactions(address nonce less than %d)",
+				bridgeURL,
 				freeGasCountPerAddrConfig,
 				freeGasCountPerAddrConfig)
 		}
