@@ -164,3 +164,15 @@ func (p *Pool) checkAndUpdateFreeGasAddr(ctx context.Context, poolTx Transaction
 	}
 	return nil
 }
+
+// AddDynamicGp cache the dynamic gas price of L2
+func (p *Pool) AddDynamicGp(dgp *big.Int) {
+	_, l2Gp := p.GetL1AndL2GasPrice()
+	result := new(big.Int).SetUint64(l2Gp)
+	if result.Cmp(dgp) < 0 {
+		result = new(big.Int).Set(dgp)
+	}
+	p.dgpMux.Lock()
+	p.dynamicGasPrice = result
+	p.dgpMux.Unlock()
+}
