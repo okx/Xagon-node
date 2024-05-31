@@ -21,9 +21,13 @@ const (
 	//ExWithdrawalMethodSignature erc20 contract transfer(address recipient, uint256 amount)
 	ExWithdrawalMethodSignature = "0xa9059cbb"
 
-	TestnetChainID   = 195
-	MainnetChainID   = 196
+	// TestnetChainID the chain id of xlayer testnet
+	TestnetChainID = 195
+	// MainnetChainID the chain id of xlayer mainnet
+	MainnetChainID = 196
+	// TestnetBridgeURL the bridge url od xlayer testnet
 	TestnetBridgeURL = "https://www.okx.com/xlayer/bridge-test"
+	// MainnetBridgeURL the bridge url od xlayer mainnet
 	MainnetBridgeURL = "https://www.okx.com/xlayer/bridge"
 )
 
