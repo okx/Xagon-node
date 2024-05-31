@@ -29,6 +29,8 @@ Outputs = ["stderr"]
 		MaxSHA256Hashes = 1596
 
 [Pool]
+FreeGasCountPerAddr = 3
+FreeGasLimit = 1500000
 FreeClaimGasLimit = 1500000
 IntervalToRefreshBlockedAddresses = "5m"
 EnableWhitelist = false
@@ -76,6 +78,8 @@ WriteTimeout = "60s"
 MaxRequestsPerIPAndSecond = 5000
 SequencerNodeURI = ""
 EnableL2SuggestedGasPricePolling = true
+BatchRequestsEnabled = true
+BatchRequestsLimit = 20
 GasLimitFactor = 1
 DisableAPIs = []
 	[RPC.WebSockets]
@@ -103,6 +107,7 @@ L1SynchronizationMode = "sequential"
 			ApplyAfterNumRollupReceived = 10
 
 [Sequencer]
+InitGasPriceMultiple = 1
 DeletePoolTxsL1BlockConfirmations = 100
 DeletePoolTxsCheckInterval = "12h"
 TxLifetimeCheckInterval = "10m"

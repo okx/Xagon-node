@@ -13,6 +13,7 @@ type ApolloConfig struct {
 	FullBatchSleepDuration types.Duration
 	PackBatchSpacialList   []string
 	GasPriceMultiple       float64
+	InitGasPriceMultiple   float64
 	QueryPendingTxsLimit   uint64
 
 	sync.RWMutex
@@ -42,6 +43,7 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().FullBatchSleepDuration = apolloConfig.Finalizer.FullBatchSleepDuration
 	getApolloConfig().PackBatchSpacialList = apolloConfig.PackBatchSpacialList
 	getApolloConfig().GasPriceMultiple = apolloConfig.GasPriceMultiple
+	getApolloConfig().InitGasPriceMultiple = apolloConfig.InitGasPriceMultiple
 	getApolloConfig().QueryPendingTxsLimit = apolloConfig.QueryPendingTxsLimit
 	getApolloConfig().Unlock()
 }
@@ -80,6 +82,17 @@ func getGasPriceMultiple(gpMul float64) float64 {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
 		ret = getApolloConfig().GasPriceMultiple
+	}
+
+	return ret
+}
+
+func getInitGasPriceMultiple(gpMul float64) float64 {
+	ret := gpMul
+	if getApolloConfig().Enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		ret = getApolloConfig().InitGasPriceMultiple
 	}
 
 	return ret

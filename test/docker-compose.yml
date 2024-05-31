@@ -368,7 +368,7 @@ services:
 
   xlayer-explorer-l1:
     container_name: xlayer-explorer-l1
-    image: hermeznetwork/xlayer-explorer:latest
+    image: hermeznetwork/zkevm-explorer:latest
     ports:
       - 4000:4000
     environment:
@@ -401,13 +401,13 @@ services:
 
   xlayer-explorer-l2:
     container_name: xlayer-explorer-l2
-    image: hermeznetwork/xlayer-explorer:latest
+    image: hermeznetwork/zkevm-explorer:latest
     ports:
       - 4001:4000
     environment:
       - NETWORK=POE
-      - SUBNETWORK=Polygon Hermez
-      - COIN=ETH
+      - SUBNETWORK=Local XLayer
+      - COIN=OKB
       - ETHEREUM_JSONRPC_VARIANT=geth
       - ETHEREUM_JSONRPC_HTTP_URL=http://xlayer-explorer-json-rpc:8124
       - DATABASE_URL=postgres://l2_explorer_user:l2_explorer_password@xlayer-explorer-l2-db:5432/l2_explorer_db
@@ -699,7 +699,7 @@ services:
 
   xlayer-data-availability-db:
     container_name: xlayer-data-availability-db
-    image: postgres
+    image: postgres:15
     ports:
       - 5438:5432
     environment:
@@ -725,3 +725,105 @@ services:
       - "/bin/sh"
       - "-c"
       - "/app/xlayer-signer http -cfg /app/config.toml"
+
+  xlayer-bridge-db:
+    container_name: xlayer-bridge-db
+    image: postgres:15
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    ports:
+      - 5439:5432
+    environment:
+      - POSTGRES_USER=test_user
+      - POSTGRES_PASSWORD=test_password
+      - POSTGRES_DB=test_db
+    command: [ "postgres", "-N", "500" ]
+
+  xlayer-bridge-redis:
+    container_name: xlayer-bridge-redis
+    image: redis
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    expose:
+      - 6379
+    ports:
+      - 6379:6379
+    environment:
+      - REDIS_PASSWORD=my_password
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=8
+
+  kafka-zookeeper:
+    image: wurstmeister/zookeeper
+    container_name: kafka-zookeeper
+    ports:
+      - "2181:2181"
+    expose:
+      - 2181
+
+  xlayer-bridge-coin-kafka:
+    image: wurstmeister/kafka
+    container_name: xlayer-bridge-coin-kafka
+    expose:
+      - 9092
+    environment:
+      KAFKA_ADVERTISED_LISTENERS: INSIDE://:9092,OUTSIDE://localhost:9123
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INSIDE:PLAINTEXT,OUTSIDE:PLAINTEXT
+      KAFKA_LISTENERS: INSIDE://0.0.0.0:9092,OUTSIDE://0.0.0.0:9123
+      KAFKA_INTER_BROKER_LISTENER_NAME: INSIDE
+      KAFKA_ZOOKEEPER_CONNECT: kafka-zookeeper:2181
+      KAFKA_CREATE_TOPICS: "explorer_chainAddressPrice_push:1:1"
+
+  xlayer-bridge-service:
+    container_name: xlayer-bridge-service
+    image: xlayer-bridge-service
+    ports:
+      - 8080:8080
+      - 9090:9090
+    environment:
+      - ZKEVM_BRIDGE_DATABASE_USER=test_user
+      - ZKEVM_BRIDGE_DATABASE_PASSWORD=test_password
+      - ZKEVM_BRIDGE_DATABASE_NAME=test_db
+      - ZKEVM_BRIDGE_DATABASE_HOST=xlayer-bridge-db
+      - ZKEVM_BRIDGE_DATABASE_PORT=5432
+    volumes:
+      - ./sequencer.keystore:/pk/keystore.claimtxmanager
+      - ./config/test.bridge.config.toml:/app/config.toml
+      - ./config/test.sentinel.config.json:/app/sentinel_config.json
+      - ./config/root-ca-cert:/app/root-ca-cert
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "/app/xlayer-bridge run --cfg /app/config.toml"
+
+  xlayer-bridge-ui:
+    container_name: xlayer-bridge-ui
+    image: hermeznetwork/zkevm-bridge-ui:etrog-v2
+    ports:
+      - 8090:80
+    environment:
+      - ETHEREUM_RPC_URL=http://3.113.237.222:18545
+      - ETHEREUM_EXPLORER_URL=http://3.113.237.222:4000
+      - ETHEREUM_ROLLUP_MANAGER_ADDRESS=0x2d42E2899662EFf08b13eeb65b154b904C7a1c8a
+      - ETHEREUM_BRIDGE_CONTRACT_ADDRESS=0x1089Af36bD72553008FAd0A1240B4D5641208494
+      - ETHEREUM_FORCE_UPDATE_GLOBAL_EXIT_ROOT=true
+      - ETHEREUM_PROOF_OF_EFFICIENCY_CONTRACT_ADDRESS=0xeb173087729c88a47568AF87b17C653039377BA6
+      - POLYGON_ZK_EVM_RPC_URL=http://3.113.237.222:8123
+      - POLYGON_ZK_EVM_EXPLORER_URL=http://3.113.237.222:4001
+      - POLYGON_ZK_EVM_BRIDGE_CONTRACT_ADDRESS=0x1089Af36bD72553008FAd0A1240B4D5641208494
+      - POLYGON_ZK_EVM_NETWORK_ID=1
+      - BRIDGE_API_URL=http://3.113.237.222:8080
+      - ENABLE_FIAT_EXCHANGE_RATES=false
+      - ENABLE_OUTDATED_NETWORK_MODAL=false
+      - ENABLE_DEPOSIT_WARNING=true
+      - ENABLE_REPORT_FORM=false
+      - USE_FIAT_EXCHANGE_RATES=false
+      - SHOW_OUTDATED_NETWORK_MODAL=false

@@ -1,0 +1,81 @@
+{
+  "flowRules": [
+    {
+      "resource": "/bridge.v1.BridgeService/CheckAPI",
+      "controlBehavior": 0,
+      "threshold": 10
+    },
+    {
+      "resource": "/bridge.v1.BridgeService/GetBridges",
+      "controlBehavior": 1,
+      "threshold": 50,
+      "maxQueueingTimeMs": 3000
+    },
+    {
+      "resource": "/bridge.v1.BridgeService/GetProof",
+      "controlBehavior": 1,
+      "threshold": 50,
+      "maxQueueingTimeMs": 3000
+    },
+    {
+      "resource": "/bridge.v1.BridgeService/GetBridge",
+      "controlBehavior": 1,
+      "threshold": 50,
+      "maxQueueingTimeMs": 3000
+    },
+    {
+      "resource": "/bridge.v1.BridgeService/GetClaims",
+      "controlBehavior": 1,
+      "threshold": 50,
+      "maxQueueingTimeMs": 3000
+    },
+    {
+      "resource": "/bridge.v1.BridgeService/GetTokenWrapped",
+      "controlBehavior": 1,
+      "threshold": 50,
+      "maxQueueingTimeMs": 3000
+    },
+    {
+      "resource": "/bridge.v1.BridgeService/GetCoinPrice",
+      "controlBehavior": 1,
+      "threshold": 50,
+      "maxQueueingTimeMs": 3000
+    },
+    {
+      "resource": "/bridge.v1.BridgeService/GetMainCoins",
+      "controlBehavior": 1,
+      "threshold": 50,
+      "maxQueueingTimeMs": 3000
+    },
+    {
+      "resource": "/bridge.v1.BridgeService/GetPendingTransactions",
+      "controlBehavior": 1,
+      "threshold": 50,
+      "maxQueueingTimeMs": 3000
+    },
+    {
+      "resource": "/bridge.v1.BridgeService/GetAllTransactions",
+      "controlBehavior": 1,
+      "threshold": 50,
+      "maxQueueingTimeMs": 3000
+    },
+    {
+      "resource": "/bridge.v1.BridgeService/GetSmtProof",
+      "controlBehavior": 1,
+      "threshold": 50,
+      "maxQueueingTimeMs": 3000
+    },
+    {
+      "resource": "/bridge.v1.BridgeService/GetNotReadyTransactions",
+      "controlBehavior": 1,
+      "threshold": 1,
+      "maxQueueingTimeMs": 3000
+    },
+    {
+      "resource": "/bridge.v1.BridgeService/GetMonitoredTxsByStatus",
+      "controlBehavior": 1,
+      "threshold": 1,
+      "maxQueueingTimeMs": 3000
+    }
+  ]
+}

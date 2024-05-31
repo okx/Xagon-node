@@ -2,9 +2,11 @@ package sequencer
 
 import (
 	"context"
+	"math/big"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/log"
+	"github.com/0xPolygonHermez/zkevm-node/pool"
 	pmetric "github.com/0xPolygonHermez/zkevm-node/sequencer/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 )
@@ -32,4 +34,17 @@ func (s *Sequencer) updateReadyTxCount() {
 
 func (s *Sequencer) countReadyTx() {
 	state.InfiniteSafeRun(s.updateReadyTxCount, "error counting ready tx", time.Second)
+}
+
+func (s *Sequencer) checkFreeGas(tx pool.Transaction, txTracker *TxTracker) (freeGp, claimTx bool) {
+	// check if tx is init-free-gas and if it can be prior pack
+	freeGp = tx.GasPrice().Cmp(big.NewInt(0)) == 0
+
+	// check if tx is bridge-claim
+	addrs := getPackBatchSpacialList(s.cfg.PackBatchSpacialList)
+	if addrs[txTracker.FromStr] {
+		claimTx = true
+	}
+
+	return
 }

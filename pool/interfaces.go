@@ -44,6 +44,8 @@ type storage interface {
 	GetInnerTx(ctx context.Context, txHash common.Hash) (string, error)
 	UpdateReadyTxCount(ctx context.Context, count uint64) error
 	GetReadyTxCount(ctx context.Context) (uint64, error)
+	AddFreeGasAddr(ctx context.Context, addr common.Address) error
+	IsFreeGasAddr(ctx context.Context, addr common.Address) (bool, error)
 }
 
 type stateInterface interface {

@@ -420,3 +420,10 @@ func (e *EthEndpoints) GetPendingStat() (interface{}, types.Error) {
 		ReadyTxCount: readyTxCount,
 	}, nil
 }
+
+func getDynamicGp(enableDgp bool, dgp *big.Int) *big.Int {
+	if !enableDgp || dgp == nil {
+		return big.NewInt(0)
+	}
+	return dgp
+}

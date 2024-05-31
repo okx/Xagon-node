@@ -1,0 +1,99 @@
+[Log]
+Level = "debug"
+Outputs = ["stdout"]
+
+[Apollo]
+Enabled = false
+AppID = "xlayer-bridge-service"
+Cluster = "default"
+MetaAddress = "http://127.0.0.1:8080"
+Namespaces = ["application"]
+Secret = ""
+IsBackupConfig = true
+
+[SyncDB]
+Database = "postgres"
+User = "test_user"
+Password = "test_password"
+Name = "test_db"
+Host = "xlayer-bridge-db"
+Port = "5432"
+MaxConns = 20
+
+[ClaimTxManager]
+Enabled = true
+FrequencyToMonitorTxs = "1s"
+PrivateKey = {Path = "/pk/keystore.claimtxmanager", Password = "testonly"}
+RetryInterval = "1s"
+RetryNumber = 10
+FreeGas = true
+AuthorizedClaimMessageAddresses = ["0x90F79bf6EB2c4f870365E785982E1f101E93b906"]
+
+[Etherman]
+L1URL = "http://xlayer-mock-l1-network:8545"
+L2URLs = ["http://xlayer-json-rpc:8123"]
+L1ChainId = 1337
+L2ChainIds = [195]
+
+[Synchronizer]
+SyncInterval = "1s"
+SyncChunkSize = 100
+
+[BridgeController]
+Store = "postgres"
+Height = 32
+
+[BridgeServer]
+GRPCPort = "9090"
+HTTPPort = "8080"
+CacheSize = 100000
+DefaultPageLimit = 25
+MaxPageLimit = 100
+BridgeVersion = "v1"
+SentinelConfigFilePath = "/app/sentinel_config.json"
+[BridgeServer.DB]
+Database = "postgres"
+User = "test_user"
+Password = "test_password"
+Name = "test_db"
+Host = "xlayer-bridge-db"
+Port = "5432"
+MaxConns = 20
+TableSuffix = ""
+[BridgeServer.Redis]
+IsClusterMode = false
+Addrs = ["xlayer-bridge-redis:6379"]
+Username = ""
+Password = ""
+DB = 0
+MockPrice = true
+
+[CoinKafkaConsumer]
+Brokers = ["xlayer-bridge-coin-kafka:9092"]
+Topics = ["explorer_chainAddressPrice_push"]
+ConsumerGroupID = "xlayer-bridge-service"
+InitialOffset = -1
+Username = ""
+Password = ""
+RootCAPath = "/app/root-ca-cert"
+
+[MessagePushProducer]
+Enabled = false
+
+[NetworkConfig]
+GenBlockNumber = 374
+PolygonBridgeAddress = "0x1089Af36bD72553008FAd0A1240B4D5641208494"
+PolygonZkEVMGlobalExitRootAddress = "0xB8cedD4B9eF683f0887C44a6E4312dC7A6e2fcdB"
+PolygonRollupManagerAddress = "0x2d42E2899662EFf08b13eeb65b154b904C7a1c8a"
+PolygonZkEvmAddress = "0xeb173087729c88a47568AF87b17C653039377BA6"
+L2PolygonBridgeAddresses = ["0x1089Af36bD72553008FAd0A1240B4D5641208494"]
+
+[NacosConfig]
+NacosUrls = ""
+NamespaceId = "public"
+ApplicationName = ""
+ExternalListenAddr = "127.0.0.1:26659"
+
+[BusinessConfig]
+StandardChainIds = [195]
+InnerChainIds = [19500]
