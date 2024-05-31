@@ -419,18 +419,6 @@ func (p *Pool) GetGasPrices(ctx context.Context) (GasPrices, error) {
 	return GasPrices{L1GasPrice: l1GasPrice, L2GasPrice: l2GasPrice}, err
 }
 
-// GetDynamicGasPrice returns the current L2 dynamic gas price
-func (p *Pool) GetDynamicGasPrice() *big.Int {
-	p.dgpMux.RLock()
-	dgp := p.dynamicGasPrice
-	p.dgpMux.RUnlock()
-	if dgp == nil || dgp.Cmp(big.NewInt(0)) == 0 {
-		_, l2Gp := p.GetL1AndL2GasPrice()
-		dgp = new(big.Int).SetUint64(l2Gp)
-	}
-	return dgp
-}
-
 // CountPendingTransactions get number of pending transactions
 // used in bench tests
 func (p *Pool) CountPendingTransactions(ctx context.Context) (uint64, error) {

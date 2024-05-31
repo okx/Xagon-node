@@ -233,19 +233,6 @@ func (s *Sequencer) loadFromPool(ctx context.Context) {
 	}
 }
 
-func (s *Sequencer) checkFreeGas(tx pool.Transaction, txTracker *TxTracker) (freeGp, claimTx bool) {
-	// check if tx is init-free-gas and if it can be prior pack
-	freeGp = tx.GasPrice().Cmp(big.NewInt(0)) == 0
-
-	// check if tx is bridge-claim
-	addrs := getPackBatchSpacialList(s.cfg.PackBatchSpacialList)
-	if addrs[txTracker.FromStr] {
-		claimTx = true
-	}
-
-	return
-}
-
 func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) error {
 	txTracker, err := s.worker.NewTxTracker(tx, tx.ZKCounters, tx.ReservedZKCounters, tx.IP)
 	if err != nil {

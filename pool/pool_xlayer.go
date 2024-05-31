@@ -2,6 +2,7 @@ package pool
 
 import (
 	"context"
+	"math/big"
 	"sync"
 	"time"
 
@@ -85,4 +86,16 @@ func (p *Pool) GetMinSuggestedGasPriceWithDelta(ctx context.Context, delta time.
 	}
 
 	return p.storage.MinL2GasPriceSince(ctx, fromTimestamp)
+}
+
+// GetDynamicGasPrice returns the current L2 dynamic gas price
+func (p *Pool) GetDynamicGasPrice() *big.Int {
+	p.dgpMux.RLock()
+	dgp := p.dynamicGasPrice
+	p.dgpMux.RUnlock()
+	if dgp == nil || dgp.Cmp(big.NewInt(0)) == 0 {
+		_, l2Gp := p.GetL1AndL2GasPrice()
+		dgp = new(big.Int).SetUint64(l2Gp)
+	}
+	return dgp
 }
