@@ -567,15 +567,27 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	freeGp := false
 	if isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims { // claim tx
 		freeGp = true
-	} else if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) &&
-		currentNonce < getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr) { // free-gas tx by count
-		freeGp, err = p.storage.IsFreeGasAddr(ctx, from)
+	} else if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) { // free-gas tx by count
+		is, err := p.storage.IsFreeGasAddr(ctx, from)
 		if err != nil {
 			log.Errorf("failed to check free gas address from storage: %v", err)
 			return err
 		}
-		if freeGp && poolTx.Gas() > getFreeGasLimit(p.cfg.FreeGasLimit) {
-			return fmt.Errorf("free gas tx with too high gas limit")
+		freeGasCountPerAddrConfig := getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr)
+		if is && poolTx.Nonce() < freeGasCountPerAddrConfig {
+			if freeGp && poolTx.Gas() > getFreeGasLimit(p.cfg.FreeGasLimit) {
+				return fmt.Errorf("free gas tx with too high gas limit")
+			}
+			freeGp = true
+		} else if is && poolTx.Nonce() >= freeGasCountPerAddrConfig &&
+			poolTx.GasPrice().Cmp(big.NewInt(0)) == 0 {
+			return fmt.Errorf("you are no longer eligible for gas-free transactions because for each new address, only the first %d transactions(address nonce less than %d) can be gas-free",
+				freeGasCountPerAddrConfig,
+				freeGasCountPerAddrConfig)
+		} else if !is && poolTx.GasPrice().Cmp(big.NewInt(0)) == 0 {
+			return fmt.Errorf("you are unable to initiate a gas-free transaction from this address unless you have previously transferred funds to this address via the X Layer Bridge (https://www.okx.com/xlayer/bridge) or the OKX Exchange, and only the first %d transactions(address nonce less than %d)",
+				freeGasCountPerAddrConfig,
+				freeGasCountPerAddrConfig)
 		}
 	}
 
