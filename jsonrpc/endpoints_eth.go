@@ -1037,12 +1037,6 @@ func (e *EthEndpoints) relayTxToSequencerNode(input string) (interface{}, types.
 	return txHash, nil
 }
 
-func getDynamicGp(enableDgp bool, dgp *big.Int) *big.Int {
-	if !enableDgp || dgp == nil {
-		return big.NewInt(0)
-	}
-	return dgp
-}
 func (e *EthEndpoints) tryToAddTxToPool(input, ip string) (interface{}, types.Error) {
 	tx, err := hexToTx(input)
 	if err != nil {
