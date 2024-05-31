@@ -106,25 +106,24 @@ func (p *Pool) GetDynamicGasPrice() *big.Int {
 func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.Address) (bool, error) {
 	if isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims { // claim tx
 		return true, nil
-	} else if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) { // free-gas tx by count
-		is, err := p.storage.IsFreeGasAddr(ctx, from)
+	} else if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) && poolTx.GasPrice().Cmp(big.NewInt(0)) == 0 { // free-gas tx by count
+		isFreeAddr, err := p.storage.IsFreeGasAddr(ctx, from)
 		if err != nil {
 			log.Errorf("failed to check free gas address from storage: %v", err)
 			return false, err
 		}
 
 		freeGasCountPerAddrConfig := getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr)
-		if is && poolTx.Nonce() < freeGasCountPerAddrConfig && poolTx.GasPrice().Cmp(big.NewInt(0)) == 0 {
+		if isFreeAddr && poolTx.Nonce() < freeGasCountPerAddrConfig {
 			if poolTx.Gas() > getFreeGasLimit(p.cfg.FreeGasLimit) {
-				return false, fmt.Errorf("free gas tx with too high gas limit")
+				return false, fmt.Errorf("gas-free transaction with too high gas limit")
 			}
 			return true, nil
-		} else if is && poolTx.Nonce() >= freeGasCountPerAddrConfig &&
-			poolTx.GasPrice().Cmp(big.NewInt(0)) == 0 {
+		} else if isFreeAddr && poolTx.Nonce() >= freeGasCountPerAddrConfig {
 			return false, fmt.Errorf("you are no longer eligible for gas-free transactions because for each new address, only the first %d transactions(address nonce less than %d) can be gas-free",
 				freeGasCountPerAddrConfig,
 				freeGasCountPerAddrConfig)
-		} else if !is && poolTx.GasPrice().Cmp(big.NewInt(0)) == 0 {
+		} else if !isFreeAddr {
 			return false, fmt.Errorf("you are unable to initiate a gas-free transaction from this address unless you have previously transferred funds to this address via the X Layer Bridge (https://www.okx.com/xlayer/bridge) or the OKX Exchange, and only the first %d transactions(address nonce less than %d)",
 				freeGasCountPerAddrConfig,
 				freeGasCountPerAddrConfig)
