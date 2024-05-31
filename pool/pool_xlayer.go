@@ -111,7 +111,8 @@ func (p *Pool) GetDynamicGasPrice() *big.Int {
 func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.Address) (bool, error) {
 	if isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims { // claim tx
 		return true, nil
-	} else if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) && poolTx.GasPrice().Cmp(big.NewInt(0)) == 0 { // free-gas tx by count
+	}
+	if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) && poolTx.GasPrice().Cmp(big.NewInt(0)) == 0 { // free-gas tx by count
 		isFreeAddr, err := p.storage.IsFreeGasAddr(ctx, from)
 		if err != nil {
 			log.Errorf("failed to check free gas address from storage: %v", err)
@@ -119,16 +120,18 @@ func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.
 		}
 
 		freeGasCountPerAddrConfig := getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr)
-		if isFreeAddr && poolTx.Nonce() < freeGasCountPerAddrConfig {
-			if poolTx.Gas() > getFreeGasLimit(p.cfg.FreeGasLimit) {
-				return false, fmt.Errorf("gas-free transaction with too high gas limit")
+		if isFreeAddr {
+			if poolTx.Nonce() < freeGasCountPerAddrConfig {
+				if poolTx.Gas() > getFreeGasLimit(p.cfg.FreeGasLimit) {
+					return false, fmt.Errorf("gas-free transaction with too high gas limit")
+				}
+				return true, nil
+			} else {
+				return false, fmt.Errorf("you are no longer eligible for gas-free transactions because for each new address, only the first %d transactions(address nonce less than %d) can be gas-free",
+					freeGasCountPerAddrConfig,
+					freeGasCountPerAddrConfig)
 			}
-			return true, nil
-		} else if isFreeAddr && poolTx.Nonce() >= freeGasCountPerAddrConfig {
-			return false, fmt.Errorf("you are no longer eligible for gas-free transactions because for each new address, only the first %d transactions(address nonce less than %d) can be gas-free",
-				freeGasCountPerAddrConfig,
-				freeGasCountPerAddrConfig)
-		} else if !isFreeAddr {
+		} else {
 			bridgeURL := ""
 			switch p.chainID {
 			case TestnetChainID:
