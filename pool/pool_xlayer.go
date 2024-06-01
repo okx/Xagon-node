@@ -179,7 +179,7 @@ func (p *Pool) checkAndUpdateFreeGasAddr(ctx context.Context, poolTx Transaction
 			return err
 		}
 		if nonce < getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr) {
-			if err = p.storage.AddFreeGasAddr(ctx, freeGpAddr); err != nil {
+			if err = p.storage.AddFreeGasAddr(ctx, *exWithdrawalToAddr); err != nil {
 				log.Errorf("failed to save free gas address to the storage", err)
 				return err
 			}
