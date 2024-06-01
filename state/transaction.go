@@ -705,7 +705,7 @@ func CheckSupersetBatchTransactions(existingTxHashes []common.Hash, processedTxs
 }
 
 // EstimateGas for a transaction
-func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common.Address, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error) {
+func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common.Address, isGasFreeSender bool, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error) {
 	const ethTransferGas = 21000
 
 	ctx := context.Background()
@@ -756,7 +756,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 
 	// if gas price is set, set the highEnd to the max amount
 	// of the account afford
-	isGasPriceSet := transaction.GasPrice().BitLen() != 0
+	isGasPriceSet := !isGasFreeSender && transaction.GasPrice().BitLen() != 0
 	if isGasPriceSet {
 		senderBalance, err := s.tree.GetBalance(ctx, senderAddress, l2Block.Root().Bytes())
 		if errors.Is(err, ErrNotFound) {

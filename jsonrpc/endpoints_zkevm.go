@@ -520,7 +520,12 @@ func (z *ZKEVMEndpoints) internalEstimateGasPriceAndFee(ctx context.Context, arg
 		return nil, nil, types.NewRPCError(types.DefaultErrorCode, "failed to convert arguments into an unsigned transaction")
 	}
 
-	gasEstimation, returnValue, err := z.state.EstimateGas(tx, sender, blockToProcess, dbTx)
+	isGasFreeSender, err := z.pool.IsFreeGasAddr(ctx, sender)
+	if err != nil {
+		return nil, nil, types.NewRPCError(types.DefaultErrorCode, "failed to check gas-free", err)
+	}
+
+	gasEstimation, returnValue, err := z.state.EstimateGas(tx, sender, isGasFreeSender, blockToProcess, dbTx)
 	if errors.Is(err, runtime.ErrExecutionReverted) {
 		data := make([]byte, len(returnValue))
 		copy(data, returnValue)

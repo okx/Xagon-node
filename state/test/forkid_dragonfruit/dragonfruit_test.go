@@ -332,7 +332,7 @@ func TestExecutorEstimateGas(t *testing.T) {
 	blockNumber, err := testState.GetLastL2BlockNumber(ctx, nil)
 	require.NoError(t, err)
 
-	estimatedGas, _, err := testState.EstimateGas(signedTx2, sequencerAddress, &blockNumber, nil)
+	estimatedGas, _, err := testState.EstimateGas(signedTx2, sequencerAddress, false, &blockNumber, nil)
 	require.NoError(t, err)
 	log.Debugf("Estimated gas = %v", estimatedGas)
 
@@ -340,7 +340,7 @@ func TestExecutorEstimateGas(t *testing.T) {
 	tx3 := types.NewTransaction(nonce, scAddress, new(big.Int), 40000, new(big.Int).SetUint64(1), common.Hex2Bytes("4abbb40a"))
 	signedTx3, err := auth.Signer(auth.From, tx3)
 	require.NoError(t, err)
-	_, _, err = testState.EstimateGas(signedTx3, sequencerAddress, &blockNumber, nil)
+	_, _, err = testState.EstimateGas(signedTx3, sequencerAddress, false, &blockNumber, nil)
 	require.Error(t, err)
 }
 
@@ -701,7 +701,7 @@ func TestExecutorGasEstimationMultisig(t *testing.T) {
 	blockNumber, err := testState.GetLastL2BlockNumber(ctx, nil)
 	require.NoError(t, err)
 
-	estimatedGas, _, err := testState.EstimateGas(signedTx6, sequencerAddress, &blockNumber, nil)
+	estimatedGas, _, err := testState.EstimateGas(signedTx6, sequencerAddress, false, &blockNumber, nil)
 	require.NoError(t, err)
 	log.Debugf("Estimated gas = %v", estimatedGas)
 

@@ -199,10 +199,15 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 			return RPCErrorResponse(types.DefaultErrorCode, "failed to convert arguments into an unsigned transaction", err, false)
 		}
 
+		isGasFreeSender, err := e.pool.IsFreeGasAddr(ctx, sender)
+		if err != nil {
+			return nil, types.NewRPCError(types.DefaultErrorCode, "failed to check gas-free", err)
+		}
+
 		t2 := time.Now()
 		toTxTime := t2.Sub(t1)
 
-		gasEstimation, returnValue, err := e.state.EstimateGas(tx, sender, blockToProcess, dbTx)
+		gasEstimation, returnValue, err := e.state.EstimateGas(tx, sender, isGasFreeSender, blockToProcess, dbTx)
 		if errors.Is(err, runtime.ErrExecutionReverted) {
 			data := make([]byte, len(returnValue))
 			copy(data, returnValue)

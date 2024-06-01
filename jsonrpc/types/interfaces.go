@@ -30,6 +30,7 @@ type PoolInterface interface {
 	GetInnerTx(ctx context.Context, txHash common.Hash) (string, error)
 	GetMinSuggestedGasPriceWithDelta(ctx context.Context, delta time.Duration) (uint64, error)
 	GetReadyTxCount(ctx context.Context) (uint64, error)
+	IsFreeGasAddr(ctx context.Context, addr common.Address) (bool, error)
 }
 
 // StateInterface gathers the methods required to interact with the state.
@@ -37,7 +38,7 @@ type StateInterface interface {
 	StartToMonitorNewL2Blocks()
 	BeginStateTransaction(ctx context.Context) (pgx.Tx, error)
 	DebugTransaction(ctx context.Context, transactionHash common.Hash, traceConfig state.TraceConfig, dbTx pgx.Tx) (*runtime.ExecutionResult, error)
-	EstimateGas(transaction *types.Transaction, senderAddress common.Address, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error)
+	EstimateGas(transaction *types.Transaction, senderAddress common.Address, isGasFreeSender bool, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error)
 	GetBalance(ctx context.Context, address common.Address, root common.Hash) (*big.Int, error)
 	GetCode(ctx context.Context, address common.Address, root common.Hash) ([]byte, error)
 	GetL2BlockByHash(ctx context.Context, hash common.Hash, dbTx pgx.Tx) (*state.L2Block, error)
