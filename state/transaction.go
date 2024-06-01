@@ -784,6 +784,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 		}
 	}
 
+	log.Errorf("====", highEnd, isGasFreeSender, isGasPriceSet, transaction.Gas())
 	// if the tx gas is set and it is smaller than the highEnd,
 	// limit the highEnd to the maximum allowed by the tx gas
 	if transaction.Gas() != 0 && transaction.Gas() < highEnd {
@@ -839,8 +840,8 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 
 		// The transaction shouldn't fail, for whatever reason, at highEnd
 		return 0, nil, fmt.Errorf(
-			"gas required exceeds allowance (%d)",
-			highEnd,
+			"gas required exceeds allowance (%d) %s",
+			highEnd, err,
 		)
 	}
 
