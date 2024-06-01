@@ -524,7 +524,7 @@ func (z *ZKEVMEndpoints) internalEstimateGasPriceAndFee(ctx context.Context, arg
 	if err != nil {
 		return nil, nil, types.NewRPCError(types.DefaultErrorCode, "failed to check gas-free", err)
 	}
-
+	log.Infof("**********", sender.String())
 	gasEstimation, returnValue, err := z.state.EstimateGas(tx, sender, isGasFreeSender, blockToProcess, dbTx)
 	if errors.Is(err, runtime.ErrExecutionReverted) {
 		data := make([]byte, len(returnValue))

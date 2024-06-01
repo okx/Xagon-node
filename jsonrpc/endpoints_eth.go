@@ -199,6 +199,7 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 			return RPCErrorResponse(types.DefaultErrorCode, "failed to convert arguments into an unsigned transaction", err, false)
 		}
 
+		log.Infof("------", sender.String())
 		isGasFreeSender, err := e.pool.IsFreeGasAddr(ctx, sender)
 		if err != nil {
 			return nil, types.NewRPCError(types.DefaultErrorCode, "failed to check gas-free", err)
