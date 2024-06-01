@@ -827,9 +827,9 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	var gasUsed uint64
 	var returnValue []byte
 	if forkID < FORKID_ETROG {
-		failed, reverted, gasUsed, returnValue, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, highEnd, nonce, false)
+		failed, reverted, gasUsed, returnValue, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, isGasFreeSender, highEnd, nonce, false)
 	} else {
-		failed, reverted, gasUsed, returnValue, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, highEnd, nonce, false)
+		failed, reverted, gasUsed, returnValue, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, isGasFreeSender, highEnd, nonce, false)
 	}
 
 	if failed {
@@ -865,9 +865,9 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 
 		log.Debugf("Estimate gas. Trying to execute TX with %v gas", mid)
 		if forkID < FORKID_ETROG {
-			failed, reverted, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, mid, nonce, true)
+			failed, reverted, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, isGasFreeSender, mid, nonce, true)
 		} else {
-			failed, reverted, _, _, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, mid, nonce, true)
+			failed, reverted, _, _, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, isGasFreeSender, mid, nonce, true)
 		}
 		executionTime := time.Since(txExecutionStart)
 		totalExecutionTime += executionTime
@@ -903,19 +903,23 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 // during the binary search process to define the gas estimation of a given tx for l2 blocks
 // before ETROG
 func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batch *Batch, l2Block *L2Block, latestL2BlockNumber uint64,
-	transaction *types.Transaction, forkID uint64, senderAddress common.Address,
+	transaction *types.Transaction, forkID uint64, senderAddress common.Address, isGasFreeSender bool,
 	gas uint64, nonce uint64, shouldOmitErr bool) (failed, reverted bool, gasUsed uint64, returnValue []byte, err error) {
 	timestamp := l2Block.Time()
 	if l2Block.NumberU64() == latestL2BlockNumber {
 		timestamp = uint64(time.Now().Unix())
 	}
 
+	gp := transaction.GasPrice()
+	if isGasFreeSender {
+		gp = big.NewInt(0)
+	}
 	tx := types.NewTx(&types.LegacyTx{
 		Nonce:    nonce,
 		To:       transaction.To(),
 		Value:    transaction.Value(),
 		Gas:      gas,
-		GasPrice: transaction.GasPrice(),
+		GasPrice: gp,
 		Data:     transaction.Data(),
 	})
 
@@ -999,17 +1003,21 @@ func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batc
 // during the binary search process to define the gas estimation of a given tx for l2 blocks
 // after ETROG
 func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batch *Batch, l2Block *L2Block, latestL2BlockNumber uint64,
-	transaction *types.Transaction, forkID uint64, senderAddress common.Address,
+	transaction *types.Transaction, forkID uint64, senderAddress common.Address, isGasFreeSender bool,
 	gas uint64, nonce uint64, shouldOmitErr bool) (failed, reverted bool, gasUsed uint64, returnValue []byte, err error) {
 	deltaTimestamp := uint32(uint64(time.Now().Unix()) - l2Block.Time())
 	transactions := s.BuildChangeL2Block(deltaTimestamp, uint32(0))
 
+	gp := transaction.GasPrice()
+	if isGasFreeSender {
+		gp = big.NewInt(0)
+	}
 	tx := types.NewTx(&types.LegacyTx{
 		Nonce:    nonce,
 		To:       transaction.To(),
 		Value:    transaction.Value(),
 		Gas:      gas,
-		GasPrice: transaction.GasPrice(),
+		GasPrice: gp,
 		Data:     transaction.Data(),
 	})
 
