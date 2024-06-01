@@ -114,3 +114,8 @@ func (_m *PoolMock) GetReadyTxCount(ctx context.Context) (uint64, error) {
 
 	return r0, r1
 }
+
+// IsFreeGasAddr check if the address is gas-free
+func (_m *PoolMock) IsFreeGasAddr(ctx context.Context, addr common.Address) (bool, error) {
+	return false, nil
+}
