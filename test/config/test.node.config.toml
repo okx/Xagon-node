@@ -29,6 +29,8 @@ Outputs = ["stderr"]
 		MaxSHA256Hashes = 1596
 
 [Pool]
+EnableFreeGasByNonce = true
+FreeGasExAddress = []
 FreeGasCountPerAddr = 3
 FreeGasLimit = 1500000
 FreeClaimGasLimit = 1500000
