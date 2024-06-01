@@ -155,7 +155,6 @@ func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.
 func (p *Pool) checkAndUpdateFreeGasAddr(ctx context.Context, poolTx Transaction, from common.Address, root common.Hash) error {
 	// check and store the free gas address
 	var freeGpAddr common.Address
-	var exWithdrawalToAddr *common.Address
 	inputHex := hex.EncodeToHex(poolTx.Data())
 	// hard code
 	if isFreeGasExAddress(p.cfg.FreeGasExAddress, from) {
@@ -163,27 +162,13 @@ func (p *Pool) checkAndUpdateFreeGasAddr(ctx context.Context, poolTx Transaction
 			addrHex := "0x" + inputHex[10:74]
 			freeGpAddr = common.HexToAddress(addrHex)
 		} else {
-			exWithdrawalToAddr = poolTx.To()
+			// the to address of any Ex withdrawal okb tx will be considered as a gas-free address
+			// even if this address is a contract, it will not affect the gas-free
+			freeGpAddr = *poolTx.To()
 		}
 	} else if poolTx.IsClaims && len(inputHex) > 4554 { // bridge contract claim
 		addrHex := "0x" + inputHex[4490:4554]
 		freeGpAddr = common.HexToAddress(addrHex)
-	}
-
-	// the to address of any Ex withdrawal okb tx will be considered as a gas-free address
-	// even if this address is a contract, it will not affect the gas-free
-	if exWithdrawalToAddr != nil {
-		nonce, err := p.state.GetNonce(ctx, *exWithdrawalToAddr, root)
-		if err != nil {
-			log.Errorf("failed to get nonce while adding tx to the pool", err)
-			return err
-		}
-		if nonce < getFreeGasCountPerAddr(p.cfg.FreeGasCountPerAddr) {
-			if err = p.storage.AddFreeGasAddr(ctx, *exWithdrawalToAddr); err != nil {
-				log.Errorf("failed to save free gas address to the storage", err)
-				return err
-			}
-		}
 	}
 
 	if freeGpAddr.Cmp(common.Address{}) != 0 {
