@@ -15,12 +15,20 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/params"
 	"github.com/ethereum/go-ethereum/trie"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v4"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 )
+
+type testGasEstimationResult struct {
+	failed, reverted, ooc bool
+	gasUsed, gasRefund    uint64
+	returnValue           []byte
+	executionError        error
+}
 
 // GetSender gets the sender from the transaction's signature
 func GetSender(tx types.Transaction) (common.Address, error) {
@@ -823,18 +831,22 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	// Check if the highEnd is a good value to make the transaction pass, if it fails we
 	// can return immediately.
 	log.Debugf("Estimate gas. Trying to execute TX with %v gas", highEnd)
-	var failed, reverted bool
-	var gasUsed uint64
-	var returnValue []byte
+	var estimationResult *testGasEstimationResult
 	if forkID < FORKID_ETROG {
-		failed, reverted, gasUsed, returnValue, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, highEnd, nonce, false)
+		estimationResult, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, highEnd, nonce, false)
 	} else {
-		failed, reverted, gasUsed, returnValue, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, highEnd, nonce, false)
+		estimationResult, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, highEnd, nonce, false)
 	}
+	if err != nil {
+		return 0, nil, err
+	}
+	if estimationResult.failed {
+		if estimationResult.reverted {
+			return 0, estimationResult.returnValue, estimationResult.executionError
+		}
 
-	if failed {
-		if reverted {
-			return 0, returnValue, err
+		if estimationResult.ooc {
+			return 0, nil, estimationResult.executionError
 		}
 
 		// The transaction shouldn't fail, for whatever reason, at highEnd
@@ -848,8 +860,28 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	internalGasTime := t6.Sub(t5)
 
 	// sets
-	if lowEnd < gasUsed {
-		lowEnd = gasUsed
+	if lowEnd < estimationResult.gasUsed {
+		lowEnd = estimationResult.gasUsed
+	}
+
+	optimisticGasLimit := (estimationResult.gasUsed + estimationResult.gasRefund + params.CallStipend) * 64 / 63 // nolint:gomnd
+	if optimisticGasLimit < highEnd {
+		if forkID < FORKID_ETROG {
+			estimationResult, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
+		} else {
+			estimationResult, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, optimisticGasLimit, nonce, false)
+		}
+		if err != nil {
+			// This should not happen under normal conditions since if we make it this far the
+			// transaction had run without error at least once before.
+			log.Error("Execution error in estimate gas", "err", err)
+			return 0, nil, err
+		}
+		if estimationResult.failed {
+			lowEnd = optimisticGasLimit
+		} else {
+			highEnd = optimisticGasLimit
+		}
 	}
 
 	// Start the binary search for the lowest possible gas price
@@ -865,20 +897,20 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 
 		log.Debugf("Estimate gas. Trying to execute TX with %v gas", mid)
 		if forkID < FORKID_ETROG {
-			failed, reverted, _, _, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, mid, nonce, true)
+			estimationResult, err = s.internalTestGasEstimationTransactionV1(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, mid, nonce, true)
 		} else {
-			failed, reverted, _, _, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, mid, nonce, true)
+			estimationResult, err = s.internalTestGasEstimationTransactionV2(ctx, batch, l2Block, latestL2BlockNumber, transaction, forkID, senderAddress, mid, nonce, true)
 		}
 		executionTime := time.Since(txExecutionStart)
 		totalExecutionTime += executionTime
 		txExecutions = append(txExecutions, executionTime)
-		if err != nil && !reverted {
+		if err != nil && !estimationResult.reverted {
 			// Reverts are ignored in the binary search, but are checked later on
 			// during the execution for the optimal gas limit found
 			return 0, nil, err
 		}
 
-		if failed {
+		if estimationResult.failed {
 			// If the transaction failed => increase the gas
 			lowEnd = mid + 1
 		} else {
@@ -904,7 +936,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 // before ETROG
 func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batch *Batch, l2Block *L2Block, latestL2BlockNumber uint64,
 	transaction *types.Transaction, forkID uint64, senderAddress common.Address,
-	gas uint64, nonce uint64, shouldOmitErr bool) (failed, reverted bool, gasUsed uint64, returnValue []byte, err error) {
+	gas uint64, nonce uint64, shouldOmitErr bool) (*testGasEstimationResult, error) {
 	timestamp := l2Block.Time()
 	if l2Block.NumberU64() == latestL2BlockNumber {
 		timestamp = uint64(time.Now().Unix())
@@ -922,7 +954,7 @@ func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batc
 	batchL2Data, err := EncodeUnsignedTransaction(*tx, s.cfg.ChainID, &nonce, forkID)
 	if err != nil {
 		log.Errorf("error encoding unsigned transaction ", err)
-		return false, false, gasUsed, nil, err
+		return nil, err
 	}
 
 	// Create a batch to be sent to the executor
@@ -961,38 +993,44 @@ func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batc
 	log.Debugf("executor time: %vms", time.Since(txExecutionOnExecutorTime).Milliseconds())
 	if err != nil {
 		log.Errorf("error estimating gas: %v", err)
-		return false, false, gasUsed, nil, err
+		return nil, err
 	}
 	if processBatchResponse.Error != executor.ExecutorError_EXECUTOR_ERROR_NO_ERROR {
 		err = executor.ExecutorErr(processBatchResponse.Error)
 		s.eventLog.LogExecutorError(ctx, processBatchResponse.Error, processBatchRequestV1)
-		return false, false, gasUsed, nil, err
+		return nil, err
 	}
-	gasUsed = processBatchResponse.Responses[0].GasUsed
 
 	txResponse := processBatchResponse.Responses[0]
+	result := &testGasEstimationResult{}
+	result.gasUsed = txResponse.GasUsed
+	result.gasRefund = txResponse.GasRefunded
 	// Check if an out of gas error happened during EVM execution
 	if txResponse.Error != executor.RomError_ROM_ERROR_NO_ERROR {
-		err := executor.RomErr(txResponse.Error)
+		result.failed = true
+		result.executionError = executor.RomErr(txResponse.Error)
 
-		if (isGasEVMError(err) || isGasApplyError(err)) && shouldOmitErr {
+		if (isGasEVMError(result.executionError) || isGasApplyError(result.executionError)) && shouldOmitErr {
 			// Specifying the transaction failed, but not providing an error
 			// is an indication that a valid error occurred due to low gas,
 			// which will increase the lower bound for the search
-			return true, false, gasUsed, nil, nil
-		}
-
-		if isEVMRevertError(err) {
+			return result, nil
+		} else if isEVMRevertError(result.executionError) {
 			// The EVM reverted during execution, attempt to extract the
 			// error message and return it
-			returnValue := txResponse.ReturnValue
-			return true, true, gasUsed, returnValue, ConstructErrorFromRevert(err, returnValue)
+			result.reverted = true
+			result.returnValue = txResponse.ReturnValue
+			result.executionError = ConstructErrorFromRevert(err, txResponse.ReturnValue)
+		} else if isOOCError(result.executionError) {
+			// The EVM got into an OOC error
+			result.ooc = true
+			return result, nil
 		}
 
-		return true, false, gasUsed, nil, err
+		return result, nil
 	}
 
-	return false, false, gasUsed, nil, nil
+	return result, nil
 }
 
 // internalTestGasEstimationTransactionV2 is used by the EstimateGas to test the tx execution
@@ -1000,7 +1038,7 @@ func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batc
 // after ETROG
 func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batch *Batch, l2Block *L2Block, latestL2BlockNumber uint64,
 	transaction *types.Transaction, forkID uint64, senderAddress common.Address,
-	gas uint64, nonce uint64, shouldOmitErr bool) (failed, reverted bool, gasUsed uint64, returnValue []byte, err error) {
+	gas uint64, nonce uint64, shouldOmitErr bool) (*testGasEstimationResult, error) {
 	deltaTimestamp := uint32(uint64(time.Now().Unix()) - l2Block.Time())
 	transactions := s.BuildChangeL2Block(deltaTimestamp, uint32(0))
 
@@ -1016,7 +1054,7 @@ func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batc
 	batchL2Data, err := EncodeUnsignedTransaction(*tx, s.cfg.ChainID, &nonce, forkID)
 	if err != nil {
 		log.Errorf("error encoding unsigned transaction ", err)
-		return false, false, gasUsed, nil, err
+		return nil, err
 	}
 
 	transactions = append(transactions, batchL2Data...)
@@ -1061,43 +1099,54 @@ func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batc
 	log.Infof("executor time: %vms", time.Since(txExecutionOnExecutorTime).Milliseconds())
 	if err != nil {
 		log.Errorf("error estimating gas: %v", err)
-		return false, false, gasUsed, nil, err
+		return nil, err
 	}
 	if processBatchResponseV2.Error != executor.ExecutorError_EXECUTOR_ERROR_NO_ERROR {
 		err = executor.ExecutorErr(processBatchResponseV2.Error)
 		s.eventLog.LogExecutorErrorV2(ctx, processBatchResponseV2.Error, processBatchRequestV2)
-		return false, false, gasUsed, nil, err
+		return nil, err
 	}
 	if processBatchResponseV2.ErrorRom != executor.RomError_ROM_ERROR_NO_ERROR {
 		err = executor.RomErr(processBatchResponseV2.ErrorRom)
-		return false, false, gasUsed, nil, err
+		return nil, err
 	}
 
-	gasUsed = processBatchResponseV2.BlockResponses[0].GasUsed
-
 	txResponse := processBatchResponseV2.BlockResponses[0].Responses[0]
+	result := &testGasEstimationResult{}
+	result.gasUsed = txResponse.GasUsed
+	result.gasRefund = txResponse.GasRefunded
 	// Check if an out of gas error happened during EVM execution
 	if txResponse.Error != executor.RomError_ROM_ERROR_NO_ERROR {
-		err := executor.RomErr(txResponse.Error)
+		result.failed = true
+		result.executionError = executor.RomErr(txResponse.Error)
 
-		if (isGasEVMError(err) || isGasApplyError(err)) && shouldOmitErr {
+		if (isGasEVMError(result.executionError) || isGasApplyError(result.executionError)) && shouldOmitErr {
 			// Specifying the transaction failed, but not providing an error
 			// is an indication that a valid error occurred due to low gas,
 			// which will increase the lower bound for the search
-			return true, false, gasUsed, nil, nil
-		}
-
-		if isEVMRevertError(err) {
+			return result, nil
+		} else if isEVMRevertError(result.executionError) {
 			// The EVM reverted during execution, attempt to extract the
 			// error message and return it
-			returnValue := txResponse.ReturnValue
-			return true, true, gasUsed, returnValue, ConstructErrorFromRevert(err, returnValue)
+			result.reverted = true
+			result.returnValue = txResponse.ReturnValue
+			result.executionError = ConstructErrorFromRevert(result.executionError, txResponse.ReturnValue)
+		} else if isOOCError(result.executionError) {
+			// The EVM got into an OOC error
+			result.ooc = true
+			return result, nil
 		}
 
-		return true, false, gasUsed, nil, err
+		return result, nil
 	}
 
-	return false, false, gasUsed, nil, nil
+	return result, nil
+}
+
+// Checks if the EVM stopped tx execution due to OOC error
+func isOOCError(err error) bool {
+	romErr := executor.RomErrorCode(err)
+	return executor.IsROMOutOfCountersError(romErr)
 }
 
 // Checks if executor level valid gas errors occurred
