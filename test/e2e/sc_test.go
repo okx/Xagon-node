@@ -671,7 +671,7 @@ func TestCounterAndBlock(t *testing.T) {
 		client := operations.MustGetClient(network.URL)
 		priKey := network.PrivateKey
 		if network.Name == "Local L2" {
-			priKey = "0xde3ca643a52f5543e84ba984c4419ff40dbabd0e483c31c1d09fee8168d68e38"
+			priKey = "0x815405dddb0e2a99b12af775fd2929e526704e1d1aea6a0b4e74dc33e2f7fcd2"
 		}
 		auth := operations.MustGetAuth(priKey, network.ChainID)
 		log.Infof("auth:%v, chainID:%v", auth.From.String(), network.ChainID)

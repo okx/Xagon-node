@@ -50,6 +50,8 @@ const (
 	EventID_ReservedZKCountersOverflow EventID = "RESERVED ZKCOUNTERS OVERFLOW"
 	// EventID_InvalidInfoRoot is triggered when an invalid l1InfoRoot was synced
 	EventID_InvalidInfoRoot EventID = "INVALID INFOROOT"
+	// EventID_L2BlockReorg is triggered when a L2 block reorg has happened in the sequencer
+	EventID_L2BlockReorg EventID = "L2 BLOCK REORG"
 	// Source_Node is the source of the event
 	Source_Node Source = "node"
 

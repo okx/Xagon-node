@@ -2,6 +2,7 @@ package pgpoolstorage
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"time"
 
@@ -97,4 +98,29 @@ func (p *PostgresPoolStorage) GetReadyTxCount(ctx context.Context) (uint64, erro
 	}
 
 	return count, nil
+}
+
+// IsFreeGasAddr determines if the address is free gas or
+// not.
+func (p *PostgresPoolStorage) IsFreeGasAddr(ctx context.Context, addr common.Address) (bool, error) {
+	var exists bool
+	req := "SELECT exists (SELECT 1 FROM pool.free_gas WHERE addr = $1)"
+	err := p.db.QueryRow(ctx, req, addr.String()).Scan(&exists)
+	if err != nil && err != sql.ErrNoRows {
+		return false, err
+	}
+
+	return exists, nil
+}
+
+// AddFreeGasAddr add free gas address
+func (p *PostgresPoolStorage) AddFreeGasAddr(ctx context.Context, addr common.Address) error {
+	sql := `INSERT INTO pool.free_gas(addr) VALUES ($1)`
+
+	_, err := p.db.Exec(ctx, sql, addr.String())
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

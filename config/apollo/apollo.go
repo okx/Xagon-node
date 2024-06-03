@@ -59,7 +59,7 @@ func (c *Client) LoadConfig() (loaded bool) {
 			switch namespace {
 			case L2GasPricer:
 				c.loadL2GasPricer(value)
-			case JsonRPCRO, JsonRPCExplorer, JsonRPCSubgraph, JsonRPCLight:
+			case JsonRPCRO, JsonRPCExplorer, JsonRPCSubgraph, JsonRPCLight, JsonRPCBridge, JsonRPCWO, JsonRPCUnlimited:
 				c.loadJsonRPC(value)
 			case Sequencer:
 				c.loadSequencer(value)
@@ -82,13 +82,13 @@ func (c *CustomChangeListener) OnChange(changeEvent *storage.ChangeEvent) {
 	for key, value := range changeEvent.Changes {
 		if value.ChangeType == storage.MODIFIED {
 			switch changeEvent.Namespace {
-			case L2GasPricerHalt, SequencerHalt, JsonRPCROHalt, JsonRPCExplorerHalt, JsonRPCSubgraphHalt, JsonRPCLightHalt, JsonRPCBridgeHalt, JsonRPCWOHalt:
+			case L2GasPricerHalt, SequencerHalt, JsonRPCROHalt, JsonRPCExplorerHalt, JsonRPCSubgraphHalt, JsonRPCLightHalt, JsonRPCBridgeHalt, JsonRPCWOHalt, JsonRPCUnlimitedHalt:
 				c.fireHalt(key, value)
 			case L2GasPricer:
 				c.fireL2GasPricer(key, value)
 			case Sequencer:
 				c.fireSequencer(key, value)
-			case JsonRPCRO, JsonRPCExplorer, JsonRPCSubgraph, JsonRPCLight, JsonRPCBridge, JsonRPCWO:
+			case JsonRPCRO, JsonRPCExplorer, JsonRPCSubgraph, JsonRPCLight, JsonRPCBridge, JsonRPCWO, JsonRPCUnlimited:
 				c.fireJsonRPC(key, value)
 			case Pool:
 				c.firePool(key, value)

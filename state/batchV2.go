@@ -38,7 +38,7 @@ type ProcessingContextV2 struct {
 }
 
 // ProcessBatchV2 processes a batch for forkID >= ETROG
-func (s *State) ProcessBatchV2(ctx context.Context, request ProcessRequest, updateMerkleTree bool) (*ProcessBatchResponse, error) {
+func (s *State) ProcessBatchV2(ctx context.Context, request ProcessRequest, updateMerkleTree bool) (*ProcessBatchResponse, string, error) {
 	updateMT := uint32(cFalse)
 	if updateMerkleTree {
 		updateMT = cTrue
@@ -85,16 +85,16 @@ func (s *State) ProcessBatchV2(ctx context.Context, request ProcessRequest, upda
 
 	res, err := s.sendBatchRequestToExecutorV2(ctx, processBatchRequest, request.Caller)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
 	var result *ProcessBatchResponse
 	result, err = s.convertToProcessBatchResponseV2(res)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return result, nil
+	return result, processBatchRequest.ContextId, nil
 }
 
 // ExecuteBatchV2 is used by the synchronizer to reprocess batches to compare generated state root vs stored one

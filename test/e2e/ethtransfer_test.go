@@ -79,7 +79,7 @@ func TestEthTransfer(t *testing.T) {
 }
 
 func sendToSeq(t *testing.T, ctx context.Context, client *ethclient.Client) {
-	auth, err := operations.GetAuth("0xde3ca643a52f5543e84ba984c4419ff40dbabd0e483c31c1d09fee8168d68e38", operations.DefaultL2ChainID)
+	auth, err := operations.GetAuth("0x815405dddb0e2a99b12af775fd2929e526704e1d1aea6a0b4e74dc33e2f7fcd2", operations.DefaultL2ChainID)
 	require.NoError(t, err)
 	senderBalance, err := client.BalanceAt(ctx, auth.From, nil)
 	require.NoError(t, err)
@@ -112,7 +112,7 @@ func sendToSeq(t *testing.T, ctx context.Context, client *ethclient.Client) {
 		Data:     data,
 	})
 
-	privateKey, err := crypto.HexToECDSA(strings.TrimPrefix("0xde3ca643a52f5543e84ba984c4419ff40dbabd0e483c31c1d09fee8168d68e38", "0x"))
+	privateKey, err := crypto.HexToECDSA(strings.TrimPrefix("0x815405dddb0e2a99b12af775fd2929e526704e1d1aea6a0b4e74dc33e2f7fcd2", "0x"))
 	require.NoError(t, err)
 
 	signedTx, err := types.SignTx(tx, types.HomesteadSigner{}, privateKey)

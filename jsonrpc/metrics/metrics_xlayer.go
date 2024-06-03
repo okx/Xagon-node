@@ -13,6 +13,9 @@ var (
 	requestInnerTxCachedName    = requestPrefix + "inner_tx_cached"
 	requestInnerTxExecutedName  = requestPrefix + "inner_tx_executed"
 	requestInnerTxAddErrorCount = requestPrefix + "inner_tx_error_count"
+	requestAuthCountName        = requestPrefix + "auth_count"
+	requestAuthErrorCountName   = requestPrefix + "auth_error_count"
+	requestRelayFailCountName   = requestPrefix + "relay_fail_count"
 
 	wsRequestPrefix             = prefix + "ws_request_"
 	requestWsMethodName         = wsRequestPrefix + "method"
@@ -23,16 +26,17 @@ var (
 	width = 0.1
 	count = 10
 
-	lastDynamicGasPriceName  = prefix + "dynamic_gas_price"
-	lastBatchNumberLabelName = "batch_number"
+	lastDynamicGasPriceName = prefix + "dynamic_gas_price"
+	lastRawGasPriceName     = prefix + "raw_gas_price"
 
-	gaugeVecs = []metrics.GaugeVecOpts{
+	gauges = []prometheus.GaugeOpts{
 		{
-			GaugeOpts: prometheus.GaugeOpts{
-				Name: lastDynamicGasPriceName,
-				Help: "[JSONRPC] dynamic gas price",
-			},
-			Labels: []string{lastBatchNumberLabelName},
+			Name: lastDynamicGasPriceName,
+			Help: "[JSONRPC] dynamic gas price",
+		},
+		{
+			Name: lastRawGasPriceName,
+			Help: "[JSONRPC] raw gas price",
 		},
 	}
 
@@ -54,6 +58,7 @@ var (
 			Labels: []string{requestMethodLabelName},
 		},
 	}
+
 	counterVecsXLayer = []metrics.CounterVecOpts{
 		{
 			CounterOpts: prometheus.CounterOpts{
@@ -90,7 +95,38 @@ var (
 			},
 			Labels: []string{"type"},
 		},
+		{
+			CounterOpts: prometheus.CounterOpts{
+				Name: requestAuthCountName,
+				Help: "[JSONRPC] number of auth requests",
+			},
+			Labels: []string{"project"},
+		},
+		{
+			CounterOpts: prometheus.CounterOpts{
+				Name: requestAuthErrorCountName,
+				Help: "[JSONRPC] number of auth error requests",
+			},
+			Labels: []string{"type"},
+		},
+		{
+			CounterOpts: prometheus.CounterOpts{
+				Name: requestRelayFailCountName,
+				Help: "[JSONRPC] number of relay fail requests",
+			},
+			Labels: []string{"type"},
+		},
 	}
+)
+
+// RequestAuthErrorType request auth error type
+type RequestAuthErrorType string
+
+const (
+	// RequestAuthErrorTypeKeyExpired represents an auth request that has expired.
+	RequestAuthErrorTypeKeyExpired RequestAuthErrorType = "key_expired"
+	// RequestAuthErrorTypeNoAuth represents an auth request that is invalid.
+	RequestAuthErrorTypeNoAuth RequestAuthErrorType = "no_auth"
 )
 
 // WsRequestMethodDuration observes (histogram) the duration of a ws request from the
@@ -134,5 +170,25 @@ func RequestInnerTxAddErrorCount() {
 
 // DynamicGasPrice sets the gauge vector to the given batch number and dynamic gas price.
 func DynamicGasPrice(dgp int64) {
-	metrics.GaugeVecSet(lastDynamicGasPriceName, "inf", float64(dgp))
+	metrics.GaugeSet(lastDynamicGasPriceName, float64(dgp))
+}
+
+// RawGasPrice sets the gauge vector to the given batch number and raw gas price.
+func RawGasPrice(gp int64) {
+	metrics.GaugeSet(lastRawGasPriceName, float64(gp))
+}
+
+// RequestAuthCount increments the requests handled counter vector by one for the given project.
+func RequestAuthCount(project string) {
+	metrics.CounterVecInc(requestAuthCountName, project)
+}
+
+// RequestAuthErrorCount increments the requests handled counter vector by one for the given project.
+func RequestAuthErrorCount(tp RequestAuthErrorType) {
+	metrics.CounterVecInc(requestAuthErrorCountName, string(tp))
+}
+
+// RequestRelayFailCount increments the requests handled counter vector by one for the given project.
+func RequestRelayFailCount(method string) {
+	metrics.CounterVecInc(requestRelayFailCountName, method)
 }

@@ -84,7 +84,10 @@ func (s *Server) handleWsBatch(httpRequest *http.Request, wsConn *concurrentWsCo
 		st := time.Now()
 		metrics.RequestMethodCount(request.Method)
 		req := handleRequest{Request: request, wsConn: wsConn, HttpRequest: httpRequest}
-		response := s.handler.Handle(req)
+		response, relayed := tryRelay(s.config.ApiRelay, request)
+		if !relayed {
+			response = s.handler.Handle(req)
+		}
 		responses = append(responses, response)
 		metrics.RequestMethodDuration(request.Method, st)
 	}

@@ -99,13 +99,14 @@ func TestL1SequenceBatchesTrustedBatchSequencedThatAlreadyExistsHappyPath(t *tes
 	l1InfoRoot := common.HexToHash(hashExamplesValues[0])
 	l1Block := newL1Block(mocks, batch, l1InfoRoot)
 	expectationsPreExecution(t, mocks, ctx, batch, nil)
-
-	mocks.Synchronizer.EXPECT().IsTrustedSequencer().Return(false)
 	executionResponse := newProcessBatchResponseV2(batch)
 	expectationsForExecution(t, mocks, ctx, l1Block.SequencedBatches[1][0], l1Block.ReceivedAt, executionResponse)
+	mocks.State.EXPECT().UpdateBatchTimestamp(ctx, batch.BatchNumber, l1Block.ReceivedAt, mocks.DbTx).Return(nil)
 	mocks.State.EXPECT().AddAccumulatedInputHash(ctx, executionResponse.NewBatchNum, common.BytesToHash(executionResponse.NewAccInputHash), mocks.DbTx).Return(nil)
 	expectationsAddSequencedBatch(t, mocks, ctx, executionResponse)
+
 	err := sut.Process(ctx, etherman.Order{Pos: 1}, l1Block, mocks.DbTx)
+
 	require.NoError(t, err)
 }
 
@@ -118,11 +119,13 @@ func TestL1SequenceBatchesPermissionlessBatchSequencedThatAlreadyExistsHappyPath
 	l1Block := newL1Block(mocks, batch, l1InfoRoot)
 	expectationsPreExecution(t, mocks, ctx, batch, nil)
 	executionResponse := newProcessBatchResponseV2(batch)
-	mocks.Synchronizer.EXPECT().IsTrustedSequencer().Return(false)
 	expectationsForExecution(t, mocks, ctx, l1Block.SequencedBatches[1][0], l1Block.ReceivedAt, executionResponse)
+	mocks.State.EXPECT().UpdateBatchTimestamp(ctx, batch.BatchNumber, l1Block.ReceivedAt, mocks.DbTx).Return(nil)
 	mocks.State.EXPECT().AddAccumulatedInputHash(ctx, executionResponse.NewBatchNum, common.BytesToHash(executionResponse.NewAccInputHash), mocks.DbTx).Return(nil)
 	expectationsAddSequencedBatch(t, mocks, ctx, executionResponse)
+
 	err := sut.Process(ctx, etherman.Order{Pos: 1}, l1Block, mocks.DbTx)
+
 	require.NoError(t, err)
 }
 
@@ -142,6 +145,7 @@ func TestL1SequenceBatchesPermissionlessBatchSequencedThatAlreadyExistsMismatch(
 	executionResponse := newProcessBatchResponseV2(batch)
 	executionResponse.NewStateRoot = common.HexToHash(hashExamplesValues[2]).Bytes()
 	expectationsForExecution(t, mocks, ctx, l1Block.SequencedBatches[1][0], l1Block.ReceivedAt, executionResponse)
+	mocks.State.EXPECT().UpdateBatchTimestamp(ctx, batch.BatchNumber, l1Block.ReceivedAt, mocks.DbTx).Return(nil)
 	mocks.State.EXPECT().AddAccumulatedInputHash(ctx, executionResponse.NewBatchNum, common.BytesToHash(executionResponse.NewAccInputHash), mocks.DbTx).Return(nil)
 	mocks.Synchronizer.EXPECT().IsTrustedSequencer().Return(false)
 	mocks.State.EXPECT().AddTrustedReorg(ctx, mock.Anything, mocks.DbTx).Return(nil)
@@ -180,6 +184,7 @@ func TestL1SequenceBatchesTrustedBatchSequencedThatAlreadyExistsMismatch(t *test
 	executionResponse := newProcessBatchResponseV2(batch)
 	executionResponse.NewStateRoot = common.HexToHash(hashExamplesValues[2]).Bytes()
 	expectationsForExecution(t, mocks, ctx, l1Block.SequencedBatches[1][0], l1Block.ReceivedAt, executionResponse)
+	mocks.State.EXPECT().UpdateBatchTimestamp(ctx, batch.BatchNumber, l1Block.ReceivedAt, mocks.DbTx).Return(nil)
 	mocks.State.EXPECT().AddAccumulatedInputHash(ctx, executionResponse.NewBatchNum, common.BytesToHash(executionResponse.NewAccInputHash), mocks.DbTx).Return(nil)
 	mocks.Synchronizer.EXPECT().IsTrustedSequencer().Return(true)
 
@@ -297,7 +302,7 @@ func newL1Block(mocks *mocksEtrogProcessorL1, batch *state.Batch, l1InfoRoot com
 func newComposedL1Block(mocks *mocksEtrogProcessorL1, forcedBatch *etherman.SequencedBatch, l1InfoRoot common.Hash) *etherman.Block {
 	l1Block := etherman.Block{
 		BlockNumber:      123,
-		ReceivedAt:       mocks.TimeProvider.Now(),
+		ReceivedAt:       time.Date(2024, 1, 1, 1, 0, 0, 0, time.UTC),
 		SequencedBatches: [][]etherman.SequencedBatch{},
 	}
 	l1Block.SequencedBatches = append(l1Block.SequencedBatches, []etherman.SequencedBatch{})

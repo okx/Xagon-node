@@ -11,7 +11,6 @@ DOCKERCOMPOSESTATEDB := xlayer-state-db
 DOCKERCOMPOSEPOOLDB := xlayer-pool-db
 DOCKERCOMPOSEEVENTDB := xlayer-event-db
 DOCKERCOMPOSEDACDB := xlayer-data-availability-db
-DOCKERCOMPOSENETWORK := xlayer-mock-l1-network
 DOCKERCOMPOSEEXPLORERL1 := xlayer-explorer-l1
 DOCKERCOMPOSEEXPLORERL1DB := xlayer-explorer-l1-db
 DOCKERCOMPOSEEXPLORERL2 := xlayer-explorer-l2
@@ -26,36 +25,23 @@ DOCKERCOMPOSEPERMISSIONLESSZKPROVER := xlayer-permissionless-prover
 DOCKERCOMPOSENODEAPPROVE := xlayer-approve
 DOCKERCOMPOSEMETRICS := xlayer-metrics
 DOCKERCOMPOSEAPPSEQV1TOV2 := xlayer-sequencer-v1tov2
-DOCKERCOMPOSEAPPSEQSENDER := xlayer-sequence-sender
 DOCKERCOMPOSEAPPSEQSENDERV1TOV2 := xlayer-sequence-sender-v1tov2
-DOCKERCOMPOSEAPPL2GASP := xlayer-l2gaspricer
 DOCKERCOMPOSEAPPL2GASPV1TOV2 := xlayer-l2gaspricer-v1tov2
-DOCKERCOMPOSEAPPAGG := xlayer-aggregator
 DOCKERCOMPOSEAPPAGGV1TOV2 := xlayer-aggregator-v1tov2
-DOCKERCOMPOSEAPPRPC := xlayer-json-rpc
 DOCKERCOMPOSEAPPRPCV1TOV2 := xlayer-json-rpc-v1tov2
-DOCKERCOMPOSEAPPSYNC := xlayer-sync
 DOCKERCOMPOSEAPPSYNCV1TOV2 := xlayer-sync-v1tov2
-DOCKERCOMPOSEAPPETHTXMANAGER := xlayer-eth-tx-manager
 DOCKERCOMPOSEAPPETHTXMANAGERV1TOV2 := xlayer-eth-tx-manager-v1tov2
-DOCKERCOMPOSESTATEDB := xlayer-state-db
-DOCKERCOMPOSEPOOLDB := xlayer-pool-db
-DOCKERCOMPOSEEVENTDB := xlayer-event-db
 DOCKERCOMPOSENETWORK := xlayer-mock-l1-network
 DOCKERCOMPOSEV1TOV2NETWORK := xlayer-v1tov2-l1-network
-DOCKERCOMPOSEEXPLORERL1 := xlayer-explorer-l1
-DOCKERCOMPOSEEXPLORERL1DB := xlayer-explorer-l1-db
-DOCKERCOMPOSEEXPLORERL2 := xlayer-explorer-l2
-DOCKERCOMPOSEEXPLORERL2DB := xlayer-explorer-l2-db
-DOCKERCOMPOSEEXPLORERRPC := xlayer-explorer-json-rpc
-DOCKERCOMPOSEZKPROVER := xlayer-prover
-DOCKERCOMPOSEPERMISSIONLESSDB := xlayer-permissionless-db
-DOCKERCOMPOSEPERMISSIONLESSNODE := xlayer-permissionless-node
-DOCKERCOMPOSEPERMISSIONLESSZKPROVER := xlayer-permissionless-prover
-DOCKERCOMPOSENODEAPPROVE := xlayer-approve
 DOCKERCOMPOSENODEAPPROVEV1TOV2 := xlayer-approve-v1tov2
-DOCKERCOMPOSEMETRICS := xlayer-metrics
 DOCKERCOMPOSEGRAFANA := grafana
+
+DOCKER_COMPOSE_BRIDGE_DB := xlayer-bridge-db
+DOCKER_COMPOSE_BRIDGE := xlayer-bridge-service
+DOCKER_COMPOSE_REDIS := xlayer-bridge-redis
+DOCKER_COMPOSE_COIN_KAFKA_NODE := xlayer-bridge-coin-kafka
+DOCKER_COMPOSE_ZOOKEEPER := kafka-zookeeper
+DOCKER_COMPOSE_BRIDGE_UI := xlayer-bridge-ui
 
 RUNSTATEDB := $(DOCKERCOMPOSE) up -d $(DOCKERCOMPOSESTATEDB)
 RUNPOOLDB := $(DOCKERCOMPOSE) up -d $(DOCKERCOMPOSEPOOLDB)
@@ -97,6 +83,13 @@ RUNAPPROVE := $(DOCKERCOMPOSE) up -d $(DOCKERCOMPOSENODEAPPROVE)
 RUNV1TOV2APPROVE := $(DOCKERCOMPOSE) up -d $(DOCKERCOMPOSENODEAPPROVEV1TOV2)
 
 RUNMETRICS := $(DOCKERCOMPOSE) up -d $(DOCKERCOMPOSEMETRICS)
+
+RUN_BRIDGE_DB := $(DOCKERCOMPOSE) up -d $(DOCKER_COMPOSE_BRIDGE_DB)
+RUN_BRIDGE := $(DOCKERCOMPOSE) up -d $(DOCKER_COMPOSE_BRIDGE)
+RUN_BRIDGE_UI := $(DOCKERCOMPOSE) up -d $(DOCKER_COMPOSE_BRIDGE_UI)
+RUN_REDIS := $(DOCKERCOMPOSE) up -d $(DOCKER_COMPOSE_REDIS)
+RUN_COIN_KAFKA := $(DOCKERCOMPOSE) up -d $(DOCKER_COMPOSE_COIN_KAFKA_NODE)
+RUN_ZOOKEEPER := $(DOCKERCOMPOSE) up -d $(DOCKER_COMPOSE_ZOOKEEPER)
 
 RUN := $(DOCKERCOMPOSE) up -d
 
@@ -140,6 +133,8 @@ STOPAPPROVE := $(DOCKERCOMPOSE) stop $(DOCKERCOMPOSENODEAPPROVE) && $(DOCKERCOMP
 STOPV1TOV2APPROVE := $(DOCKERCOMPOSE) stop $(DOCKERCOMPOSENODEAPPROVEV1TOV2) && $(DOCKERCOMPOSE) rm -f $(DOCKERCOMPOSENODEAPPROVEV1TOV2)
 
 STOPMETRICS := $(DOCKERCOMPOSE) stop $(DOCKERCOMPOSEMETRICS) && $(DOCKERCOMPOSE) rm -f $(DOCKERCOMPOSEMETRICS)
+
+STOPDSDATA := rm -rf datastream.bin && rm -rf datastream.db
 
 STOP := $(DOCKERCOMPOSE) down --remove-orphans
 
@@ -649,6 +644,38 @@ stop-approve-pol: ## Stops approve in node container
 stop-approve-pol-v1tov2: ## Stops approve in node container
 	$(STOPV1TOV2APPROVE)
 
+.PHONY: run-bridge
+run-bridge: ## Runs a full node whit bridge services
+	$(RUNSTATEDB)
+	$(RUNPOOLDB)
+	$(RUNEVENTDB)
+	$(RUNDACDB)
+	$(RUN_BRIDGE_DB)
+	$(RUN_REDIS)
+	$(RUN_COIN_KAFKA)
+	$(RUN_ZOOKEEPER)
+	$(RUNL1NETWORK)
+	$(RUNEXPLORERL1DB)
+	$(RUNEXPLORERL2DB)
+	sleep 1
+	$(RUNZKPROVER)
+	$(RUNAPPROVE)
+	sleep 3
+	$(RUNSYNC)
+	sleep 4
+	$(RUNDACNODE)
+	$(RUNETHTXMANAGER)
+	$(RUNSEQUENCER)
+	$(RUNSEQUENCESENDER)
+	$(RUNL2GASPRICER)
+	$(RUNAGGREGATOR)
+	$(RUNJSONRPC)
+	$(RUN_BRIDGE)
+	$(RUN_BRIDGE_UI)
+	$(RUNEXPLORERJSONRPC)
+	$(RUNEXPLORERL1)
+	$(RUNEXPLORERL2)
+
 .PHONY: run
 run: ## Runs a full node
 	$(RUNSTATEDB)
@@ -693,6 +720,7 @@ run-v1tov2: ## Runs a full node using v1tov2 network
 .PHONY: stop
 stop: ## Stops all services
 	$(STOP)
+	$(STOPDSDATA)
 
 .PHONY: ship
 ship: ## Builds docker images and run them
@@ -766,7 +794,7 @@ generate-mocks-sequencer: ## Generates mocks for sequencer , using mockery tool
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=stateInterface --dir=../sequencer --output=../sequencer --outpkg=sequencer --inpackage --structname=StateMock --filename=mock_state.go
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=txPool --dir=../sequencer --output=../sequencer --outpkg=sequencer --inpackage  --structname=PoolMock --filename=mock_pool.go
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=Tx --srcpkg=github.com/jackc/pgx/v4 --output=../sequencer --outpkg=sequencer --structname=DbTxMock --filename=mock_dbtx.go
-	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=etherman --dir=../sequencer --output=../sequencer --outpkg=sequencer --inpackage --structname=EthermanMock --filename=mock_etherman.go
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --name=ethermanInterface --dir=../sequencer --output=../sequencer --outpkg=sequencer --inpackage --structname=EthermanMock --filename=mock_etherman.go
 
 .PHONY: generate-mocks-sequencesender
 generate-mocks-sequencesender: ## Generates mocks for sequencesender , using mockery tool
@@ -803,6 +831,9 @@ generate-mocks-synchronizer: ## Generates mocks for synchronizer , using mockery
 	
 	rm -Rf ../synchronizer/actions/elderberry/mocks
 	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/actions/elderberry --output ../synchronizer/actions/elderberry/mocks --outpkg mock_elderberry ${COMMON_MOCKERY_PARAMS}
+	
+	rm -Rf ../synchronizer/l1_check_block/mocks
+	export "GOROOT=$$(go env GOROOT)" && $$(go env GOPATH)/bin/mockery --all --case snake --dir ../synchronizer/l1_check_block --output ../synchronizer/l1_check_block/mocks --outpkg mock_l1_check_block ${COMMON_MOCKERY_PARAMS}
 	
 	
 

@@ -164,11 +164,11 @@ func TestAddrQueue(t *testing.T) {
 	t.Run("Delete readyTx 0x01", func(t *testing.T) {
 		tc := addTxTestCases[2]
 		tx := newTestTxTracker(tc.hash, tc.nonce, tc.gasPrice, tc.cost)
-		deltx := addr.deleteTx(tx.Hash)
+		deltx, isReady := addr.deleteTx(tx.Hash)
 		if !(addr.readyTx == nil) {
 			t.Fatalf("Error readyTx not nil. Expected=%s, Actual=%s", "", addr.readyTx.HashStr)
 		}
-		if !(deltx.HashStr == tx.HashStr) {
+		if !isReady || !(deltx.HashStr == tx.HashStr) {
 			t.Fatalf("Error returning deletedReadyTx. Expected=%s, Actual=%s", tx.HashStr, deltx.HashStr)
 		}
 	})

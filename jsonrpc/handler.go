@@ -64,6 +64,7 @@ type handleRequest struct {
 // check the `eth.go` file for more example on how the methods are implemented
 type Handler struct {
 	serviceMap map[string]*serviceData
+	cfg        Config
 }
 
 func newJSONRpcHandler() *Handler {
@@ -160,8 +161,16 @@ func (h *Handler) HandleWs(reqBody []byte, wsConn *concurrentWsConn, httpReq *ht
 		wsConn:      wsConn,
 		HttpRequest: httpReq,
 	}
+	if !methodRateLimitAllow(req.Method) {
+		return types.NewResponse(req, nil, types.NewRPCError(types.InvalidParamsErrorCode, "server is too busy")).Bytes()
+	}
 
-	return h.Handle(handleReq).Bytes()
+	response, relayed := tryRelay(h.cfg.ApiRelay, req)
+	if !relayed {
+		response = h.Handle(handleReq)
+	}
+
+	return response.Bytes()
 }
 
 // RemoveFilterByWsConn uninstalls the filter attached to this websocket connection

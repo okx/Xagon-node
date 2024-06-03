@@ -40,15 +40,16 @@ func (f *finalizer) processForcedBatches(ctx context.Context, lastBatchNumber ui
 			forcedBatchToProcess = *missingForcedBatch
 		}
 
+		var contextId string
 		log.Infof("processing forced batch %d, lastBatchNumber: %d, stateRoot: %s", forcedBatchToProcess.ForcedBatchNumber, lastBatchNumber, stateRoot.String())
-		lastBatchNumber, stateRoot, err = f.processForcedBatch(ctx, forcedBatchToProcess, lastBatchNumber, stateRoot)
+		lastBatchNumber, stateRoot, contextId, err = f.processForcedBatch(ctx, forcedBatchToProcess, lastBatchNumber, stateRoot)
 
 		if err != nil {
 			log.Errorf("error when processing forced batch %d, error: %v", forcedBatchToProcess.ForcedBatchNumber, err)
 			return lastBatchNumber, stateRoot
 		}
 
-		log.Infof("processed forced batch %d, batchNumber: %d, newStateRoot: %s", forcedBatchToProcess.ForcedBatchNumber, lastBatchNumber, stateRoot.String())
+		log.Infof("processed forced batch %d, batchNumber: %d, newStateRoot: %s, contextId: %s", forcedBatchToProcess.ForcedBatchNumber, lastBatchNumber, stateRoot.String(), contextId)
 
 		nextForcedBatchNumber += 1
 	}
@@ -57,26 +58,26 @@ func (f *finalizer) processForcedBatches(ctx context.Context, lastBatchNumber ui
 	return lastBatchNumber, stateRoot
 }
 
-func (f *finalizer) processForcedBatch(ctx context.Context, forcedBatch state.ForcedBatch, lastBatchNumber uint64, stateRoot common.Hash) (newLastBatchNumber uint64, newStateRoot common.Hash, retErr error) {
+func (f *finalizer) processForcedBatch(ctx context.Context, forcedBatch state.ForcedBatch, lastBatchNumber uint64, stateRoot common.Hash) (newLastBatchNumber uint64, newStateRoot common.Hash, ctxId string, retErr error) {
 	dbTx, err := f.stateIntf.BeginStateTransaction(ctx)
 	if err != nil {
 		log.Errorf("failed to begin state transaction for process forced batch %d, error: %v", forcedBatch.ForcedBatchNumber, err)
-		return lastBatchNumber, stateRoot, err
+		return lastBatchNumber, stateRoot, "", err
 	}
 
 	// Helper function in case we get an error when processing the forced batch
-	rollbackOnError := func(retError error) (newLastBatchNumber uint64, newStateRoot common.Hash, retErr error) {
+	rollbackOnError := func(retError error) (newLastBatchNumber uint64, newStateRoot common.Hash, ctxId string, retErr error) {
 		err := dbTx.Rollback(ctx)
 		if err != nil {
-			return lastBatchNumber, stateRoot, fmt.Errorf("rollback error due to error %v, error: %v", retError, err)
+			return lastBatchNumber, stateRoot, "", fmt.Errorf("rollback error due to error %v, error: %v", retError, err)
 		}
-		return lastBatchNumber, stateRoot, retError
+		return lastBatchNumber, stateRoot, "", retError
 	}
 
 	// Get L1 block for the forced batch
 	fbL1Block, err := f.stateIntf.GetBlockByNumber(ctx, forcedBatch.BlockNumber, dbTx)
 	if err != nil {
-		return lastBatchNumber, stateRoot, fmt.Errorf("error getting L1 block number %d for forced batch %d, error: %v", forcedBatch.ForcedBatchNumber, forcedBatch.ForcedBatchNumber, err)
+		return lastBatchNumber, stateRoot, "", fmt.Errorf("error getting L1 block number %d for forced batch %d, error: %v", forcedBatch.ForcedBatchNumber, forcedBatch.ForcedBatchNumber, err)
 	}
 
 	newBatchNumber := lastBatchNumber + 1
@@ -107,7 +108,7 @@ func (f *finalizer) processForcedBatch(ctx context.Context, forcedBatch state.Fo
 		Caller:                  stateMetrics.DiscardCallerLabel,
 	}
 
-	batchResponse, err := f.stateIntf.ProcessBatchV2(ctx, batchRequest, true)
+	batchResponse, contextId, err := f.stateIntf.ProcessBatchV2(ctx, batchRequest, true)
 	if err != nil {
 		return rollbackOnError(fmt.Errorf("failed to process/execute forced batch %d, error: %v", forcedBatch.ForcedBatchNumber, err))
 	}
@@ -141,7 +142,7 @@ func (f *finalizer) processForcedBatch(ctx context.Context, forcedBatch state.Fo
 		return rollbackOnError(fmt.Errorf("error when commit dbTx when processing forced batch %d, error: %v", forcedBatch.ForcedBatchNumber, err))
 	}
 
-	return newBatchNumber, batchResponse.NewStateRoot, nil
+	return newBatchNumber, batchResponse.NewStateRoot, contextId, nil
 }
 
 // addForcedTxToWorker adds the txs of the forced batch to the worker

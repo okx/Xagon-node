@@ -76,10 +76,78 @@ func TestIncrementalProcessUpdateBatchL2DataOnCache(t *testing.T) {
 	processBatchResp := &state.ProcessBatchResponse{
 		NewStateRoot: expectedStateRoot,
 	}
-	stateMock.EXPECT().ProcessBatchV2(ctx, mock.Anything, true).Return(processBatchResp, nil).Once()
+	stateMock.EXPECT().ProcessBatchV2(ctx, mock.Anything, true).Return(processBatchResp, "", nil).Once()
 
 	syncMock.EXPECT().PendingFlushID(mock.Anything, mock.Anything).Once()
 	syncMock.EXPECT().CheckFlushID(mock.Anything).Return(nil).Maybe()
+	// Act
+	res, err := sut.IncrementalProcess(ctx, &data, nil)
+	// Assert
+	log.Info(res)
+	require.NoError(t, err)
+	require.Equal(t, trustedBatchL2Data, res.UpdateBatch.BatchL2Data)
+	require.Equal(t, false, res.ClearCache)
+}
+
+// This test check that if you process incrementally a batch that need to be close
+// the GER is update because we call UpdateWIPBatch
+// NOTE: CloseBatch() doesnt update GER
+func TestIncrementalProcessUpdateBatchL2DataAndGER(t *testing.T) {
+	// Arrange
+	stateMock := mock_l2_sync_etrog.NewStateInterface(t)
+	syncMock := mock_syncinterfaces.NewSynchronizerFlushIDManager(t)
+
+	sut := SyncTrustedBatchExecutorForEtrog{
+		state: stateMock,
+		sync:  syncMock,
+	}
+	ctx := context.Background()
+
+	stateBatchL2Data, _ := hex.DecodeString(codedL2BlockHeader + codedRLP2Txs1)
+	trustedBatchL2Data, _ := hex.DecodeString(codedL2BlockHeader + codedRLP2Txs1 + codedL2BlockHeader + codedRLP2Txs1)
+	expectedStateRoot := common.HexToHash("0x723e5c4c7ee7890e1e66c2e391d553ee792d2204ecb4fe921830f12f8dcd1a92")
+	//deltaBatchL2Data := []byte{4}
+	batchNumber := uint64(123)
+	data := l2_shared.ProcessData{
+		BatchNumber:       batchNumber,
+		OldStateRoot:      common.Hash{},
+		BatchMustBeClosed: true,
+		TrustedBatch: &types.Batch{
+			Number:      123,
+			BatchL2Data: trustedBatchL2Data,
+			StateRoot:   expectedStateRoot,
+			Closed:      true,
+		},
+		StateBatch: &state.Batch{
+			BatchNumber:    batchNumber,
+			BatchL2Data:    stateBatchL2Data,
+			GlobalExitRoot: common.HexToHash("0x9c8fa7ce2e197f9f1b3c30de9f93de3c1cb290e6c118a18446f47a9e1364c3ab"),
+		},
+	}
+	expectedUpdate := state.ProcessingReceipt{
+		BatchNumber:    123,
+		StateRoot:      expectedStateRoot,
+		LocalExitRoot:  data.TrustedBatch.LocalExitRoot,
+		GlobalExitRoot: data.TrustedBatch.GlobalExitRoot,
+		AccInputHash:   data.TrustedBatch.AccInputHash,
+		BatchL2Data:    trustedBatchL2Data,
+	}
+
+	stateMock.EXPECT().UpdateWIPBatch(ctx, expectedUpdate, mock.Anything).Return(nil).Once()
+	stateMock.EXPECT().GetL1InfoTreeDataFromBatchL2Data(ctx, mock.Anything, mock.Anything).Return(map[uint32]state.L1DataV2{}, expectedStateRoot, common.Hash{}, nil).Once()
+	stateMock.EXPECT().GetForkIDByBatchNumber(batchNumber).Return(uint64(7)).Once()
+
+	processBatchResp := &state.ProcessBatchResponse{
+		NewStateRoot: expectedStateRoot,
+	}
+	stateMock.EXPECT().ProcessBatchV2(ctx, mock.Anything, true).Return(processBatchResp, "", nil).Once()
+
+	syncMock.EXPECT().PendingFlushID(mock.Anything, mock.Anything).Once()
+	syncMock.EXPECT().CheckFlushID(mock.Anything).Return(nil).Maybe()
+	expectedUpdateClosed := expectedUpdate
+	expectedUpdateClosed.GlobalExitRoot = common.Hash{}
+	expectedUpdateClosed.ClosingReason = state.SyncL2TrustedBatchClosingReason
+	stateMock.EXPECT().CloseBatch(ctx, expectedUpdateClosed, mock.Anything).Return(nil).Once()
 	// Act
 	res, err := sut.IncrementalProcess(ctx, &data, nil)
 	// Assert
@@ -206,7 +274,7 @@ func TestNothingProcessDoesntMatchBatchReprocess(t *testing.T) {
 	processBatchResp := &state.ProcessBatchResponse{
 		NewStateRoot: data.TrustedBatch.StateRoot,
 	}
-	testData.stateMock.EXPECT().ProcessBatchV2(testData.ctx, mock.Anything, true).Return(processBatchResp, nil).Once()
+	testData.stateMock.EXPECT().ProcessBatchV2(testData.ctx, mock.Anything, true).Return(processBatchResp, "", nil).Once()
 	testData.stateMock.EXPECT().GetBatchByNumber(testData.ctx, data.BatchNumber, mock.Anything).Return(&state.Batch{}, nil).Once()
 	_, err := testData.sut.NothingProcess(testData.ctx, &data, nil)
 	require.NoError(t, err)

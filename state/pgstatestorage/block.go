@@ -63,6 +63,35 @@ func (p *PostgresStorage) GetFirstUncheckedBlock(ctx context.Context, fromBlockN
 	return &block, err
 }
 
+func (p *PostgresStorage) GetUncheckedBlocks(ctx context.Context, fromBlockNumber uint64, toBlockNumber uint64, dbTx pgx.Tx) ([]*state.Block, error) {
+	const getUncheckedBlocksSQL = "SELECT block_num, block_hash, parent_hash, received_at, checked FROM state.block WHERE block_num>=$1 AND block_num<=$2 AND checked=false ORDER BY block_num"
+
+	q := p.getExecQuerier(dbTx)
+
+	rows, err := q.Query(ctx, getUncheckedBlocksSQL, fromBlockNumber, toBlockNumber)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var blocks []*state.Block
+	for rows.Next() {
+		var (
+			blockHash  string
+			parentHash string
+			block      state.Block
+		)
+		err := rows.Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt, &block.Checked)
+		if err != nil {
+			return nil, err
+		}
+		block.BlockHash = common.HexToHash(blockHash)
+		block.ParentHash = common.HexToHash(parentHash)
+		blocks = append(blocks, &block)
+	}
+	return blocks, nil
+}
+
 // GetPreviousBlock gets the offset previous L1 block respect to latest.
 func (p *PostgresStorage) GetPreviousBlock(ctx context.Context, offset uint64, dbTx pgx.Tx) (*state.Block, error) {
 	var (
@@ -75,6 +104,26 @@ func (p *PostgresStorage) GetPreviousBlock(ctx context.Context, offset uint64, d
 	q := p.getExecQuerier(dbTx)
 
 	err := q.QueryRow(ctx, getPreviousBlockSQL, offset).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt, &block.Checked)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, state.ErrNotFound
+	}
+	block.BlockHash = common.HexToHash(blockHash)
+	block.ParentHash = common.HexToHash(parentHash)
+	return &block, err
+}
+
+// GetPreviousBlockToBlockNumber gets the previous L1 block respect blockNumber.
+func (p *PostgresStorage) GetPreviousBlockToBlockNumber(ctx context.Context, blockNumber uint64, dbTx pgx.Tx) (*state.Block, error) {
+	var (
+		blockHash  string
+		parentHash string
+		block      state.Block
+	)
+	const getPreviousBlockSQL = "SELECT block_num, block_hash, parent_hash, received_at,checked FROM state.block WHERE block_num < $1 ORDER BY block_num DESC LIMIT 1 "
+
+	q := p.getExecQuerier(dbTx)
+
+	err := q.QueryRow(ctx, getPreviousBlockSQL, blockNumber).Scan(&block.BlockNumber, &blockHash, &parentHash, &block.ReceivedAt, &block.Checked)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, state.ErrNotFound
 	}

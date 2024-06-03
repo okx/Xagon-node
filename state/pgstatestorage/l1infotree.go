@@ -53,7 +53,7 @@ func (p *PostgresStorage) GetLatestL1InfoRoot(ctx context.Context, maxBlockNumbe
 	const getL1InfoRootSQL = `SELECT block_num, timestamp, mainnet_exit_root, rollup_exit_root, global_exit_root, prev_block_hash, l1_info_root, l1_info_tree_index
 		FROM state.exit_root 
 		WHERE l1_info_tree_index IS NOT NULL AND block_num <= $1
-		ORDER BY l1_info_tree_index DESC`
+		ORDER BY l1_info_tree_index DESC LIMIT 1`
 
 	entry := state.L1InfoTreeExitRootStorageEntry{}
 

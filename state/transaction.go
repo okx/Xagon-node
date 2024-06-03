@@ -149,7 +149,7 @@ func (s *State) StoreTransactions(ctx context.Context, batchNumber uint64, proce
 		}
 
 		// firstTxToInsert := len(existingTxs)
-
+		txIndex := 0
 		for i := 0; i < len(processedTxs); i++ {
 			processedTx := processedTxs[i]
 			// if the transaction has an intrinsic invalid tx error it means
@@ -177,7 +177,7 @@ func (s *State) StoreTransactions(ctx context.Context, batchNumber uint64, proce
 			header.BlockInfoRoot = processedBlock.BlockInfoRoot
 			transactions := []*types.Transaction{&processedTx.Tx}
 
-			receipt := GenerateReceipt(header.Number, processedTx, uint(i), forkID)
+			receipt := GenerateReceipt(header.Number, processedTx, uint(txIndex), forkID)
 			if !CheckLogOrder(receipt.Logs) {
 				return fmt.Errorf("error: logs received from executor are not in order")
 			}
@@ -201,6 +201,7 @@ func (s *State) StoreTransactions(ctx context.Context, batchNumber uint64, proce
 			if err := s.AddL2Block(ctx, batchNumber, l2Block, receipts, txsL2Hash, storeTxsEGPData, imStateRoots, dbTx); err != nil {
 				return err
 			}
+			txIndex++
 		}
 	}
 	return nil

@@ -121,22 +121,25 @@ func (a *addrQueue) IsEmpty() bool {
 }
 
 // deleteTx deletes the tx from the addrQueue
-func (a *addrQueue) deleteTx(txHash common.Hash) (deletedReadyTx *TxTracker) {
+func (a *addrQueue) deleteTx(txHash common.Hash) (deletedTx *TxTracker, isReady bool) {
 	txHashStr := txHash.String()
 
 	if (a.readyTx != nil) && (a.readyTx.HashStr == txHashStr) {
 		log.Infof("deleting readyTx %s from addrQueue %s", txHashStr, a.fromStr)
 		prevReadyTx := a.readyTx
 		a.readyTx = nil
-		return prevReadyTx
+		return prevReadyTx, true
 	} else {
+		var deletedTx *TxTracker
 		for _, txTracker := range a.notReadyTxs {
 			if txTracker.HashStr == txHashStr {
+				deletedTx = txTracker
 				log.Infof("deleting notReadyTx %s from addrQueue %s", txHashStr, a.fromStr)
 				delete(a.notReadyTxs, txTracker.Nonce)
+				break
 			}
 		}
-		return nil
+		return deletedTx, false
 	}
 }
 
@@ -156,6 +159,22 @@ func (a *addrQueue) deletePendingTxToStore(txHash common.Hash) {
 	} else {
 		log.Warnf("tx %s not found in pendingTxsToStore list", txHash.String())
 	}
+}
+
+func (a *addrQueue) getTransactions() []*TxTracker {
+	// TODO: Add test for this function
+
+	txsList := []*TxTracker{}
+
+	if a.readyTx != nil {
+		txsList = append(txsList, a.readyTx)
+	}
+
+	for _, tx := range a.notReadyTxs {
+		txsList = append(txsList, tx)
+	}
+
+	return txsList
 }
 
 // updateCurrentNonceBalance updates the nonce and balance of the addrQueue and updates the ready and notReady txs
@@ -179,7 +198,7 @@ func (a *addrQueue) updateCurrentNonceBalance(nonce *uint64, balance *big.Int) (
 				}
 			}
 			for _, txTracker := range txsToDelete {
-				log.Infof("deleting notReadyTx with nonce %d from addrQueue %s", txTracker.Nonce, a.fromStr)
+				log.Infof("deleting notReadyTx with nonce %d from addrQueue %s, reason: %s", txTracker.Nonce, a.fromStr, *txTracker.FailedReason)
 				delete(a.notReadyTxs, txTracker.Nonce)
 			}
 		}
@@ -211,6 +230,10 @@ func (a *addrQueue) updateCurrentNonceBalance(nonce *uint64, balance *big.Int) (
 	if oldReadyTx != nil && oldReadyTx.Nonce > a.currentNonce {
 		log.Infof("set readyTx %s as notReadyTx from addrQueue %s", oldReadyTx.HashStr, a.fromStr)
 		a.notReadyTxs[oldReadyTx.Nonce] = oldReadyTx
+	} else if oldReadyTx != nil { // if oldReadyTx doesn't have a valid nonce then we add it to the txsToDelete
+		reason := runtime.ErrIntrinsicInvalidNonce.Error()
+		oldReadyTx.FailedReason = &reason
+		txsToDelete = append(txsToDelete, oldReadyTx)
 	}
 
 	return a.readyTx, oldReadyTx, txsToDelete

@@ -51,6 +51,8 @@ type Pool struct {
 	gasPrices               GasPrices
 	gasPricesMux            *sync.RWMutex
 	effectiveGasPrice       *EffectiveGasPrice
+	dynamicGasPrice         *big.Int
+	dgpMux                  *sync.RWMutex
 }
 
 type preExecutionResponse struct {
@@ -87,6 +89,7 @@ func NewPool(cfg Config, batchConstraintsCfg state.BatchConstraintsCfg, s storag
 		gasPrices:               GasPrices{0, 0},
 		gasPricesMux:            new(sync.RWMutex),
 		effectiveGasPrice:       NewEffectiveGasPrice(cfg.EffectiveGasPrice),
+		dgpMux:                  new(sync.RWMutex),
 	}
 	p.refreshGasPrices()
 	go func(cfg *Config, p *Pool) {
@@ -535,8 +538,12 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		}
 	}
 
-	// Reject transactions with a gas price lower than the minimum gas price
-	if !isFreeGasAddress(p.cfg.FreeGasAddress, from) || !poolTx.IsClaims { // XLayer handle
+	freeGp, err := p.checkFreeGp(ctx, poolTx, from)
+	if err != nil {
+		return err
+	}
+
+	if !freeGp { // XLayer handle
 		p.minSuggestedGasPriceMux.RLock()
 		gasPriceCmp := poolTx.GasPrice().Cmp(p.minSuggestedGasPrice)
 		if gasPriceCmp == -1 {
@@ -602,6 +609,12 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	// Executor field size requirements check
 	if err := p.checkTxFieldCompatibilityWithExecutor(ctx, poolTx.Transaction); err != nil {
 		return err
+	}
+
+	if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) {
+		if err := p.checkAndUpdateFreeGasAddr(ctx, poolTx, from, lastL2Block.Root()); err != nil {
+			return err
+		}
 	}
 
 	return nil
