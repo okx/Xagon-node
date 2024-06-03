@@ -143,7 +143,7 @@ func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.
 			case MainnetChainID:
 				bridgeURL = MainnetBridgeURL
 			}
-			return false, fmt.Errorf("you are unable to initiate a gas-free transaction from this address unless you have previously transferred funds to this address via the X Layer Bridge (%s) or the OKX Exchange, and only the first %d transactions(address nonce less than %d)",
+			return false, fmt.Errorf("you are unable to initiate a gas-free transaction from this address unless you have previously transferred funds to this address via the X Layer Bridge (%s) or the OKX Exchange, only the first %d transactions (address nonce must be less than %d) can be gas-free",
 				bridgeURL,
 				freeGasCountPerAddrConfig,
 				freeGasCountPerAddrConfig)
@@ -157,13 +157,16 @@ func (p *Pool) checkAndUpdateFreeGasAddr(ctx context.Context, poolTx Transaction
 	var freeGpAddr common.Address
 	inputHex := hex.EncodeToHex(poolTx.Data())
 	// hard code
-	if isFreeGasExAddress(p.cfg.FreeGasExAddress, from) &&
-		strings.HasPrefix(inputHex, ExWithdrawalMethodSignature) &&
-		len(inputHex) > 74 { // erc20 contract transfer
-		addrHex := "0x" + inputHex[10:74]
-		freeGpAddr = common.HexToAddress(addrHex)
-	} else if poolTx.IsClaims &&
-		len(inputHex) > 4554 { // bridge contract claim
+	if isFreeGasExAddress(p.cfg.FreeGasExAddress, from) {
+		if strings.HasPrefix(inputHex, ExWithdrawalMethodSignature) && len(inputHex) > 74 { // erc20 contract transfer
+			addrHex := "0x" + inputHex[10:74]
+			freeGpAddr = common.HexToAddress(addrHex)
+		} else {
+			// the to address of any Ex withdrawal okb tx will be considered as a gas-free address
+			// even if this address is a contract, it will not affect the gas-free
+			freeGpAddr = *poolTx.To()
+		}
+	} else if poolTx.IsClaims && len(inputHex) > 4554 { // bridge contract claim
 		addrHex := "0x" + inputHex[4490:4554]
 		freeGpAddr = common.HexToAddress(addrHex)
 	}

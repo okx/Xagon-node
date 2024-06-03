@@ -115,7 +115,7 @@ func (_m *StateMock) DebugTransaction(ctx context.Context, transactionHash commo
 }
 
 // EstimateGas provides a mock function with given fields: transaction, senderAddress, l2BlockNumber, dbTx
-func (_m *StateMock) EstimateGas(transaction *coretypes.Transaction, senderAddress common.Address, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error) {
+func (_m *StateMock) EstimateGas(transaction *coretypes.Transaction, senderAddress common.Address, isGasFreeSender bool, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error) {
 	ret := _m.Called(transaction, senderAddress, l2BlockNumber, dbTx)
 
 	if len(ret) == 0 {
