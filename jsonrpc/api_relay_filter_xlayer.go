@@ -15,18 +15,22 @@ func init() {
 	banListInst.register(debugTraceTransactionNotPrestateTracer)
 }
 
+func pass(request *types.Request) bool {
+	return !banListInst.ban(request)
+}
+
 func (c *banList) register(handler ban) {
 	*c = append(*c, handler)
 }
 
-func (c *banList) pass(request *types.Request) bool {
+func (c *banList) ban(request *types.Request) bool {
 	for _, handler := range *c {
-		if !handler(request) {
-			return false
+		if handler(request) {
+			return true
 		}
 	}
 
-	return true
+	return false
 }
 
 // debutTraceTransactionNotPrestateTracer checks if the request is a debug_traceTransaction and the tracer is not preStateTracer
@@ -50,7 +54,7 @@ func debugTraceTransactionNotPrestateTracer(req *types.Request) bool {
 		return false
 	}
 	var cfg traceConfig
-	err := json.Unmarshal(inputs[1].([]byte), cfg) // the second param is the trace config
+	err := json.Unmarshal(inputs[1].([]byte), &cfg) // the second param is the trace config
 	if err != nil {
 		return false
 	}
