@@ -11,6 +11,10 @@ import (
 	"sync"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+	ethTypes "github.com/ethereum/go-ethereum/core/types"
+	"github.com/jackc/pgx/v4"
+
 	"github.com/0xPolygonHermez/zkevm-node/hex"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/client"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
@@ -19,9 +23,6 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime"
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime/executor"
-	"github.com/ethereum/go-ethereum/common"
-	ethTypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/jackc/pgx/v4"
 )
 
 const (
@@ -537,13 +538,13 @@ func (e *EthEndpoints) GetFilterChanges(filterID string) (interface{}, types.Err
 func (e *EthEndpoints) GetFilterLogs(filterID string) (interface{}, types.Error) {
 	filter, err := e.storage.GetFilter(filterID)
 	if errors.Is(err, ErrNotFound) {
-		return nil, nil
+		return []types.Log{}, nil
 	} else if err != nil {
 		return RPCErrorResponse(types.DefaultErrorCode, "failed to get filter from storage", err, true)
 	}
 
 	if filter.Type != FilterTypeLog {
-		return nil, nil
+		return []types.Log{}, nil
 	}
 
 	filterParameters := filter.Parameters.(LogFilter)
