@@ -40,7 +40,7 @@ func getRelayDestURI(localDestURI string) string {
 }
 
 func tryRelay(localCfg ApiRelayConfig, request types.Request) (types.Response, bool) {
-	if shouldRelay(localCfg, request.Method) {
+	if shouldRelay(localCfg, request.Method) && checkListInst.pass(&request) {
 		destURI := getRelayDestURI(localCfg.DestURI)
 		res, err := client.JSONRPCRelay(destURI, request)
 		if err != nil {
