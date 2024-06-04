@@ -53,12 +53,14 @@ func debugTraceTransactionNotPrestateTracer(req *types.Request) bool {
 	if len(inputs) < 2 { // nolint:gomnd
 		return false
 	}
-	var cfg traceConfig
-	err := json.Unmarshal(inputs[1].([]byte), &cfg) // the second param is the trace config
-	if err != nil {
+	traceCfgMap, ok := inputs[1].(map[string]interface{})
+	if !ok {
 		return false
 	}
-	if cfg.Tracer != nil && *cfg.Tracer != "prestateTracer" {
+	if traceCfgMap["tracer"] == nil {
+		return false
+	}
+	if traceCfgMap["tracer"].(string) != "prestateTracer" {
 		return true
 	}
 
