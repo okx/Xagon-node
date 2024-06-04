@@ -234,6 +234,7 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 
 // GasPrice returns the average gas price based on the last x blocks
 func (e *EthEndpoints) GasPrice() (interface{}, types.Error) {
+	return hex.EncodeUint64(0), nil
 	ctx := context.Background()
 	if e.cfg.SequencerNodeURI != "" {
 		return e.getPriceFromSequencerNode()
