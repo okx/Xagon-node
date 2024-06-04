@@ -434,6 +434,8 @@ func runJSONRPCServer(c config.Config, etherman *etherman.Client, chainID uint64
 }
 
 func createSequencer(cfg config.Config, pool *pool.Pool, st *state.State, etherman *etherman.Client, eventLog *event.EventLog) *sequencer.Sequencer {
+	cfg.Sequencer.L2Coinbase = cfg.SequenceSender.L2Coinbase
+
 	seq, err := sequencer.New(cfg.Sequencer, cfg.State.Batch, cfg.Pool, pool, st, etherman, eventLog)
 	if err != nil {
 		log.Fatal(err)

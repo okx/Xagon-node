@@ -38,7 +38,7 @@ var (
 type finalizer struct {
 	cfg              FinalizerCfg
 	isSynced         func(ctx context.Context) bool
-	sequencerAddress common.Address
+	l2Coinbase       common.Address
 	workerIntf       workerInterface
 	poolIntf         txPool
 	stateIntf        stateInterface
@@ -86,8 +86,9 @@ type finalizer struct {
 	// interval metrics
 	metrics *intervalMetrics
 	// stream server
-	streamServer *datastreamer.StreamServer
-	dataToStream chan interface{}
+	streamServer      *datastreamer.StreamServer
+	dataToStream      chan interface{}
+	dataToStreamCount atomic.Int32
 }
 
 // newFinalizer returns a new instance of Finalizer.
@@ -98,7 +99,7 @@ func newFinalizer(
 	poolIntf txPool,
 	stateIntf stateInterface,
 	etherman ethermanInterface,
-	sequencerAddr common.Address,
+	l2Coinbase common.Address,
 	isSynced func(ctx context.Context) bool,
 	batchConstraints state.BatchConstraintsCfg,
 	eventLog *event.EventLog,
@@ -109,7 +110,7 @@ func newFinalizer(
 	f := finalizer{
 		cfg:              cfg,
 		isSynced:         isSynced,
-		sequencerAddress: sequencerAddr,
+		l2Coinbase:       l2Coinbase,
 		workerIntf:       workerIntf,
 		poolIntf:         poolIntf,
 		stateIntf:        stateIntf,
@@ -211,8 +212,15 @@ func (f *finalizer) updateProverIdAndFlushId(ctx context.Context) {
 					f.storedFlushID = storedFlushID
 					f.storedFlushIDCond.Broadcast()
 					f.storedFlushIDCond.L.Unlock()
+
+					// Exit the for loop o the storedFlushId is greater or equal that the lastPendingFlushID
+					if f.storedFlushID >= f.lastPendingFlushID {
+						break
+					}
 				}
 			}
+
+			time.Sleep(f.cfg.FlushIdCheckInterval.Duration)
 		}
 	}
 }
@@ -941,6 +949,11 @@ func (f *finalizer) logZKCounters(counters state.ZKCounters) string {
 	return fmt.Sprintf("{gasUsed: %d, keccakHashes: %d, poseidonHashes: %d, poseidonPaddings: %d, memAligns: %d, arithmetics: %d, binaries: %d, sha256Hashes: %d, steps: %d}",
 		counters.GasUsed, counters.KeccakHashes, counters.PoseidonHashes, counters.PoseidonPaddings, counters.MemAligns, counters.Arithmetics,
 		counters.Binaries, counters.Sha256Hashes_V2, counters.Steps)
+}
+
+// Decrease datastreamChannelCount variable
+func (f *finalizer) DataToStreamChannelCountAdd(ct int32) {
+	f.dataToStreamCount.Add(ct)
 }
 
 // Halt halts the finalizer

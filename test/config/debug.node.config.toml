@@ -103,6 +103,7 @@ StateConsistencyCheckInterval = "5s"
 		L2BlockMaxDeltaTimestamp = "3s"		
 		ResourceExhaustedMarginPct = 10
 		StateRootSyncInterval = "120s"
+		FlushIdCheckInterval = "50ms"
 		HaltOnBatchNumber = 0
 		SequentialBatchSanityCheck = false
 		SequentialProcessL2Block = false
@@ -120,6 +121,7 @@ WaitPeriodSendSequence = "15s"
 LastBatchVirtualizationTimeMaxWaitPeriod = "10s"
 L1BlockTimestampMargin = "5s"
 MaxTxSizeForL1 = 131072
+SequenceL1BlockConfirmations = 2
 L2Coinbase = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 PrivateKey = {Path = "./test/sequencer.keystore", Password = "testonly"}
 

@@ -2799,21 +2799,33 @@ func (_c *StateFullInterface_SetLastBatchInfoSeenOnEthereum_Call) RunAndReturn(r
 }
 
 // StoreL2Block provides a mock function with given fields: ctx, batchNumber, l2Block, txsEGPLog, dbTx
-func (_m *StateFullInterface) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *state.ProcessBlockResponse, txsEGPLog []*state.EffectiveGasPriceLog, dbTx pgx.Tx) error {
+func (_m *StateFullInterface) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *state.ProcessBlockResponse, txsEGPLog []*state.EffectiveGasPriceLog, dbTx pgx.Tx) (common.Hash, error) {
 	ret := _m.Called(ctx, batchNumber, l2Block, txsEGPLog, dbTx)
 
 	if len(ret) == 0 {
 		panic("no return value specified for StoreL2Block")
 	}
 
-	var r0 error
-	if rf, ok := ret.Get(0).(func(context.Context, uint64, *state.ProcessBlockResponse, []*state.EffectiveGasPriceLog, pgx.Tx) error); ok {
+	var r0 common.Hash
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *state.ProcessBlockResponse, []*state.EffectiveGasPriceLog, pgx.Tx) (common.Hash, error)); ok {
+		return rf(ctx, batchNumber, l2Block, txsEGPLog, dbTx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, uint64, *state.ProcessBlockResponse, []*state.EffectiveGasPriceLog, pgx.Tx) common.Hash); ok {
 		r0 = rf(ctx, batchNumber, l2Block, txsEGPLog, dbTx)
 	} else {
-		r0 = ret.Error(0)
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(common.Hash)
+		}
 	}
 
-	return r0
+	if rf, ok := ret.Get(1).(func(context.Context, uint64, *state.ProcessBlockResponse, []*state.EffectiveGasPriceLog, pgx.Tx) error); ok {
+		r1 = rf(ctx, batchNumber, l2Block, txsEGPLog, dbTx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // StateFullInterface_StoreL2Block_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'StoreL2Block'
@@ -2838,12 +2850,12 @@ func (_c *StateFullInterface_StoreL2Block_Call) Run(run func(ctx context.Context
 	return _c
 }
 
-func (_c *StateFullInterface_StoreL2Block_Call) Return(_a0 error) *StateFullInterface_StoreL2Block_Call {
-	_c.Call.Return(_a0)
+func (_c *StateFullInterface_StoreL2Block_Call) Return(_a0 common.Hash, _a1 error) *StateFullInterface_StoreL2Block_Call {
+	_c.Call.Return(_a0, _a1)
 	return _c
 }
 
-func (_c *StateFullInterface_StoreL2Block_Call) RunAndReturn(run func(context.Context, uint64, *state.ProcessBlockResponse, []*state.EffectiveGasPriceLog, pgx.Tx) error) *StateFullInterface_StoreL2Block_Call {
+func (_c *StateFullInterface_StoreL2Block_Call) RunAndReturn(run func(context.Context, uint64, *state.ProcessBlockResponse, []*state.EffectiveGasPriceLog, pgx.Tx) (common.Hash, error)) *StateFullInterface_StoreL2Block_Call {
 	_c.Call.Return(run)
 	return _c
 }

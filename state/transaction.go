@@ -208,9 +208,9 @@ func (s *State) StoreTransactions(ctx context.Context, batchNumber uint64, proce
 }
 
 // StoreL2Block stores a l2 block into the state
-func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *ProcessBlockResponse, txsEGPLog []*EffectiveGasPriceLog, dbTx pgx.Tx) error {
+func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *ProcessBlockResponse, txsEGPLog []*EffectiveGasPriceLog, dbTx pgx.Tx) (common.Hash, error) {
 	if dbTx == nil {
-		return ErrDBTxNil
+		return common.Hash{}, ErrDBTxNil
 	}
 
 	log.Debugf("storing l2 block %d, txs %d, hash %s", l2Block.BlockNumber, len(l2Block.TransactionResponses), l2Block.BlockHash.String())
@@ -218,7 +218,7 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 
 	prevL2BlockHash, err := s.GetL2BlockHashByNumber(ctx, l2Block.BlockNumber-1, dbTx)
 	if err != nil {
-		return err
+		return common.Hash{}, err
 	}
 
 	forkID := s.GetForkIDByBatchNumber(batchNumber)
@@ -289,12 +289,12 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 
 	// Store L2 block and its transactions
 	if err := s.AddL2Block(ctx, batchNumber, block, receipts, txsL2Hash, storeTxsEGPData, imStateRoots, dbTx); err != nil {
-		return err
+		return common.Hash{}, err
 	}
 
 	log.Debugf("stored L2 block %d for batch %d, storing time %v", header.Number, batchNumber, time.Since(start))
 
-	return nil
+	return block.Hash(), nil
 }
 
 // PreProcessUnsignedTransaction processes the unsigned transaction in order to calculate its zkCounters

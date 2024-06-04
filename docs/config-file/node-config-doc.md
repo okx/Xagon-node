@@ -690,29 +690,30 @@ SecretKey=""
 **Type:** : `object`
 **Description:** Pool service configuration
 
-| Property                                                                        | Pattern | Type            | Deprecated | Definition | Title/Description                                                                                    |
-| ------------------------------------------------------------------------------- | ------- | --------------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------- |
-| - [IntervalToRefreshBlockedAddresses](#Pool_IntervalToRefreshBlockedAddresses ) | No      | string          | No         | -          | Duration                                                                                             |
-| - [IntervalToRefreshWhiteAddresses](#Pool_IntervalToRefreshWhiteAddresses )     | No      | string          | No         | -          | Duration                                                                                             |
-| - [EnableWhitelist](#Pool_EnableWhitelist )                                     | No      | boolean         | No         | -          | EnableWhitelist is a flag to enable/disable the whitelist                                            |
-| - [IntervalToRefreshGasPrices](#Pool_IntervalToRefreshGasPrices )               | No      | string          | No         | -          | Duration                                                                                             |
-| - [MaxTxBytesSize](#Pool_MaxTxBytesSize )                                       | No      | integer         | No         | -          | MaxTxBytesSize is the max size of a transaction in bytes                                             |
-| - [MaxTxDataBytesSize](#Pool_MaxTxDataBytesSize )                               | No      | integer         | No         | -          | MaxTxDataBytesSize is the max size of the data field of a transaction in bytes                       |
-| - [DB](#Pool_DB )                                                               | No      | object          | No         | -          | DB is the database configuration                                                                     |
-| - [DefaultMinGasPriceAllowed](#Pool_DefaultMinGasPriceAllowed )                 | No      | integer         | No         | -          | DefaultMinGasPriceAllowed is the default min gas price to suggest                                    |
-| - [MinAllowedGasPriceInterval](#Pool_MinAllowedGasPriceInterval )               | No      | string          | No         | -          | Duration                                                                                             |
-| - [PollMinAllowedGasPriceInterval](#Pool_PollMinAllowedGasPriceInterval )       | No      | string          | No         | -          | Duration                                                                                             |
-| - [AccountQueue](#Pool_AccountQueue )                                           | No      | integer         | No         | -          | AccountQueue represents the maximum number of non-executable transaction slots permitted per account |
-| - [GlobalQueue](#Pool_GlobalQueue )                                             | No      | integer         | No         | -          | GlobalQueue represents the maximum number of non-executable transaction slots for all accounts       |
-| - [EffectiveGasPrice](#Pool_EffectiveGasPrice )                                 | No      | object          | No         | -          | EffectiveGasPrice is the config for the effective gas price calculation                              |
-| - [ForkID](#Pool_ForkID )                                                       | No      | integer         | No         | -          | ForkID is the current fork ID of the chain                                                           |
-| - [FreeGasAddress](#Pool_FreeGasAddress )                                       | No      | array of string | No         | -          | XLayer config<br />FreeGasAddress is the default free gas address                                    |
-| - [FreeClaimGasLimit](#Pool_FreeClaimGasLimit )                                 | No      | integer         | No         | -          | FreeClaimGasLimit is the max gas allowed use to do a free claim                                      |
-| - [BridgeClaimMethodSigs](#Pool_BridgeClaimMethodSigs )                         | No      | array of string | No         | -          | BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method                            |
-| - [EnableFreeGasByNonce](#Pool_EnableFreeGasByNonce )                           | No      | boolean         | No         | -          | EnableFreeGasByNonce enable free gas                                                                 |
-| - [FreeGasExAddress](#Pool_FreeGasExAddress )                                   | No      | array of string | No         | -          | FreeGasExAddress is the ex address which can be free gas for the transfer receiver                   |
-| - [FreeGasCountPerAddr](#Pool_FreeGasCountPerAddr )                             | No      | integer         | No         | -          | FreeGasCountPerAddr is the count limit of free gas tx per address                                    |
-| - [FreeGasLimit](#Pool_FreeGasLimit )                                           | No      | integer         | No         | -          | FreeGasLimit is the max gas allowed use to do a free gas tx                                          |
+| Property                                                                        | Pattern | Type            | Deprecated | Definition | Title/Description                                                                                                                   |
+| ------------------------------------------------------------------------------- | ------- | --------------- | ---------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| - [IntervalToRefreshBlockedAddresses](#Pool_IntervalToRefreshBlockedAddresses ) | No      | string          | No         | -          | Duration                                                                                                                            |
+| - [IntervalToRefreshWhiteAddresses](#Pool_IntervalToRefreshWhiteAddresses )     | No      | string          | No         | -          | Duration                                                                                                                            |
+| - [EnableWhitelist](#Pool_EnableWhitelist )                                     | No      | boolean         | No         | -          | EnableWhitelist is a flag to enable/disable the whitelist                                                                           |
+| - [IntervalToRefreshGasPrices](#Pool_IntervalToRefreshGasPrices )               | No      | string          | No         | -          | Duration                                                                                                                            |
+| - [MaxTxBytesSize](#Pool_MaxTxBytesSize )                                       | No      | integer         | No         | -          | MaxTxBytesSize is the max size of a transaction in bytes                                                                            |
+| - [MaxTxDataBytesSize](#Pool_MaxTxDataBytesSize )                               | No      | integer         | No         | -          | MaxTxDataBytesSize is the max size of the data field of a transaction in bytes                                                      |
+| - [DB](#Pool_DB )                                                               | No      | object          | No         | -          | DB is the database configuration                                                                                                    |
+| - [DefaultMinGasPriceAllowed](#Pool_DefaultMinGasPriceAllowed )                 | No      | integer         | No         | -          | DefaultMinGasPriceAllowed is the default min gas price to suggest                                                                   |
+| - [MinAllowedGasPriceInterval](#Pool_MinAllowedGasPriceInterval )               | No      | string          | No         | -          | Duration                                                                                                                            |
+| - [PollMinAllowedGasPriceInterval](#Pool_PollMinAllowedGasPriceInterval )       | No      | string          | No         | -          | Duration                                                                                                                            |
+| - [AccountQueue](#Pool_AccountQueue )                                           | No      | integer         | No         | -          | AccountQueue represents the maximum number of non-executable transaction slots permitted per account                                |
+| - [GlobalQueue](#Pool_GlobalQueue )                                             | No      | integer         | No         | -          | GlobalQueue represents the maximum number of non-executable transaction slots for all accounts                                      |
+| - [EffectiveGasPrice](#Pool_EffectiveGasPrice )                                 | No      | object          | No         | -          | EffectiveGasPrice is the config for the effective gas price calculation                                                             |
+| - [ForkID](#Pool_ForkID )                                                       | No      | integer         | No         | -          | ForkID is the current fork ID of the chain                                                                                          |
+| - [TxFeeCap](#Pool_TxFeeCap )                                                   | No      | number          | No         | -          | TxFeeCap is the global transaction fee(price * gaslimit) cap for<br />send-transaction variants. The unit is ether. 0 means no cap. |
+| - [FreeGasAddress](#Pool_FreeGasAddress )                                       | No      | array of string | No         | -          | XLayer config<br />FreeGasAddress is the default free gas address                                                                   |
+| - [FreeClaimGasLimit](#Pool_FreeClaimGasLimit )                                 | No      | integer         | No         | -          | FreeClaimGasLimit is the max gas allowed use to do a free claim                                                                     |
+| - [BridgeClaimMethodSigs](#Pool_BridgeClaimMethodSigs )                         | No      | array of string | No         | -          | BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method                                                           |
+| - [EnableFreeGasByNonce](#Pool_EnableFreeGasByNonce )                           | No      | boolean         | No         | -          | EnableFreeGasByNonce enable free gas                                                                                                |
+| - [FreeGasExAddress](#Pool_FreeGasExAddress )                                   | No      | array of string | No         | -          | FreeGasExAddress is the ex address which can be free gas for the transfer receiver                                                  |
+| - [FreeGasCountPerAddr](#Pool_FreeGasCountPerAddr )                             | No      | integer         | No         | -          | FreeGasCountPerAddr is the count limit of free gas tx per address                                                                   |
+| - [FreeGasLimit](#Pool_FreeGasLimit )                                           | No      | integer         | No         | -          | FreeGasLimit is the max gas allowed use to do a free gas tx                                                                         |
 
 ### <a name="Pool_IntervalToRefreshBlockedAddresses"></a>7.1. `Pool.IntervalToRefreshBlockedAddresses`
 
@@ -1218,7 +1219,22 @@ L2GasPriceSuggesterFactor=0.5
 ForkID=0
 ```
 
-### <a name="Pool_FreeGasAddress"></a>7.15. `Pool.FreeGasAddress`
+### <a name="Pool_TxFeeCap"></a>7.15. `Pool.TxFeeCap`
+
+**Type:** : `number`
+
+**Default:** `1`
+
+**Description:** TxFeeCap is the global transaction fee(price * gaslimit) cap for
+send-transaction variants. The unit is ether. 0 means no cap.
+
+**Example setting the default value** (1):
+```
+[Pool]
+TxFeeCap=1
+```
+
+### <a name="Pool_FreeGasAddress"></a>7.16. `Pool.FreeGasAddress`
 
 **Type:** : `array of string`
 
@@ -1233,7 +1249,7 @@ FreeGasAddress is the default free gas address
 FreeGasAddress=["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]
 ```
 
-### <a name="Pool_FreeClaimGasLimit"></a>7.16. `Pool.FreeClaimGasLimit`
+### <a name="Pool_FreeClaimGasLimit"></a>7.17. `Pool.FreeClaimGasLimit`
 
 **Type:** : `integer`
 
@@ -1247,12 +1263,12 @@ FreeGasAddress=["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]
 FreeClaimGasLimit=150000
 ```
 
-### <a name="Pool_BridgeClaimMethodSigs"></a>7.17. `Pool.BridgeClaimMethodSigs`
+### <a name="Pool_BridgeClaimMethodSigs"></a>7.18. `Pool.BridgeClaimMethodSigs`
 
 **Type:** : `array of string`
 **Description:** BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method
 
-### <a name="Pool_EnableFreeGasByNonce"></a>7.18. `Pool.EnableFreeGasByNonce`
+### <a name="Pool_EnableFreeGasByNonce"></a>7.19. `Pool.EnableFreeGasByNonce`
 
 **Type:** : `boolean`
 
@@ -1266,12 +1282,12 @@ FreeClaimGasLimit=150000
 EnableFreeGasByNonce=false
 ```
 
-### <a name="Pool_FreeGasExAddress"></a>7.19. `Pool.FreeGasExAddress`
+### <a name="Pool_FreeGasExAddress"></a>7.20. `Pool.FreeGasExAddress`
 
 **Type:** : `array of string`
 **Description:** FreeGasExAddress is the ex address which can be free gas for the transfer receiver
 
-### <a name="Pool_FreeGasCountPerAddr"></a>7.20. `Pool.FreeGasCountPerAddr`
+### <a name="Pool_FreeGasCountPerAddr"></a>7.21. `Pool.FreeGasCountPerAddr`
 
 **Type:** : `integer`
 
@@ -1285,7 +1301,7 @@ EnableFreeGasByNonce=false
 FreeGasCountPerAddr=0
 ```
 
-### <a name="Pool_FreeGasLimit"></a>7.21. `Pool.FreeGasLimit`
+### <a name="Pool_FreeGasLimit"></a>7.22. `Pool.FreeGasLimit`
 
 **Type:** : `integer`
 
@@ -2462,26 +2478,26 @@ L1SyncCheckL2BlockNumberhModulus=600
 
 | Property                                                                     | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                                                                                                                                                       |
 | ---------------------------------------------------------------------------- | ------- | ---------------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| - [Enable](#Synchronizer_L1BlockCheck_Enable )                               | No      | boolean          | No         | -          | Enable if is true then the check l1 Block Hash is active                                                                                                                                                                                                |
+| - [Enabled](#Synchronizer_L1BlockCheck_Enabled )                             | No      | boolean          | No         | -          | If enabled then the check l1 Block Hash is active                                                                                                                                                                                                       |
 | - [L1SafeBlockPoint](#Synchronizer_L1BlockCheck_L1SafeBlockPoint )           | No      | enum (of string) | No         | -          | L1SafeBlockPoint is the point that a block is considered safe enough to be checked<br />it can be: finalized, safe,pending or latest                                                                                                                    |
 | - [L1SafeBlockOffset](#Synchronizer_L1BlockCheck_L1SafeBlockOffset )         | No      | integer          | No         | -          | L1SafeBlockOffset is the offset to add to L1SafeBlockPoint as a safe point<br />it can be positive or negative<br />Example: L1SafeBlockPoint= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block             |
 | - [ForceCheckBeforeStart](#Synchronizer_L1BlockCheck_ForceCheckBeforeStart ) | No      | boolean          | No         | -          | ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks                                                                                                                                    |
-| - [PreCheckEnable](#Synchronizer_L1BlockCheck_PreCheckEnable )               | No      | boolean          | No         | -          | PreCheckEnable if is true then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock                                                                                                                                        |
+| - [PreCheckEnabled](#Synchronizer_L1BlockCheck_PreCheckEnabled )             | No      | boolean          | No         | -          | If enabled then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock                                                                                                                                                       |
 | - [L1PreSafeBlockPoint](#Synchronizer_L1BlockCheck_L1PreSafeBlockPoint )     | No      | enum (of string) | No         | -          | L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked<br />it can be: finalized, safe,pending or latest                                                                                                                 |
 | - [L1PreSafeBlockOffset](#Synchronizer_L1BlockCheck_L1PreSafeBlockOffset )   | No      | integer          | No         | -          | L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point<br />it can be positive or negative<br />Example: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block |
 
-#### <a name="Synchronizer_L1BlockCheck_Enable"></a>9.7.1. `Synchronizer.L1BlockCheck.Enable`
+#### <a name="Synchronizer_L1BlockCheck_Enabled"></a>9.7.1. `Synchronizer.L1BlockCheck.Enabled`
 
 **Type:** : `boolean`
 
 **Default:** `true`
 
-**Description:** Enable if is true then the check l1 Block Hash is active
+**Description:** If enabled then the check l1 Block Hash is active
 
 **Example setting the default value** (true):
 ```
 [Synchronizer.L1BlockCheck]
-Enable=true
+Enabled=true
 ```
 
 #### <a name="Synchronizer_L1BlockCheck_L1SafeBlockPoint"></a>9.7.2. `Synchronizer.L1BlockCheck.L1SafeBlockPoint`
@@ -2534,18 +2550,18 @@ L1SafeBlockOffset=0
 ForceCheckBeforeStart=true
 ```
 
-#### <a name="Synchronizer_L1BlockCheck_PreCheckEnable"></a>9.7.5. `Synchronizer.L1BlockCheck.PreCheckEnable`
+#### <a name="Synchronizer_L1BlockCheck_PreCheckEnabled"></a>9.7.5. `Synchronizer.L1BlockCheck.PreCheckEnabled`
 
 **Type:** : `boolean`
 
 **Default:** `true`
 
-**Description:** PreCheckEnable if is true then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock
+**Description:** If enabled then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock
 
 **Example setting the default value** (true):
 ```
 [Synchronizer.L1BlockCheck]
-PreCheckEnable=true
+PreCheckEnabled=true
 ```
 
 #### <a name="Synchronizer_L1BlockCheck_L1PreSafeBlockPoint"></a>9.7.6. `Synchronizer.L1BlockCheck.L1PreSafeBlockPoint`
@@ -2872,11 +2888,26 @@ FallbackToSequentialModeOnSynchronized=false
 
 | Property                                                                                                | Pattern | Type    | Deprecated | Definition | Title/Description                                                                                                                                                   |
 | ------------------------------------------------------------------------------------------------------- | ------- | ------- | ---------- | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| - [Enabled](#Synchronizer_L2Synchronization_Enabled )                                                   | No      | boolean | No         | -          | If enabled then the L2 sync process is permitted (only for permissionless)                                                                                          |
 | - [AcceptEmptyClosedBatches](#Synchronizer_L2Synchronization_AcceptEmptyClosedBatches )                 | No      | boolean | No         | -          | AcceptEmptyClosedBatches is a flag to enable or disable the acceptance of empty batches.<br />if true, the synchronizer will accept empty batches and process them. |
 | - [ReprocessFullBatchOnClose](#Synchronizer_L2Synchronization_ReprocessFullBatchOnClose )               | No      | boolean | No         | -          | ReprocessFullBatchOnClose if is true when a batch is closed is force to reprocess again                                                                             |
 | - [CheckLastL2BlockHashOnCloseBatch](#Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch ) | No      | boolean | No         | -          | CheckLastL2BlockHashOnCloseBatch if is true when a batch is closed is force to check the last L2Block hash                                                          |
 
-#### <a name="Synchronizer_L2Synchronization_AcceptEmptyClosedBatches"></a>9.10.1. `Synchronizer.L2Synchronization.AcceptEmptyClosedBatches`
+#### <a name="Synchronizer_L2Synchronization_Enabled"></a>9.10.1. `Synchronizer.L2Synchronization.Enabled`
+
+**Type:** : `boolean`
+
+**Default:** `true`
+
+**Description:** If enabled then the L2 sync process is permitted (only for permissionless)
+
+**Example setting the default value** (true):
+```
+[Synchronizer.L2Synchronization]
+Enabled=true
+```
+
+#### <a name="Synchronizer_L2Synchronization_AcceptEmptyClosedBatches"></a>9.10.2. `Synchronizer.L2Synchronization.AcceptEmptyClosedBatches`
 
 **Type:** : `boolean`
 
@@ -2891,7 +2922,7 @@ if true, the synchronizer will accept empty batches and process them.
 AcceptEmptyClosedBatches=false
 ```
 
-#### <a name="Synchronizer_L2Synchronization_ReprocessFullBatchOnClose"></a>9.10.2. `Synchronizer.L2Synchronization.ReprocessFullBatchOnClose`
+#### <a name="Synchronizer_L2Synchronization_ReprocessFullBatchOnClose"></a>9.10.3. `Synchronizer.L2Synchronization.ReprocessFullBatchOnClose`
 
 **Type:** : `boolean`
 
@@ -2905,7 +2936,7 @@ AcceptEmptyClosedBatches=false
 ReprocessFullBatchOnClose=false
 ```
 
-#### <a name="Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch"></a>9.10.3. `Synchronizer.L2Synchronization.CheckLastL2BlockHashOnCloseBatch`
+#### <a name="Synchronizer_L2Synchronization_CheckLastL2BlockHashOnCloseBatch"></a>9.10.4. `Synchronizer.L2Synchronization.CheckLastL2BlockHashOnCloseBatch`
 
 **Type:** : `boolean`
 
@@ -2924,20 +2955,21 @@ CheckLastL2BlockHashOnCloseBatch=true
 **Type:** : `object`
 **Description:** Configuration of the sequencer service
 
-| Property                                                                             | Pattern | Type            | Deprecated | Definition | Title/Description                                                                                   |
-| ------------------------------------------------------------------------------------ | ------- | --------------- | ---------- | ---------- | --------------------------------------------------------------------------------------------------- |
-| - [DeletePoolTxsL1BlockConfirmations](#Sequencer_DeletePoolTxsL1BlockConfirmations ) | No      | integer         | No         | -          | DeletePoolTxsL1BlockConfirmations is blocks amount after which txs will be deleted from the pool    |
-| - [DeletePoolTxsCheckInterval](#Sequencer_DeletePoolTxsCheckInterval )               | No      | string          | No         | -          | Duration                                                                                            |
-| - [TxLifetimeCheckInterval](#Sequencer_TxLifetimeCheckInterval )                     | No      | string          | No         | -          | Duration                                                                                            |
-| - [TxLifetimeMax](#Sequencer_TxLifetimeMax )                                         | No      | string          | No         | -          | Duration                                                                                            |
-| - [LoadPoolTxsCheckInterval](#Sequencer_LoadPoolTxsCheckInterval )                   | No      | string          | No         | -          | Duration                                                                                            |
-| - [StateConsistencyCheckInterval](#Sequencer_StateConsistencyCheckInterval )         | No      | string          | No         | -          | Duration                                                                                            |
-| - [Finalizer](#Sequencer_Finalizer )                                                 | No      | object          | No         | -          | Finalizer's specific config properties                                                              |
-| - [StreamServer](#Sequencer_StreamServer )                                           | No      | object          | No         | -          | StreamServerCfg is the config for the stream server                                                 |
-| - [PackBatchSpacialList](#Sequencer_PackBatchSpacialList )                           | No      | array of string | No         | -          | XLayer config<br />PackBatchSpacialList is the list of addresses that will have a special gas price |
-| - [GasPriceMultiple](#Sequencer_GasPriceMultiple )                                   | No      | number          | No         | -          | GasPriceMultiple is the multiple of the gas price                                                   |
-| - [InitGasPriceMultiple](#Sequencer_InitGasPriceMultiple )                           | No      | number          | No         | -          | InitGasPriceMultiple is the multiple of the gas price for init free gas tx                          |
-| - [QueryPendingTxsLimit](#Sequencer_QueryPendingTxsLimit )                           | No      | integer         | No         | -          | QueryPendingTxsLimit is used to limit amount txs from the db                                        |
+| Property                                                                             | Pattern | Type             | Deprecated | Definition | Title/Description                                                                                                      |
+| ------------------------------------------------------------------------------------ | ------- | ---------------- | ---------- | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| - [DeletePoolTxsL1BlockConfirmations](#Sequencer_DeletePoolTxsL1BlockConfirmations ) | No      | integer          | No         | -          | DeletePoolTxsL1BlockConfirmations is blocks amount after which txs will be deleted from the pool                       |
+| - [DeletePoolTxsCheckInterval](#Sequencer_DeletePoolTxsCheckInterval )               | No      | string           | No         | -          | Duration                                                                                                               |
+| - [TxLifetimeCheckInterval](#Sequencer_TxLifetimeCheckInterval )                     | No      | string           | No         | -          | Duration                                                                                                               |
+| - [TxLifetimeMax](#Sequencer_TxLifetimeMax )                                         | No      | string           | No         | -          | Duration                                                                                                               |
+| - [LoadPoolTxsCheckInterval](#Sequencer_LoadPoolTxsCheckInterval )                   | No      | string           | No         | -          | Duration                                                                                                               |
+| - [StateConsistencyCheckInterval](#Sequencer_StateConsistencyCheckInterval )         | No      | string           | No         | -          | Duration                                                                                                               |
+| - [L2Coinbase](#Sequencer_L2Coinbase )                                               | No      | array of integer | No         | -          | L2Coinbase defines which address is going to receive the fees. It gets the config value from SequenceSender.L2Coinbase |
+| - [Finalizer](#Sequencer_Finalizer )                                                 | No      | object           | No         | -          | Finalizer's specific config properties                                                                                 |
+| - [StreamServer](#Sequencer_StreamServer )                                           | No      | object           | No         | -          | StreamServerCfg is the config for the stream server                                                                    |
+| - [PackBatchSpacialList](#Sequencer_PackBatchSpacialList )                           | No      | array of string  | No         | -          | XLayer config<br />PackBatchSpacialList is the list of addresses that will have a special gas price                    |
+| - [GasPriceMultiple](#Sequencer_GasPriceMultiple )                                   | No      | number           | No         | -          | GasPriceMultiple is the multiple of the gas price                                                                      |
+| - [InitGasPriceMultiple](#Sequencer_InitGasPriceMultiple )                           | No      | number           | No         | -          | InitGasPriceMultiple is the multiple of the gas price for init free gas tx                                             |
+| - [QueryPendingTxsLimit](#Sequencer_QueryPendingTxsLimit )                           | No      | integer          | No         | -          | QueryPendingTxsLimit is used to limit amount txs from the db                                                           |
 
 ### <a name="Sequencer_DeletePoolTxsL1BlockConfirmations"></a>10.1. `Sequencer.DeletePoolTxsL1BlockConfirmations`
 
@@ -3083,7 +3115,12 @@ LoadPoolTxsCheckInterval="500ms"
 StateConsistencyCheckInterval="5s"
 ```
 
-### <a name="Sequencer_Finalizer"></a>10.7. `[Sequencer.Finalizer]`
+### <a name="Sequencer_L2Coinbase"></a>10.7. `Sequencer.L2Coinbase`
+
+**Type:** : `array of integer`
+**Description:** L2Coinbase defines which address is going to receive the fees. It gets the config value from SequenceSender.L2Coinbase
+
+### <a name="Sequencer_Finalizer"></a>10.8. `[Sequencer.Finalizer]`
 
 **Type:** : `object`
 **Description:** Finalizer's specific config properties
@@ -3100,13 +3137,14 @@ StateConsistencyCheckInterval="5s"
 | - [BatchMaxDeltaTimestamp](#Sequencer_Finalizer_BatchMaxDeltaTimestamp )                       | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [L2BlockMaxDeltaTimestamp](#Sequencer_Finalizer_L2BlockMaxDeltaTimestamp )                   | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [StateRootSyncInterval](#Sequencer_Finalizer_StateRootSyncInterval )                         | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
+| - [FlushIdCheckInterval](#Sequencer_Finalizer_FlushIdCheckInterval )                           | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [HaltOnBatchNumber](#Sequencer_Finalizer_HaltOnBatchNumber )                                 | No      | integer | No         | -          | HaltOnBatchNumber specifies the batch number where the Sequencer will stop to process more transactions and generate new batches.<br />The Sequencer will halt after it closes the batch equal to this number |
 | - [SequentialBatchSanityCheck](#Sequencer_Finalizer_SequentialBatchSanityCheck )               | No      | boolean | No         | -          | SequentialBatchSanityCheck indicates if the reprocess of a closed batch (sanity check) must be done in a<br />sequential way (instead than in parallel)                                                       |
 | - [SequentialProcessL2Block](#Sequencer_Finalizer_SequentialProcessL2Block )                   | No      | boolean | No         | -          | SequentialProcessL2Block indicates if the processing of a L2 Block must be done in the same finalizer go func instead<br />in the processPendingL2Blocks go func                                              |
 | - [FullBatchSleepDuration](#Sequencer_Finalizer_FullBatchSleepDuration )                       | No      | string  | No         | -          | Duration                                                                                                                                                                                                      |
 | - [Metrics](#Sequencer_Finalizer_Metrics )                                                     | No      | object  | No         | -          | Metrics is the config for the sequencer metrics                                                                                                                                                               |
 
-#### <a name="Sequencer_Finalizer_ForcedBatchesTimeout"></a>10.7.1. `Sequencer.Finalizer.ForcedBatchesTimeout`
+#### <a name="Sequencer_Finalizer_ForcedBatchesTimeout"></a>10.8.1. `Sequencer.Finalizer.ForcedBatchesTimeout`
 
 **Title:** Duration
 
@@ -3132,7 +3170,7 @@ StateConsistencyCheckInterval="5s"
 ForcedBatchesTimeout="1m0s"
 ```
 
-#### <a name="Sequencer_Finalizer_NewTxsWaitInterval"></a>10.7.2. `Sequencer.Finalizer.NewTxsWaitInterval`
+#### <a name="Sequencer_Finalizer_NewTxsWaitInterval"></a>10.8.2. `Sequencer.Finalizer.NewTxsWaitInterval`
 
 **Title:** Duration
 
@@ -3158,7 +3196,7 @@ ForcedBatchesTimeout="1m0s"
 NewTxsWaitInterval="100ms"
 ```
 
-#### <a name="Sequencer_Finalizer_ResourceExhaustedMarginPct"></a>10.7.3. `Sequencer.Finalizer.ResourceExhaustedMarginPct`
+#### <a name="Sequencer_Finalizer_ResourceExhaustedMarginPct"></a>10.8.3. `Sequencer.Finalizer.ResourceExhaustedMarginPct`
 
 **Type:** : `integer`
 
@@ -3172,7 +3210,7 @@ NewTxsWaitInterval="100ms"
 ResourceExhaustedMarginPct=10
 ```
 
-#### <a name="Sequencer_Finalizer_ForcedBatchesL1BlockConfirmations"></a>10.7.4. `Sequencer.Finalizer.ForcedBatchesL1BlockConfirmations`
+#### <a name="Sequencer_Finalizer_ForcedBatchesL1BlockConfirmations"></a>10.8.4. `Sequencer.Finalizer.ForcedBatchesL1BlockConfirmations`
 
 **Type:** : `integer`
 
@@ -3186,7 +3224,7 @@ ResourceExhaustedMarginPct=10
 ForcedBatchesL1BlockConfirmations=64
 ```
 
-#### <a name="Sequencer_Finalizer_L1InfoTreeL1BlockConfirmations"></a>10.7.5. `Sequencer.Finalizer.L1InfoTreeL1BlockConfirmations`
+#### <a name="Sequencer_Finalizer_L1InfoTreeL1BlockConfirmations"></a>10.8.5. `Sequencer.Finalizer.L1InfoTreeL1BlockConfirmations`
 
 **Type:** : `integer`
 
@@ -3200,7 +3238,7 @@ ForcedBatchesL1BlockConfirmations=64
 L1InfoTreeL1BlockConfirmations=64
 ```
 
-#### <a name="Sequencer_Finalizer_ForcedBatchesCheckInterval"></a>10.7.6. `Sequencer.Finalizer.ForcedBatchesCheckInterval`
+#### <a name="Sequencer_Finalizer_ForcedBatchesCheckInterval"></a>10.8.6. `Sequencer.Finalizer.ForcedBatchesCheckInterval`
 
 **Title:** Duration
 
@@ -3226,7 +3264,7 @@ L1InfoTreeL1BlockConfirmations=64
 ForcedBatchesCheckInterval="10s"
 ```
 
-#### <a name="Sequencer_Finalizer_L1InfoTreeCheckInterval"></a>10.7.7. `Sequencer.Finalizer.L1InfoTreeCheckInterval`
+#### <a name="Sequencer_Finalizer_L1InfoTreeCheckInterval"></a>10.8.7. `Sequencer.Finalizer.L1InfoTreeCheckInterval`
 
 **Title:** Duration
 
@@ -3252,7 +3290,7 @@ ForcedBatchesCheckInterval="10s"
 L1InfoTreeCheckInterval="10s"
 ```
 
-#### <a name="Sequencer_Finalizer_BatchMaxDeltaTimestamp"></a>10.7.8. `Sequencer.Finalizer.BatchMaxDeltaTimestamp`
+#### <a name="Sequencer_Finalizer_BatchMaxDeltaTimestamp"></a>10.8.8. `Sequencer.Finalizer.BatchMaxDeltaTimestamp`
 
 **Title:** Duration
 
@@ -3278,7 +3316,7 @@ L1InfoTreeCheckInterval="10s"
 BatchMaxDeltaTimestamp="30m0s"
 ```
 
-#### <a name="Sequencer_Finalizer_L2BlockMaxDeltaTimestamp"></a>10.7.9. `Sequencer.Finalizer.L2BlockMaxDeltaTimestamp`
+#### <a name="Sequencer_Finalizer_L2BlockMaxDeltaTimestamp"></a>10.8.9. `Sequencer.Finalizer.L2BlockMaxDeltaTimestamp`
 
 **Title:** Duration
 
@@ -3304,7 +3342,7 @@ BatchMaxDeltaTimestamp="30m0s"
 L2BlockMaxDeltaTimestamp="3s"
 ```
 
-#### <a name="Sequencer_Finalizer_StateRootSyncInterval"></a>10.7.10. `Sequencer.Finalizer.StateRootSyncInterval`
+#### <a name="Sequencer_Finalizer_StateRootSyncInterval"></a>10.8.10. `Sequencer.Finalizer.StateRootSyncInterval`
 
 **Title:** Duration
 
@@ -3331,7 +3369,33 @@ the stateroot used in the tx-by-tx execution
 StateRootSyncInterval="1h0m0s"
 ```
 
-#### <a name="Sequencer_Finalizer_HaltOnBatchNumber"></a>10.7.11. `Sequencer.Finalizer.HaltOnBatchNumber`
+#### <a name="Sequencer_Finalizer_FlushIdCheckInterval"></a>10.8.11. `Sequencer.Finalizer.FlushIdCheckInterval`
+
+**Title:** Duration
+
+**Type:** : `string`
+
+**Default:** `"50ms"`
+
+**Description:** FlushIdCheckInterval is the time interval to get storedFlushID value from the executor/hashdb
+
+**Examples:** 
+
+```json
+"1m"
+```
+
+```json
+"300ms"
+```
+
+**Example setting the default value** ("50ms"):
+```
+[Sequencer.Finalizer]
+FlushIdCheckInterval="50ms"
+```
+
+#### <a name="Sequencer_Finalizer_HaltOnBatchNumber"></a>10.8.12. `Sequencer.Finalizer.HaltOnBatchNumber`
 
 **Type:** : `integer`
 
@@ -3346,7 +3410,7 @@ The Sequencer will halt after it closes the batch equal to this number
 HaltOnBatchNumber=0
 ```
 
-#### <a name="Sequencer_Finalizer_SequentialBatchSanityCheck"></a>10.7.12. `Sequencer.Finalizer.SequentialBatchSanityCheck`
+#### <a name="Sequencer_Finalizer_SequentialBatchSanityCheck"></a>10.8.13. `Sequencer.Finalizer.SequentialBatchSanityCheck`
 
 **Type:** : `boolean`
 
@@ -3361,7 +3425,7 @@ sequential way (instead than in parallel)
 SequentialBatchSanityCheck=false
 ```
 
-#### <a name="Sequencer_Finalizer_SequentialProcessL2Block"></a>10.7.13. `Sequencer.Finalizer.SequentialProcessL2Block`
+#### <a name="Sequencer_Finalizer_SequentialProcessL2Block"></a>10.8.14. `Sequencer.Finalizer.SequentialProcessL2Block`
 
 **Type:** : `boolean`
 
@@ -3376,7 +3440,7 @@ in the processPendingL2Blocks go func
 SequentialProcessL2Block=false
 ```
 
-#### <a name="Sequencer_Finalizer_FullBatchSleepDuration"></a>10.7.14. `Sequencer.Finalizer.FullBatchSleepDuration`
+#### <a name="Sequencer_Finalizer_FullBatchSleepDuration"></a>10.8.15. `Sequencer.Finalizer.FullBatchSleepDuration`
 
 **Title:** Duration
 
@@ -3403,7 +3467,7 @@ FullBatchSleepDuration is the time the finalizer sleeps between each full batch 
 FullBatchSleepDuration="0s"
 ```
 
-#### <a name="Sequencer_Finalizer_Metrics"></a>10.7.15. `[Sequencer.Finalizer.Metrics]`
+#### <a name="Sequencer_Finalizer_Metrics"></a>10.8.16. `[Sequencer.Finalizer.Metrics]`
 
 **Type:** : `object`
 **Description:** Metrics is the config for the sequencer metrics
@@ -3413,7 +3477,7 @@ FullBatchSleepDuration="0s"
 | - [Interval](#Sequencer_Finalizer_Metrics_Interval )   | No      | string  | No         | -          | Duration                                           |
 | - [EnableLog](#Sequencer_Finalizer_Metrics_EnableLog ) | No      | boolean | No         | -          | EnableLog is a flag to enable/disable metrics logs |
 
-##### <a name="Sequencer_Finalizer_Metrics_Interval"></a>10.7.15.1. `Sequencer.Finalizer.Metrics.Interval`
+##### <a name="Sequencer_Finalizer_Metrics_Interval"></a>10.8.16.1. `Sequencer.Finalizer.Metrics.Interval`
 
 **Title:** Duration
 
@@ -3439,7 +3503,7 @@ FullBatchSleepDuration="0s"
 Interval="1h0m0s"
 ```
 
-##### <a name="Sequencer_Finalizer_Metrics_EnableLog"></a>10.7.15.2. `Sequencer.Finalizer.Metrics.EnableLog`
+##### <a name="Sequencer_Finalizer_Metrics_EnableLog"></a>10.8.16.2. `Sequencer.Finalizer.Metrics.EnableLog`
 
 **Type:** : `boolean`
 
@@ -3453,7 +3517,7 @@ Interval="1h0m0s"
 EnableLog=true
 ```
 
-### <a name="Sequencer_StreamServer"></a>10.8. `[Sequencer.StreamServer]`
+### <a name="Sequencer_StreamServer"></a>10.9. `[Sequencer.StreamServer]`
 
 **Type:** : `object`
 **Description:** StreamServerCfg is the config for the stream server
@@ -3468,7 +3532,7 @@ EnableLog=true
 | - [Log](#Sequencer_StreamServer_Log )                                         | No      | object  | No         | -          | Log is the log configuration                                     |
 | - [UpgradeEtrogBatchNumber](#Sequencer_StreamServer_UpgradeEtrogBatchNumber ) | No      | integer | No         | -          | UpgradeEtrogBatchNumber is the batch number of the upgrade etrog |
 
-#### <a name="Sequencer_StreamServer_Port"></a>10.8.1. `Sequencer.StreamServer.Port`
+#### <a name="Sequencer_StreamServer_Port"></a>10.9.1. `Sequencer.StreamServer.Port`
 
 **Type:** : `integer`
 
@@ -3482,7 +3546,7 @@ EnableLog=true
 Port=0
 ```
 
-#### <a name="Sequencer_StreamServer_Filename"></a>10.8.2. `Sequencer.StreamServer.Filename`
+#### <a name="Sequencer_StreamServer_Filename"></a>10.9.2. `Sequencer.StreamServer.Filename`
 
 **Type:** : `string`
 
@@ -3496,7 +3560,7 @@ Port=0
 Filename=""
 ```
 
-#### <a name="Sequencer_StreamServer_Version"></a>10.8.3. `Sequencer.StreamServer.Version`
+#### <a name="Sequencer_StreamServer_Version"></a>10.9.3. `Sequencer.StreamServer.Version`
 
 **Type:** : `integer`
 
@@ -3510,7 +3574,7 @@ Filename=""
 Version=0
 ```
 
-#### <a name="Sequencer_StreamServer_ChainID"></a>10.8.4. `Sequencer.StreamServer.ChainID`
+#### <a name="Sequencer_StreamServer_ChainID"></a>10.9.4. `Sequencer.StreamServer.ChainID`
 
 **Type:** : `integer`
 
@@ -3524,7 +3588,7 @@ Version=0
 ChainID=0
 ```
 
-#### <a name="Sequencer_StreamServer_Enabled"></a>10.8.5. `Sequencer.StreamServer.Enabled`
+#### <a name="Sequencer_StreamServer_Enabled"></a>10.9.5. `Sequencer.StreamServer.Enabled`
 
 **Type:** : `boolean`
 
@@ -3538,7 +3602,7 @@ ChainID=0
 Enabled=false
 ```
 
-#### <a name="Sequencer_StreamServer_Log"></a>10.8.6. `[Sequencer.StreamServer.Log]`
+#### <a name="Sequencer_StreamServer_Log"></a>10.9.6. `[Sequencer.StreamServer.Log]`
 
 **Type:** : `object`
 **Description:** Log is the log configuration
@@ -3549,7 +3613,7 @@ Enabled=false
 | - [Level](#Sequencer_StreamServer_Log_Level )             | No      | enum (of string) | No         | -          | -                 |
 | - [Outputs](#Sequencer_StreamServer_Log_Outputs )         | No      | array of string  | No         | -          | -                 |
 
-##### <a name="Sequencer_StreamServer_Log_Environment"></a>10.8.6.1. `Sequencer.StreamServer.Log.Environment`
+##### <a name="Sequencer_StreamServer_Log_Environment"></a>10.9.6.1. `Sequencer.StreamServer.Log.Environment`
 
 **Type:** : `enum (of string)`
 
@@ -3565,7 +3629,7 @@ Must be one of:
 * "production"
 * "development"
 
-##### <a name="Sequencer_StreamServer_Log_Level"></a>10.8.6.2. `Sequencer.StreamServer.Log.Level`
+##### <a name="Sequencer_StreamServer_Log_Level"></a>10.9.6.2. `Sequencer.StreamServer.Log.Level`
 
 **Type:** : `enum (of string)`
 
@@ -3586,11 +3650,11 @@ Must be one of:
 * "panic"
 * "fatal"
 
-##### <a name="Sequencer_StreamServer_Log_Outputs"></a>10.8.6.3. `Sequencer.StreamServer.Log.Outputs`
+##### <a name="Sequencer_StreamServer_Log_Outputs"></a>10.9.6.3. `Sequencer.StreamServer.Log.Outputs`
 
 **Type:** : `array of string`
 
-#### <a name="Sequencer_StreamServer_UpgradeEtrogBatchNumber"></a>10.8.7. `Sequencer.StreamServer.UpgradeEtrogBatchNumber`
+#### <a name="Sequencer_StreamServer_UpgradeEtrogBatchNumber"></a>10.9.7. `Sequencer.StreamServer.UpgradeEtrogBatchNumber`
 
 **Type:** : `integer`
 
@@ -3604,13 +3668,13 @@ Must be one of:
 UpgradeEtrogBatchNumber=0
 ```
 
-### <a name="Sequencer_PackBatchSpacialList"></a>10.9. `Sequencer.PackBatchSpacialList`
+### <a name="Sequencer_PackBatchSpacialList"></a>10.10. `Sequencer.PackBatchSpacialList`
 
 **Type:** : `array of string`
 **Description:** XLayer config
 PackBatchSpacialList is the list of addresses that will have a special gas price
 
-### <a name="Sequencer_GasPriceMultiple"></a>10.10. `Sequencer.GasPriceMultiple`
+### <a name="Sequencer_GasPriceMultiple"></a>10.11. `Sequencer.GasPriceMultiple`
 
 **Type:** : `number`
 
@@ -3624,7 +3688,7 @@ PackBatchSpacialList is the list of addresses that will have a special gas price
 GasPriceMultiple=0
 ```
 
-### <a name="Sequencer_InitGasPriceMultiple"></a>10.11. `Sequencer.InitGasPriceMultiple`
+### <a name="Sequencer_InitGasPriceMultiple"></a>10.12. `Sequencer.InitGasPriceMultiple`
 
 **Type:** : `number`
 
@@ -3638,7 +3702,7 @@ GasPriceMultiple=0
 InitGasPriceMultiple=0
 ```
 
-### <a name="Sequencer_QueryPendingTxsLimit"></a>10.12. `Sequencer.QueryPendingTxsLimit`
+### <a name="Sequencer_QueryPendingTxsLimit"></a>10.13. `Sequencer.QueryPendingTxsLimit`
 
 **Type:** : `integer`
 
@@ -3668,6 +3732,7 @@ QueryPendingTxsLimit=0
 | - [PrivateKey](#SequenceSender_PrivateKey )                                                             | No      | object           | No         | -          | PrivateKey defines all the key store files that are going<br />to be read in order to provide the private keys to sign the L1 txs                                                                                                                                                                                                                                                                                             |
 | - [ForkUpgradeBatchNumber](#SequenceSender_ForkUpgradeBatchNumber )                                     | No      | integer          | No         | -          | Batch number where there is a forkid change (fork upgrade)                                                                                                                                                                                                                                                                                                                                                                    |
 | - [GasOffset](#SequenceSender_GasOffset )                                                               | No      | integer          | No         | -          | GasOffset is the amount of gas to be added to the gas estimation in order<br />to provide an amount that is higher than the estimated one. This is used<br />to avoid the TX getting reverted in case something has changed in the network<br />state after the estimation which can cause the TX to require more gas to be<br />executed.<br /><br />ex:<br />gas estimation: 1000<br />gas offset: 100<br />final gas: 1100 |
+| - [SequenceL1BlockConfirmations](#SequenceSender_SequenceL1BlockConfirmations )                         | No      | integer          | No         | -          | SequenceL1BlockConfirmations is number of blocks to consider a sequence sent to L1 as final                                                                                                                                                                                                                                                                                                                                   |
 | - [MaxBatchesForL1](#SequenceSender_MaxBatchesForL1 )                                                   | No      | integer          | No         | -          | XLayer config<br />MaxBatchesForL1 is the maximum amount of batches to be sequenced in a single L1 tx                                                                                                                                                                                                                                                                                                                         |
 | - [DAPermitApiPrivateKey](#SequenceSender_DAPermitApiPrivateKey )                                       | No      | object           | No         | -          | DAPermitApiPrivateKey defines all the key store files that are going<br />to sign batches for DA service                                                                                                                                                                                                                                                                                                                      |
 
@@ -3864,7 +3929,21 @@ final gas: 1100
 GasOffset=80000
 ```
 
-### <a name="SequenceSender_MaxBatchesForL1"></a>11.10. `SequenceSender.MaxBatchesForL1`
+### <a name="SequenceSender_SequenceL1BlockConfirmations"></a>11.10. `SequenceSender.SequenceL1BlockConfirmations`
+
+**Type:** : `integer`
+
+**Default:** `32`
+
+**Description:** SequenceL1BlockConfirmations is number of blocks to consider a sequence sent to L1 as final
+
+**Example setting the default value** (32):
+```
+[SequenceSender]
+SequenceL1BlockConfirmations=32
+```
+
+### <a name="SequenceSender_MaxBatchesForL1"></a>11.11. `SequenceSender.MaxBatchesForL1`
 
 **Type:** : `integer`
 
@@ -3879,7 +3958,7 @@ MaxBatchesForL1 is the maximum amount of batches to be sequenced in a single L1 
 MaxBatchesForL1=10
 ```
 
-### <a name="SequenceSender_DAPermitApiPrivateKey"></a>11.11. `[SequenceSender.DAPermitApiPrivateKey]`
+### <a name="SequenceSender_DAPermitApiPrivateKey"></a>11.12. `[SequenceSender.DAPermitApiPrivateKey]`
 
 **Type:** : `object`
 **Description:** DAPermitApiPrivateKey defines all the key store files that are going
@@ -3890,7 +3969,7 @@ to sign batches for DA service
 | - [Path](#SequenceSender_DAPermitApiPrivateKey_Path )         | No      | string | No         | -          | Path is the file path for the key store file           |
 | - [Password](#SequenceSender_DAPermitApiPrivateKey_Password ) | No      | string | No         | -          | Password is the password to decrypt the key store file |
 
-#### <a name="SequenceSender_DAPermitApiPrivateKey_Path"></a>11.11.1. `SequenceSender.DAPermitApiPrivateKey.Path`
+#### <a name="SequenceSender_DAPermitApiPrivateKey_Path"></a>11.12.1. `SequenceSender.DAPermitApiPrivateKey.Path`
 
 **Type:** : `string`
 
@@ -3904,7 +3983,7 @@ to sign batches for DA service
 Path="/pk/sequencer.keystore"
 ```
 
-#### <a name="SequenceSender_DAPermitApiPrivateKey_Password"></a>11.11.2. `SequenceSender.DAPermitApiPrivateKey.Password`
+#### <a name="SequenceSender_DAPermitApiPrivateKey_Password"></a>11.12.2. `SequenceSender.DAPermitApiPrivateKey.Password`
 
 **Type:** : `string`
 

@@ -67,6 +67,7 @@ var (
 		IntervalToRefreshGasPrices:        cfgTypes.NewDuration(5 * time.Second),
 		AccountQueue:                      15,
 		GlobalQueue:                       20,
+		TxFeeCap:                          1,
 		EffectiveGasPrice: pool.EffectiveGasPriceCfg{
 			Enabled:                     true,
 			L1GasPriceFactor:            0.25,
@@ -1086,10 +1087,12 @@ func Test_TryAddIncompatibleTxs(t *testing.T) {
 			expectedError: fmt.Errorf("chain id higher than allowed, max allowed is %v", uint64(math.MaxUint64)),
 		},
 	}
+	c := cfg
+	c.TxFeeCap = 0
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			incompatibleTx := testCase.createIncompatibleTx()
-			p := setupPool(t, cfg, bc, s, st, incompatibleTx.ChainId().Uint64(), ctx, eventLog)
+			p := setupPool(t, c, bc, s, st, incompatibleTx.ChainId().Uint64(), ctx, eventLog)
 			err = p.AddTx(ctx, incompatibleTx, ip)
 			assert.Equal(t, testCase.expectedError, err)
 		})
@@ -2203,6 +2206,115 @@ func Test_AddTx_IPValidation(t *testing.T) {
 				assert.ErrorIs(t, err, tc.expected)
 			} else {
 				assert.NoError(t, err)
+			}
+		})
+	}
+}
+
+func Test_AddTx_TxFeeCap(t *testing.T) {
+	eventStorage, err := nileventstorage.NewNilEventStorage()
+	if err != nil {
+		log.Fatal(err)
+	}
+	eventLog := event.NewEventLog(event.Config{}, eventStorage)
+
+	initOrResetDB(t)
+
+	stateSqlDB, err := db.NewSQLDB(stateDBCfg)
+	if err != nil {
+		panic(err)
+	}
+	defer stateSqlDB.Close() //nolint:gosec,errcheck
+
+	poolSqlDB, err := db.NewSQLDB(poolDBCfg)
+	require.NoError(t, err)
+	defer poolSqlDB.Close() //nolint:gosec,errcheck
+
+	st := newState(stateSqlDB, eventLog)
+
+	genesisBlock := state.Block{
+		BlockNumber: 0,
+		BlockHash:   state.ZeroHash,
+		ParentHash:  state.ZeroHash,
+		ReceivedAt:  time.Now(),
+	}
+	genesis := state.Genesis{
+		Actions: []*state.GenesisAction{
+			{
+				Address: senderAddress,
+				Type:    int(merkletree.LeafTypeBalance),
+				Value:   "1000000000000000000000",
+			},
+		},
+	}
+	ctx := context.Background()
+	dbTx, err := st.BeginStateTransaction(ctx)
+	require.NoError(t, err)
+	_, err = st.SetGenesis(ctx, genesisBlock, genesis, metrics.SynchronizerCallerLabel, dbTx)
+	require.NoError(t, err)
+	require.NoError(t, dbTx.Commit(ctx))
+
+	s, err := pgpoolstorage.NewPostgresPoolStorage(poolDBCfg)
+	require.NoError(t, err)
+
+	p := setupPool(t, cfg, bc, s, st, chainID.Uint64(), ctx, eventLog)
+
+	privateKey, err := crypto.HexToECDSA(strings.TrimPrefix(senderPrivateKey, "0x"))
+	require.NoError(t, err)
+
+	auth, err := bind.NewKeyedTransactorWithChainID(privateKey, chainID)
+	require.NoError(t, err)
+
+	type testCase struct {
+		name          string
+		nonce         uint64
+		gas           uint64
+		gasPrice      string
+		expectedError error
+	}
+
+	testCases := []testCase{
+		{
+			name:          "add tx with fee under cap",
+			nonce:         0,
+			gas:           uint64(100000),
+			gasPrice:      "9999999999999",
+			expectedError: nil,
+		},
+		{
+			name:          "add tx with fee exactly as cap",
+			nonce:         0,
+			gas:           uint64(100000),
+			gasPrice:      "10000000000000",
+			expectedError: nil,
+		},
+		{
+			name:          "add tx with fee over the cap",
+			nonce:         0,
+			gas:           uint64(100000),
+			gasPrice:      "10000000000001",
+			expectedError: fmt.Errorf("tx fee (1.0000000000001 ether) exceeds the configured cap (1.00 ether)"),
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			gasPrice, ok := big.NewInt(0).SetString(tc.gasPrice, encoding.Base10)
+			require.True(t, ok)
+			tx := ethTypes.NewTx(&ethTypes.LegacyTx{
+				Nonce:    tc.nonce,
+				Gas:      tc.gas,
+				GasPrice: gasPrice,
+			})
+
+			signedTx, err := auth.Signer(auth.From, tx)
+			require.NoError(t, err)
+
+			err = p.AddTx(ctx, *signedTx, ip)
+			if tc.expectedError != nil {
+				require.Equal(t, err.Error(), tc.expectedError.Error())
+			} else {
+				require.Nil(t, err)
 			}
 		})
 	}

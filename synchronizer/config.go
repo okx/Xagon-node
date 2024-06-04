@@ -37,8 +37,8 @@ type Config struct {
 
 // L1BlockCheckConfig Configuration for L1 Block Checker
 type L1BlockCheckConfig struct {
-	// Enable if is true then the check l1 Block Hash is active
-	Enable bool `mapstructure:"Enable"`
+	// If enabled then the check l1 Block Hash is active
+	Enabled bool `mapstructure:"Enabled"`
 	// L1SafeBlockPoint is the point that a block is considered safe enough to be checked
 	// it can be: finalized, safe,pending or latest
 	L1SafeBlockPoint string `mapstructure:"L1SafeBlockPoint" jsonschema:"enum=finalized,enum=safe, enum=pending,enum=latest"`
@@ -49,8 +49,8 @@ type L1BlockCheckConfig struct {
 	// ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks
 	ForceCheckBeforeStart bool `mapstructure:"ForceCheckBeforeStart"`
 
-	// PreCheckEnable if is true then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock
-	PreCheckEnable bool `mapstructure:"PreCheckEnable"`
+	// If enabled then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock
+	PreCheckEnabled bool `mapstructure:"PreCheckEnabled"`
 	// L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked
 	// it can be: finalized, safe,pending or latest
 	L1PreSafeBlockPoint string `mapstructure:"L1PreSafeBlockPoint" jsonschema:"enum=finalized,enum=safe, enum=pending,enum=latest"`
@@ -61,7 +61,7 @@ type L1BlockCheckConfig struct {
 }
 
 func (c *L1BlockCheckConfig) String() string {
-	return fmt.Sprintf("Enable: %v, L1SafeBlockPoint: %s, L1SafeBlockOffset: %d, ForceCheckBeforeStart: %v", c.Enable, c.L1SafeBlockPoint, c.L1SafeBlockOffset, c.ForceCheckBeforeStart)
+	return fmt.Sprintf("Enable: %v, L1SafeBlockPoint: %s, L1SafeBlockOffset: %d, ForceCheckBeforeStart: %v", c.Enabled, c.L1SafeBlockPoint, c.L1SafeBlockOffset, c.ForceCheckBeforeStart)
 }
 
 // L1ParallelSynchronizationConfig Configuration for parallel mode (if UL1SynchronizationMode equal to 'parallel')

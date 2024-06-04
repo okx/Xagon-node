@@ -79,11 +79,11 @@ var (
 	}
 	// chainID         = new(big.Int).SetInt64(400)
 	// pvtKey          = "0x28b2b0318721be8c8339199172cd7cc8f5e273800a35616ec893083a4b32c02e"
-	nonce1  = uint64(1)
-	nonce2  = uint64(2)
-	seqAddr = common.Address{}
-	oldHash = common.HexToHash("0x01")
-	newHash = common.HexToHash("0x02")
+	nonce1     = uint64(1)
+	nonce2     = uint64(2)
+	l2Coinbase = common.Address{}
+	oldHash    = common.HexToHash("0x01")
+	newHash    = common.HexToHash("0x02")
 	// newHash2 = common.HexToHash("0x03")
 	// stateRootHashes = []common.Hash{oldHash, newHash, newHash2}
 	// txHash       = common.HexToHash("0xf9e4fe4bd2256f782c66cffd76acdb455a76111842bb7e999af2f1b7f4d8d092")
@@ -117,7 +117,7 @@ func TestNewFinalizer(t *testing.T) {
 	poolMock.On("GetLastSentFlushID", context.Background()).Return(uint64(0), nil)
 
 	// arrange and act
-	f = newFinalizer(cfg, poolCfg, workerMock, poolMock, stateMock, ethermanMock, seqAddr, isSynced, bc, eventLog, nil, newTimeoutCond(&sync.Mutex{}), nil)
+	f = newFinalizer(cfg, poolCfg, workerMock, poolMock, stateMock, ethermanMock, l2Coinbase, isSynced, bc, eventLog, nil, newTimeoutCond(&sync.Mutex{}), nil)
 
 	// assert
 	assert.NotNil(t, f)
@@ -125,7 +125,7 @@ func TestNewFinalizer(t *testing.T) {
 	assert.Equal(t, f.workerIntf, workerMock)
 	assert.Equal(t, poolMock, poolMock)
 	assert.Equal(t, f.stateIntf, stateMock)
-	assert.Equal(t, f.sequencerAddress, seqAddr)
+	assert.Equal(t, f.l2Coinbase, l2Coinbase)
 	assert.Equal(t, f.batchConstraints, bc)
 }
 
@@ -980,6 +980,7 @@ func TestFinalizer_finalizeSIPBatch(t *testing.T) {
 
 			// arrange
 			stateMock.On("BeginStateTransaction", ctx).Return(dbTxMock, nilErr).Once()
+			stateMock.On("GetForkIDByBatchNumber", mock.Anything).Return(uint64(state.FORKID_BLUEBERRY))
 			stateMock.On("CloseWIPBatch", ctx, receipt, mock.Anything).Return(tc.managerErr).Once()
 
 			if tc.managerErr == nil {
@@ -2196,7 +2197,7 @@ func setupFinalizer(withWipBatch bool) *finalizer {
 		}
 		wipBatch = &Batch{
 			batchNumber:          1,
-			coinbase:             seqAddr,
+			coinbase:             l2Coinbase,
 			initialStateRoot:     oldHash,
 			imStateRoot:          newHash,
 			timestamp:            now(),
@@ -2212,7 +2213,7 @@ func setupFinalizer(withWipBatch bool) *finalizer {
 	return &finalizer{
 		cfg:                        cfg,
 		isSynced:                   isSynced,
-		sequencerAddress:           seqAddr,
+		l2Coinbase:                 l2Coinbase,
 		workerIntf:                 workerMock,
 		poolIntf:                   poolMock,
 		stateIntf:                  stateMock,
