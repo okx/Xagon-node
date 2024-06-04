@@ -60,7 +60,7 @@ func debugTraceTransactionNotPrestateTracer(req *types.Request) bool {
 	if traceCfgMap["tracer"] == nil {
 		return false
 	}
-	if traceCfgMap["tracer"].(string) != "prestateTracer" {
+	if tracer, ok := traceCfgMap["tracer"].(string); ok && tracer != "prestateTracer" {
 		return true
 	}
 
