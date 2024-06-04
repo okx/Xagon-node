@@ -124,3 +124,15 @@ func (p *PostgresPoolStorage) AddFreeGasAddr(ctx context.Context, addr common.Ad
 
 	return nil
 }
+
+// AddBlockedAddr add blocked address
+func (p *PostgresPoolStorage) AddBlockedAddr(ctx context.Context, addr common.Address) error {
+	sql := `INSERT INTO pool.blocked(addr) VALUES ($1)`
+
+	_, err := p.db.Exec(ctx, sql, addr.String())
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

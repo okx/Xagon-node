@@ -21,6 +21,8 @@ type apolloConfig struct {
 	FreeGasCountPerAddr  uint64
 	FreeGasLimit         uint64
 
+	BlockedList []string
+
 	sync.RWMutex
 }
 
@@ -47,6 +49,14 @@ func (c *apolloConfig) setFreeGasAddresses(freeGasAddrs []string) {
 	}
 	c.FreeGasAddresses = make([]string, len(freeGasAddrs))
 	copy(c.FreeGasAddresses, freeGasAddrs)
+}
+
+func (c *apolloConfig) setBlockedList(blockedAddrs []string) {
+	if c == nil || !c.EnableApollo {
+		return
+	}
+	c.BlockedList = make([]string, len(blockedAddrs))
+	copy(c.BlockedList, blockedAddrs)
 }
 
 func (c *apolloConfig) setFreeGasExAddresses(freeGasExAddrs []string) {
@@ -77,6 +87,7 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().GlobalQueue = apolloConfig.GlobalQueue
 	getApolloConfig().AccountQueue = apolloConfig.AccountQueue
 	getApolloConfig().setFreeGasAddresses(apolloConfig.FreeGasAddress)
+	getApolloConfig().setBlockedList(apolloConfig.BlockedList)
 	getApolloConfig().EnableWhitelist = apolloConfig.EnableWhitelist
 	getApolloConfig().setBridgeClaimMethods(apolloConfig.BridgeClaimMethodSigs)
 
@@ -180,4 +191,23 @@ func getEnableWhitelist(enableWhitelist bool) bool {
 	}
 
 	return enableWhitelist
+}
+
+func isBlockedAddress(localBlockedList []string, address common.Address) bool {
+	if getApolloConfig().enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		return contains(getApolloConfig().BlockedList, address)
+	}
+
+	return contains(localBlockedList, address)
+}
+
+func getBlockedList(localBlockedList []string) []string {
+	if getApolloConfig().enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		return getApolloConfig().BlockedList
+	}
+	return localBlockedList
 }

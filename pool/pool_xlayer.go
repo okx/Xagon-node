@@ -198,3 +198,29 @@ func (p *Pool) AddDynamicGp(dgp *big.Int) {
 	p.dynamicGasPrice = result
 	p.dgpMux.Unlock()
 }
+
+func (p *Pool) checkBlockedAddr(ctx context.Context, address common.Address) (bool, error) {
+	// check from db
+	if _, blocked := p.blockedAddresses.Load(address.String()); blocked {
+		return true, nil
+	}
+
+	// check from dynamic config
+	if isBlockedAddress(p.cfg.BlockedList, address) {
+		// update all config blocked address to cache and db
+		for _, addrStr := range getBlockedList(p.cfg.BlockedList) {
+			addr := common.HexToAddress(addrStr)
+			_, found := p.blockedAddresses.Load(addr.String())
+			if !found {
+				p.blockedAddresses.Store(addr.String(), 1)
+				err := p.storage.AddBlockedAddr(ctx, addr)
+				if err != nil {
+					return false, err
+				}
+			}
+		}
+		return true, nil
+	}
+
+	return false, nil
+}

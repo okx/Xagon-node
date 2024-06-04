@@ -467,7 +467,10 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 	}
 
 	// check if sender is blocked
-	_, blocked := p.blockedAddresses.Load(from.String())
+	blocked, err := p.checkBlockedAddr(ctx, from)
+	if err != nil {
+		return err
+	}
 	if blocked {
 		log.Infof("%v: %v", ErrBlockedSender.Error(), from.String())
 		return ErrBlockedSender
@@ -475,7 +478,10 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 
 	// check if receiver is blocked
 	if to := poolTx.To(); to != nil {
-		_, blocked = p.blockedAddresses.Load(to.String())
+		blocked, err = p.checkBlockedAddr(ctx, *to)
+		if err != nil {
+			return err
+		}
 		if blocked {
 			log.Infof("%v: %v", ErrBlockedReceiver.Error(), to.String())
 			return ErrBlockedReceiver

@@ -51,6 +51,8 @@ type Config struct {
 	ForkID uint64 `mapstructure:"ForkID"`
 
 	// XLayer config
+	// BlockedList is the blocked address list
+	BlockedList []string `mapstructure:"BlockedList"`
 	// FreeGasAddress is the default free gas address
 	FreeGasAddress []string `mapstructure:"FreeGasAddress"`
 	// FreeClaimGasLimit is the max gas allowed use to do a free claim
