@@ -706,7 +706,8 @@ SecretKey=""
 | - [GlobalQueue](#Pool_GlobalQueue )                                             | No      | integer         | No         | -          | GlobalQueue represents the maximum number of non-executable transaction slots for all accounts       |
 | - [EffectiveGasPrice](#Pool_EffectiveGasPrice )                                 | No      | object          | No         | -          | EffectiveGasPrice is the config for the effective gas price calculation                              |
 | - [ForkID](#Pool_ForkID )                                                       | No      | integer         | No         | -          | ForkID is the current fork ID of the chain                                                           |
-| - [FreeGasAddress](#Pool_FreeGasAddress )                                       | No      | array of string | No         | -          | XLayer config<br />FreeGasAddress is the default free gas address                                    |
+| - [BlockedList](#Pool_BlockedList )                                             | No      | array of string | No         | -          | XLayer config<br />BlockedList is the blocked address list                                           |
+| - [FreeGasAddress](#Pool_FreeGasAddress )                                       | No      | array of string | No         | -          | FreeGasAddress is the default free gas address                                                       |
 | - [FreeClaimGasLimit](#Pool_FreeClaimGasLimit )                                 | No      | integer         | No         | -          | FreeClaimGasLimit is the max gas allowed use to do a free claim                                      |
 | - [BridgeClaimMethodSigs](#Pool_BridgeClaimMethodSigs )                         | No      | array of string | No         | -          | BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method                            |
 | - [EnableFreeGasByNonce](#Pool_EnableFreeGasByNonce )                           | No      | boolean         | No         | -          | EnableFreeGasByNonce enable free gas                                                                 |
@@ -1218,14 +1219,19 @@ L2GasPriceSuggesterFactor=0.5
 ForkID=0
 ```
 
-### <a name="Pool_FreeGasAddress"></a>7.15. `Pool.FreeGasAddress`
+### <a name="Pool_BlockedList"></a>7.15. `Pool.BlockedList`
+
+**Type:** : `array of string`
+**Description:** XLayer config
+BlockedList is the blocked address list
+
+### <a name="Pool_FreeGasAddress"></a>7.16. `Pool.FreeGasAddress`
 
 **Type:** : `array of string`
 
 **Default:** `["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]`
 
-**Description:** XLayer config
-FreeGasAddress is the default free gas address
+**Description:** FreeGasAddress is the default free gas address
 
 **Example setting the default value** (["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]):
 ```
@@ -1233,7 +1239,7 @@ FreeGasAddress is the default free gas address
 FreeGasAddress=["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]
 ```
 
-### <a name="Pool_FreeClaimGasLimit"></a>7.16. `Pool.FreeClaimGasLimit`
+### <a name="Pool_FreeClaimGasLimit"></a>7.17. `Pool.FreeClaimGasLimit`
 
 **Type:** : `integer`
 
@@ -1247,12 +1253,12 @@ FreeGasAddress=["0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"]
 FreeClaimGasLimit=150000
 ```
 
-### <a name="Pool_BridgeClaimMethodSigs"></a>7.17. `Pool.BridgeClaimMethodSigs`
+### <a name="Pool_BridgeClaimMethodSigs"></a>7.18. `Pool.BridgeClaimMethodSigs`
 
 **Type:** : `array of string`
 **Description:** BridgeClaimMethodSignature for tracking BridgeClaimMethodSignature method
 
-### <a name="Pool_EnableFreeGasByNonce"></a>7.18. `Pool.EnableFreeGasByNonce`
+### <a name="Pool_EnableFreeGasByNonce"></a>7.19. `Pool.EnableFreeGasByNonce`
 
 **Type:** : `boolean`
 
@@ -1266,12 +1272,12 @@ FreeClaimGasLimit=150000
 EnableFreeGasByNonce=false
 ```
 
-### <a name="Pool_FreeGasExAddress"></a>7.19. `Pool.FreeGasExAddress`
+### <a name="Pool_FreeGasExAddress"></a>7.20. `Pool.FreeGasExAddress`
 
 **Type:** : `array of string`
 **Description:** FreeGasExAddress is the ex address which can be free gas for the transfer receiver
 
-### <a name="Pool_FreeGasCountPerAddr"></a>7.20. `Pool.FreeGasCountPerAddr`
+### <a name="Pool_FreeGasCountPerAddr"></a>7.21. `Pool.FreeGasCountPerAddr`
 
 **Type:** : `integer`
 
@@ -1285,7 +1291,7 @@ EnableFreeGasByNonce=false
 FreeGasCountPerAddr=0
 ```
 
-### <a name="Pool_FreeGasLimit"></a>7.21. `Pool.FreeGasLimit`
+### <a name="Pool_FreeGasLimit"></a>7.22. `Pool.FreeGasLimit`
 
 **Type:** : `integer`
 

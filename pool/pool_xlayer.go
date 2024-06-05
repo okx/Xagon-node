@@ -198,3 +198,13 @@ func (p *Pool) AddDynamicGp(dgp *big.Int) {
 	p.dynamicGasPrice = result
 	p.dgpMux.Unlock()
 }
+
+func (p *Pool) checkBlockedAddr(address common.Address) bool {
+	// check from db
+	if _, blocked := p.blockedAddresses.Load(address.String()); blocked {
+		return true
+	}
+
+	// check from dynamic config
+	return isBlockedAddress(p.cfg.BlockedList, address)
+}
