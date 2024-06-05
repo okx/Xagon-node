@@ -206,6 +206,7 @@ StateConsistencyCheckInterval = "5s"
 		Port = 0
 		Filename = ""
 		Version = 0
+		WriteTimeout = "5s"
 		Enabled = false
 
 [SequenceSender]

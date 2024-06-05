@@ -154,6 +154,10 @@ func Test_Defaults(t *testing.T) {
 			expectedValue: uint8(0),
 		},
 		{
+			path:          "Sequencer.StreamServer.WriteTimeout",
+			expectedValue: types.NewDuration(5 * time.Second),
+		},
+		{
 			path:          "Sequencer.StreamServer.Enabled",
 			expectedValue: false,
 		},
