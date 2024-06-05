@@ -450,12 +450,19 @@
 					"description": "ForkID is the current fork ID of the chain",
 					"default": 0
 				},
+				"BlockedList": {
+					"items": {
+						"type": "string"
+					},
+					"type": "array",
+					"description": "XLayer config\nBlockedList is the blocked address list"
+				},
 				"FreeGasAddress": {
 					"items": {
 						"type": "string"
 					},
 					"type": "array",
-					"description": "XLayer config\nFreeGasAddress is the default free gas address",
+					"description": "FreeGasAddress is the default free gas address",
 					"default": [
 						"0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"
 					]

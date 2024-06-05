@@ -202,12 +202,3 @@ func isBlockedAddress(localBlockedList []string, address common.Address) bool {
 
 	return contains(localBlockedList, address)
 }
-
-func getBlockedList(localBlockedList []string) []string {
-	if getApolloConfig().enable() {
-		getApolloConfig().RLock()
-		defer getApolloConfig().RUnlock()
-		return getApolloConfig().BlockedList
-	}
-	return localBlockedList
-}

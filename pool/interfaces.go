@@ -46,7 +46,6 @@ type storage interface {
 	GetReadyTxCount(ctx context.Context) (uint64, error)
 	AddFreeGasAddr(ctx context.Context, addr common.Address) error
 	IsFreeGasAddr(ctx context.Context, addr common.Address) (bool, error)
-	AddBlockedAddr(ctx context.Context, addr common.Address) error
 }
 
 type stateInterface interface {
