@@ -131,7 +131,7 @@ func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.
 				}
 				return true, nil
 			} else {
-				return false, fmt.Errorf("you are no longer eligible for gas-free transactions because for each new address, only the first %d transactions(address nonce less than %d) can be gas-free",
+				return false, fmt.Errorf("You are no longer eligible for gas-free transactions because for each new address. Only the first %d transactions(address nonce less than %d) can be gas-free",
 					freeGasCountPerAddrConfig,
 					freeGasCountPerAddrConfig)
 			}
@@ -143,7 +143,7 @@ func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.
 			case MainnetChainID:
 				bridgeURL = MainnetBridgeURL
 			}
-			return false, fmt.Errorf("you are unable to initiate a gas-free transaction from this address unless you have previously transferred funds to this address via the X Layer Bridge (%s) or the OKX Exchange, only the first %d transactions (address nonce must be less than %d) can be gas-free",
+			return false, fmt.Errorf("You are unable to initiate a gas-free transaction from this address unless you have previously transferred funds to this address via the X Layer Bridge (%s) or the OKX Exchange. Only the first %d transactions (address nonce must be less than %d) can be gas-free",
 				bridgeURL,
 				freeGasCountPerAddrConfig,
 				freeGasCountPerAddrConfig)
