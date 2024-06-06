@@ -7,6 +7,7 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-node/aggregator"
 	"github.com/0xPolygonHermez/zkevm-node/config/types"
+	"github.com/0xPolygonHermez/zkevm-node/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-node/db"
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
 	"github.com/0xPolygonHermez/zkevm-node/ethtxmanager"
@@ -102,6 +103,8 @@ type Config struct {
 	SequenceSender sequencesender.Config
 	// Configuration of the aggregator service
 	Aggregator aggregator.Config
+	// Configuration of the data availability service
+	DataAvailability dataavailability.Config
 	// Configuration of the genesis of the network. This is used to known the initial state of the network
 	NetworkConfig NetworkConfig
 	// Configuration of the gas price suggester service

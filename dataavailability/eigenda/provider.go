@@ -66,6 +66,7 @@ func (d *DataAvailabilityProvider) PostSequence(ctx context.Context, batchesData
 	}
 	log.Debug("sent blob to EigenDA disperser, request id: ", base64.StdEncoding.EncodeToString(idBytes))
 
+	startTime := time.Now()
 	var blobStatusReply *disperser_rpc.BlobStatusReply
 	for {
 		blobStatusReply, err = d.client.GetBlobStatus(ctx, idBytes)
@@ -82,15 +83,19 @@ func (d *DataAvailabilityProvider) PostSequence(ctx context.Context, batchesData
 			return nil, ErrDisperseFailed
 		} else if currStatus == disperser_rpc.BlobStatus_INSUFFICIENT_SIGNATURES {
 			return nil, ErrInsufficientSignatures
+		} else {
+			// status == BlobStatus_PROCESSING || BlobStatus_DISPERSING || BlobStatus_UNKNOWN
+			if time.Since(startTime) > d.cfg.BlobStatusConfirmedTimeout.Duration {
+				err = fmt.Errorf("blob status confirmation timeout")
+				log.Error("Error: ", err)
+				return nil, err
+			}
 		}
-
-		// Wait period before retrieving blob status
 		time.Sleep(d.cfg.RetrieveBlobStatusPeriod.Duration)
 	}
 
 	if blobStatusReply == nil {
-		err = fmt.Errorf("empty blob status reply returned")
-		return nil, err
+		return nil, fmt.Errorf("empty blob status reply returned")
 	}
 
 	// Get abi-encoded data availability message
