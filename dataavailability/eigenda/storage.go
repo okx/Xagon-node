@@ -7,6 +7,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+// ErrNotFound is used when DA information is not found
 var ErrNotFound = errors.New("not found")
 
 // DAStorage is an in-memory data availability storage for the mock implementation.
@@ -18,6 +19,7 @@ type DAStorage struct {
 	mutex *sync.RWMutex
 }
 
+// Get tries to get the DA information indexed to the block hash.
 func (s *DAStorage) Get(hash common.Hash) ([]byte, error) {
 	s.mutex.RLock()
 	defer s.mutex.RUnlock()
@@ -30,6 +32,7 @@ func (s *DAStorage) Get(hash common.Hash) ([]byte, error) {
 	}
 }
 
+// Add indexes the DA information with the block hash into the in-memory storage.
 func (s *DAStorage) Add(hash common.Hash, message []byte) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()
@@ -37,6 +40,7 @@ func (s *DAStorage) Add(hash common.Hash, message []byte) error {
 	return nil
 }
 
+// Update updates the DA information with the block hash into the in-memory storage.
 func (s *DAStorage) Update(hash common.Hash, message []byte) error {
 	s.mutex.Lock()
 	defer s.mutex.Unlock()

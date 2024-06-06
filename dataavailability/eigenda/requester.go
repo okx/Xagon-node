@@ -6,11 +6,13 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 )
 
+// DataAvailabilityRetriever is the EigenDA retriever client to retrieve and
+// decode EigenDA blobs into L2 batches data
 type DataAvailabilityRetriever struct {
 	backend BlobRetriever
 }
 
-// Get batch data from EigenDA request ID
+// GetBatchL2DataFromRequestId gets the batch data from the EigenDA request ID
 func (d *DataAvailabilityRetriever) GetBatchL2DataFromRequestId(ctx context.Context, id []byte) ([][]byte, error) {
 	msg, err := d.backend.GetDataAvailabilityMessageFromId(ctx, id)
 	if err != nil {
@@ -20,7 +22,8 @@ func (d *DataAvailabilityRetriever) GetBatchL2DataFromRequestId(ctx context.Cont
 	}
 }
 
-// Get data availability message from EigenDA request ID
+// GetDataAvailabilityMessageFromRequestId gets the data availability message
+// from the EigenDA request ID
 func (d *DataAvailabilityRetriever) GetDataAvailabilityMessageFromRequestId(ctx context.Context, id []byte) ([]byte, error) {
 	return d.backend.GetDataAvailabilityMessageFromId(ctx, id)
 }

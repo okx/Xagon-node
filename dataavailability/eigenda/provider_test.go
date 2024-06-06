@@ -82,9 +82,9 @@ func TestDisperseBlobWithRandomDataUsingProvider(t *testing.T) {
 	dataSize := []int{100000, 200000, 1000, 80, 30000}
 
 	// Disperse Blob with different DataSizes
-	rand.Seed(time.Now().UnixNano())
-	data := make([]byte, dataSize[rand.Intn(len(dataSize))])
-	_, err := rand.Read(data)
+	rand.Seed(time.Now().UnixNano())                         //nolint:gosec,staticcheck
+	data := make([]byte, dataSize[rand.Intn(len(dataSize))]) //nolint:gosec,staticcheck
+	_, err := rand.Read(data)                                //nolint:gosec,staticcheck
 	assert.NoError(t, err)
 
 	// Generate mock string sequence

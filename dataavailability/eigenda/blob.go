@@ -13,19 +13,27 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-var ErrConvertFromABIInterface = errors.New("conversion from abi interface error")
+var (
+	// HashByteLength is the hash byte length
+	HashByteLength = 32
+	// ErrConvertFromABIInterface is used when there is a decoding error
+	ErrConvertFromABIInterface = errors.New("conversion from abi interface error")
+)
 
+// BlobData is the EigenDA blob data
 type BlobData struct {
 	BlobHeader            BlobHeader            `abi:"blobHeader"`
 	BlobVerificationProof BlobVerificationProof `abi:"blobVerificationProof"`
 }
 
+// BlobHeader is the EigenDA blob header
 type BlobHeader struct {
 	Commitment       Commitment        `abi:"commitment"`
 	DataLength       uint32            `abi:"dataLength"`
 	QuorumBlobParams []QuorumBlobParam `abi:"quorumBlobParams"`
 }
 
+// BlobVerificationProof is the EigenDA blob verification proof
 type BlobVerificationProof struct {
 	BatchId        uint32        `abi:"batchId"`
 	BlobIndex      uint32        `abi:"blobIndex"`
@@ -34,11 +42,13 @@ type BlobVerificationProof struct {
 	QuorumIndices  []byte        `abi:"quorumIndices"`
 }
 
+// Commitment is the EigenDA commitment proof
 type Commitment struct {
 	X *big.Int `abi:"X"`
 	Y *big.Int `abi:"Y"`
 }
 
+// QuorumBlobParam is the EigenDA quorum blob parameters
 type QuorumBlobParam struct {
 	QuorumNumber                    uint8  `abi:"quorumNumber"`
 	AdversaryThresholdPercentage    uint8  `abi:"adversaryThresholdPercentage"`
@@ -46,6 +56,7 @@ type QuorumBlobParam struct {
 	ChunkLength                     uint32 `abi:"chunkLength"`
 }
 
+// BatchMetadata is the EigenDA batch meta data
 type BatchMetadata struct {
 	// The header of the data store
 	BatchHeader BatchHeader `abi:"batchHeader"`
@@ -55,6 +66,7 @@ type BatchMetadata struct {
 	ConfirmationBlockNumber uint32 `abi:"confirmationBlockNumber"`
 }
 
+// BatchHeader is the EigenDA batch header
 type BatchHeader struct {
 	BlobHeadersRoot common.Hash `abi:"blobHeadersRoot"`
 	// Each byte is a different quorum number
@@ -65,11 +77,13 @@ type BatchHeader struct {
 	ReferenceBlockNumber  uint32 `abi:"referenceBlockNumber"`
 }
 
+// ReducedBatchHeader is the EigenDA reduced batch header
 type ReducedBatchHeader struct {
 	BlobHeadersRoot      common.Hash `abi:"blobHeadersRoot"`
 	ReferenceBlockNumber uint32      `abi:"referenceBlockNumber"`
 }
 
+// GetBlobData gets the blob data from the EigenDA gRPC struct
 func GetBlobData(info *disperser_rpc.BlobInfo) (BlobData, error) {
 	header := GetBlobHeader(info.GetBlobHeader())
 	proof, err := GetBlobVerificationProof(info.GetBlobVerificationProof())
@@ -82,6 +96,7 @@ func GetBlobData(info *disperser_rpc.BlobInfo) (BlobData, error) {
 	}, nil
 }
 
+// GetBlobHeader gets the blob header from the EigenDA gRPC struct
 func GetBlobHeader(header *disperser_rpc.BlobHeader) BlobHeader {
 	quorums := []QuorumBlobParam{}
 	for _, quorum := range header.GetBlobQuorumParams() {
@@ -104,12 +119,13 @@ func GetBlobHeader(header *disperser_rpc.BlobHeader) BlobHeader {
 	}
 }
 
+// GetBlobVerificationProof gets the blob verification proof from the EigenDA gRPC struct
 func GetBlobVerificationProof(proof *disperser_rpc.BlobVerificationProof) (BlobVerificationProof, error) {
-	if len(proof.BatchMetadata.BatchHeader.BatchRoot) != 32 {
+	if len(proof.BatchMetadata.BatchHeader.BatchRoot) != HashByteLength {
 		return BlobVerificationProof{}, fmt.Errorf("BlobHeadersRoot not type bytes32")
 	}
 
-	if len(proof.BatchMetadata.SignatoryRecordHash) != 32 {
+	if len(proof.BatchMetadata.SignatoryRecordHash) != HashByteLength {
 		return BlobVerificationProof{}, fmt.Errorf("SignatoryRecordHash not type bytes32")
 	}
 
@@ -131,7 +147,7 @@ func GetBlobVerificationProof(proof *disperser_rpc.BlobVerificationProof) (BlobV
 	}, nil
 }
 
-// Method to calculate the BatchHeaderHash.
+// GetBatchHeaderHash calculates the BatchHeaderHash.
 // Ref: https://github.com/Layr-Labs/eigenda/blob/5aecf5c2b679e69d363824513ba227388edcad82/contracts/src/libraries/EigenDAHasher.sol#L50
 func (data BatchMetadata) GetBatchHeaderHash() ([]byte, error) {
 	parsedABI, err := abi.JSON(bytes.NewReader([]byte(batchHeaderABI)))
@@ -157,6 +173,8 @@ func (data BatchMetadata) GetBatchHeaderHash() ([]byte, error) {
 	return crypto.Keccak256(encoded), nil
 }
 
+// TryEncodeToDataAvailabilityMessage is a fallible encoding method to encode
+// EigenDA blob data into data availability message represented as byte array.
 func TryEncodeToDataAvailabilityMessage(blobData BlobData) ([]byte, error) {
 	parsedABI, err := abi.JSON(bytes.NewReader([]byte(blobDataABI)))
 	if err != nil {
@@ -177,6 +195,8 @@ func TryEncodeToDataAvailabilityMessage(blobData BlobData) ([]byte, error) {
 	return encoded, nil
 }
 
+// TryDecodeFromDataAvailabilityMessage is a fallible decoding method to
+// decode data availability message into EigenDA blob data.
 func TryDecodeFromDataAvailabilityMessage(msg []byte) (BlobData, error) {
 	// Parse the ABI
 	parsedABI, err := abi.JSON(bytes.NewReader([]byte(blobDataABI)))
@@ -342,65 +362,4 @@ func convertBatchHeader(val reflect.Value) (BatchHeader, error) {
 	}
 
 	return header, nil
-}
-
-// -------- Debugging methods --------
-func (blobData BlobData) DebugLogBlobData() {
-	fmt.Println("Logging blob data...")
-
-	fmt.Println("--- Blob header ---")
-	fmt.Println("Blob header commitment x: ", blobData.BlobHeader.Commitment.X)
-	fmt.Println("Blob header commitment y: ", blobData.BlobHeader.Commitment.Y)
-	fmt.Println("Blob header data length: ", blobData.BlobHeader.DataLength)
-	for idx, q := range blobData.BlobHeader.QuorumBlobParams {
-		fmt.Printf("Blob header quorum %v quorum number: %v\n", idx, q.QuorumNumber)
-		fmt.Printf("Blob header quorum %v quorum adversary threshold percentage: %v\n", idx, q.AdversaryThresholdPercentage)
-		fmt.Printf("Blob header quorum %v quorum confirmation threshold percentage: %v\n", idx, q.ConfirmationThresholdPercentage)
-		fmt.Printf("Blob header quorum %v quorum chunk length: %v\n", idx, q.ChunkLength)
-	}
-
-	fmt.Println("--- Blob verification proof ---")
-	fmt.Println("Blob verification proof batch id: ", blobData.BlobVerificationProof.BatchId)
-	fmt.Println("Blob verification proof blob idx: ", blobData.BlobVerificationProof.BlobIndex)
-
-	fmt.Println("Blob verification proof batch metadata:")
-	fmt.Println("Blob verification proof batch metadata batch header batch headers root: ", blobData.BlobVerificationProof.BatchMetadata.BatchHeader.BlobHeadersRoot.Bytes())
-	fmt.Println("Blob verification proof batch metadata batch header quorum numbers: ", blobData.BlobVerificationProof.BatchMetadata.BatchHeader.QuorumNumbers)
-	fmt.Println("Blob verification proof batch metadata batch header signed stake for quorums: ", blobData.BlobVerificationProof.BatchMetadata.BatchHeader.SignedStakeForQuorums)
-	fmt.Println("Blob verification proof batch metadata batch header reference block number: ", blobData.BlobVerificationProof.BatchMetadata.BatchHeader.ReferenceBlockNumber)
-	fmt.Println("Blob verification proof batch metadata signature record hash: ", blobData.BlobVerificationProof.BatchMetadata.SignatoryRecordHash.Bytes())
-	fmt.Println("Blob verification proof batch metadata confirmation block number: ", blobData.BlobVerificationProof.BatchMetadata.ConfirmationBlockNumber)
-
-	fmt.Println("Blob verification proof inclusion proof: ", blobData.BlobVerificationProof.InclusionProof)
-	fmt.Println("Blob verification proof quorum indices: ", blobData.BlobVerificationProof.QuorumIndices)
-}
-
-func DebugLogBlobInfoResponse(info *disperser_rpc.BlobInfo) {
-	fmt.Println("Logging blob data...")
-
-	fmt.Println("--- Blob header ---")
-	fmt.Println("Blob header commitment x: ", info.BlobHeader.Commitment.X)
-	fmt.Println("Blob header commitment y: ", info.BlobHeader.Commitment.Y)
-	fmt.Println("Blob header data length: ", info.BlobHeader.DataLength)
-	for idx, q := range info.BlobHeader.BlobQuorumParams {
-		fmt.Printf("Blob header quorum %v quorum number: %v\n", idx, q.QuorumNumber)
-		fmt.Printf("Blob header quorum %v quorum adversary threshold percentage: %v\n", idx, q.AdversaryThresholdPercentage)
-		fmt.Printf("Blob header quorum %v quorum confirmation threshold percentage: %v\n", idx, q.ConfirmationThresholdPercentage)
-		fmt.Printf("Blob header quorum %v quorum chunk length: %v\n", idx, q.ChunkLength)
-	}
-
-	fmt.Println("--- Blob verification proof ---")
-	fmt.Println("Blob verification proof batch id: ", info.BlobVerificationProof.BatchId)
-	fmt.Println("Blob verification proof blob idx: ", info.BlobVerificationProof.BlobIndex)
-
-	fmt.Println("Blob verification proof batch metadata:")
-	fmt.Println("Blob verification proof batch metadata batch header batch headers root: ", info.BlobVerificationProof.BatchMetadata.BatchHeader.BatchRoot)
-	fmt.Println("Blob verification proof batch metadata batch header quorum numbers: ", info.BlobVerificationProof.BatchMetadata.BatchHeader.QuorumNumbers)
-	fmt.Println("Blob verification proof batch metadata batch header signed stake for quorums: ", info.BlobVerificationProof.BatchMetadata.BatchHeader.QuorumSignedPercentages)
-	fmt.Println("Blob verification proof batch metadata batch header reference block number: ", info.BlobVerificationProof.BatchMetadata.BatchHeader.ReferenceBlockNumber)
-	fmt.Println("Blob verification proof batch metadata signature record hash: ", info.BlobVerificationProof.BatchMetadata.SignatoryRecordHash)
-	fmt.Println("Blob verification proof batch metadata confirmation block number: ", info.BlobVerificationProof.BatchMetadata.ConfirmationBlockNumber)
-
-	fmt.Println("Blob verification proof inclusion proof: ", info.BlobVerificationProof.InclusionProof)
-	fmt.Println("Blob verification proof quorum indices: ", info.BlobVerificationProof.QuorumIndexes)
 }

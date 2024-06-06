@@ -52,9 +52,9 @@ func TestEncodeDecodeSequenceToAndFromRandomBlob(t *testing.T) {
 	mockSeqHash := []common.Hash{}
 	for i := 0; i < 10; i++ {
 		// Disperse Blob with different DataSizes
-		rand.Seed(time.Now().UnixNano())
-		data := make([]byte, dataSize[rand.Intn(len(dataSize))])
-		_, err := rand.Read(data)
+		rand.Seed(time.Now().UnixNano())                         //nolint:gosec,staticcheck
+		data := make([]byte, dataSize[rand.Intn(len(dataSize))]) //nolint:gosec,staticcheck
+		_, err := rand.Read(data)                                //nolint:gosec,staticcheck
 		assert.NoError(t, err)
 		mockSeqData = append(mockSeqData, data)
 

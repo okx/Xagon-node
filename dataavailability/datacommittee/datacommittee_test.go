@@ -99,7 +99,7 @@ func newSimulatedDacman(t *testing.T, auth *bind.TransactOpts) (
 	// 10000000 ETH in wei
 	balance, _ := new(big.Int).SetString("10000000000000000000000000", 10) //nolint:gomnd
 	address := auth.From
-	genesisAlloc := map[common.Address]core.GenesisAccount{
+	genesisAlloc := map[common.Address]core.GenesisAccount{ //nolint:staticcheck
 		address: {
 			Balance: balance,
 		},

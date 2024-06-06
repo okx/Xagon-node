@@ -18,17 +18,13 @@ import (
 	"google.golang.org/grpc/credentials/insecure"
 )
 
-// type DisperserClient interface {
-// 	DisperseBlob(ctx context.Context, data []byte, customQuorums []uint8) (*disperser.BlobStatus, []byte, error)
-// 	DisperseBlobAuthenticated(ctx context.Context, data []byte, customQuorums []uint8) (*disperser.BlobStatus, []byte, error)
-// 	GetBlobStatus(ctx context.Context, key []byte) (*disperser_rpc.BlobStatusReply, error)
-// }
-
+// DisperserClient is the EigenDA disperser client to send and get blob data with the disperser.
 type DisperserClient struct {
 	cfg    *dataavailability.Config
 	signer core.BlobRequestSigner
 }
 
+// NewDisperserClient creates a new disperser client
 func NewDisperserClient(cfg *dataavailability.Config, signer core.BlobRequestSigner) *DisperserClient {
 	return &DisperserClient{
 		cfg:    cfg,
@@ -38,7 +34,7 @@ func NewDisperserClient(cfg *dataavailability.Config, signer core.BlobRequestSig
 
 func (c *DisperserClient) getDialOptions() []grpc.DialOption {
 	if c.cfg.UseSecureGrpcFlag {
-		cfg := &tls.Config{MinVersion: tls.VersionTLS13}
+		cfg := &tls.Config{} //nolint:gosec
 		credential := credentials.NewTLS(cfg)
 		return []grpc.DialOption{grpc.WithTransportCredentials(credential)}
 	} else {
@@ -46,6 +42,7 @@ func (c *DisperserClient) getDialOptions() []grpc.DialOption {
 	}
 }
 
+// DisperseBlob disperses a blob represented as byte array.
 func (c *DisperserClient) DisperseBlob(ctx context.Context, data []byte, quorums []uint8) (*disperser.BlobStatus, []byte, error) {
 	addr := fmt.Sprintf("%v:%v", c.cfg.Hostname, c.cfg.Port)
 
@@ -88,8 +85,8 @@ func (c *DisperserClient) DisperseBlob(ctx context.Context, data []byte, quorums
 	return blobStatus, reply.GetRequestId(), nil
 }
 
+// DisperseBlobAuthenticated disperses a blob represented as byte array.
 func (c *DisperserClient) DisperseBlobAuthenticated(ctx context.Context, data []byte, quorums []uint8) (*disperser.BlobStatus, []byte, error) {
-
 	addr := fmt.Sprintf("%v:%v", c.cfg.Hostname, c.cfg.Port)
 
 	dialOptions := c.getDialOptions()
@@ -182,6 +179,7 @@ func (c *DisperserClient) DisperseBlobAuthenticated(ctx context.Context, data []
 	return blobStatus, disperseReply.DisperseReply.GetRequestId(), nil
 }
 
+// GetBlobStatus gets the blob status from the disperser on EigenDA layer.
 func (c *DisperserClient) GetBlobStatus(ctx context.Context, requestID []byte) (*disperser_rpc.BlobStatusReply, error) {
 	addr := fmt.Sprintf("%v:%v", c.cfg.Hostname, c.cfg.Port)
 	dialOptions := c.getDialOptions()
@@ -191,7 +189,7 @@ func (c *DisperserClient) GetBlobStatus(ctx context.Context, requestID []byte) (
 	}
 
 	DisperserClient := disperser_rpc.NewDisperserClient(conn)
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*60)
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*60) //nolint:gomnd
 	defer cancel()
 
 	request := &disperser_rpc.BlobStatusRequest{
@@ -206,6 +204,7 @@ func (c *DisperserClient) GetBlobStatus(ctx context.Context, requestID []byte) (
 	return reply, nil
 }
 
+// RetrieveBlob retrieves the blob from the disperser on EigenDA layer.
 func (c *DisperserClient) RetrieveBlob(ctx context.Context, batchHeaderHash []byte, blobIndex uint32) (*disperser_rpc.RetrieveBlobReply, error) {
 	addr := fmt.Sprintf("%v:%v", c.cfg.Hostname, c.cfg.Port)
 	dialOptions := c.getDialOptions()
@@ -215,7 +214,7 @@ func (c *DisperserClient) RetrieveBlob(ctx context.Context, batchHeaderHash []by
 	}
 
 	DisperserClient := disperser_rpc.NewDisperserClient(conn)
-	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*60)
+	ctxTimeout, cancel := context.WithTimeout(ctx, time.Second*60) //nolint:gomnd
 	defer cancel()
 
 	request := &disperser_rpc.RetrieveBlobRequest{

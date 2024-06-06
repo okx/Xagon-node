@@ -18,7 +18,7 @@ func EncodeSequence(batchesData [][]byte) []byte {
 	sequence := []byte{}
 	metadata := []byte{}
 	n := uint64(len(batchesData))
-	bn := make([]byte, 8)
+	bn := make([]byte, 8) //nolint:gomnd
 	binary.BigEndian.PutUint64(bn, n)
 	metadata = append(metadata, bn...)
 
@@ -30,7 +30,7 @@ func EncodeSequence(batchesData [][]byte) []byte {
 		// Batch metadata contains the byte array length and the Keccak256 hash of the
 		// batch data
 		n := uint64(len(seq))
-		bn := make([]byte, 8)
+		bn := make([]byte, 8) //nolint:gomnd
 		binary.BigEndian.PutUint64(bn, n)
 		hash := crypto.Keccak256Hash(seq)
 		metadata = append(metadata, bn...)
