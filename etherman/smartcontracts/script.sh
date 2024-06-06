@@ -20,3 +20,4 @@ gen polygonrollupmanager
 gen mockpolygonrollupmanager
 gen mockverifier
 gen proxy
+gen eigendaverifier
