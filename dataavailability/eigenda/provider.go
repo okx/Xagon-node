@@ -12,6 +12,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	disperser_rpc "github.com/Layr-Labs/eigenda/api/grpc/disperser"
 	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/crypto"
 )
 
 var (
@@ -105,7 +106,21 @@ func (d *DataAvailabilityProvider) PostSequence(ctx context.Context, batchesData
 		log.Error("Error getting blob data: ", err)
 		return nil, err
 	}
-	return TryEncodeToDataAvailabilityMessage(data)
+
+	daMessage, err := TryEncodeToDataAvailabilityMessage(data)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, batchData := range batchesData {
+		hash := crypto.Keccak256Hash(batchData)
+		err = d.storeDataAvailabilityMessage(hash, daMessage)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return daMessage, nil
 }
 
 // GetSequence gets blob data from the EigenDA layer and decodes the blob data into
@@ -141,18 +156,6 @@ func (d *DataAvailabilityProvider) GetSequence(ctx context.Context, batchHashes 
 	batchesData = append(batchesData, data...)
 
 	return batchesData, nil
-}
-
-// StoreDataAvailabilityMessage stores the data availaiblity message into storage
-func (d *DataAvailabilityProvider) StoreDataAvailabilityMessage(ctx context.Context, batchHash common.Hash, dataAvailabilityMessage []byte) error {
-	// Store blob information inside in-memory DA storage
-	err := d.state.Add(batchHash, dataAvailabilityMessage)
-	if err != nil {
-		log.Error("Error storing data availability message: ", err)
-		return err
-	}
-
-	return nil
 }
 
 // GetBatchL2Data returns the data from the EigenDA layer operators. It checks the DA storage to get the
@@ -217,4 +220,15 @@ func (d *DataAvailabilityProvider) GetDataAvailabilityMessageFromId(ctx context.
 	}
 
 	return TryEncodeToDataAvailabilityMessage(blobData)
+}
+
+func (d *DataAvailabilityProvider) storeDataAvailabilityMessage(batchHash common.Hash, dataAvailabilityMessage []byte) error {
+	// Store blob information inside in-memory DA storage
+	err := d.state.Add(batchHash, dataAvailabilityMessage)
+	if err != nil {
+		log.Error("Error storing data availability message: ", err)
+		return err
+	}
+
+	return nil
 }
