@@ -5,14 +5,12 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"sync"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	disperser_rpc "github.com/Layr-Labs/eigenda/api/grpc/disperser"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/crypto"
 )
 
 var (
@@ -27,22 +25,15 @@ var (
 // dataavailability package.
 type DataAvailabilityProvider struct {
 	cfg    dataavailability.Config
-	state  DAStorage
 	client *DisperserClient
 }
 
 // NewDataAvailabilityProvider creates a new data availability provider
 func NewDataAvailabilityProvider(cfg dataavailability.Config) *DataAvailabilityProvider {
-	// Initialize in-memory DA storage
-	s := DAStorage{
-		inner: map[common.Hash][]byte{},
-		mutex: &sync.RWMutex{},
-	}
+	// TODO: Switch to authenticated blob dispersion pipeline
 	signer := MockBlobRequestSigner{}
-
 	p := &DataAvailabilityProvider{
 		cfg:    cfg,
-		state:  s,
 		client: NewDisperserClient(&cfg, signer),
 	}
 
@@ -107,34 +98,15 @@ func (d *DataAvailabilityProvider) PostSequence(ctx context.Context, batchesData
 		return nil, err
 	}
 
-	daMessage, err := TryEncodeToDataAvailabilityMessage(data)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, batchData := range batchesData {
-		hash := crypto.Keccak256Hash(batchData)
-		err = d.storeDataAvailabilityMessage(hash, daMessage)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return daMessage, nil
+	return TryEncodeToDataAvailabilityMessage(data)
 }
 
 // GetSequence gets blob data from the EigenDA layer and decodes the blob data into
-// L2 batches data
+// L2 batches data. The EigenDA provider does not use batchHashes to retrieve the L2
+// batches data.
 func (d *DataAvailabilityProvider) GetSequence(ctx context.Context, batchHashes []common.Hash, dataAvailabilityMessage []byte) ([][]byte, error) {
 	// Get blob from EigenDA layer
 	var batchesData [][]byte
-	for _, hash := range batchHashes {
-		batchData, err := d.GetBatchL2Data(ctx, hash)
-		if err != nil {
-			return nil, err
-		}
-		batchesData = append(batchesData, batchData)
-	}
 
 	// Try decoding data availability message
 	blobData, err := TryDecodeFromDataAvailabilityMessage(dataAvailabilityMessage)
@@ -156,46 +128,6 @@ func (d *DataAvailabilityProvider) GetSequence(ctx context.Context, batchHashes 
 	batchesData = append(batchesData, data...)
 
 	return batchesData, nil
-}
-
-// GetBatchL2Data returns the data from the EigenDA layer operators. It checks the DA storage to get the
-// requestID used when submitting the batch data to the DA.
-func (d *DataAvailabilityProvider) GetBatchL2Data(ctx context.Context, hash common.Hash) ([]byte, error) {
-	msg, err := d.state.Get(hash)
-	if err != nil {
-		log.Error("Error calculating batch header hash from blob data: ", err)
-		return nil, err
-	}
-	if msg == nil {
-		return nil, fmt.Errorf("DA message not found")
-	}
-
-	blobData, err := TryDecodeFromDataAvailabilityMessage(msg)
-	if err != nil {
-		log.Error("Error decoding from da message: ", err)
-		return nil, err
-	}
-	batchHeaderHash, err := blobData.BlobVerificationProof.BatchMetadata.GetBatchHeaderHash()
-	if err != nil {
-		log.Error("Error calculating batch header hash from blob data: ", err)
-		return nil, err
-	}
-
-	reply, err := d.client.RetrieveBlob(ctx, batchHeaderHash, blobData.BlobVerificationProof.BlobIndex)
-	if err != nil {
-		log.Error("Error retrieving blob from EigenDA disperser: ", err)
-		return nil, err
-	}
-	data := reply.GetData()
-	batchesData, batchesHash := DecodeSequence(data)
-
-	// Get batch data from batch hash
-	for idx, h := range batchesHash {
-		if h == hash {
-			return batchesData[idx], nil
-		}
-	}
-	return nil, fmt.Errorf("failed to get batch data from hash, corrupted DA storage")
 }
 
 // GetDataAvailabilityMessageFromId gets the data availability message from request ID
@@ -220,15 +152,4 @@ func (d *DataAvailabilityProvider) GetDataAvailabilityMessageFromId(ctx context.
 	}
 
 	return TryEncodeToDataAvailabilityMessage(blobData)
-}
-
-func (d *DataAvailabilityProvider) storeDataAvailabilityMessage(batchHash common.Hash, dataAvailabilityMessage []byte) error {
-	// Store blob information inside in-memory DA storage
-	err := d.state.Add(batchHash, dataAvailabilityMessage)
-	if err != nil {
-		log.Error("Error storing data availability message: ", err)
-		return err
-	}
-
-	return nil
 }
