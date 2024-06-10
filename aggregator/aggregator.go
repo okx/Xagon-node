@@ -369,7 +369,7 @@ func (a *Aggregator) tryBuildFinalProof(ctx context.Context, prover proverInterf
 		log.Debug("Time to verify proof not reached or proof verification in progress")
 		return false, nil
 	}
-	log.Debug("Send final proof time reached")
+	log.Info("Send final proof time reached")
 
 	for !a.isSynced(ctx, nil) {
 		log.Info("Waiting for synchronizer to sync...")
@@ -468,7 +468,7 @@ func (a *Aggregator) validateEligibleFinalProof(ctx context.Context, proof *stat
 			}
 			return false, nil
 		} else {
-			log.Debugf("Proof batch number %d is not the following to last verfied batch number %d", proof.BatchNumber, lastVerifiedBatchNum)
+			log.Infof("Proof batch number %d is not the following to last verfied batch number %d", proof.BatchNumber, lastVerifiedBatchNum)
 			return false, nil
 		}
 	}
@@ -709,6 +709,8 @@ func (a *Aggregator) tryAggregateProofs(ctx context.Context, prover proverInterf
 		log.Error(FirstToUpper(err.Error()))
 		return false, err
 	}
+
+	log.Info("Aggregated proof generated updated database")
 
 	// NOTE(pg): the defer func is useless from now on, use a different variable
 	// name for errors (or shadow err in inner scopes) to not trigger it.
