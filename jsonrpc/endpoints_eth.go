@@ -537,13 +537,13 @@ func (e *EthEndpoints) GetFilterChanges(filterID string) (interface{}, types.Err
 func (e *EthEndpoints) GetFilterLogs(filterID string) (interface{}, types.Error) {
 	filter, err := e.storage.GetFilter(filterID)
 	if errors.Is(err, ErrNotFound) {
-		return nil, nil
+		return []types.Log{}, nil
 	} else if err != nil {
 		return RPCErrorResponse(types.DefaultErrorCode, "failed to get filter from storage", err, true)
 	}
 
 	if filter.Type != FilterTypeLog {
-		return nil, nil
+		return []types.Log{}, nil
 	}
 
 	filterParameters := filter.Parameters.(LogFilter)
