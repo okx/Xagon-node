@@ -164,7 +164,7 @@ func newState(ctx context.Context, c *config.Config, l2ChainID uint64, forkIDInt
 		stateTree = merkletree.NewStateTree(stateDBClient)
 	}
 
-	st := state.NewState(stateCfg, stateDb, executorClient, stateTree, eventLog, nil)
+	st := state.NewState(stateCfg, stateDb, executorClient, stateTree, eventLog, nil, nil)
 	return st
 }
 

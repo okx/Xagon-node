@@ -83,6 +83,11 @@ var (
 	// ErrInvalidTxChangeL2BlockMinTimestamp indicates that the change l2 block transaction has trigger an error while executing
 	ErrInvalidTxChangeL2BlockMinTimestamp = errors.New("indicates that the change l2 block transaction has trigger an error while executing (min timestamp)")
 
+	// Start of V3 errors
+
+	// ErrInvalidL1InfoTreeIndex indicates that the l1 info tree index added is not valid since its value is 0
+	ErrInvalidL1InfoTreeIndex = errors.New("l1 info tree index is invalid")
+
 	// EXECUTOR ERRORS
 	// ===============
 
@@ -321,6 +326,67 @@ var (
 	ErrExecutorErrorInvalidUpdateMerkleTree = errors.New("invalid update merkle tree")
 	// ErrExecutorErrorSMMainInvalidTxStatusError indicates that the TX has an invalid status-error combination
 	ErrExecutorErrorSMMainInvalidTxStatusError = errors.New("tx has an invalid status-error combination")
+
+	// Start of V3 errors
+
+	// ErrExecutorErrorInvalidPreviousL1InfoTreeRoot indicates that the input parameter previous_l1_info_tree_root is invalid
+	ErrExecutorErrorInvalidPreviousL1InfoTreeRoot = errors.New("previous_l1_info_tree_root is invalid")
+	// ErrExecutorErrorInvalidForcedHashData indicates that the input parameter forced_hash_data is invalid
+	ErrExecutorErrorInvalidForcedHashData = errors.New("forced_hash_data is invalid")
+	// ErrExecutorErrorInvalidForcedDataGlobalExitRoot indicates that the input parameter forced_data.global_exit_root is invalid
+	ErrExecutorErrorInvalidForcedDataGlobalExitRoot = errors.New("forced_data.global_exit_root is invalid")
+	// ErrExecutorErrorInvalidForcedDataBlockHashL1 indicates that the input parameter forced_data.block_hash_l1 is invalid
+	ErrExecutorErrorInvalidForcedDataBlockHashL1 = errors.New("forced_data.block_hash_l1 is invalid")
+	// ErrExecutorErrorInvalidL1DataV3InitialHistoricRoot indicates that the input parameter L1 Data initiali_historic_root is invalid
+	ErrExecutorErrorInvalidL1DataV3InitialHistoricRoot = errors.New("L1 Data initiali_historic_root is invalid")
+	// ErrExecutorErrorInvalidOldBlobStateRoot indicates that the input parameter old_blob_state_root is invalid
+	ErrExecutorErrorInvalidOldBlobStateRoot = errors.New("old_blob_state_root is invalid")
+	// ErrExecutorErrorInvalidOldBlobAccInputHash indicates that the input parameter old_blob_acc_input_hash is invalid
+	ErrExecutorErrorInvalidOldBlobAccInputHash = errors.New("old_blob_acc_input_hash is invalid")
+	// ErrExecutorErrorInvalidLastL1InfoTreeRoot indicates that the input parameter last_l1_info_tree_root is invalid
+	ErrExecutorErrorInvalidLastL1InfoTreeRoot = errors.New("last_l1_info_tree_root is invalid")
+	// ErrExecutorErrorInvalidNewBlobStateRoot indicates that the input parameter new_blob_state_root is invalid
+	ErrExecutorErrorInvalidNewBlobStateRoot = errors.New("new_blob_state_root is invalid")
+	// ErrExecutorErrorInvalidNewBlobAccInputHash indicates that the input parameter new_blob_acc_input_hash is invalid
+	ErrExecutorErrorInvalidNewBlobAccInputHash = errors.New("new_blob_acc_input_hash is invalid")
+	// ErrExecutorErrorInvalidBlobData indicates that the input parameter blob_data is invalid
+	ErrExecutorErrorInvalidBlobData = errors.New("blob_data is invalid")
+	// ErrExecutorErrorInvalidZKGasLimit indicates that the input parameter zk_gas_limit is invalid
+	ErrExecutorErrorInvalidZKGasLimit = errors.New("zk_gas_limit is invalid")
+	// ErrExecutorErrorInvalidPointZ indicates that the input parameter point_z is invalid
+	ErrExecutorErrorInvalidPointZ = errors.New("point_z is invalid")
+	// ErrExecutorErrorInvalidPointY indicates that the input parameter point_y is invalid
+	ErrExecutorErrorInvalidPointY = errors.New("point_y is invalid")
+	// ErrExecutorErrorSMMainPointZMismatch indicates that the input parameter point_z is different from the one calculated by the executor
+	ErrExecutorErrorSMMainPointZMismatch = errors.New("point_z mismatch")
+	// ErrExecutorErrorSMMainBlobL2HashDataMismatch indicates that the input parameter blob L2 data hash is different from the one calculated by the executor
+	ErrExecutorErrorSMMainBlobL2HashDataMismatch = errors.New("blob L2 hash data mismatch")
+	// ErrExecutorErrorSMMainBatchHashDataMismatch indicates that the input parameter batch data hash is different from the one calculated by the executor
+	ErrExecutorErrorSMMainBatchHashDataMismatch = errors.New("batch hash data mismatch")
+	// ErrExecutorErrorSMMainInvalidBlobType indicates that the input parameter blob type is invalid
+	ErrExecutorErrorSMMainInvalidBlobType = errors.New("invalid blob type")
+	// ErrExecutorErrorSMMainUnrestoredSavedContext indicates that at least one saved context was not restored before finishing the execution
+	ErrExecutorErrorSMMainUnrestoredSavedContext = errors.New("unrestored saved context")
+	// ErrExecutorErrorSMMainInvalidMemoryCtx indicates that the memory context polynomial was assigned an invalid value
+	ErrExecutorErrorSMMainInvalidMemoryCtx = errors.New("invalid memory ctx")
+
+	// ROM BLOB ERRORS
+	// ===============
+
+	// ErrROMBlobInvalidParsing indicates that has been an error while parsing the blob data
+	ErrROMBlobInvalidParsing = errors.New("error while parsing the blob data")
+	// ErrROMBlobInvalidMSBByte indicates that the MSB on one field element is different than zero (only for blob_type = 1)
+	ErrROMBlobInvalidMSBByte = errors.New("MSB on one field element is different than zero")
+	// ErrROMBlobInvalidZKGasLimit not enough zk_gas_limit supplied to pay for batches proofs
+	ErrROMBlobInvalidZKGasLimit = errors.New("not enough zk_gas_limit supplied to pay for batches proofs")
+	// ErrROMBlobInvalidBlobType blob_type not supported
+	ErrROMBlobInvalidBlobType = errors.New("blob_type not supported")
+	// ErrROMBlobInvalidCompressionType compression type not supported
+	ErrROMBlobInvalidCompressionType = errors.New("compression type not supported")
+	// ErrROMBlobInvalidForcedBatches fblobtype = 2 and numBatches > 1
+	ErrROMBlobInvalidForcedBatches = errors.New("fblobtype = 2 and numBatches > 1")
+	// ErrROMBlobInvalidTotalBodyLen totalBodyLen != blobDataLen - 1 (byte compression) - 4 (bytes totalBodyLen)
+	ErrROMBlobInvalidTotalBodyLen = errors.New("totalBodyLen != blobDataLen - 1 (byte compression) - 4 (bytes totalBodyLen)")
 
 	// GRPC ERRORS
 	// ===========

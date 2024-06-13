@@ -12,6 +12,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/event"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
+	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/jackc/pgx/v4"
 )
@@ -21,6 +22,7 @@ const (
 	monitoredIDFormat    = "sequence-from-%v-to-%v"
 	retriesSanityCheck   = 8
 	waitRetrySanityCheck = 15 * time.Second
+	waitRetryGetL1Block  = 2 * time.Second
 )
 
 var (
@@ -36,11 +38,13 @@ var (
 
 // SequenceSender represents a sequence sender
 type SequenceSender struct {
-	cfg          Config
-	state        stateInterface
-	ethTxManager ethTxManager
-	etherman     etherman
-	eventLog     *event.EventLog
+	cfg                      Config
+	state                    stateInterface
+	ethTxManager             ethTxManager
+	etherman                 etherman
+	eventLog                 *event.EventLog
+	lastSequenceInitialBatch uint64
+	lastSequenceEndBatch     uint64
 }
 
 // New inits sequence sender
@@ -63,7 +67,7 @@ func (s *SequenceSender) Start(ctx context.Context) {
 
 // marginTimeElapsed checks if the time between currentTime and l2BlockTimestamp is greater than timeMargin.
 // If it's greater returns true, otherwise it returns false and the waitTime needed to achieve this timeMargin
-func (s *SequenceSender) marginTimeElapsed(ctx context.Context, l2BlockTimestamp uint64, currentTime uint64, timeMargin int64) (bool, int64) {
+func (s *SequenceSender) marginTimeElapsed(l2BlockTimestamp uint64, currentTime uint64, timeMargin int64) (bool, int64) {
 	// Check the time difference between L2 block and currentTime
 	var timeDiff int64
 	if l2BlockTimestamp >= currentTime {
@@ -91,7 +95,58 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 	retry := false
 	// process monitored sequences before starting a next cycle
 	s.ethTxManager.ProcessPendingMonitoredTxs(ctx, ethTxManagerOwner, func(result ethtxmanager.MonitoredTxResult, dbTx pgx.Tx) {
-		if result.Status == ethtxmanager.MonitoredTxStatusFailed {
+		if result.Status == ethtxmanager.MonitoredTxStatusConfirmed {
+			if len(result.Txs) > 0 {
+				var txL1BlockNumber uint64
+				var txHash common.Hash
+				receiptFound := false
+				for _, tx := range result.Txs {
+					if tx.Receipt != nil {
+						txL1BlockNumber = tx.Receipt.BlockNumber.Uint64()
+						txHash = tx.Tx.Hash()
+						receiptFound = true
+						break
+					}
+				}
+
+				if !receiptFound {
+					s.halt(ctx, fmt.Errorf("monitored tx %s for sequence [%d-%d] is confirmed but doesn't have a receipt", result.ID, s.lastSequenceInitialBatch, s.lastSequenceEndBatch))
+				}
+
+				// wait L1 confirmation blocks
+				log.Infof("waiting %d L1 block confirmations for sequence [%d-%d], L1 block: %d, tx: %s",
+					s.cfg.SequenceL1BlockConfirmations, s.lastSequenceInitialBatch, s.lastSequenceEndBatch, txL1BlockNumber, txHash)
+				for {
+					lastL1BlockHeader, err := s.etherman.GetLatestBlockHeader(ctx)
+					if err != nil {
+						log.Errorf("failed to get last L1 block number, err: %v", err)
+					} else {
+						lastL1BlockNumber := lastL1BlockHeader.Number.Uint64()
+
+						if lastL1BlockNumber >= txL1BlockNumber+s.cfg.SequenceL1BlockConfirmations {
+							log.Infof("continuing, last L1 block: %d", lastL1BlockNumber)
+							break
+						}
+					}
+					time.Sleep(waitRetryGetL1Block)
+				}
+
+				lastSCBatchNum, err := s.etherman.GetLatestBatchNumber()
+				if err != nil {
+					log.Warnf("failed to get from the SC last sequenced batch number, err: %v", err)
+					return
+				}
+
+				// If it's the first time we call that function after the restart of the sequence-sender (lastSequenceBatch is 0) and we are having the
+				// confirmation of a pending L1 tx sent before the sequence-sender was restarted, we don't know which batch was the last sequenced.
+				// Therefore we cannot compare the last sequenced batch in the SC with the last sequenced from sequence-sender. We skip this check
+				if s.lastSequenceEndBatch != 0 && (lastSCBatchNum != s.lastSequenceEndBatch) {
+					s.halt(ctx, fmt.Errorf("last sequenced batch from SC %d doesn't match last sequenced batch sent %d", lastSCBatchNum, s.lastSequenceEndBatch))
+				}
+			} else {
+				s.halt(ctx, fmt.Errorf("monitored tx %s for sequence [%d-%d] doesn't have transactions to be checked", result.ID, s.lastSequenceInitialBatch, s.lastSequenceEndBatch))
+			}
+		} else { // Monitored tx is failed
 			retry = true
 			mTxResultLogger := ethtxmanager.CreateMonitoredTxResultLogger(ethTxManagerOwner, result)
 			mTxResultLogger.Error("failed to send sequence, TODO: review this fatal and define what to do in this case")
@@ -102,13 +157,12 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 		return
 	}
 
-	// Check if synchronizer is up to date
-	synced, err := s.isSynced(ctx, retriesSanityCheck, waitRetrySanityCheck)
+	sanityCheckOk, err := s.sanityCheck(ctx, retriesSanityCheck, waitRetrySanityCheck)
 	if err != nil {
 		s.halt(ctx, err)
 	}
-	if !synced {
-		log.Info("wait virtual state to be synced...")
+	if !sanityCheckOk {
+		log.Info("sanity check failed, retrying...")
 		time.Sleep(5 * time.Second) // nolint:gomnd
 		return
 	}
@@ -126,7 +180,7 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 		return
 	}
 
-	lastVirtualBatchNum, err := s.state.GetLastVirtualBatchNum(ctx, nil)
+	lastVirtualBatchNum, err := s.etherman.GetLatestBatchNumber()
 	if err != nil {
 		log.Errorf("failed to get last virtual batch num, err: %v", err)
 		return
@@ -153,7 +207,7 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 			return
 		}
 
-		elapsed, waitTime := s.marginTimeElapsed(ctx, lastL2BlockTimestamp, lastL1BlockHeader.Time, timeMargin)
+		elapsed, waitTime := s.marginTimeElapsed(lastL2BlockTimestamp, lastL1BlockHeader.Time, timeMargin)
 
 		if !elapsed {
 			log.Infof("waiting at least %d seconds to send sequences, time difference between last L1 block %d (ts: %d) and last L2 block %d (ts: %d) in the sequence is lower than %d seconds",
@@ -170,7 +224,7 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 	for {
 		currentTime := uint64(time.Now().Unix())
 
-		elapsed, waitTime := s.marginTimeElapsed(ctx, lastL2BlockTimestamp, currentTime, timeMargin)
+		elapsed, waitTime := s.marginTimeElapsed(lastL2BlockTimestamp, currentTime, timeMargin)
 
 		// Wait if the time difference is less than timeMargin (L1BlockTimestampMargin)
 		if !elapsed {
@@ -200,13 +254,16 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 		mTxLogger.Errorf("error to add sequences tx to eth tx manager: ", err)
 		return
 	}
+
+	s.lastSequenceInitialBatch = sequences[0].BatchNumber
+	s.lastSequenceEndBatch = lastSequence.BatchNumber
 }
 
 // getSequencesToSend generates an array of sequences to be send to L1.
 // If the array is empty, it doesn't necessarily mean that there are no sequences to be sent,
 // it could be that it's not worth it to do so yet.
 func (s *SequenceSender) getSequencesToSend(ctx context.Context) ([]types.Sequence, error) {
-	lastVirtualBatchNum, err := s.state.GetLastVirtualBatchNum(ctx, nil)
+	lastVirtualBatchNum, err := s.etherman.GetLatestBatchNumber()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last virtual batch num, err: %w", err)
 	}
@@ -297,7 +354,7 @@ func (s *SequenceSender) getSequencesToSend(ctx context.Context) ([]types.Sequen
 		}
 		if err != nil {
 			log.Infof("Handling estimage gas send sequence error: %v", err)
-			sequences, err = s.handleEstimateGasSendSequenceErr(ctx, sequences, currentBatchNumToSequence, err)
+			sequences, err = s.handleEstimateGasSendSequenceErr(sequences, currentBatchNumToSequence, err)
 			if sequences != nil {
 				if len(sequences) > 0 {
 					// Handling the error gracefully, re-processing the sequence as a sanity check
@@ -347,12 +404,7 @@ func (s *SequenceSender) getSequencesToSend(ctx context.Context) ([]types.Sequen
 // nil, error: impossible to handle gracefully
 // sequence, nil: handled gracefully. Potentially manipulating the sequences
 // nil, nil: a situation that requires waiting
-func (s *SequenceSender) handleEstimateGasSendSequenceErr(
-	ctx context.Context,
-	sequences []types.Sequence,
-	currentBatchNumToSequence uint64,
-	err error,
-) ([]types.Sequence, error) {
+func (s *SequenceSender) handleEstimateGasSendSequenceErr(sequences []types.Sequence, currentBatchNumToSequence uint64, err error) ([]types.Sequence, error) {
 	// Insufficient allowance
 	if errors.Is(err, ethman.ErrInsufficientAllowance) {
 		return nil, err
@@ -415,7 +467,7 @@ func isDataForEthTxTooBig(err error) bool {
 		errors.Is(err, ethman.ErrContentLengthTooLarge)
 }
 
-func (s *SequenceSender) isSynced(ctx context.Context, retries int, waitRetry time.Duration) (bool, error) {
+func (s *SequenceSender) sanityCheck(ctx context.Context, retries int, waitRetry time.Duration) (bool, error) {
 	lastVirtualBatchNum, err := s.state.GetLastVirtualBatchNum(ctx, nil)
 	if err != nil && err != state.ErrNotFound {
 		log.Warnf("failed to get last virtual batch number, err: %v", err)
@@ -434,10 +486,8 @@ func (s *SequenceSender) isSynced(ctx context.Context, retries int, waitRetry ti
 		return false, nil
 	}
 
-	if lastVirtualBatchNum < lastSCBatchNum {
-		log.Infof("waiting for the state to be synced, last virtual batch: %d, last SC sequenced batch: %d", lastVirtualBatchNum, lastSCBatchNum)
-		return false, nil
-	} else if lastVirtualBatchNum > lastSCBatchNum { // Sanity check: virtual batch number cannot be greater than last batch sequenced in the SC
+	// Sanity check: virtual batch number cannot be greater than last batch sequenced in the SC
+	if lastVirtualBatchNum > lastSCBatchNum {
 		// we will retry some times to check that really the last sequenced batch in the SC is lower that the las virtual batch
 		log.Warnf("last virtual batch %d is greater than last SC sequenced batch %d, retrying...", lastVirtualBatchNum, lastSCBatchNum)
 		for i := 0; i < retries; i++ {
@@ -457,13 +507,13 @@ func (s *SequenceSender) isSynced(ctx context.Context, retries int, waitRetry ti
 		log.Infof("last virtual batch %d is equal to last SC sequenced batch %d, continuing...", lastVirtualBatchNum, lastSCBatchNum)
 	}
 
-	// At this point lastVirtualBatchNum = lastEthBatchNum. Check trusted batches
-	if lastTrustedBatchClosed.BatchNumber >= lastVirtualBatchNum {
-		return true, nil
-	} else { // Sanity check: virtual batch number cannot be greater than last trusted batch closed
+	// Sanity check: virtual batch number cannot be greater than last trusted batch closed
+	if lastTrustedBatchClosed.BatchNumber < lastVirtualBatchNum {
 		log.Errorf("last virtual batch %d is greater than last trusted batch closed %d", lastVirtualBatchNum, lastTrustedBatchClosed.BatchNumber)
 		return false, ErrSyncVirtualGreaterTrusted
 	}
+
+	return true, nil
 }
 
 // halt halts the SequenceSender

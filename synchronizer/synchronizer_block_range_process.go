@@ -21,9 +21,14 @@ type stateBlockRangeProcessor interface {
 	GetForkIDByBlockNumber(blockNumber uint64) uint64
 }
 
+type ethermanI interface {
+	GetFinalizedBlockNumber(ctx context.Context) (uint64, error)
+}
+
 // BlockRangeProcess is the struct that process the block range that implements syncinterfaces.BlockRangeProcessor
 type BlockRangeProcess struct {
 	state             stateBlockRangeProcessor
+	etherMan          ethermanI
 	l1EventProcessors syncinterfaces.L1EventProcessorManager
 	flushIdManager    syncinterfaces.SynchronizerFlushIDManager
 }
@@ -31,11 +36,13 @@ type BlockRangeProcess struct {
 // NewBlockRangeProcessLegacy creates a new BlockRangeProcess
 func NewBlockRangeProcessLegacy(
 	state stateBlockRangeProcessor,
+	etherMan ethermanI,
 	l1EventProcessors syncinterfaces.L1EventProcessorManager,
 	flushIdManager syncinterfaces.SynchronizerFlushIDManager,
 ) *BlockRangeProcess {
 	return &BlockRangeProcess{
 		state:             state,
+		etherMan:          etherMan,
 		l1EventProcessors: l1EventProcessors,
 		flushIdManager:    flushIdManager,
 	}
@@ -52,19 +59,13 @@ func (s *BlockRangeProcess) ProcessBlockRange(ctx context.Context, blocks []ethe
 }
 
 // ProcessBlockRange process the L1 events and stores the information in the db
-func (s *BlockRangeProcess) addBlock(ctx context.Context, block *etherman.Block, dbTx pgx.Tx) error {
-	b := state.Block{
-		BlockNumber: block.BlockNumber,
-		BlockHash:   block.BlockHash,
-		ParentHash:  block.ParentHash,
-		ReceivedAt:  block.ReceivedAt,
-	}
-	// Add block information
-	return s.state.AddBlock(ctx, &b, dbTx)
-}
-
-// ProcessBlockRange process the L1 events and stores the information in the db
 func (s *BlockRangeProcess) internalProcessBlockRange(ctx context.Context, blocks []etherman.Block, order map[common.Hash][]etherman.Order, storeBlocks syncinterfaces.ProcessBlockRangeL1BlocksMode, dbTxExt *pgx.Tx) error {
+	// Check the latest finalized block in L1
+	finalizedBlockNumber, err := s.etherMan.GetFinalizedBlockNumber(ctx)
+	if err != nil {
+		log.Errorf("error getting finalized block number in L1. Error: %v", err)
+		return err
+	}
 	// New info has to be included into the db using the state
 	for i := range blocks {
 		// Begin db transaction
@@ -80,7 +81,7 @@ func (s *BlockRangeProcess) internalProcessBlockRange(ctx context.Context, block
 			dbTx = *dbTxExt
 		}
 		// Process event received from l1
-		err = s.processBlock(ctx, blocks, i, dbTx, order, storeBlocks)
+		err = s.processBlock(ctx, blocks, i, dbTx, order, storeBlocks, finalizedBlockNumber)
 		if err != nil {
 			if dbTxExt == nil {
 				// Rollback db transaction
@@ -109,10 +110,19 @@ func (s *BlockRangeProcess) internalProcessBlockRange(ctx context.Context, block
 	return nil
 }
 
-func (s *BlockRangeProcess) processBlock(ctx context.Context, blocks []etherman.Block, i int, dbTx pgx.Tx, order map[common.Hash][]etherman.Order, storeBlock syncinterfaces.ProcessBlockRangeL1BlocksMode) error {
+func (s *BlockRangeProcess) processBlock(ctx context.Context, blocks []etherman.Block, i int, dbTx pgx.Tx, order map[common.Hash][]etherman.Order, storeBlock syncinterfaces.ProcessBlockRangeL1BlocksMode, finalizedBlockNumber uint64) error {
 	var err error
 	if storeBlock == syncinterfaces.StoreL1Blocks {
-		err = s.addBlock(ctx, &blocks[i], dbTx)
+		b := state.Block{
+			BlockNumber: blocks[i].BlockNumber,
+			BlockHash:   blocks[i].BlockHash,
+			ParentHash:  blocks[i].ParentHash,
+			ReceivedAt:  blocks[i].ReceivedAt,
+		}
+		if blocks[i].BlockNumber <= finalizedBlockNumber {
+			b.Checked = true
+		}
+		err = s.state.AddBlock(ctx, &b, dbTx)
 		if err != nil {
 			log.Errorf("error adding block to db. BlockNumber: %d, error: %v", blocks[i].BlockNumber, err)
 			return err

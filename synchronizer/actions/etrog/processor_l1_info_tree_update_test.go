@@ -45,7 +45,7 @@ func TestProcessorL1InfoTreeUpdate_Process(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	testState := state.NewState(stateCfg, pgstatestorage.NewPostgresStorage(stateCfg, stateDb), nil, nil, nil, mt)
+	testState := state.NewState(stateCfg, pgstatestorage.NewPostgresStorage(stateCfg, stateDb), nil, nil, nil, mt, nil)
 
 	sut := NewProcessorL1InfoTreeUpdate(testState)
 	l1infotree := etherman.GlobalExitRoot{

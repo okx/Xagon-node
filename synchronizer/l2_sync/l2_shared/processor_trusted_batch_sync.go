@@ -171,6 +171,10 @@ func (s *ProcessorTrustedBatchSync) AddPostChecker(checker PostClosedBatchChecke
 
 // ProcessTrustedBatch processes a trusted batch and return the new state
 func (s *ProcessorTrustedBatchSync) ProcessTrustedBatch(ctx context.Context, trustedBatch *types.Batch, status TrustedState, dbTx pgx.Tx, debugPrefix string) (*TrustedState, error) {
+	if trustedBatch == nil {
+		log.Errorf("%s trustedBatch is nil, it never should be nil", debugPrefix)
+		return nil, fmt.Errorf("%s trustedBatch is nil, it never should be nil", debugPrefix)
+	}
 	log.Debugf("%s Processing trusted batch: %v", debugPrefix, trustedBatch.Number)
 	stateCurrentBatch, statePreviousBatch := s.GetCurrentAndPreviousBatchFromCache(&status)
 	if s.l1SyncChecker != nil {
@@ -374,7 +378,9 @@ func (s *ProcessorTrustedBatchSync) GetModeForProcessBatch(trustedNodeBatch *typ
 	result.OldAccInputHash = statePreviousBatch.AccInputHash
 	result.Now = s.timeProvider.Now()
 	result.DebugPrefix = fmt.Sprintf("%s mode %s:", debugPrefix, result.Mode)
-
+	if result.BatchMustBeClosed {
+		result.DebugPrefix += " (must_be_closed)"
+	}
 	if isTrustedBatchEmptyAndClosed(trustedNodeBatch) {
 		if s.Cfg.AcceptEmptyClosedBatches {
 			log.Infof("%s Batch %v: TrustedBatch Empty and closed, accepted due configuration", result.DebugPrefix, trustedNodeBatch.Number)

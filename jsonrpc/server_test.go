@@ -42,7 +42,6 @@ type mocksWrapper struct {
 	State    *mocks.StateMock
 	Etherman *mocks.EthermanMock
 	Storage  *storageMock
-	DbTx     *mocks.DBTxMock
 }
 
 func newMockedServer(t *testing.T, cfg Config) (*mockedServer, *mocksWrapper, *ethclient.Client) {
@@ -50,7 +49,6 @@ func newMockedServer(t *testing.T, cfg Config) (*mockedServer, *mocksWrapper, *e
 	st := mocks.NewStateMock(t)
 	etherman := mocks.NewEthermanMock(t)
 	storage := newStorageMock(t)
-	dbTx := mocks.NewDBTxMock(t)
 	apis := map[string]bool{
 		APIEth:    true,
 		APINet:    true,
@@ -143,7 +141,6 @@ func newMockedServer(t *testing.T, cfg Config) (*mockedServer, *mocksWrapper, *e
 		State:    st,
 		Etherman: etherman,
 		Storage:  storage,
-		DbTx:     dbTx,
 	}
 
 	return msv, mks, ethClient
@@ -262,11 +259,9 @@ func TestBatchRequests(t *testing.T) {
 			NumberOfRequests:     100,
 			ExpectedError:        nil,
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-				m.DbTx.On("Commit", context.Background()).Return(nil).Times(tc.NumberOfRequests)
-				m.State.On("BeginStateTransaction", context.Background()).Return(m.DbTx, nil).Times(tc.NumberOfRequests)
-				m.State.On("GetLastL2BlockNumber", context.Background(), m.DbTx).Return(block.Number().Uint64(), nil).Times(tc.NumberOfRequests)
-				m.State.On("GetL2BlockByNumber", context.Background(), block.Number().Uint64(), m.DbTx).Return(block, nil).Times(tc.NumberOfRequests)
-				m.State.On("GetTransactionReceipt", context.Background(), mock.Anything, m.DbTx).Return(ethTypes.NewReceipt([]byte{}, false, uint64(0)), nil)
+				m.State.On("GetLastL2BlockNumber", context.Background(), nil).Return(block.Number().Uint64(), nil).Times(tc.NumberOfRequests)
+				m.State.On("GetL2BlockByNumber", context.Background(), block.Number().Uint64(), nil).Return(block, nil).Times(tc.NumberOfRequests)
+				m.State.On("GetTransactionReceipt", context.Background(), mock.Anything, nil).Return(ethTypes.NewReceipt([]byte{}, false, uint64(0)), nil)
 			},
 		},
 		{
@@ -276,11 +271,9 @@ func TestBatchRequests(t *testing.T) {
 			NumberOfRequests:     5,
 			ExpectedError:        nil,
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-				m.DbTx.On("Commit", context.Background()).Return(nil).Times(tc.NumberOfRequests)
-				m.State.On("BeginStateTransaction", context.Background()).Return(m.DbTx, nil).Times(tc.NumberOfRequests)
-				m.State.On("GetLastL2BlockNumber", context.Background(), m.DbTx).Return(block.Number().Uint64(), nil).Times(tc.NumberOfRequests)
-				m.State.On("GetL2BlockByNumber", context.Background(), block.Number().Uint64(), m.DbTx).Return(block, nil).Times(tc.NumberOfRequests)
-				m.State.On("GetTransactionReceipt", context.Background(), mock.Anything, m.DbTx).Return(ethTypes.NewReceipt([]byte{}, false, uint64(0)), nil)
+				m.State.On("GetLastL2BlockNumber", context.Background(), nil).Return(block.Number().Uint64(), nil).Times(tc.NumberOfRequests)
+				m.State.On("GetL2BlockByNumber", context.Background(), block.Number().Uint64(), nil).Return(block, nil).Times(tc.NumberOfRequests)
+				m.State.On("GetTransactionReceipt", context.Background(), mock.Anything, nil).Return(ethTypes.NewReceipt([]byte{}, false, uint64(0)), nil)
 			},
 		},
 		{
@@ -290,11 +283,9 @@ func TestBatchRequests(t *testing.T) {
 			NumberOfRequests:     4,
 			ExpectedError:        nil,
 			SetupMocks: func(m *mocksWrapper, tc testCase) {
-				m.DbTx.On("Commit", context.Background()).Return(nil).Times(tc.NumberOfRequests)
-				m.State.On("BeginStateTransaction", context.Background()).Return(m.DbTx, nil).Times(tc.NumberOfRequests)
-				m.State.On("GetLastL2BlockNumber", context.Background(), m.DbTx).Return(block.Number().Uint64(), nil).Times(tc.NumberOfRequests)
-				m.State.On("GetL2BlockByNumber", context.Background(), block.Number().Uint64(), m.DbTx).Return(block, nil).Times(tc.NumberOfRequests)
-				m.State.On("GetTransactionReceipt", context.Background(), mock.Anything, m.DbTx).Return(ethTypes.NewReceipt([]byte{}, false, uint64(0)), nil)
+				m.State.On("GetLastL2BlockNumber", context.Background(), nil).Return(block.Number().Uint64(), nil).Times(tc.NumberOfRequests)
+				m.State.On("GetL2BlockByNumber", context.Background(), block.Number().Uint64(), nil).Return(block, nil).Times(tc.NumberOfRequests)
+				m.State.On("GetTransactionReceipt", context.Background(), mock.Anything, nil).Return(ethTypes.NewReceipt([]byte{}, false, uint64(0)), nil)
 			},
 		},
 	}
@@ -589,9 +580,7 @@ func TestMaxRequestPerIPPerSec(t *testing.T) {
 	// this makes us sure the code is calling these methods only for
 	// allowed requests
 	times := int(cfg.MaxRequestsPerIPAndSecond)
-	m.DbTx.On("Commit", context.Background()).Return(nil).Times(times)
-	m.State.On("BeginStateTransaction", context.Background()).Return(m.DbTx, nil).Times(times)
-	m.State.On("GetLastL2BlockNumber", context.Background(), m.DbTx).Return(uint64(1), nil).Times(times)
+	m.State.On("GetLastL2BlockNumber", context.Background(), nil).Return(uint64(1), nil).Times(times)
 
 	// prepare the workers to process the requests as long as a job is available
 	requestsLimitedCount := uint64(0)

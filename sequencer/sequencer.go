@@ -11,11 +11,13 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/pool"
 	"github.com/0xPolygonHermez/zkevm-node/state"
+	"github.com/0xPolygonHermez/zkevm-node/state/datastream"
 	"github.com/ethereum/go-ethereum/common"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
-	datastreamChannelMultiplier = 2
+	datastreamChannelBufferSize = 50
 )
 
 // Sequencer represents a sequencer
@@ -27,7 +29,7 @@ type Sequencer struct {
 	pool      txPool
 	stateIntf stateInterface
 	eventLog  *event.EventLog
-	etherman  etherman
+	etherman  ethermanInterface
 	worker    *Worker
 	finalizer *finalizer
 
@@ -36,18 +38,11 @@ type Sequencer struct {
 	streamServer *datastreamer.StreamServer
 	dataToStream chan interface{}
 
-	address common.Address
-
 	numberOfStateInconsistencies uint64
 }
 
 // New init sequencer
-func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txPool, stateIntf stateInterface, etherman etherman, eventLog *event.EventLog) (*Sequencer, error) {
-	addr, err := etherman.TrustedSequencer()
-	if err != nil {
-		return nil, fmt.Errorf("failed to get trusted sequencer address, error: %v", err)
-	}
-
+func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txPool, stateIntf stateInterface, etherman ethermanInterface, eventLog *event.EventLog) (*Sequencer, error) {
 	sequencer := &Sequencer{
 		cfg:       cfg,
 		batchCfg:  batchCfg,
@@ -55,13 +50,10 @@ func New(cfg Config, batchCfg state.BatchConfig, poolCfg pool.Config, txPool txP
 		pool:      txPool,
 		stateIntf: stateIntf,
 		etherman:  etherman,
-		address:   addr,
 		eventLog:  eventLog,
 	}
 
-	// TODO: Make configurable
-	channelBufferSize := 200 * datastreamChannelMultiplier // nolint:gomnd
-	sequencer.dataToStream = make(chan interface{}, channelBufferSize)
+	sequencer.dataToStream = make(chan interface{}, datastreamChannelBufferSize)
 
 	return sequencer, nil
 }
@@ -75,12 +67,12 @@ func (s *Sequencer) Start(ctx context.Context) {
 
 	err := s.pool.MarkWIPTxsAsPending(ctx)
 	if err != nil {
-		log.Fatalf("failed to mark WIP txs as pending, error: %v", err)
+		log.Fatalf("failed to mark wip txs as pending, error: %v", err)
 	}
 
 	// Start stream server if enabled
 	if s.cfg.StreamServer.Enabled {
-		s.streamServer, err = datastreamer.NewServer(s.cfg.StreamServer.Port, s.cfg.StreamServer.Version, s.cfg.StreamServer.ChainID, state.StreamTypeSequencer, s.cfg.StreamServer.Filename, &s.cfg.StreamServer.Log)
+		s.streamServer, err = datastreamer.NewServer(s.cfg.StreamServer.Port, s.cfg.StreamServer.Version, s.cfg.StreamServer.ChainID, state.StreamTypeSequencer, s.cfg.StreamServer.Filename, s.cfg.StreamServer.WriteTimeout.Duration, &s.cfg.StreamServer.Log)
 		if err != nil {
 			log.Fatalf("failed to create stream server, error: %v", err)
 		}
@@ -93,16 +85,16 @@ func (s *Sequencer) Start(ctx context.Context) {
 		s.updateDataStreamerFile(ctx, s.cfg.StreamServer.ChainID)
 	}
 
-	go s.loadFromPool(ctx)
-
 	if s.streamServer != nil {
 		go s.sendDataToStreamer(s.cfg.StreamServer.ChainID)
 	}
 
 	s.workerReadyTxsCond = newTimeoutCond(&sync.Mutex{})
 	s.worker = NewWorker(s.stateIntf, s.batchCfg.Constraints, s.workerReadyTxsCond)
-	s.finalizer = newFinalizer(s.cfg.Finalizer, s.poolCfg, s.worker, s.pool, s.stateIntf, s.etherman, s.address, s.isSynced, s.batchCfg.Constraints, s.eventLog, s.streamServer, s.workerReadyTxsCond, s.dataToStream)
+	s.finalizer = newFinalizer(s.cfg.Finalizer, s.poolCfg, s.worker, s.pool, s.stateIntf, s.etherman, s.cfg.L2Coinbase, s.isSynced, s.batchCfg.Constraints, s.eventLog, s.streamServer, s.workerReadyTxsCond, s.dataToStream)
 	go s.finalizer.Start(ctx)
+
+	go s.loadFromPool(ctx)
 
 	go s.deleteOldPoolTxs(ctx)
 
@@ -137,7 +129,7 @@ func (s *Sequencer) checkStateInconsistency(ctx context.Context) {
 }
 
 func (s *Sequencer) updateDataStreamerFile(ctx context.Context, chainID uint64) {
-	err := state.GenerateDataStreamerFile(ctx, s.streamServer, s.stateIntf, true, nil, chainID, s.cfg.StreamServer.UpgradeEtrogBatchNumber)
+	err := state.GenerateDataStreamFile(ctx, s.streamServer, s.stateIntf, true, nil, chainID, s.cfg.StreamServer.UpgradeEtrogBatchNumber)
 	if err != nil {
 		log.Fatalf("failed to generate data streamer file, error: %v", err)
 	}
@@ -147,6 +139,11 @@ func (s *Sequencer) updateDataStreamerFile(ctx context.Context, chainID uint64) 
 func (s *Sequencer) deleteOldPoolTxs(ctx context.Context) {
 	for {
 		time.Sleep(s.cfg.DeletePoolTxsCheckInterval.Duration)
+
+		if s.finalizer.haltFinalizer.Load() {
+			return
+		}
+
 		log.Infof("trying to get txs to delete from the pool...")
 		earliestTxHash, err := s.pool.GetEarliestProcessedTx(ctx)
 		if err != nil {
@@ -181,6 +178,11 @@ func (s *Sequencer) deleteOldPoolTxs(ctx context.Context) {
 func (s *Sequencer) expireOldWorkerTxs(ctx context.Context) {
 	for {
 		time.Sleep(s.cfg.TxLifetimeCheckInterval.Duration)
+
+		if s.finalizer.haltFinalizer.Load() {
+			return
+		}
+
 		txTrackers := s.worker.ExpireTransactions(s.cfg.TxLifetimeMax.Duration)
 		failedReason := ErrExpiredTransaction.Error()
 		for _, txTracker := range txTrackers {
@@ -195,6 +197,10 @@ func (s *Sequencer) expireOldWorkerTxs(ctx context.Context) {
 // loadFromPool keeps loading transactions from the pool
 func (s *Sequencer) loadFromPool(ctx context.Context) {
 	for {
+		if s.finalizer.haltFinalizer.Load() {
+			return
+		}
+
 		poolTransactions, err := s.pool.GetNonWIPPendingTxs(ctx, s.cfg.LoadPendingTxsLimit)
 		if err != nil && err != pool.ErrNotFound {
 			log.Errorf("error loading txs from pool, error: %v", err)
@@ -250,6 +256,8 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 		// Read data from channel
 		dataStream := <-s.dataToStream
 
+		s.finalizer.DataToStreamChannelCountAdd(-1)
+
 		if s.streamServer != nil {
 			switch data := dataStream.(type) {
 			// Stream a complete L2 block with its transactions
@@ -262,71 +270,103 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 					continue
 				}
 
-				bookMark := state.DSBookMark{
-					Type:  state.BookMarkTypeL2Block,
+				bookMark := &datastream.BookMark{
+					Type:  datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK,
 					Value: l2Block.L2BlockNumber,
 				}
 
-				_, err = s.streamServer.AddStreamBookmark(bookMark.Encode())
+				marshalledBookMark, err := proto.Marshal(bookMark)
+				if err != nil {
+					log.Errorf("failed to marshal bookmark for l2block %d, error: %v", l2Block.L2BlockNumber, err)
+					continue
+				}
+
+				_, err = s.streamServer.AddStreamBookmark(marshalledBookMark)
 				if err != nil {
 					log.Errorf("failed to add stream bookmark for l2block %d, error: %v", l2Block.L2BlockNumber, err)
 					continue
 				}
 
 				// Get previous block timestamp to calculate delta timestamp
-				previousL2Block := state.DSL2BlockStart{}
+				previousL2Block := datastream.L2Block{}
 				if l2Block.L2BlockNumber > 0 {
-					bookMark = state.DSBookMark{
-						Type:  state.BookMarkTypeL2Block,
+					bookMark = &datastream.BookMark{
+						Type:  datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK,
 						Value: l2Block.L2BlockNumber - 1,
 					}
 
-					previousL2BlockEntry, err := s.streamServer.GetFirstEventAfterBookmark(bookMark.Encode())
+					marshalledBookMark, err := proto.Marshal(bookMark)
+					if err != nil {
+						log.Errorf("failed to marshal bookmark for l2block %d, error: %v", l2Block.L2BlockNumber, err)
+						continue
+					}
+
+					previousL2BlockEntry, err := s.streamServer.GetFirstEventAfterBookmark(marshalledBookMark)
 					if err != nil {
 						log.Errorf("failed to get previous l2block %d, error: %v", l2Block.L2BlockNumber-1, err)
 						continue
 					}
 
-					previousL2Block = state.DSL2BlockStart{}.Decode(previousL2BlockEntry.Data)
+					err = proto.Unmarshal(previousL2BlockEntry.Data, &previousL2Block)
+					if err != nil {
+						log.Errorf("failed to unmarshal previous l2block %d, error: %v", l2Block.L2BlockNumber-1, err)
+						continue
+					}
 				}
 
-				blockStart := state.DSL2BlockStart{
+				streamL2Block := &datastream.L2Block{
+					Number:          l2Block.L2BlockNumber,
 					BatchNumber:     l2Block.BatchNumber,
-					L2BlockNumber:   l2Block.L2BlockNumber,
 					Timestamp:       l2Block.Timestamp,
 					DeltaTimestamp:  uint32(l2Block.Timestamp - previousL2Block.Timestamp),
-					L1InfoTreeIndex: l2Block.L1InfoTreeIndex,
-					L1BlockHash:     l2Block.L1BlockHash,
-					GlobalExitRoot:  l2Block.GlobalExitRoot,
-					Coinbase:        l2Block.Coinbase,
-					ForkID:          l2Block.ForkID,
-					ChainID:         uint32(chainID),
+					MinTimestamp:    l2Block.MinTimestamp,
+					L1Blockhash:     l2Block.L1BlockHash.Bytes(),
+					L1InfotreeIndex: l2Block.L1InfoTreeIndex,
+					Hash:            l2Block.BlockHash.Bytes(),
+					StateRoot:       l2Block.StateRoot.Bytes(),
+					GlobalExitRoot:  l2Block.GlobalExitRoot.Bytes(),
+					Coinbase:        l2Block.Coinbase.Bytes(),
 				}
 
-				_, err = s.streamServer.AddStreamEntry(state.EntryTypeL2BlockStart, blockStart.Encode())
+				marshalledL2Block, err := proto.Marshal(streamL2Block)
+				if err != nil {
+					log.Errorf("failed to marshal l2block %d, error: %v", l2Block.L2BlockNumber, err)
+					continue
+				}
+
+				_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK), marshalledL2Block)
 				if err != nil {
 					log.Errorf("failed to add stream entry for l2block %d, error: %v", l2Block.L2BlockNumber, err)
 					continue
 				}
 
 				for _, l2Transaction := range l2Block.Txs {
-					_, err = s.streamServer.AddStreamEntry(state.EntryTypeL2Tx, l2Transaction.Encode())
+					streamL2Transaction := &datastream.Transaction{
+						L2BlockNumber:               l2Transaction.L2BlockNumber,
+						IsValid:                     l2Transaction.IsValid != 0,
+						Encoded:                     l2Transaction.Encoded,
+						EffectiveGasPricePercentage: uint32(l2Transaction.EffectiveGasPricePercentage),
+						ImStateRoot:                 l2Transaction.ImStateRoot.Bytes(),
+					}
+
+					// Clear the state root if the ForkID is > ETROG
+					// currently this is redundant as the current implementation of the sequencer
+					// leaves the ImStateRoot empty
+					if l2Block.ForkID > state.FORKID_ETROG {
+						streamL2Transaction.ImStateRoot = common.Hash{}.Bytes()
+					}
+
+					marshalledL2Transaction, err := proto.Marshal(streamL2Transaction)
+					if err != nil {
+						log.Errorf("failed to marshal l2tx for l2block %d, error: %v", l2Block.L2BlockNumber, err)
+						continue
+					}
+
+					_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_TRANSACTION), marshalledL2Transaction)
 					if err != nil {
 						log.Errorf("failed to add l2tx stream entry for l2block %d, error: %v", l2Block.L2BlockNumber, err)
 						continue
 					}
-				}
-
-				blockEnd := state.DSL2BlockEnd{
-					L2BlockNumber: l2Block.L2BlockNumber,
-					BlockHash:     l2Block.BlockHash,
-					StateRoot:     l2Block.StateRoot,
-				}
-
-				_, err = s.streamServer.AddStreamEntry(state.EntryTypeL2BlockEnd, blockEnd.Encode())
-				if err != nil {
-					log.Errorf("failed to add stream entry for l2block %d, error: %v", l2Block.L2BlockNumber, err)
-					continue
 				}
 
 				err = s.streamServer.CommitAtomicOp()
@@ -334,26 +374,81 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 					log.Errorf("failed to commit atomic op for l2block %d, error: %v ", l2Block.L2BlockNumber, err)
 					continue
 				}
-
 			// Stream a bookmark
-			case state.DSBookMark:
-				bookmark := data
-
+			case datastream.BookMark:
 				err = s.streamServer.StartAtomicOp()
 				if err != nil {
-					log.Errorf("failed to start atomic op for bookmark type %d, value %d, error: %v", bookmark.Type, bookmark.Value, err)
+					log.Errorf("failed to start atomic op for bookmark type %d, value %d, error: %v", data.Type, data.Value, err)
 					continue
 				}
 
-				_, err = s.streamServer.AddStreamBookmark(bookmark.Encode())
+				marshalledBookMark, err := proto.Marshal(&data)
 				if err != nil {
-					log.Errorf("failed to add stream bookmark type %d, value %d, error: %v", bookmark.Type, bookmark.Value, err)
+					log.Errorf("failed to marshal bookmark type %d, value %d, error: %v", data.Type, data.Value, err)
+					continue
+				}
+
+				_, err = s.streamServer.AddStreamBookmark(marshalledBookMark)
+				if err != nil {
+					log.Errorf("failed to add stream bookmark for bookmark type %d, value %d, error: %v", data.Type, data.Value, err)
 					continue
 				}
 
 				err = s.streamServer.CommitAtomicOp()
 				if err != nil {
-					log.Errorf("failed to commit atomic op for bookmark type %d, value %d, error: %v", bookmark.Type, bookmark.Value, err)
+					log.Errorf("failed to commit atomic op for bookmark type %d, value %d, error: %v", data.Type, data.Value, err)
+					continue
+				}
+			case datastream.BatchStart:
+				err = s.streamServer.StartAtomicOp()
+				if err != nil {
+					log.Errorf("failed to start atomic op for batch start, error: %v", err)
+					continue
+				}
+
+				data.ChainId = chainID
+
+				marshalledBatchStart, err := proto.Marshal(&data)
+				if err != nil {
+					log.Errorf("failed to marshal batch start error: %v", err)
+					continue
+				}
+
+				_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START), marshalledBatchStart)
+				if err != nil {
+					log.Errorf("failed to add stream entry for batch start, error: %v", err)
+					continue
+				}
+
+				err = s.streamServer.CommitAtomicOp()
+				if err != nil {
+					log.Errorf("failed to commit atomic op for batch start, error: %v", err)
+					continue
+				}
+
+			case datastream.BatchEnd:
+				err = s.streamServer.StartAtomicOp()
+				if err != nil {
+					log.Errorf("failed to start atomic op for batch end, error: %v", err)
+					continue
+				}
+
+				marshalledBatchEnd, err := proto.Marshal(&data)
+				if err != nil {
+					log.Errorf("failed to marshal batch end, error: %v", err)
+					continue
+				}
+
+				_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END), marshalledBatchEnd)
+				if err != nil {
+					log.Errorf("failed to add stream entry for batch end, error: %v", err)
+					continue
+				}
+
+				err = s.streamServer.CommitAtomicOp()
+				if err != nil {
+					log.Errorf("failed to commit atomic op for batch end, error: %v", err)
+					continue
 				}
 
 			// Invalid stream message type

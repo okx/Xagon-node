@@ -17,7 +17,7 @@ func TestAddForkIDInterval(t *testing.T) {
 		panic(err)
 	}
 	pgStateStorage = pgstatestorage.NewPostgresStorage(state.Config{}, stateDb)
-	testState = state.NewState(stateCfg, pgStateStorage, executorClient, stateTree, nil, nil)
+	testState = state.NewState(stateCfg, pgStateStorage, executorClient, stateTree, nil, nil, nil)
 
 	for i := 1; i <= 6; i++ {
 		err = testState.AddForkID(ctx, state.ForkIDInterval{ForkId: uint64(i), BlockNumber: uint64(i * 100), FromBatchNumber: uint64(i * 10), ToBatchNumber: uint64(i*10) + 9}, nil)
@@ -76,13 +76,13 @@ func TestGetForkID(t *testing.T) {
 		panic(err)
 	}
 	pgStateStorage = pgstatestorage.NewPostgresStorage(stateCfg, stateDb)
-	testState = state.NewState(stateCfg, pgStateStorage, executorClient, stateTree, nil, nil)
-	st := state.NewState(stateCfg, pgstatestorage.NewPostgresStorage(stateCfg, stateDb), executorClient, stateTree, nil, nil)
+	testState = state.NewState(stateCfg, pgStateStorage, executorClient, stateTree, nil, nil, nil)
+	st := state.NewState(stateCfg, pgstatestorage.NewPostgresStorage(stateCfg, stateDb), executorClient, stateTree, nil, nil, nil)
 
 	avoidMemoryStateCfg := stateCfg
 	avoidMemoryStateCfg.AvoidForkIDInMemory = true
 	pgStateStorageAvoidMemory := pgstatestorage.NewPostgresStorage(avoidMemoryStateCfg, stateDb)
-	stAvoidMemory := state.NewState(avoidMemoryStateCfg, pgStateStorageAvoidMemory, executorClient, stateTree, nil, nil)
+	stAvoidMemory := state.NewState(avoidMemoryStateCfg, pgStateStorageAvoidMemory, executorClient, stateTree, nil, nil, nil)
 
 	// persist forkID intervals
 	forkIdIntervals := []state.ForkIDInterval{}

@@ -3,8 +3,8 @@ package etherman
 import (
 	"time"
 
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/oldpolygonzkevm"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonzkevm"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevm"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/preetrogpolygonzkevm"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -19,6 +19,7 @@ type Block struct {
 	VerifiedBatches       []VerifiedBatch
 	SequencedForceBatches [][]SequencedForceBatch
 	ForkIDs               []ForkID
+	SequenceBlobs         []SequenceBlobs
 	ReceivedAt            time.Time
 	// GER data
 	GlobalExitRoots, L1InfoTree []GlobalExitRoot
@@ -49,9 +50,9 @@ type SequencedBatch struct {
 	Nonce         uint64
 	Coinbase      common.Address
 	// Struct used in preEtrog forks
-	*oldpolygonzkevm.PolygonZkEVMBatchData
+	*preetrogpolygonzkevm.PolygonZkEVMBatchData
 	// Struct used in Etrog
-	*polygonzkevm.PolygonRollupBaseEtrogBatchData
+	*etrogpolygonzkevm.PolygonRollupBaseEtrogBatchData
 	// Struct used in Elderberry
 	*SequencedBatchElderberryData
 }
@@ -63,7 +64,7 @@ type UpdateEtrogSequence struct {
 	TxHash        common.Hash
 	Nonce         uint64
 	// Struct used in Etrog
-	*polygonzkevm.PolygonRollupBaseEtrogBatchData
+	*etrogpolygonzkevm.PolygonRollupBaseEtrogBatchData
 }
 
 // ForcedBatch represents a ForcedBatch
@@ -92,7 +93,7 @@ type SequencedForceBatch struct {
 	TxHash      common.Hash
 	Timestamp   time.Time
 	Nonce       uint64
-	polygonzkevm.PolygonRollupBaseEtrogBatchData
+	etrogpolygonzkevm.PolygonRollupBaseEtrogBatchData
 }
 
 // ForkID is a sturct to track the ForkID event.

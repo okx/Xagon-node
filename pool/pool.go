@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
 	"sync"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 var (
@@ -457,6 +459,10 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		return ErrNegativeValue
 	}
 
+	if err := checkTxFee(poolTx.GasPrice(), poolTx.Gas(), p.cfg.TxFeeCap); err != nil {
+		return err
+	}
+
 	// check if sender is blocked
 	_, blocked := p.blockedAddresses.Load(from.String())
 	if blocked {
@@ -728,4 +734,20 @@ func IntrinsicGas(tx types.Transaction) (uint64, error) {
 		gas += z * txDataZeroGas
 	}
 	return gas, nil
+}
+
+// checkTxFee is an internal function used to check whether the fee of
+// the given transaction is _reasonable_(under the cap).
+func checkTxFee(gasPrice *big.Int, gas uint64, cap float64) error {
+	// Short circuit if there is no cap for transaction fee at all.
+	if cap == 0 {
+		return nil
+	}
+	feeEth := new(big.Float).Quo(new(big.Float).SetInt(new(big.Int).Mul(gasPrice, new(big.Int).SetUint64(gas))), new(big.Float).SetInt(big.NewInt(params.Ether)))
+	feeFloat, _ := feeEth.Float64()
+	if feeFloat > cap {
+		feeFloatTruncated := strconv.FormatFloat(feeFloat, 'f', -1, 64)
+		return fmt.Errorf("tx fee (%s ether) exceeds the configured cap (%.2f ether)", feeFloatTruncated, cap)
+	}
+	return nil
 }

@@ -44,6 +44,7 @@ MinAllowedGasPriceInterval = "5m"
 PollMinAllowedGasPriceInterval = "15s"
 AccountQueue = 64
 GlobalQueue = 1024
+TxFeeCap = 1.0
     [Pool.EffectiveGasPrice]
 	Enabled = false
 	L1GasPriceFactor = 0.25
@@ -102,9 +103,18 @@ EnableHttpLog = true
 SyncInterval = "1s"
 SyncChunkSize = 100
 TrustedSequencerURL = "" # If it is empty or not specified, then the value is read from the smc
+SyncBlockProtection = "safe" # latest, finalized, safe
 L1SynchronizationMode = "sequential"
 L1SyncCheckL2BlockHash = true
-L1SyncCheckL2BlockNumberhModulus = 30
+L1SyncCheckL2BlockNumberModulus = 600
+	[Synchronizer.L1BlockCheck]
+		Enabled = true
+		L1SafeBlockPoint = "finalized"
+		L1SafeBlockOffset = 0
+		ForceCheckBeforeStart = true
+		PreCheckEnabled = true
+		L1PreSafeBlockPoint = "safe"
+		L1PreSafeBlockOffset = 0
 	[Synchronizer.L1ParallelSynchronization]
 		MaxClients = 10
 		MaxPendingNoProcessedBlocks = 25
@@ -119,6 +129,7 @@ L1SyncCheckL2BlockNumberhModulus = 30
 			AceptableInacctivityTime = "5s"
 			ApplyAfterNumRollupReceived = 10
 	[Synchronizer.L2Synchronization]
+		Enabled = true
 		AcceptEmptyClosedBatches = false
 		ReprocessFullBatchOnClose = true
 		CheckLastL2BlockHashOnCloseBatch = true
@@ -137,12 +148,14 @@ StateConsistencyCheckInterval = "5s"
 		ForcedBatchesCheckInterval = "10s"
 		L1InfoTreeL1BlockConfirmations = 64
 		L1InfoTreeCheckInterval = "10s"
-		BatchMaxDeltaTimestamp = "10s"
+		BatchMaxDeltaTimestamp = "1800s"
 		L2BlockMaxDeltaTimestamp = "3s"
 		ResourceExhaustedMarginPct = 10
+		StateRootSyncInterval = "3600s"
+		FlushIdCheckInterval = "50ms"
 		HaltOnBatchNumber = 0
 		SequentialBatchSanityCheck = false
-		SequentialProcessL2Block = true
+		SequentialProcessL2Block = false
 	[Sequencer.Finalizer.Metrics]
 		Interval = "60m"
 		EnableLog = true
@@ -150,6 +163,7 @@ StateConsistencyCheckInterval = "5s"
 		Port = 0
 		Filename = ""
 		Version = 0
+		WriteTimeout = "5s"
 		Enabled = false
 LoadPendingTxsLimit = 0
 
@@ -158,6 +172,7 @@ WaitPeriodSendSequence = "5s"
 LastBatchVirtualizationTimeMaxWaitPeriod = "5s"
 L1BlockTimestampMargin = "30s"
 MaxTxSizeForL1 = 131072
+SequenceL1BlockConfirmations = 32
 L2Coinbase = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 PrivateKey = {Path = "/pk/sequencer.keystore", Password = "testonly"}
 GasOffset = 80000

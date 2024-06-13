@@ -61,11 +61,22 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 	}
 	oldStateRoot = previousL2Block.Root()
 
+	count := 0
+	for _, tx := range l2Block.Transactions() {
+		checkReceipt, err := s.GetTransactionReceipt(ctx, tx.Hash(), dbTx)
+		if err != nil {
+			return nil, err
+		}
+		if checkReceipt.TransactionIndex < receipt.TransactionIndex {
+			count++
+		}
+	}
+
 	// since the executor only stores the state roots by block, we need to
 	// execute all the txs in the block until the tx we want to trace
 	var txsToEncode []types.Transaction
 	var effectivePercentage []uint8
-	for i := 0; i <= int(receipt.TransactionIndex); i++ {
+	for i := 0; i <= count; i++ {
 		txsToEncode = append(txsToEncode, *l2Block.Transactions()[i])
 		effectivePercentage = append(effectivePercentage, MaxEffectivePercentage)
 		log.Debugf("trace will reprocess tx: %v", l2Block.Transactions()[i].Hash().String())
@@ -296,7 +307,7 @@ func (s *State) DebugTransaction(ctx context.Context, transactionHash common.Has
 			return nil, err
 		} else if processBatchResponseV2.Error != executor.ExecutorError_EXECUTOR_ERROR_NO_ERROR {
 			err = executor.ExecutorErr(processBatchResponseV2.Error)
-			s.eventLog.LogExecutorErrorV2(ctx, processBatchResponseV2.Error, processBatchRequestV2)
+			s.eventLog.LogExecutorError(ctx, processBatchResponseV2.Error, processBatchRequestV2)
 			return nil, err
 		}
 

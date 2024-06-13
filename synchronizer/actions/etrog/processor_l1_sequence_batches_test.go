@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonzkevm"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime/executor"
 	"github.com/0xPolygonHermez/zkevm-node/synchronizer/actions"
@@ -268,7 +268,7 @@ func newForcedSequenceBatch(batch *state.Batch, l1InfoRoot common.Hash, forcedTi
 		TxHash:        state.HashByteArray(batch.BatchL2Data),
 		Coinbase:      batch.Coinbase,
 		SequencerAddr: common.HexToAddress(addrExampleValues[0]),
-		PolygonRollupBaseEtrogBatchData: &polygonzkevm.PolygonRollupBaseEtrogBatchData{
+		PolygonRollupBaseEtrogBatchData: &etrogpolygonzkevm.PolygonRollupBaseEtrogBatchData{
 			Transactions:         []byte{},
 			ForcedTimestamp:      uint64(forcedTimestamp.Unix()),
 			ForcedGlobalExitRoot: forcedGlobalExitRoot,
@@ -284,7 +284,7 @@ func newL1Block(mocks *mocksEtrogProcessorL1, batch *state.Batch, l1InfoRoot com
 		TxHash:        state.HashByteArray(batch.BatchL2Data),
 		Coinbase:      batch.Coinbase,
 		SequencerAddr: common.HexToAddress(addrExampleValues[0]),
-		PolygonRollupBaseEtrogBatchData: &polygonzkevm.PolygonRollupBaseEtrogBatchData{
+		PolygonRollupBaseEtrogBatchData: &etrogpolygonzkevm.PolygonRollupBaseEtrogBatchData{
 			Transactions: []byte{},
 		},
 	}

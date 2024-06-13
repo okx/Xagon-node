@@ -66,6 +66,7 @@ func (s *State) convertToProcessBatchResponseV2(batchResponse *executor.ProcessB
 		ForkID:               batchResponse.ForkId,
 		InvalidBatch_V2:      batchResponse.InvalidBatch != 0,
 		RomError_V2:          executor.RomErr(batchResponse.ErrorRom),
+		OldStateRoot_V2:      common.BytesToHash(batchResponse.OldStateRoot),
 	}, nil
 }
 

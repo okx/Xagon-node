@@ -93,7 +93,7 @@ func TestGetForkIDByBlockNumber(t *testing.T) {
 			}
 			storage := NewPostgresStorage(cfg, nil)
 			// Create a new State instance with test data
-			state := state.NewState(cfg, storage, nil, nil, nil, nil)
+			state := state.NewState(cfg, storage, nil, nil, nil, nil, nil)
 
 			// Call the function being tested
 			actual := state.GetForkIDByBlockNumber(tc.blockNumber)

@@ -1,0 +1,45 @@
+{
+    "leafs": [
+        {
+            "globalExitRoot": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "blockHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+            "minTimestamp": "0"
+        },
+        {
+            "globalExitRoot": "0x16994edfddddb9480667b64174fc00d3b6da7290d37b8db3a16571b4ddf0789f",
+            "blockHash": "0x24a5871d68723340d9eadc674aa8ad75f3e33b61d5a9db7db92af856a19270bb",
+            "minTimestamp": "42"
+        },
+        {
+            "globalExitRoot": "0x887c22bd8750d34016ac3c66b5ff102dacdd73f6b014e710b51e8022af9a1968",
+            "blockHash": "0xc1df82d9c4b87413eae2ef048f94b4d3554cea73d92b0f7af96e0271c691e2bb",
+            "minTimestamp": "3"
+        },
+        {
+            "globalExitRoot": "0xe1d3b5c807b281e4683cc6d6315cf95b9ade8641defcb32372f1c126e398ef7a",
+            "blockHash": "0x4df84f40ae0c8229d0d6069e5c8f39a7c299677a09d367fc7b05e3bc380ee652",
+            "minTimestamp": "56"
+        },
+        {
+            "globalExitRoot": "0x9867cc5f7f196b93bae1e27e6320742445d290f2263827498b54fec539f756af",
+            "blockHash": "0x2733e50f526ec2fa19a22b31e8ed50f23cd1fdf94c9154ed3a7609a2f1ff981f",
+            "minTimestamp": "4"
+        },
+        {
+            "globalExitRoot": "0x838c5655cb21c6cb83313b5a631175dff4963772cce9108188b34ac87c81c41e",
+            "blockHash": "0x21ddb9a356815c3fac1026b6dec5df3124afbadb485c9ba5a3e3398a04b7ba85",
+            "minTimestamp": "11"
+        },
+        {
+            "globalExitRoot": "0x662ee4dd2dd7b2bc707961b1e646c4047669dcb6584f0d8d770daf5d7e7deb2e",
+            "blockHash": "0xf4418588ed35a2458cffeb39b93d26f18d2ab13bdce6aee58e7b99359ec2dfd9",
+            "minTimestamp": "2"
+        },
+        {
+            "globalExitRoot": "0x0abf5ac974a1ed57f4050aa510dd9c74f508277b39d7973bb2dfccc5eeb0618d",
+            "blockHash": "0xda7bce9f4e8618b6bd2f4132ce798cdc7a60e7e1460a7299e3c6342a579626d2",
+            "minTimestamp": "100"
+        }
+    ],
+    "l1InfoTreeIndexTransition": [2,5,8]
+}

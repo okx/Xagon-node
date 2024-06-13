@@ -127,7 +127,7 @@ func TestStateTransition(t *testing.T) {
 				SkipVerifyL1InfoRoot_V2: testCase.L1InfoTree.SkipVerifyL1InfoRoot,
 			}
 
-			processResponse, _ := testState.ProcessBatchV2(ctx, processRequest, true)
+			processResponse, _, _ := testState.ProcessBatchV2(ctx, processRequest, true)
 			require.Nil(t, processResponse.ExecutorError)
 			require.Equal(t, testCase.ExpectedNewStateRoot, processResponse.NewStateRoot.String())
 		}

@@ -64,6 +64,11 @@
 					"description": "URL is the URL of the Ethereum node for L1",
 					"default": "http://localhost:8545"
 				},
+				"ConsensusL1URL": {
+					"type": "string",
+					"description": "ConsensusL1URL is the URL of the consensus L1 RPC endpoint",
+					"default": ""
+				},
 				"ForkIDChunkSize": {
 					"type": "integer",
 					"description": "ForkIDChunkSize is the max interval for each call to L1 provider to get the forkIDs",
@@ -327,6 +332,11 @@
 					"type": "integer",
 					"description": "ForkID is the current fork ID of the chain",
 					"default": 0
+				},
+				"TxFeeCap": {
+					"type": "number",
+					"description": "TxFeeCap is the global transaction fee(price * gaslimit) cap for\nsend-transaction variants. The unit is ether. 0 means no cap.",
+					"default": 1
 				}
 			},
 			"additionalProperties": false,
@@ -517,15 +527,71 @@
 					"description": "TrustedSequencerURL is the rpc url to connect and sync the trusted state",
 					"default": ""
 				},
+				"SyncBlockProtection": {
+					"type": "string",
+					"description": "SyncBlockProtection specify the state to sync (lastest, finalized or safe)",
+					"default": "safe"
+				},
 				"L1SyncCheckL2BlockHash": {
 					"type": "boolean",
 					"description": "L1SyncCheckL2BlockHash if is true when a batch is closed is force to check  L2Block hash against trustedNode (only apply for permissionless)",
 					"default": true
 				},
-				"L1SyncCheckL2BlockNumberhModulus": {
+				"L1SyncCheckL2BlockNumberModulus": {
 					"type": "integer",
-					"description": "L1SyncCheckL2BlockNumberhModulus is the modulus used to choose the l2block to check\na modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)",
-					"default": 30
+					"description": "L1SyncCheckL2BlockNumberModulus is the modulus used to choose the l2block to check\na modules 5, for instance, means check all l2block multiples of 5 (10,15,20,...)",
+					"default": 600
+				},
+				"L1BlockCheck": {
+					"properties": {
+						"Enabled": {
+							"type": "boolean",
+							"description": "If enabled then the check l1 Block Hash is active",
+							"default": true
+						},
+						"L1SafeBlockPoint": {
+							"type": "string",
+							"enum": [
+								"finalized",
+								"safe",
+								"latest"
+							],
+							"description": "L1SafeBlockPoint is the point that a block is considered safe enough to be checked\nit can be: finalized, safe,pending or latest",
+							"default": "finalized"
+						},
+						"L1SafeBlockOffset": {
+							"type": "integer",
+							"description": "L1SafeBlockOffset is the offset to add to L1SafeBlockPoint as a safe point\nit can be positive or negative\nExample: L1SafeBlockPoint= finalized, L1SafeBlockOffset= -10, then the safe block ten blocks before the finalized block",
+							"default": 0
+						},
+						"ForceCheckBeforeStart": {
+							"type": "boolean",
+							"description": "ForceCheckBeforeStart if is true then the first time the system is started it will force to check all pending blocks",
+							"default": true
+						},
+						"PreCheckEnabled": {
+							"type": "boolean",
+							"description": "If enabled then the pre-check is active, will check blocks between L1SafeBlock and L1PreSafeBlock",
+							"default": true
+						},
+						"L1PreSafeBlockPoint": {
+							"type": "string",
+							"enum": [
+								"finalized",
+								"safe",
+								"latest"
+							],
+							"description": "L1PreSafeBlockPoint is the point that a block is considered safe enough to be checked\nit can be: finalized, safe,pending or latest",
+							"default": "safe"
+						},
+						"L1PreSafeBlockOffset": {
+							"type": "integer",
+							"description": "L1PreSafeBlockOffset is the offset to add to L1PreSafeBlockPoint as a safe point\nit can be positive or negative\nExample: L1PreSafeBlockPoint= finalized, L1PreSafeBlockOffset= -10, then the safe block ten blocks before the finalized block",
+							"default": 0
+						}
+					},
+					"additionalProperties": false,
+					"type": "object"
 				},
 				"L1SynchronizationMode": {
 					"type": "string",
@@ -637,6 +703,11 @@
 				},
 				"L2Synchronization": {
 					"properties": {
+						"Enabled": {
+							"type": "boolean",
+							"description": "If enabled then the L2 sync process is permitted (only for permissionless)",
+							"default": true
+						},
 						"AcceptEmptyClosedBatches": {
 							"type": "boolean",
 							"description": "AcceptEmptyClosedBatches is a flag to enable or disable the acceptance of empty batches.\nif true, the synchronizer will accept empty batches and process them.",
@@ -719,6 +790,15 @@
 						"300ms"
 					]
 				},
+				"L2Coinbase": {
+					"items": {
+						"type": "integer"
+					},
+					"type": "array",
+					"maxItems": 20,
+					"minItems": 20,
+					"description": "L2Coinbase defines which address is going to receive the fees. It gets the config value from SequenceSender.L2Coinbase"
+				},
 				"Finalizer": {
 					"properties": {
 						"ForcedBatchesTimeout": {
@@ -769,7 +849,7 @@
 						"L1InfoTreeCheckInterval": {
 							"type": "string",
 							"title": "Duration",
-							"description": "L1InfoTreeCheckInterval is the wait time to check if the L1InfoRoot has been updated",
+							"description": "L1InfoTreeCheckInterval is the time interval to check if the L1InfoRoot has been updated",
 							"default": "10s",
 							"examples": [
 								"1m",
@@ -780,7 +860,7 @@
 							"type": "string",
 							"title": "Duration",
 							"description": "BatchMaxDeltaTimestamp is the resolution of the timestamp used to close a batch",
-							"default": "10s",
+							"default": "30m0s",
 							"examples": [
 								"1m",
 								"300ms"
@@ -791,6 +871,26 @@
 							"title": "Duration",
 							"description": "L2BlockMaxDeltaTimestamp is the resolution of the timestamp used to close a L2 block",
 							"default": "3s",
+							"examples": [
+								"1m",
+								"300ms"
+							]
+						},
+						"StateRootSyncInterval": {
+							"type": "string",
+							"title": "Duration",
+							"description": "StateRootSyncInterval indicates how often the stateroot generated by the L2 block process will be synchronized with\nthe stateroot used in the tx-by-tx execution",
+							"default": "1h0m0s",
+							"examples": [
+								"1m",
+								"300ms"
+							]
+						},
+						"FlushIdCheckInterval": {
+							"type": "string",
+							"title": "Duration",
+							"description": "FlushIdCheckInterval is the time interval to get storedFlushID value from the executor/hashdb",
+							"default": "50ms",
 							"examples": [
 								"1m",
 								"300ms"
@@ -809,7 +909,7 @@
 						"SequentialProcessL2Block": {
 							"type": "boolean",
 							"description": "SequentialProcessL2Block indicates if the processing of a L2 Block must be done in the same finalizer go func instead\nin the processPendingL2Blocks go func",
-							"default": true
+							"default": false
 						},
 						"Metrics": {
 							"properties": {
@@ -903,6 +1003,16 @@
 							"type": "integer",
 							"description": "UpgradeEtrogBatchNumber is the batch number of the upgrade etrog",
 							"default": 0
+						},
+						"WriteTimeout": {
+							"type": "string",
+							"title": "Duration",
+							"description": "WriteTimeout is the TCP write timeout when sending data to a datastream client",
+							"default": "5s",
+							"examples": [
+								"1m",
+								"300ms"
+							]
 						}
 					},
 					"additionalProperties": false,
@@ -1001,6 +1111,11 @@
 					"type": "integer",
 					"description": "GasOffset is the amount of gas to be added to the gas estimation in order\nto provide an amount that is higher than the estimated one. This is used\nto avoid the TX getting reverted in case something has changed in the network\nstate after the estimation which can cause the TX to require more gas to be\nexecuted.\n\nex:\ngas estimation: 1000\ngas offset: 100\nfinal gas: 1100",
 					"default": 80000
+				},
+				"SequenceL1BlockConfirmations": {
+					"type": "integer",
+					"description": "SequenceL1BlockConfirmations is number of blocks to consider a sequence sent to L1 as final",
+					"default": 32
 				}
 			},
 			"additionalProperties": false,

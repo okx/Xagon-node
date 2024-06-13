@@ -5,25 +5,25 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/mockpolygonrollupmanager"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonrollupmanager"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevm"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevmbridge"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevmglobalexitroot"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/mocketrogpolygonrollupmanager"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/mockverifier"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/pol"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonrollupmanager"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonzkevm"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonzkevmbridge"
-	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygonzkevmglobalexitroot"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/proxy"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/accounts/abi/bind"
 	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core"
+	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/ethereum/go-ethereum/crypto"
 	"github.com/ethereum/go-ethereum/ethclient/simulated"
 )
 
 // NewSimulatedEtherman creates an etherman that uses a simulated blockchain. It's important to notice that the ChainID of the auth
 // must be 1337. The address that holds the auth will have an initial balance of 10 ETH
-func NewSimulatedEtherman(cfg Config, auth *bind.TransactOpts) (*Client, *simulated.Backend, common.Address, *polygonzkevmbridge.Polygonzkevmbridge, error) {
+func NewSimulatedEtherman(cfg Config, auth *bind.TransactOpts) (*Client, *simulated.Backend, common.Address, *etrogpolygonzkevmbridge.Etrogpolygonzkevmbridge, error) {
 	if auth == nil {
 		// read only client
 		return &Client{}, nil, common.Address{}, nil, nil
@@ -31,7 +31,7 @@ func NewSimulatedEtherman(cfg Config, auth *bind.TransactOpts) (*Client, *simula
 	// 10000000 ETH in wei
 	balance, _ := new(big.Int).SetString("10000000000000000000000000", 10) //nolint:gomnd
 	address := auth.From
-	genesisAlloc := map[common.Address]core.GenesisAccount{
+	genesisAlloc := map[common.Address]types.Account{
 		address: {
 			Balance: balance,
 		},
@@ -61,18 +61,18 @@ func NewSimulatedEtherman(cfg Config, auth *bind.TransactOpts) (*Client, *simula
 	const posRollupManager = 4
 	calculatedRollupManagerAddr := crypto.CreateAddress(auth.From, nonce+posRollupManager)
 	genesis := common.HexToHash("0xfd3434cd8f67e59d73488a2b8da242dd1f02849ea5dd99f0ca22c836c3d5b4a9") // Random value. Needs to be different to 0x0
-	exitManagerAddr, _, globalExitRoot, err := polygonzkevmglobalexitroot.DeployPolygonzkevmglobalexitroot(auth, client.Client(), calculatedRollupManagerAddr, calculatedBridgeAddr)
+	exitManagerAddr, _, globalExitRoot, err := etrogpolygonzkevmglobalexitroot.DeployEtrogpolygonzkevmglobalexitroot(auth, client.Client(), calculatedRollupManagerAddr, calculatedBridgeAddr)
 	if err != nil {
 		log.Error("error: ", err)
 		return nil, nil, common.Address{}, nil, err
 	}
-	implementationBridgeAddr, _, _, err := polygonzkevmbridge.DeployPolygonzkevmbridge(auth, client.Client())
+	implementationBridgeAddr, _, _, err := etrogpolygonzkevmbridge.DeployEtrogpolygonzkevmbridge(auth, client.Client())
 	if err != nil {
 		log.Error("error: ", err)
 		return nil, nil, common.Address{}, nil, err
 	}
 
-	implementationMockRollupManagerAddr, _, _, err := mockpolygonrollupmanager.DeployMockpolygonrollupmanager(auth, client.Client(), exitManagerAddr, polAddr, calculatedBridgeAddr)
+	implementationMockRollupManagerAddr, _, _, err := mocketrogpolygonrollupmanager.DeployMocketrogpolygonrollupmanager(auth, client.Client(), exitManagerAddr, polAddr, calculatedBridgeAddr)
 	if err != nil {
 		log.Error("error: ", err)
 		return nil, nil, common.Address{}, nil, err
@@ -92,17 +92,17 @@ func NewSimulatedEtherman(cfg Config, auth *bind.TransactOpts) (*Client, *simula
 		return nil, nil, common.Address{}, nil, fmt.Errorf("RollupManagerAddr (%s) is different from the expected contract address (%s)",
 			mockRollupManagerAddr.String(), calculatedRollupManagerAddr.String())
 	}
-	initZkevmAddr, _, _, err := polygonzkevm.DeployPolygonzkevm(auth, client.Client(), exitManagerAddr, polAddr, bridgeAddr, mockRollupManagerAddr)
+	initZkevmAddr, _, _, err := etrogpolygonzkevm.DeployEtrogpolygonzkevm(auth, client.Client(), exitManagerAddr, polAddr, bridgeAddr, mockRollupManagerAddr)
 	if err != nil {
 		log.Error("error: ", err)
 		return nil, nil, common.Address{}, nil, err
 	}
-	mockRollupManager, err := mockpolygonrollupmanager.NewMockpolygonrollupmanager(mockRollupManagerAddr, client.Client())
+	mockRollupManager, err := mocketrogpolygonrollupmanager.NewMocketrogpolygonrollupmanager(mockRollupManagerAddr, client.Client())
 	if err != nil {
 		log.Error("error: ", err)
 		return nil, nil, common.Address{}, nil, err
 	}
-	br, err := polygonzkevmbridge.NewPolygonzkevmbridge(bridgeAddr, client.Client())
+	br, err := etrogpolygonzkevmbridge.NewEtrogpolygonzkevmbridge(bridgeAddr, client.Client())
 	if err != nil {
 		log.Error("error: ", err)
 		return nil, nil, common.Address{}, nil, err
@@ -157,13 +157,13 @@ func NewSimulatedEtherman(cfg Config, auth *bind.TransactOpts) (*Client, *simula
 			bridgeAddr.String(), calculatedBridgeAddr.String())
 	}
 
-	rollupManager, err := polygonrollupmanager.NewPolygonrollupmanager(mockRollupManagerAddr, client.Client())
+	rollupManager, err := etrogpolygonrollupmanager.NewEtrogpolygonrollupmanager(mockRollupManagerAddr, client.Client())
 	if err != nil {
 		log.Error("error: ", err)
 		return nil, nil, common.Address{}, nil, err
 	}
 
-	trueZkevm, err := polygonzkevm.NewPolygonzkevm(zkevmAddr, client.Client()) //nolint
+	trueZkevm, err := etrogpolygonzkevm.NewEtrogpolygonzkevm(zkevmAddr, client.Client()) //nolint
 	if err != nil {
 		log.Error("error: ", err)
 		return nil, nil, common.Address{}, nil, err
@@ -190,15 +190,15 @@ func NewSimulatedEtherman(cfg Config, auth *bind.TransactOpts) (*Client, *simula
 	client.Commit()
 
 	c := &Client{
-		EthClient:             client.Client(),
-		ZkEVM:                 trueZkevm,
-		RollupManager:         rollupManager,
-		Pol:                   polContract,
-		GlobalExitRootManager: globalExitRoot,
-		RollupID:              rollupID,
-		SCAddresses:           []common.Address{zkevmAddr, mockRollupManagerAddr, exitManagerAddr},
-		auth:                  map[common.Address]bind.TransactOpts{},
-		cfg:                   cfg,
+		EthClient:                  client.Client(),
+		EtrogZkEVM:                 trueZkevm,
+		EtrogRollupManager:         rollupManager,
+		Pol:                        polContract,
+		EtrogGlobalExitRootManager: globalExitRoot,
+		RollupID:                   rollupID,
+		SCAddresses:                []common.Address{zkevmAddr, mockRollupManagerAddr, exitManagerAddr},
+		auth:                       map[common.Address]bind.TransactOpts{},
+		cfg:                        cfg,
 	}
 	err = c.AddOrReplaceAuth(*auth)
 	if err != nil {

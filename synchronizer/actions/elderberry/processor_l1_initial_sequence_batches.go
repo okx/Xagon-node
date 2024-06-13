@@ -19,9 +19,9 @@ type ProcessorL1InitialSequenceBatchesElderberry struct {
 // NewProcessorL1InitialSequenceBatchesElderberry returns instance of a processor for InitialSequenceBatchesOrder
 func NewProcessorL1InitialSequenceBatchesElderberry(previousProcessor actions.L1EventProcessor) *ProcessorL1InitialSequenceBatchesElderberry {
 	return &ProcessorL1InitialSequenceBatchesElderberry{
-		ProcessorBase: actions.ProcessorBase[ProcessorL1InitialSequenceBatchesElderberry]{
-			SupportedEvent:    []etherman.EventOrder{etherman.InitialSequenceBatchesOrder},
-			SupportedForkdIds: &actions.ForksIdOnlyElderberry},
+		ProcessorBase: *actions.NewProcessorBase[ProcessorL1InitialSequenceBatchesElderberry](
+			[]etherman.EventOrder{etherman.InitialSequenceBatchesOrder},
+			actions.ForksIdOnlyElderberry),
 		previousProcessor: previousProcessor,
 	}
 }

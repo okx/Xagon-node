@@ -45,7 +45,11 @@ func TestFirstLeafOfL1InfoTreeIsIndex0(t *testing.T) {
 	if err != nil {
 		panic(err)
 	}
-	testState := state.NewState(stateCfg, storage, nil, nil, nil, mt)
+	mtr, err := l1infotree.NewL1InfoTreeRecursive(32)
+	if err != nil {
+		panic(err)
+	}
+	testState := state.NewState(stateCfg, storage, nil, nil, nil, mt, mtr)
 	dbTx, err := testState.BeginStateTransaction(ctx)
 	defer func() {
 		_ = dbTx.Rollback(ctx)
@@ -82,7 +86,7 @@ func TestGetCurrentL1InfoRootBuildCacheIfNil(t *testing.T) {
 		}},
 	}
 	ctx := context.Background()
-	testState := state.NewState(stateCfg, mockStorage, nil, nil, nil, nil)
+	testState := state.NewState(stateCfg, mockStorage, nil, nil, nil, nil, nil)
 
 	mockStorage.EXPECT().GetAllL1InfoRootEntries(ctx, nil).Return([]state.L1InfoTreeExitRootStorageEntry{}, nil)
 
@@ -108,7 +112,10 @@ func TestGetCurrentL1InfoRootNoBuildCacheIfNotNil(t *testing.T) {
 	ctx := context.Background()
 	l1InfoTree, err := l1infotree.NewL1InfoTree(uint8(32), nil)
 	require.NoError(t, err)
-	testState := state.NewState(stateCfg, mockStorage, nil, nil, nil, l1InfoTree)
+
+	l1InfoTreeRecursive, err := l1infotree.NewL1InfoTreeRecursive(32)
+	require.NoError(t, err)
+	testState := state.NewState(stateCfg, mockStorage, nil, nil, nil, l1InfoTree, l1InfoTreeRecursive)
 
 	// GetCurrentL1InfoRoot use the cache value in state.l1InfoTree
 	l1InfoRoot, err := testState.GetCurrentL1InfoRoot(ctx, nil)
@@ -131,7 +138,7 @@ func TestAddL1InfoTreeLeafIfNil(t *testing.T) {
 		}},
 	}
 	ctx := context.Background()
-	testState := state.NewState(stateCfg, mockStorage, nil, nil, nil, nil)
+	testState := state.NewState(stateCfg, mockStorage, nil, nil, nil, nil, nil)
 
 	mockStorage.EXPECT().GetLatestIndex(ctx, mock.Anything).Return(uint32(0), state.ErrNotFound)
 	mockStorage.EXPECT().AddL1InfoRootToExitRoot(ctx, mock.Anything, mock.Anything).Return(nil)

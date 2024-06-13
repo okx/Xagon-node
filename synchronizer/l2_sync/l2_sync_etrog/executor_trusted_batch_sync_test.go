@@ -76,7 +76,7 @@ func TestIncrementalProcessUpdateBatchL2DataOnCache(t *testing.T) {
 	processBatchResp := &state.ProcessBatchResponse{
 		NewStateRoot: expectedStateRoot,
 	}
-	stateMock.EXPECT().ProcessBatchV2(ctx, mock.Anything, true).Return(processBatchResp, nil).Once()
+	stateMock.EXPECT().ProcessBatchV2(ctx, mock.Anything, true).Return(processBatchResp, "", nil).Once()
 
 	syncMock.EXPECT().PendingFlushID(mock.Anything, mock.Anything).Once()
 	syncMock.EXPECT().CheckFlushID(mock.Anything).Return(nil).Maybe()
@@ -206,7 +206,7 @@ func TestNothingProcessDoesntMatchBatchReprocess(t *testing.T) {
 	processBatchResp := &state.ProcessBatchResponse{
 		NewStateRoot: data.TrustedBatch.StateRoot,
 	}
-	testData.stateMock.EXPECT().ProcessBatchV2(testData.ctx, mock.Anything, true).Return(processBatchResp, nil).Once()
+	testData.stateMock.EXPECT().ProcessBatchV2(testData.ctx, mock.Anything, true).Return(processBatchResp, "", nil).Once()
 	testData.stateMock.EXPECT().GetBatchByNumber(testData.ctx, data.BatchNumber, mock.Anything).Return(&state.Batch{}, nil).Once()
 	_, err := testData.sut.NothingProcess(testData.ctx, &data, nil)
 	require.NoError(t, err)

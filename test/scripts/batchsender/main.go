@@ -289,7 +289,7 @@ func sendBatches(cliCtx *cli.Context) error {
 						switch vLog.Topics[0] {
 						case etherman.SequencedBatchesSigHash():
 							if vLog.TxHash == tx.Hash() { // ignore other txs happening on L1
-								sb, err := ethMan.ZkEVM.ParseSequenceBatches(vLog)
+								sb, err := ethMan.EtrogZkEVM.ParseSequenceBatches(vLog)
 								if err != nil {
 									return err
 								}
@@ -302,7 +302,7 @@ func sendBatches(cliCtx *cli.Context) error {
 								}
 							}
 						case etherman.TrustedVerifyBatchesSigHash():
-							vb, err := ethMan.ZkEVM.ParseVerifyBatches(vLog)
+							vb, err := ethMan.EtrogZkEVM.ParseVerifyBatches(vLog)
 							if err != nil {
 								return err
 							}

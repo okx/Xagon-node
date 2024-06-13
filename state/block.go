@@ -12,6 +12,7 @@ type Block struct {
 	BlockHash   common.Hash
 	ParentHash  common.Hash
 	ReceivedAt  time.Time
+	Checked     bool
 }
 
 // NewBlock creates a block with the given data.

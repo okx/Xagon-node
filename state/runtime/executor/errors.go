@@ -20,6 +20,13 @@ var (
 	ErrROMUnknown = fmt.Errorf("unknown ROM error")
 	// ErrCodeROMUnknown indicates an unknown ROM error
 	ErrCodeROMUnknown = RomError(math.MaxInt32)
+
+	// ErrROMBlobUnspecified indicates an unspecified ROM blob error
+	ErrROMBlobUnspecified = fmt.Errorf("unspecified ROM blob error")
+	// ErrROMBlobUnknown indicates an unknown ROM blob error
+	ErrROMBlobUnknown = fmt.Errorf("unknown ROM blob error")
+	// ErrCodeROMBlobUnknown indicates an unknown ROM blob error
+	ErrCodeROMBlobUnknown = RomBlobError(math.MaxInt32)
 )
 
 // RomErr returns an instance of error related to the ExecutorError
@@ -96,6 +103,9 @@ func RomErr(errorCode RomError) error {
 		return runtime.ErrInvalidTxChangeL2BlockLimitTimestamp
 	case RomError_ROM_ERROR_INVALID_TX_CHANGE_L2_BLOCK_MIN_TIMESTAMP:
 		return runtime.ErrInvalidTxChangeL2BlockMinTimestamp
+	// Start of V3 errors
+	case RomError_ROM_ERROR_INVALID_L1_INFO_TREE_INDEX:
+		return runtime.ErrInvalidL1InfoTreeIndex
 	}
 	return ErrROMUnknown
 }
@@ -172,6 +182,8 @@ func RomErrorCode(err error) RomError {
 		return RomError_ROM_ERROR_INVALID_TX_CHANGE_L2_BLOCK_LIMIT_TIMESTAMP
 	case runtime.ErrInvalidTxChangeL2BlockMinTimestamp:
 		return RomError_ROM_ERROR_INVALID_TX_CHANGE_L2_BLOCK_MIN_TIMESTAMP
+	case runtime.ErrInvalidL1InfoTreeIndex:
+		return RomError_ROM_ERROR_INVALID_L1_INFO_TREE_INDEX
 	}
 	return ErrCodeROMUnknown
 }
@@ -456,7 +468,49 @@ func ExecutorErr(errorCode ExecutorError) error {
 		return runtime.ErrExecutorErrorInvalidUpdateMerkleTree
 	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_INVALID_TX_STATUS_ERROR:
 		return runtime.ErrExecutorErrorSMMainInvalidTxStatusError
+		// Start of V3 errors
+	case ExecutorError_EXECUTOR_ERROR_INVALID_PREVIOUS_L1_INFO_TREE_ROOT:
+		return runtime.ErrExecutorErrorInvalidPreviousL1InfoTreeRoot
+	case ExecutorError_EXECUTOR_ERROR_INVALID_FORCED_HASH_DATA:
+		return runtime.ErrExecutorErrorInvalidForcedHashData
+	case ExecutorError_EXECUTOR_ERROR_INVALID_FORCED_DATA_GLOBAL_EXIT_ROOT:
+		return runtime.ErrExecutorErrorInvalidForcedDataGlobalExitRoot
+	case ExecutorError_EXECUTOR_ERROR_INVALID_FORCED_DATA_BLOCK_HASH_L1:
+		return runtime.ErrExecutorErrorInvalidForcedDataBlockHashL1
+	case ExecutorError_EXECUTOR_ERROR_INVALID_L1_DATA_V3_INITIAL_HISTORIC_ROOT:
+		return runtime.ErrExecutorErrorInvalidL1DataV3InitialHistoricRoot
+	case ExecutorError_EXECUTOR_ERROR_INVALID_OLD_BLOB_STATE_ROOT:
+		return runtime.ErrExecutorErrorInvalidOldBlobStateRoot
+	case ExecutorError_EXECUTOR_ERROR_INVALID_OLD_BLOB_ACC_INPUT_HASH:
+		return runtime.ErrExecutorErrorInvalidOldBlobAccInputHash
+	case ExecutorError_EXECUTOR_ERROR_INVALID_LAST_L1_INFO_TREE_ROOT:
+		return runtime.ErrExecutorErrorInvalidLastL1InfoTreeRoot
+	case ExecutorError_EXECUTOR_ERROR_INVALID_NEW_BLOB_STATE_ROOT:
+		return runtime.ErrExecutorErrorInvalidNewBlobStateRoot
+	case ExecutorError_EXECUTOR_ERROR_INVALID_NEW_BLOB_ACC_INPUT_HASH:
+		return runtime.ErrExecutorErrorInvalidNewBlobAccInputHash
+	case ExecutorError_EXECUTOR_ERROR_INVALID_BLOB_DATA:
+		return runtime.ErrExecutorErrorInvalidBlobData
+	case ExecutorError_EXECUTOR_ERROR_INVALID_ZK_GAS_LIMIT:
+		return runtime.ErrExecutorErrorInvalidZKGasLimit
+	case ExecutorError_EXECUTOR_ERROR_INVALID_POINT_Z:
+		return runtime.ErrExecutorErrorInvalidPointZ
+	case ExecutorError_EXECUTOR_ERROR_INVALID_POINT_Y:
+		return runtime.ErrExecutorErrorInvalidPointY
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_POINT_Z_MISMATCH:
+		return runtime.ErrExecutorErrorSMMainPointZMismatch
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_BLOB_L2_HASH_DATA_MISMATCH:
+		return runtime.ErrExecutorErrorSMMainBlobL2HashDataMismatch
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_BATCH_HASH_DATA_MISMATCH:
+		return runtime.ErrExecutorErrorSMMainBatchHashDataMismatch
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_INVALID_BLOB_TYPE:
+		return runtime.ErrExecutorErrorSMMainInvalidBlobType
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_UNRESTORED_SAVED_CONTEXT:
+		return runtime.ErrExecutorErrorSMMainUnrestoredSavedContext
+	case ExecutorError_EXECUTOR_ERROR_SM_MAIN_INVALID_MEMORY_CTX:
+		return runtime.ErrExecutorErrorSMMainInvalidMemoryCtx
 	}
+
 	return ErrExecutorUnknown
 }
 
@@ -698,7 +752,96 @@ func ExecutorErrorCode(err error) ExecutorError {
 		return ExecutorError_EXECUTOR_ERROR_INVALID_UPDATE_MERKLE_TREE
 	case runtime.ErrExecutorErrorSMMainInvalidTxStatusError:
 		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_INVALID_TX_STATUS_ERROR
+	// Start of V3 errors
+	case runtime.ErrExecutorErrorInvalidPreviousL1InfoTreeRoot:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_PREVIOUS_L1_INFO_TREE_ROOT
+	case runtime.ErrExecutorErrorInvalidForcedHashData:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_FORCED_HASH_DATA
+	case runtime.ErrExecutorErrorInvalidForcedDataGlobalExitRoot:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_FORCED_DATA_GLOBAL_EXIT_ROOT
+	case runtime.ErrExecutorErrorInvalidForcedDataBlockHashL1:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_FORCED_DATA_BLOCK_HASH_L1
+	case runtime.ErrExecutorErrorInvalidL1DataV3InitialHistoricRoot:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_L1_DATA_V3_INITIAL_HISTORIC_ROOT
+	case runtime.ErrExecutorErrorInvalidOldBlobStateRoot:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_OLD_BLOB_STATE_ROOT
+	case runtime.ErrExecutorErrorInvalidOldBlobAccInputHash:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_OLD_BLOB_ACC_INPUT_HASH
+	case runtime.ErrExecutorErrorInvalidLastL1InfoTreeRoot:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_LAST_L1_INFO_TREE_ROOT
+	case runtime.ErrExecutorErrorInvalidNewBlobStateRoot:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_NEW_BLOB_STATE_ROOT
+	case runtime.ErrExecutorErrorInvalidNewBlobAccInputHash:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_NEW_BLOB_ACC_INPUT_HASH
+	case runtime.ErrExecutorErrorInvalidBlobData:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_BLOB_DATA
+	case runtime.ErrExecutorErrorInvalidZKGasLimit:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_ZK_GAS_LIMIT
+	case runtime.ErrExecutorErrorInvalidPointZ:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_POINT_Z
+	case runtime.ErrExecutorErrorInvalidPointY:
+		return ExecutorError_EXECUTOR_ERROR_INVALID_POINT_Y
+	case runtime.ErrExecutorErrorSMMainPointZMismatch:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_POINT_Z_MISMATCH
+	case runtime.ErrExecutorErrorSMMainBlobL2HashDataMismatch:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_BLOB_L2_HASH_DATA_MISMATCH
+	case runtime.ErrExecutorErrorSMMainBatchHashDataMismatch:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_BATCH_HASH_DATA_MISMATCH
+	case runtime.ErrExecutorErrorSMMainInvalidBlobType:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_INVALID_BLOB_TYPE
+	case runtime.ErrExecutorErrorSMMainUnrestoredSavedContext:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_UNRESTORED_SAVED_CONTEXT
+	case runtime.ErrExecutorErrorSMMainInvalidMemoryCtx:
+		return ExecutorError_EXECUTOR_ERROR_SM_MAIN_INVALID_MEMORY_CTX
 	}
 
 	return ErrCodeExecutorUnknown
+}
+
+// RomBlobErr returns an instance of error related to the ExecutorError
+func RomBlobErr(errorCode RomBlobError) error {
+	switch errorCode {
+	case RomBlobError_ROM_BLOB_ERROR_UNSPECIFIED:
+		return ErrROMBlobUnspecified
+	case RomBlobError_ROM_BLOB_ERROR_NO_ERROR:
+		return nil
+	case RomBlobError_ROM_BLOB_ERROR_INVALID_PARSING:
+		return runtime.ErrROMBlobInvalidParsing
+	case RomBlobError_ROM_BLOB_ERROR_INVALID_MSB_BYTE:
+		return runtime.ErrROMBlobInvalidMSBByte
+	case RomBlobError_ROM_BLOB_ERROR_INVALID_ZK_GAS_LIMIT:
+		return runtime.ErrROMBlobInvalidZKGasLimit
+	case RomBlobError_ROM_BLOB_ERROR_INVALID_BLOB_TYPE:
+		return runtime.ErrROMBlobInvalidBlobType
+	case RomBlobError_ROM_BLOB_ERROR_INVALID_COMPRESSION_TYPE:
+		return runtime.ErrROMBlobInvalidCompressionType
+	case RomBlobError_ROM_BLOB_ERROR_INVALID_FORCED_BATCHES:
+		return runtime.ErrROMBlobInvalidForcedBatches
+	case RomBlobError_ROM_BLOB_ERROR_INVALID_TOTALBODY_LEN:
+		return runtime.ErrROMBlobInvalidTotalBodyLen
+	}
+	return ErrROMBlobUnknown
+}
+
+// RomBlobErrorCode returns the error code for a given error
+func RomBlobErrorCode(err error) RomBlobError {
+	switch err {
+	case nil:
+		return RomBlobError_ROM_BLOB_ERROR_NO_ERROR
+	case runtime.ErrROMBlobInvalidParsing:
+		return RomBlobError_ROM_BLOB_ERROR_INVALID_PARSING
+	case runtime.ErrROMBlobInvalidMSBByte:
+		return RomBlobError_ROM_BLOB_ERROR_INVALID_MSB_BYTE
+	case runtime.ErrROMBlobInvalidZKGasLimit:
+		return RomBlobError_ROM_BLOB_ERROR_INVALID_ZK_GAS_LIMIT
+	case runtime.ErrROMBlobInvalidBlobType:
+		return RomBlobError_ROM_BLOB_ERROR_INVALID_BLOB_TYPE
+	case runtime.ErrROMBlobInvalidCompressionType:
+		return RomBlobError_ROM_BLOB_ERROR_INVALID_COMPRESSION_TYPE
+	case runtime.ErrROMBlobInvalidForcedBatches:
+		return RomBlobError_ROM_BLOB_ERROR_INVALID_FORCED_BATCHES
+	case runtime.ErrROMBlobInvalidTotalBodyLen:
+		return RomBlobError_ROM_BLOB_ERROR_INVALID_TOTALBODY_LEN
+	}
+	return ErrCodeROMBlobUnknown
 }

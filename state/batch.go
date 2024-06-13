@@ -42,11 +42,12 @@ type Batch struct {
 	AccInputHash  common.Hash
 	// Timestamp (<=incaberry) -> batch time
 	// 			 (>incaberry) -> minTimestamp used in batch creation, real timestamp is in virtual_batch.batch_timestamp
-	Timestamp      time.Time
-	Transactions   []types.Transaction
-	GlobalExitRoot common.Hash
-	ForcedBatchNum *uint64
-	Resources      BatchResources
+	Timestamp              time.Time
+	Transactions           []types.Transaction
+	GlobalExitRoot         common.Hash
+	ForcedBatchNum         *uint64
+	Resources              BatchResources
+	HighReservedZKCounters ZKCounters
 	// WIP: if WIP == true is a openBatch
 	WIP bool
 }
@@ -83,6 +84,8 @@ const (
 	MaxDeltaTimestampClosingReason ClosingReason = "Max delta timestamp"
 	// NoTxFitsClosingReason is the closing reason used when any of the txs in the pool (worker) fits in the remaining resources of the batch
 	NoTxFitsClosingReason ClosingReason = "No transaction fits"
+	// L2BlockReorgClonsingReason is the closing reason used when we have a L2 block reorg (unexpected error, like OOC, when processing L2 block)
+	L2BlockReorgClonsingReason ClosingReason = "L2 block reorg"
 
 	// Reason due Synchronizer
 	// ------------------------------------------------------------------------------------------
@@ -109,9 +112,10 @@ type ProcessingReceipt struct {
 	GlobalExitRoot common.Hash
 	AccInputHash   common.Hash
 	// Txs           []types.Transaction
-	BatchL2Data    []byte
-	ClosingReason  ClosingReason
-	BatchResources BatchResources
+	BatchL2Data            []byte
+	ClosingReason          ClosingReason
+	BatchResources         BatchResources
+	HighReservedZKCounters ZKCounters
 }
 
 // VerifiedBatch represents a VerifiedBatch

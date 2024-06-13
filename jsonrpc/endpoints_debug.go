@@ -31,7 +31,6 @@ type DebugEndpoints struct {
 	cfg      Config
 	state    types.StateInterface
 	etherman types.EthermanInterface
-	txMan    DBTxManager
 }
 
 // NewDebugEndpoints returns DebugEndpoints
@@ -64,54 +63,51 @@ type traceBatchTransactionResponse struct {
 // TraceTransaction creates a response for debug_traceTransaction request.
 // See https://geth.ethereum.org/docs/interacting-with-geth/rpc/ns-debug#debugtracetransaction
 func (d *DebugEndpoints) TraceTransaction(hash types.ArgHash, cfg *traceConfig) (interface{}, types.Error) {
-	return d.txMan.NewDbTxScope(d.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
-		return d.buildTraceTransaction(ctx, hash.Hash(), cfg, dbTx)
-	})
+	ctx := context.Background()
+	return d.buildTraceTransaction(ctx, hash.Hash(), cfg, nil)
 }
 
 // TraceBlockByNumber creates a response for debug_traceBlockByNumber request.
 // See https://geth.ethereum.org/docs/interacting-with-geth/rpc/ns-debug#debugtraceblockbynumber
 func (d *DebugEndpoints) TraceBlockByNumber(number types.BlockNumber, cfg *traceConfig) (interface{}, types.Error) {
-	return d.txMan.NewDbTxScope(d.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
-		blockNumber, rpcErr := number.GetNumericBlockNumber(ctx, d.state, d.etherman, dbTx)
-		if rpcErr != nil {
-			return nil, rpcErr
-		}
+	ctx := context.Background()
+	blockNumber, rpcErr := number.GetNumericBlockNumber(ctx, d.state, d.etherman, nil)
+	if rpcErr != nil {
+		return nil, rpcErr
+	}
 
-		block, err := d.state.GetL2BlockByNumber(ctx, blockNumber, dbTx)
-		if errors.Is(err, state.ErrNotFound) {
-			return nil, types.NewRPCError(types.DefaultErrorCode, fmt.Sprintf("block #%d not found", blockNumber))
-		} else if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, "failed to get block by number", err, true)
-		}
+	block, err := d.state.GetL2BlockByNumber(ctx, blockNumber, nil)
+	if errors.Is(err, state.ErrNotFound) {
+		return nil, types.NewRPCError(types.DefaultErrorCode, fmt.Sprintf("block #%d not found", blockNumber))
+	} else if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, "failed to get block by number", err, true)
+	}
 
-		traces, rpcErr := d.buildTraceBlock(ctx, block.Transactions(), cfg, dbTx)
-		if rpcErr != nil {
-			return nil, rpcErr
-		}
+	traces, rpcErr := d.buildTraceBlock(ctx, block.Transactions(), cfg, nil)
+	if rpcErr != nil {
+		return nil, rpcErr
+	}
 
-		return traces, nil
-	})
+	return traces, nil
 }
 
 // TraceBlockByHash creates a response for debug_traceBlockByHash request.
 // See https://geth.ethereum.org/docs/interacting-with-geth/rpc/ns-debug#debugtraceblockbyhash
 func (d *DebugEndpoints) TraceBlockByHash(hash types.ArgHash, cfg *traceConfig) (interface{}, types.Error) {
-	return d.txMan.NewDbTxScope(d.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
-		block, err := d.state.GetL2BlockByHash(ctx, hash.Hash(), dbTx)
-		if errors.Is(err, state.ErrNotFound) {
-			return nil, types.NewRPCError(types.DefaultErrorCode, fmt.Sprintf("block %s not found", hash.Hash().String()))
-		} else if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, "failed to get block by hash", err, true)
-		}
+	ctx := context.Background()
+	block, err := d.state.GetL2BlockByHash(ctx, hash.Hash(), nil)
+	if errors.Is(err, state.ErrNotFound) {
+		return nil, types.NewRPCError(types.DefaultErrorCode, fmt.Sprintf("block %s not found", hash.Hash().String()))
+	} else if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, "failed to get block by hash", err, true)
+	}
 
-		traces, rpcErr := d.buildTraceBlock(ctx, block.Transactions(), cfg, dbTx)
-		if rpcErr != nil {
-			return nil, rpcErr
-		}
+	traces, rpcErr := d.buildTraceBlock(ctx, block.Transactions(), cfg, nil)
+	if rpcErr != nil {
+		return nil, rpcErr
+	}
 
-		return traces, nil
-	})
+	return traces, nil
 }
 
 // TraceBatchByNumber creates a response for debug_traceBatchByNumber request.
@@ -144,113 +140,112 @@ func (d *DebugEndpoints) TraceBatchByNumber(httpRequest *http.Request, number ty
 	// how many txs it will process in parallel.
 	const bufferSize = 10
 
-	return d.txMan.NewDbTxScope(d.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
-		batchNumber, rpcErr := number.GetNumericBatchNumber(ctx, d.state, d.etherman, dbTx)
-		if rpcErr != nil {
-			return nil, rpcErr
+	ctx := context.Background()
+	batchNumber, rpcErr := number.GetNumericBatchNumber(ctx, d.state, d.etherman, nil)
+	if rpcErr != nil {
+		return nil, rpcErr
+	}
+
+	batch, err := d.state.GetBatchByNumber(ctx, batchNumber, nil)
+	if errors.Is(err, state.ErrNotFound) {
+		return nil, types.NewRPCError(types.DefaultErrorCode, fmt.Sprintf("batch #%d not found", batchNumber))
+	} else if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, "failed to get batch by number", err, true)
+	}
+
+	txs, _, err := d.state.GetTransactionsByBatchNumber(ctx, batch.BatchNumber, nil)
+	if !errors.Is(err, state.ErrNotFound) && err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load batch txs from state by number %v to create the traces", batchNumber), err, true)
+	}
+
+	receipts := make([]ethTypes.Receipt, 0, len(txs))
+	for _, tx := range txs {
+		receipt, err := d.state.GetTransactionReceipt(ctx, tx.Hash(), nil)
+		if err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load receipt for tx %v to get trace", tx.Hash().String()), err, true)
+		}
+		receipts = append(receipts, *receipt)
+	}
+
+	requests := make(chan (ethTypes.Receipt), bufferSize)
+
+	mu := &sync.Mutex{}
+	wg := sync.WaitGroup{}
+	wg.Add(len(receipts))
+	responses := make([]traceResponse, 0, len(receipts))
+
+	// gets the trace from the jRPC and adds it to the responses
+	loadTraceByTxHash := func(d *DebugEndpoints, receipt ethTypes.Receipt, cfg *traceConfig) {
+		response := traceResponse{
+			blockNumber: receipt.BlockNumber.Uint64(),
+			txIndex:     uint64(receipt.TransactionIndex),
+			txHash:      receipt.TxHash,
 		}
 
-		batch, err := d.state.GetBatchByNumber(ctx, batchNumber, dbTx)
-		if errors.Is(err, state.ErrNotFound) {
-			return nil, types.NewRPCError(types.DefaultErrorCode, fmt.Sprintf("batch #%d not found", batchNumber))
-		} else if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, "failed to get batch by number", err, true)
+		defer wg.Done()
+		trace, err := d.TraceTransaction(types.ArgHash(receipt.TxHash), cfg)
+		if err != nil {
+			err := fmt.Errorf("failed to get tx trace for tx %v, err: %w", receipt.TxHash.String(), err)
+			log.Errorf(err.Error())
+			response.err = err
+		} else {
+			response.trace = trace
 		}
 
-		txs, _, err := d.state.GetTransactionsByBatchNumber(ctx, batch.BatchNumber, dbTx)
-		if !errors.Is(err, state.ErrNotFound) && err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load batch txs from state by number %v to create the traces", batchNumber), err, true)
+		// add to the responses
+		mu.Lock()
+		defer mu.Unlock()
+		responses = append(responses, response)
+	}
+
+	// goes through the buffer and loads the trace
+	// by all the transactions added in the buffer
+	// then add the results to the responses map
+	go func() {
+		index := uint(0)
+		for req := range requests {
+			go loadTraceByTxHash(d, req, cfg)
+			index++
 		}
+	}()
 
-		receipts := make([]ethTypes.Receipt, 0, len(txs))
-		for _, tx := range txs {
-			receipt, err := d.state.GetTransactionReceipt(ctx, tx.Hash(), dbTx)
-			if err != nil {
-				return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't load receipt for tx %v to get trace", tx.Hash().String()), err, true)
-			}
-			receipts = append(receipts, *receipt)
+	// add receipts to the buffer
+	for _, receipt := range receipts {
+		requests <- receipt
+	}
+
+	// wait the traces to be loaded
+	if waitTimeout(&wg, d.cfg.ReadTimeout.Duration) {
+		return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get traces for batch %v: timeout reached", batchNumber), nil, true)
+	}
+
+	close(requests)
+
+	// since the txs are attached to a L2 Block and the L2 Block is
+	// the struct attached to the Batch, in order to always respond
+	// the traces in the same order, we need to order the transactions
+	// first by block number and then by tx index, so we can have something
+	// close to the txs being sorted by a tx index related to the batch
+	sort.Slice(responses, func(i, j int) bool {
+		if responses[i].txIndex != responses[j].txIndex {
+			return responses[i].txIndex < responses[j].txIndex
 		}
-
-		requests := make(chan (ethTypes.Receipt), bufferSize)
-
-		mu := &sync.Mutex{}
-		wg := sync.WaitGroup{}
-		wg.Add(len(receipts))
-		responses := make([]traceResponse, 0, len(receipts))
-
-		// gets the trace from the jRPC and adds it to the responses
-		loadTraceByTxHash := func(d *DebugEndpoints, receipt ethTypes.Receipt, cfg *traceConfig) {
-			response := traceResponse{
-				blockNumber: receipt.BlockNumber.Uint64(),
-				txIndex:     uint64(receipt.TransactionIndex),
-				txHash:      receipt.TxHash,
-			}
-
-			defer wg.Done()
-			trace, err := d.TraceTransaction(types.ArgHash(receipt.TxHash), cfg)
-			if err != nil {
-				err := fmt.Errorf("failed to get tx trace for tx %v, err: %w", receipt.TxHash.String(), err)
-				log.Errorf(err.Error())
-				response.err = err
-			} else {
-				response.trace = trace
-			}
-
-			// add to the responses
-			mu.Lock()
-			defer mu.Unlock()
-			responses = append(responses, response)
-		}
-
-		// goes through the buffer and loads the trace
-		// by all the transactions added in the buffer
-		// then add the results to the responses map
-		go func() {
-			index := uint(0)
-			for req := range requests {
-				go loadTraceByTxHash(d, req, cfg)
-				index++
-			}
-		}()
-
-		// add receipts to the buffer
-		for _, receipt := range receipts {
-			requests <- receipt
-		}
-
-		// wait the traces to be loaded
-		if waitTimeout(&wg, d.cfg.ReadTimeout.Duration) {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get traces for batch %v: timeout reached", batchNumber), nil, true)
-		}
-
-		close(requests)
-
-		// since the txs are attached to a L2 Block and the L2 Block is
-		// the struct attached to the Batch, in order to always respond
-		// the traces in the same order, we need to order the transactions
-		// first by block number and then by tx index, so we can have something
-		// close to the txs being sorted by a tx index related to the batch
-		sort.Slice(responses, func(i, j int) bool {
-			if responses[i].txIndex != responses[j].txIndex {
-				return responses[i].txIndex < responses[j].txIndex
-			}
-			return responses[i].blockNumber < responses[j].blockNumber
-		})
-
-		// build the batch trace response array
-		traces := make([]traceBatchTransactionResponse, 0, len(receipts))
-		for _, response := range responses {
-			if response.err != nil {
-				return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get traces for batch %v: failed to get trace for tx: %v, err: %v", batchNumber, response.txHash.String(), response.err.Error()), nil, true)
-			}
-
-			traces = append(traces, traceBatchTransactionResponse{
-				TxHash: response.txHash,
-				Result: response.trace,
-			})
-		}
-		return traces, nil
+		return responses[i].blockNumber < responses[j].blockNumber
 	})
+
+	// build the batch trace response array
+	traces := make([]traceBatchTransactionResponse, 0, len(receipts))
+	for _, response := range responses {
+		if response.err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("failed to get traces for batch %v: failed to get trace for tx: %v, err: %v", batchNumber, response.txHash.String(), response.err.Error()), nil, true)
+		}
+
+		traces = append(traces, traceBatchTransactionResponse{
+			TxHash: response.txHash,
+			Result: response.trace,
+		})
+	}
+	return traces, nil
 }
 
 func (d *DebugEndpoints) buildTraceBlock(ctx context.Context, txs []*ethTypes.Transaction, cfg *traceConfig, dbTx pgx.Tx) (interface{}, types.Error) {

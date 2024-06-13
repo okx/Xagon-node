@@ -15,22 +15,25 @@ import (
 
 // ProcessRequest represents the request of a batch process.
 type ProcessRequest struct {
-	BatchNumber               uint64
-	GlobalExitRoot_V1         common.Hash
-	L1InfoRoot_V2             common.Hash
-	L1InfoTreeData_V2         map[uint32]L1DataV2
-	OldStateRoot              common.Hash
-	OldAccInputHash           common.Hash
-	Transactions              []byte
-	Coinbase                  common.Address
-	ForcedBlockHashL1         common.Hash
-	Timestamp_V1              time.Time
-	TimestampLimit_V2         uint64
-	Caller                    metrics.CallerLabel
-	SkipFirstChangeL2Block_V2 bool
-	SkipWriteBlockInfoRoot_V2 bool
-	SkipVerifyL1InfoRoot_V2   bool
-	ForkID                    uint64
+	BatchNumber                uint64
+	GlobalExitRoot_V1          common.Hash
+	L1InfoRoot_V2              common.Hash
+	L1InfoTreeData_V2          map[uint32]L1DataV2
+	L1InfoTreeData_V3          map[uint32]L1DataV3
+	OldStateRoot               common.Hash
+	OldAccInputHash            common.Hash
+	Transactions               []byte
+	Coinbase                   common.Address
+	ForcedBlockHashL1          common.Hash
+	Timestamp_V1               time.Time
+	TimestampLimit_V2          uint64
+	Caller                     metrics.CallerLabel
+	SkipFirstChangeL2Block_V2  bool
+	SkipWriteBlockInfoRoot_V2  bool
+	SkipVerifyL1InfoRoot_V2    bool
+	ForkID                     uint64
+	PreviousL1InfoTreeRoot_V3  common.Hash
+	PreviousL1InfoTreeIndex_V3 uint32
 }
 
 // L1DataV2 represents the L1InfoTree data used in ProcessRequest.L1InfoTreeData_V2 parameter
@@ -39,6 +42,15 @@ type L1DataV2 struct {
 	BlockHashL1    common.Hash
 	MinTimestamp   uint64
 	SmtProof       [][]byte
+}
+
+// L1DataV3 represents the L1InfoTree data used in ProcessRequest.L1InfoTreeData_V3 parameter
+type L1DataV3 struct {
+	GlobalExitRoot        common.Hash
+	BlockHashL1           common.Hash
+	MinTimestamp          uint64
+	SmtProofPreviousIndex [][]byte
+	InitialHistoricRoot   common.Hash
 }
 
 // ProcessBatchResponse represents the response of a batch process.
@@ -50,21 +62,25 @@ type ProcessBatchResponse struct {
 	UsedZkCounters     ZKCounters
 	ReservedZkCounters ZKCounters
 	// TransactionResponses_V1 []*ProcessTransactionResponse
-	BlockResponses       []*ProcessBlockResponse
-	ExecutorError        error
-	ReadWriteAddresses   map[common.Address]*InfoReadWrite
-	IsRomLevelError      bool
-	IsExecutorLevelError bool
-	IsRomOOCError        bool
-	FlushID              uint64
-	StoredFlushID        uint64
-	ProverID             string
-	GasUsed_V2           uint64
-	SMTKeys_V2           []merkletree.Key
-	ProgramKeys_V2       []merkletree.Key
-	ForkID               uint64
-	InvalidBatch_V2      bool
-	RomError_V2          error
+	BlockResponses            []*ProcessBlockResponse
+	ExecutorError             error
+	ReadWriteAddresses        map[common.Address]*InfoReadWrite
+	IsRomLevelError           bool
+	IsExecutorLevelError      bool
+	IsRomOOCError             bool
+	FlushID                   uint64
+	StoredFlushID             uint64
+	ProverID                  string
+	GasUsed_V2                uint64
+	SMTKeys_V2                []merkletree.Key
+	ProgramKeys_V2            []merkletree.Key
+	ForkID                    uint64
+	InvalidBatch_V2           bool
+	RomError_V2               error
+	OldStateRoot_V2           common.Hash
+	NewLastTimestamp_V3       uint64
+	CurrentL1InfoTreeRoot_V3  common.Hash
+	CurrentL1InfoTreeIndex_V3 uint32
 }
 
 // ProcessBlockResponse represents the response of a block

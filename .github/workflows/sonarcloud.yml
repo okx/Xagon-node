@@ -1,0 +1,34 @@
+name: SonarCloud analysis
+
+on:
+  push:
+    branches:
+      - develop
+      - 'release/**'
+      - 'feature/**'
+      - sonarcloud-update
+
+jobs:
+  sonarcloud:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+
+      - name: Compile SCs
+        run: make compile-scs
+        working-directory: test
+  
+      - name: Test
+        env:
+          ZKPROVER_URI: 127.0.0.1
+        run: make test-full-non-e2e-sonar
+        working-directory: test
+    
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -2,6 +2,7 @@ package migrations_test
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"testing"
 
@@ -32,6 +33,36 @@ func init() {
 	})
 }
 
+type migrationBase struct {
+	newIndexes []string
+	newTables  []tableMetadata
+	newColumns []columnMetadata
+
+	removedIndexes []string
+	removedTables  []tableMetadata
+	removedColumns []columnMetadata
+}
+
+func (m migrationBase) AssertNewAndRemovedItemsAfterMigrationUp(t *testing.T, db *sql.DB) {
+	assertIndexesNotExist(t, db, m.removedIndexes)
+	assertTablesNotExist(t, db, m.removedTables)
+	assertColumnsNotExist(t, db, m.removedColumns)
+
+	assertIndexesExist(t, db, m.newIndexes)
+	assertTablesExist(t, db, m.newTables)
+	assertColumnsExist(t, db, m.newColumns)
+}
+
+func (m migrationBase) AssertNewAndRemovedItemsAfterMigrationDown(t *testing.T, db *sql.DB) {
+	assertIndexesExist(t, db, m.removedIndexes)
+	assertTablesExist(t, db, m.removedTables)
+	assertColumnsExist(t, db, m.removedColumns)
+
+	assertIndexesNotExist(t, db, m.newIndexes)
+	assertTablesNotExist(t, db, m.newTables)
+	assertColumnsNotExist(t, db, m.newColumns)
+}
+
 type migrationTester interface {
 	// InsertData used to insert data in the affected tables of the migration that is being tested
 	// data will be inserted with the schema as it was previous the migration that is being tested
@@ -42,6 +73,14 @@ type migrationTester interface {
 	// RunAssertsAfterMigrationDown this function will be called after reverting the migration that is being tested
 	// and should assert that the data inserted in the function InsertData is persisted properly
 	RunAssertsAfterMigrationDown(*testing.T, *sql.DB)
+}
+
+type tableMetadata struct {
+	schema, name string
+}
+
+type columnMetadata struct {
+	schema, tableName, name string
 }
 
 var (
@@ -118,62 +157,121 @@ func runMigrationsDown(d *sql.DB, n int, packrName string) error {
 	return nil
 }
 
-func checkColumn(t *testing.T, db *sql.DB, schema string, table string, column string, exists bool) (bool, error) {
+func checkColumnExists(db *sql.DB, column columnMetadata) (bool, error) {
 	const getColumn = `SELECT count(*) FROM information_schema.columns WHERE table_schema=$1 AND table_name=$2 AND column_name=$3`
 	var result int
 
-	row := db.QueryRow(getColumn, schema, table, column)
+	row := db.QueryRow(getColumn, column.schema, column.tableName, column.name)
 	err := row.Scan(&result)
 
-	if err != nil {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return false, nil
+	} else if err != nil {
+		return false, err
 	}
 
-	if exists {
-		return (result == 1), nil
-	} else {
-		return (result == 0), nil
+	return (result == 1), nil
+}
+
+func assertColumnExists(t *testing.T, db *sql.DB, column columnMetadata) {
+	exists, err := checkColumnExists(db, column)
+	assert.NoError(t, err)
+	assert.True(t, exists)
+}
+
+func assertColumnNotExists(t *testing.T, db *sql.DB, column columnMetadata) {
+	exists, err := checkColumnExists(db, column)
+	assert.NoError(t, err)
+	assert.False(t, exists)
+}
+
+func assertColumnsExist(t *testing.T, db *sql.DB, columns []columnMetadata) {
+	for _, column := range columns {
+		assertColumnExists(t, db, column)
 	}
 }
 
-func assertColumnExists(t *testing.T, db *sql.DB, schema string, table string, column string) {
-	exists, err := checkColumn(t, db, schema, table, column, true)
-	assert.NoError(t, err)
-	assert.Equal(t, true, exists)
+func assertColumnsNotExist(t *testing.T, db *sql.DB, columns []columnMetadata) {
+	for _, column := range columns {
+		assertColumnNotExists(t, db, column)
+	}
 }
 
-func assertColumnNotExists(t *testing.T, db *sql.DB, schema string, table string, column string) {
-	notExists, err := checkColumn(t, db, schema, table, column, false)
-	assert.NoError(t, err)
-	assert.Equal(t, true, notExists)
-}
-
-func checkTable(t *testing.T, db *sql.DB, schema string, table string, exists bool) (bool, error) {
+func checkTableExists(db *sql.DB, table tableMetadata) (bool, error) {
 	const getTable = `SELECT count(*) FROM information_schema.tables WHERE table_schema=$1 AND table_name=$2`
 	var result int
 
-	row := db.QueryRow(getTable, schema, table)
+	row := db.QueryRow(getTable, table.schema, table.name)
 	err := row.Scan(&result)
 
-	if err != nil {
+	if errors.Is(err, pgx.ErrNoRows) {
 		return false, nil
+	} else if err != nil {
+		return false, err
 	}
 
-	if exists {
-		return (result == 1), nil
-	} else {
-		return (result == 0), nil
+	return (result == 1), nil
+}
+
+func assertTableExists(t *testing.T, db *sql.DB, table tableMetadata) {
+	exists, err := checkTableExists(db, table)
+	assert.NoError(t, err)
+	assert.True(t, exists)
+}
+
+func assertTableNotExists(t *testing.T, db *sql.DB, table tableMetadata) {
+	exists, err := checkTableExists(db, table)
+	assert.NoError(t, err)
+	assert.False(t, exists)
+}
+
+func assertTablesExist(t *testing.T, db *sql.DB, tables []tableMetadata) {
+	for _, table := range tables {
+		assertTableExists(t, db, table)
 	}
 }
 
-func assertTableExists(t *testing.T, db *sql.DB, schema string, table string) {
-	exists, err := checkTable(t, db, schema, table, true)
-	assert.NoError(t, err)
-	assert.Equal(t, true, exists)
+func assertTablesNotExist(t *testing.T, db *sql.DB, tables []tableMetadata) {
+	for _, table := range tables {
+		assertTableNotExists(t, db, table)
+	}
 }
 
-func assertTableNotExists(t *testing.T, db *sql.DB, schema string, table string) {
-	notExists, err := checkTable(t, db, schema, table, false)
+func checkIndexExists(db *sql.DB, index string) (bool, error) {
+	const getIndex = `SELECT count(*) FROM pg_indexes WHERE indexname = $1;`
+	row := db.QueryRow(getIndex, index)
+
+	var result int
+	err := row.Scan(&result)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, nil
+	} else if err != nil {
+		return false, err
+	}
+
+	return (result == 1), nil
+}
+
+func assertIndexExists(t *testing.T, db *sql.DB, index string) {
+	exists, err := checkIndexExists(db, index)
 	assert.NoError(t, err)
-	assert.Equal(t, true, notExists)
+	assert.True(t, exists)
+}
+
+func assertIndexNotExists(t *testing.T, db *sql.DB, index string) {
+	exists, err := checkIndexExists(db, index)
+	assert.NoError(t, err)
+	assert.False(t, exists)
+}
+
+func assertIndexesExist(t *testing.T, db *sql.DB, indexes []string) {
+	for _, index := range indexes {
+		assertIndexExists(t, db, index)
+	}
+}
+
+func assertIndexesNotExist(t *testing.T, db *sql.DB, indexes []string) {
+	for _, index := range indexes {
+		assertIndexNotExists(t, db, index)
+	}
 }

@@ -6,12 +6,15 @@ check-go:
 
 # Targets that require the checks
 generate-file: check-go
-reprocess: check-go
 decode-entry-offline: check-go
 decode-l2block-offline: check-go
 decode-entry: check-go
 decode-l2block: check-go
+decode-batch: check-go
+decode-batch-offline: check-go
 truncate: check-go
+dump-batch: check-go
+dump-batch-offline: check-go
 
 arguments := $(wordlist 2,$(words $(MAKECMDGOALS)),$(MAKECMDGOALS))
 
@@ -27,6 +30,14 @@ decode-entry: ## Runs the tool to decode a given entry number
 decode-l2block: ## Runs the tool to decode a given L2 block
 	go run main.go decode-l2block -cfg config/tool.config.toml -l2block $(arguments)
 
+.PHONY: decode-batch
+decode-batch: ## Runs the tool to decode a given batch
+	go run main.go decode-batch -cfg config/tool.config.toml -batch $(arguments)
+
+.PHONY: dump-batch
+dump-batch: ## Runs the tool to dump a given batch to file
+	go run main.go dump-batch -cfg config/tool.config.toml -d -batch $(arguments)
+
 .PHONY: decode-entry-offline
 decode-entry-offline: ## Runs the offline tool to decode a given entry number
 	go run main.go decode-entry-offline -cfg config/tool.config.toml -entry $(arguments)
@@ -35,13 +46,18 @@ decode-entry-offline: ## Runs the offline tool to decode a given entry number
 decode-l2block-offline: ## Runs the offline tool to decode a given L2 block
 	go run main.go decode-l2block-offline -cfg config/tool.config.toml -l2block $(arguments)
 
+.PHONY: decode-batch-offline
+decode-batch-offline: ## Runs the offline tool to decode a given batch
+	go run main.go decode-batch-offline -cfg config/tool.config.toml -batch $(arguments)
+
+.PHONY: dump-batch-offline
+dump-batch-offline: ## Runs the tool to dump a given batch to file offline
+	go run main.go dump-batch-offline -cfg config/tool.config.toml -d -batch $(arguments)
+
 .PHONY: truncate
 truncate: ## Runs the offline tool to truncate the stream file
 	go run main.go truncate -cfg config/tool.config.toml -entry $(arguments)
 
-# .PHONY: reprocess
-reprocess: ## Runs the tool to reprocess the information in the stream since a given l2 block
-	go run main.go reprocess -cfg config/tool.config.toml -genesis ../test/config/test.genesis.config.json -l2block $(arguments)
 
 ## Help display.
 ## Pulls comments from beside commands and prints a nicely formatted
@@ -50,10 +66,7 @@ reprocess: ## Runs the tool to reprocess the information in the stream since a g
 
 .PHONY: help
 help: ## Prints this help
-	@grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \
-	| sort \
-	| awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
+	@grep -E '^[a-zA-Z0-9_-]+:.*## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' | sort
 
-.DEFAULT: 
+.DEFAULT:
 	@echo ""
-

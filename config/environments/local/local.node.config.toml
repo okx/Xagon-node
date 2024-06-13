@@ -82,6 +82,7 @@ EnableL2SuggestedGasPricePolling = true
 SyncInterval = "1s"
 SyncChunkSize = 100
 TrustedSequencerURL = "" # If it is empty or not specified, then the value is read from the smc
+SyncBlockProtection = "latest" # latest, finalized, safe
 
 [Sequencer]
 DeletePoolTxsL1BlockConfirmations = 100
@@ -100,15 +101,18 @@ StateConsistencyCheckInterval = "5s"
 		BatchMaxDeltaTimestamp = "120s"
 		L2BlockMaxDeltaTimestamp = "3s"
 		ResourceExhaustedMarginPct = 10
+		StateRootSyncInterval = "360s"
+		FlushIdCheckInterval = "50ms"
 		HaltOnBatchNumber = 0
 		SequentialBatchSanityCheck = false
-		SequentialProcessL2Block = true
+		SequentialProcessL2Block = false
 	[Sequencer.Finalizer.Metrics]
 		Interval = "60m"
 		EnableLog = true		
 	[Sequencer.StreamServer]
 		Port = 0
 		Filename = ""
+		WriteTimeout = "5s"
 		Enabled = false
 
 [SequenceSender]
@@ -116,6 +120,7 @@ WaitPeriodSendSequence = "5s"
 LastBatchVirtualizationTimeMaxWaitPeriod = "5s"
 L1BlockTimestampMargin = "30s"
 MaxTxSizeForL1 = 131072
+SequenceL1BlockConfirmations = 32
 L2Coinbase = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 PrivateKey = {Path = "/pk/sequencer.keystore", Password = "testonly"}
 

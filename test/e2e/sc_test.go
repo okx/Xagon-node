@@ -9,6 +9,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/Counter"
+	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/CounterAndBlock"
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/EmitLog2"
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/FailureTest"
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/Read"
@@ -644,5 +645,108 @@ func TestRead(t *testing.T) {
 		value, err = sc.ExternalReadWParams(callOpts, big.NewInt(1))
 		require.NoError(t, err)
 		require.Equal(t, 0, big.NewInt(2).Cmp(value))
+	}
+}
+
+func TestCounterAndBlock(t *testing.T) {
+	if testing.Short() {
+		t.Skip()
+	}
+
+	var err error
+	err = operations.Teardown()
+	require.NoError(t, err)
+
+	defer func() { require.NoError(t, operations.Teardown()) }()
+
+	ctx := context.Background()
+	opsCfg := operations.GetDefaultOperationsConfig()
+	opsMan, err := operations.NewManager(ctx, opsCfg)
+	require.NoError(t, err)
+	err = opsMan.Setup()
+	require.NoError(t, err)
+
+	for _, network := range networks {
+		log.Debugf(network.Name)
+		client := operations.MustGetClient(network.URL)
+		auth := operations.MustGetAuth(network.PrivateKey, network.ChainID)
+
+		_, scTx, sc, err := CounterAndBlock.DeployCounterAndBlock(auth, client)
+		require.NoError(t, err)
+
+		logTx(scTx)
+		err = operations.WaitTxToBeMined(ctx, client, scTx, operations.DefaultTimeoutTxToBeMined)
+		require.NoError(t, err)
+
+		scReceipt, err := client.TransactionReceipt(ctx, scTx.Hash())
+		require.NoError(t, err)
+
+		scBlock, err := client.BlockByNumber(ctx, scReceipt.BlockNumber)
+		require.NoError(t, err)
+
+		count, ts, err := sc.GetCount(&bind.CallOpts{Pending: false, BlockNumber: scBlock.Number()})
+		require.NoError(t, err)
+
+		assert.Equal(t, 0, count.Cmp(big.NewInt(0)))
+		assert.Equal(t, ts.Uint64(), scBlock.Time())
+
+		const numberOfIncrements = 5
+		type result struct {
+			tx            *types.Transaction
+			receipt       *types.Receipt
+			block         *types.Block
+			expectedCount *big.Int
+		}
+
+		results := make([]result, 0, numberOfIncrements)
+		for i := 0; i < numberOfIncrements; i++ {
+			tx, err := sc.Increment(auth)
+			require.NoError(t, err)
+
+			logTx(tx)
+			err = operations.WaitTxToBeMined(ctx, client, tx, operations.DefaultTimeoutTxToBeMined)
+			require.NoError(t, err)
+
+			receipt, err := client.TransactionReceipt(ctx, tx.Hash())
+			require.NoError(t, err)
+
+			block, err := client.BlockByNumber(ctx, receipt.BlockNumber)
+			require.NoError(t, err)
+
+			results = append(results, result{
+				tx:            tx,
+				expectedCount: big.NewInt(int64(i) + 1),
+				receipt:       receipt,
+				block:         block,
+			})
+		}
+
+		const numberOfChecks = 2
+
+		// checks against first increment
+		for _, r := range results {
+			for i := 0; i < numberOfChecks; i++ {
+				count, ts, err = sc.GetCount(&bind.CallOpts{Pending: false, BlockNumber: r.block.Number()})
+				require.NoError(t, err)
+				assert.Equal(t, r.expectedCount.Uint64(), count.Uint64())
+				assert.Equal(t, r.block.Time(), ts.Uint64())
+
+				time.Sleep(time.Second)
+			}
+		}
+
+		latestIncrement := results[len(results)-1]
+		// checks against second increment with latest block
+		for i := 0; i < numberOfChecks; i++ {
+			latestBlock, err := client.BlockByNumber(ctx, nil)
+			require.NoError(t, err)
+
+			count, ts, err = sc.GetCount(&bind.CallOpts{Pending: false})
+			require.NoError(t, err)
+			assert.Equal(t, latestIncrement.expectedCount.Uint64(), count.Uint64())
+			assert.Equal(t, latestBlock.Time(), ts.Uint64())
+
+			time.Sleep(time.Second)
+		}
 	}
 }

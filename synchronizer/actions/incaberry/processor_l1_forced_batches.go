@@ -23,9 +23,9 @@ type ProcessL1ForcedBatches struct {
 // NewProcessL1ForcedBatches returns instance of a processor for ForcedBatchesOrder
 func NewProcessL1ForcedBatches(state stateProcessL1ForcedBatchesInterface) *ProcessL1ForcedBatches {
 	return &ProcessL1ForcedBatches{
-		ProcessorBase: actions.ProcessorBase[ProcessL1ForcedBatches]{
-			SupportedEvent:    []etherman.EventOrder{etherman.ForcedBatchesOrder},
-			SupportedForkdIds: &actions.ForksIdAll},
+		ProcessorBase: *actions.NewProcessorBase[ProcessL1ForcedBatches](
+			[]etherman.EventOrder{etherman.ForcedBatchesOrder},
+			actions.ForksIdAll),
 		state: state}
 }
 

@@ -6,12 +6,27 @@ import (
 	"time"
 )
 
+// SEQUENTIAL L2 BLOCK PROCESSING
 //           |-----------------------------------------------------------------------------| -> totalTime
 //                        |------------|    |-------------------------|                      -> transactionsTime
 //           |-newL2Block-|----tx 1----|    |---tx 2---|-----tx 3-----|  |-----l2Block-----|
 // sequencer |sssss     ss|sss       ss|    |sss     ss|sss         ss|  |ssss           ss| -> sequencerTime
 //  executor |     xxxxx  |   xxxxxxx  |    |   xxxxx  |   xxxxxxxxx  |  |    xxxxxxxxxxx  | -> executorTime
 //      idle |                         |iiii|          |              |ii|                 | -> idleTime
+//
+
+// PARALLEL L2 BLOCK PROCESSING
+//             |---------------------------------------------------------------------------------------------| -> totalTime
+//             |-----------------------L2 block 1-----------------------|  |-----------L2 block 2------------|
+//                          |------------|    |-------------------------|               |--------------------| -> transactionsTime
+//             |-newL2Block-|----tx 1----|    |---tx 2---|-----tx 3-----|  |-newL2Block-|--tx 4---|---tx 5---|
+//   sequencer |sssss     ss|sss       ss|    |sss     ss|sss         ss|  |sssss     ss|ss     ss|sss     ss| -> sequencerTime
+//    executor |     xxxxx  |   xxxxxxx  |    |   xxxxx  |   xxxxxxxxx  |  |     xxxxx  |  xxxxxx |   xxxxx  | -> executorTime
+//        idle |                         |iiii|          |              |ii|                                 | -> idleTime
+
+//                                                                         | -> L2 block 1   |
+// seq-l2block |                                                           |ssss           ss|
+// exe-l2block |                                                           |    xxxxxxxxxxx  |
 //
 
 type processTimes struct {
@@ -41,9 +56,11 @@ type metrics struct {
 	newL2BlockTimes    processTimes
 	transactionsTimes  processTimes
 	l2BlockTimes       processTimes
+	waitl2BlockTime    time.Duration
 	gas                uint64
 	estimatedTxsPerSec float64
 	estimatedGasPerSec uint64
+	sequential         bool
 }
 
 func (m *metrics) sub(mSub metrics) {
@@ -53,6 +70,7 @@ func (m *metrics) sub(mSub metrics) {
 	m.newL2BlockTimes.sub(mSub.newL2BlockTimes)
 	m.transactionsTimes.sub(mSub.transactionsTimes)
 	m.l2BlockTimes.sub(mSub.l2BlockTimes)
+	m.waitl2BlockTime -= mSub.waitl2BlockTime
 	m.gas -= mSub.gas
 }
 
@@ -63,32 +81,57 @@ func (m *metrics) sumUp(mSumUp metrics) {
 	m.newL2BlockTimes.sumUp(mSumUp.newL2BlockTimes)
 	m.transactionsTimes.sumUp(mSumUp.transactionsTimes)
 	m.l2BlockTimes.sumUp(mSumUp.l2BlockTimes)
+	m.waitl2BlockTime += mSumUp.waitl2BlockTime
 	m.gas += mSumUp.gas
 }
 
 func (m *metrics) executorTime() time.Duration {
-	return m.newL2BlockTimes.executor + m.transactionsTimes.executor + m.l2BlockTimes.executor
+	if m.sequential {
+		return m.newL2BlockTimes.executor + m.transactionsTimes.executor + m.l2BlockTimes.executor
+	} else {
+		return m.newL2BlockTimes.executor + m.transactionsTimes.executor + m.waitl2BlockTime
+	}
 }
 
 func (m *metrics) sequencerTime() time.Duration {
-	return m.newL2BlockTimes.sequencer + m.transactionsTimes.sequencer + m.l2BlockTimes.sequencer
+	if m.sequential {
+		return m.newL2BlockTimes.sequencer + m.transactionsTimes.sequencer + m.l2BlockTimes.sequencer
+	} else {
+		return m.newL2BlockTimes.sequencer + m.transactionsTimes.sequencer
+	}
 }
 
 func (m *metrics) totalTime() time.Duration {
-	return m.newL2BlockTimes.total() + m.transactionsTimes.total() + m.l2BlockTimes.total() + m.idleTime
+	if m.sequential {
+		return m.newL2BlockTimes.total() + m.transactionsTimes.total() + m.l2BlockTimes.total() + m.idleTime
+	} else {
+		return m.newL2BlockTimes.total() + m.transactionsTimes.total() + m.waitl2BlockTime + m.idleTime
+	}
 }
 
-func (m *metrics) close(createdAt time.Time, l2BlockTxsCount int64) {
+func (m *metrics) close(createdAt time.Time, l2BlockTxsCount int64, sequential bool) {
 	// Compute pending fields
 	m.closedAt = time.Now()
 	totalTime := time.Since(createdAt)
+	m.sequential = sequential
 	m.l2BlockTxsCount = l2BlockTxsCount
-	m.transactionsTimes.sequencer = totalTime - m.idleTime - m.newL2BlockTimes.total() - m.transactionsTimes.executor - m.l2BlockTimes.total()
+
+	if m.sequential {
+		m.transactionsTimes.sequencer = totalTime - m.idleTime - m.newL2BlockTimes.total() - m.transactionsTimes.executor - m.l2BlockTimes.total()
+	} else {
+		m.transactionsTimes.sequencer = totalTime - m.idleTime - m.newL2BlockTimes.total() - m.transactionsTimes.executor - m.waitl2BlockTime
+	}
 
 	// Compute performance
 	if m.processedTxsCount > 0 {
-		// timePerTxuS is the average time spent per tx. This includes the l2Block time since the processing time of this section is proportional to the number of txs
-		timePerTxuS := (m.transactionsTimes.total() + m.l2BlockTimes.total()).Microseconds() / m.processedTxsCount
+		var timePerTxuS int64
+		if m.sequential {
+			// timePerTxuS is the average time spent per tx. This includes the l2Block time since the processing time of this section is proportional to the number of txs
+			timePerTxuS = (m.transactionsTimes.total() + m.l2BlockTimes.total()).Microseconds() / m.processedTxsCount
+		} else {
+			// timePerTxuS is the average time spent per tx. This includes the waitl2Block
+			timePerTxuS = (m.transactionsTimes.total() + m.waitl2BlockTime).Microseconds() / m.processedTxsCount
+		}
 		// estimatedTxs is the number of transactions that we estimate could have been processed in the block
 		estimatedTxs := float64(totalTime.Microseconds()-m.newL2BlockTimes.total().Microseconds()) / float64(timePerTxuS)
 		// estimatedTxxPerSec is the estimated transactions per second (rounded to 2 decimal digits)
@@ -102,8 +145,8 @@ func (m *metrics) close(createdAt time.Time, l2BlockTxsCount int64) {
 }
 
 func (m *metrics) log() string {
-	return fmt.Sprintf("blockTxs: %d, txs: %d, gas: %d, txsSec: %.2f, gasSec: %d, time: {total: %d, idle: %d, sequencer: {total: %d, newL2Block: %d, txs: %d, l2Block: %d}, executor: {total: %d, newL2Block: %d, txs: %d, l2Block: %d}",
-		m.l2BlockTxsCount, m.processedTxsCount, m.gas, m.estimatedTxsPerSec, m.estimatedGasPerSec, m.totalTime().Microseconds(), m.idleTime.Microseconds(),
+	return fmt.Sprintf("blockTxs: %d, txs: %d, gas: %d, txsSec: %.2f, gasSec: %d, time: {total: %d, idle: %d, waitL2Block: %d, sequencer: {total: %d, newL2Block: %d, txs: %d, l2Block: %d}, executor: {total: %d, newL2Block: %d, txs: %d, l2Block: %d}",
+		m.l2BlockTxsCount, m.processedTxsCount, m.gas, m.estimatedTxsPerSec, m.estimatedGasPerSec, m.totalTime().Microseconds(), m.idleTime.Microseconds(), m.waitl2BlockTime.Microseconds(),
 		m.sequencerTime().Microseconds(), m.newL2BlockTimes.sequencer.Microseconds(), m.transactionsTimes.sequencer.Microseconds(), m.l2BlockTimes.sequencer.Microseconds(),
 		m.executorTime().Microseconds(), m.newL2BlockTimes.executor.Microseconds(), m.transactionsTimes.executor.Microseconds(), m.l2BlockTimes.executor.Microseconds())
 }

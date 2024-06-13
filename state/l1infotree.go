@@ -34,20 +34,20 @@ func (s *State) buildL1InfoTreeCacheIfNeed(ctx context.Context, dbTx pgx.Tx) err
 	if s.l1InfoTree != nil {
 		return nil
 	}
-	log.Debugf("Building L1InfoTree cache")
-	allLeaves, err := s.storage.GetAllL1InfoRootEntries(ctx, dbTx)
+	// Reset L1InfoTree siblings and leaves
+	allLeaves, err := s.GetAllL1InfoRootEntries(ctx, dbTx)
 	if err != nil {
-		log.Error("error getting all leaves. Error: ", err)
-		return fmt.Errorf("error getting all leaves. Error: %w", err)
+		log.Error("error getting all leaves to reset l1InfoTree. Error: ", err)
+		return err
 	}
 	var leaves [][32]byte
 	for _, leaf := range allLeaves {
 		leaves = append(leaves, leaf.Hash())
 	}
-	mt, err := l1infotree.NewL1InfoTree(uint8(32), leaves) //nolint:gomnd
+	mt, err := s.l1InfoTree.ResetL1InfoTree(leaves)
 	if err != nil {
-		log.Error("error creating L1InfoTree. Error: ", err)
-		return fmt.Errorf("error creating L1InfoTree. Error: %w", err)
+		log.Error("error resetting l1InfoTree. Error: ", err)
+		return err
 	}
 	s.l1InfoTree = mt
 	return nil
@@ -55,6 +55,14 @@ func (s *State) buildL1InfoTreeCacheIfNeed(ctx context.Context, dbTx pgx.Tx) err
 
 // AddL1InfoTreeLeaf adds a new leaf to the L1InfoTree and returns the entry and error
 func (s *State) AddL1InfoTreeLeaf(ctx context.Context, l1InfoTreeLeaf *L1InfoTreeLeaf, dbTx pgx.Tx) (*L1InfoTreeExitRootStorageEntry, error) {
+	var stateTx *StateTx
+	if dbTx != nil {
+		var ok bool
+		stateTx, ok = dbTx.(*StateTx)
+		if !ok {
+			return nil, fmt.Errorf("error casting dbTx to stateTx")
+		}
+	}
 	var newIndex uint32
 	gerIndex, err := s.GetLatestIndex(ctx, dbTx)
 	if err != nil && !errors.Is(err, ErrNotFound) {
@@ -73,6 +81,9 @@ func (s *State) AddL1InfoTreeLeaf(ctx context.Context, l1InfoTreeLeaf *L1InfoTre
 	if err != nil {
 		log.Error("error add new leaf to the L1InfoTree. Error: ", err)
 		return nil, err
+	}
+	if stateTx != nil {
+		stateTx.SetL1InfoTreeModified()
 	}
 	entry := L1InfoTreeExitRootStorageEntry{
 		L1InfoTreeLeaf:  *l1InfoTreeLeaf,
