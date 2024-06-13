@@ -1969,6 +1969,7 @@ CheckLastL2BlockHashOnCloseBatch=true
 | - [L2Coinbase](#Sequencer_L2Coinbase )                                               | No      | array of integer | No         | -          | L2Coinbase defines which address is going to receive the fees. It gets the config value from SequenceSender.L2Coinbase |
 | - [Finalizer](#Sequencer_Finalizer )                                                 | No      | object           | No         | -          | Finalizer's specific config properties                                                                                 |
 | - [StreamServer](#Sequencer_StreamServer )                                           | No      | object           | No         | -          | StreamServerCfg is the config for the stream server                                                                    |
+| - [LoadPendingTxsLimit](#Sequencer_LoadPendingTxsLimit )                             | No      | integer          | No         | -          | LoadPendingTxsLimit is used to limit amount txs from the db                                                            |
 
 ### <a name="Sequencer_DeletePoolTxsL1BlockConfirmations"></a>10.1. `Sequencer.DeletePoolTxsL1BlockConfirmations`
 
@@ -2664,6 +2665,20 @@ UpgradeEtrogBatchNumber=0
 ```
 [Sequencer.StreamServer]
 WriteTimeout="5s"
+```
+
+### <a name="Sequencer_LoadPendingTxsLimit"></a>10.10. `Sequencer.LoadPendingTxsLimit`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Description:** LoadPendingTxsLimit is used to limit amount txs from the db
+
+**Example setting the default value** (0):
+```
+[Sequencer]
+LoadPendingTxsLimit=0
 ```
 
 ## <a name="SequenceSender"></a>11. `[SequenceSender]`
