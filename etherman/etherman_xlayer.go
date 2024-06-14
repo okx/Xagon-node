@@ -20,6 +20,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/etherman/ethgasstation"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/metrics"
 	dataavailabilityprotocol "github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/dataavailabilityprotocol_xlayer"
+	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/eigendaverifier"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/etrogpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/oldpolygonzkevm"
 	"github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/oldpolygonzkevmglobalexitroot"
@@ -179,6 +180,12 @@ type L1Config struct {
 	PolAddr common.Address `json:"polTokenAddress"`
 	// GlobalExitRootManagerAddr Address of the L1 GlobalExitRootManager contract
 	GlobalExitRootManagerAddr common.Address `json:"polygonZkEVMGlobalExitRootAddress"`
+	// EigenDARollupUtilsAddr Address of the L1 library
+	EigenDARollupUtilsAddr common.Address `mapstructure:"eigenDARollupUtilsAddress"`
+	// EigenDAVerifierManagerAddr Address of the L1 contract
+	EigenDAVerifierManagerAddr common.Address `mapstructure:"eigenDAVerifierManagerAddress"`
+	// EigenDAServiceManagerAddr Address of the L1 contract
+	EigenDaServiceManagerAddr common.Address `mapstructure:"eigenDAServiceManagerAddress"`
 }
 
 type externalGasProviders struct {
@@ -195,6 +202,7 @@ type Client struct {
 	RollupManager            *polygonrollupmanager.Polygonrollupmanager
 	GlobalExitRootManager    *polygonzkevmglobalexitroot.Polygonzkevmglobalexitroot
 	OldGlobalExitRootManager *oldpolygonzkevmglobalexitroot.Oldpolygonzkevmglobalexitroot
+	EigendaVerifier          *eigendaverifier.Eigendaverifier
 	Pol                      *pol.Pol
 	DAProtocol               *dataavailabilityprotocol.Dataavailabilityprotocol
 	SCAddresses              []common.Address
@@ -251,6 +259,11 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 		log.Errorf("error creating NewOldpolygonzkevmglobalexitroot client (%s). Error: %w", l1Config.GlobalExitRootManagerAddr.String(), err)
 		return nil, err
 	}
+	eigendaVerifier, err := eigendaverifier.NewEigendaverifier(l1Config.EigenDAVerifierManagerAddr, ethClient)
+	if err != nil {
+		fmt.Printf("error creating NewEigendaverifier client (%s)\n", l1Config.EigenDAVerifierManagerAddr.String())
+		return nil, err
+	}
 	pol, err := pol.NewPol(l1Config.PolAddr, ethClient)
 	if err != nil {
 		log.Errorf("error creating NewPol client (%s). Error: %w", l1Config.PolAddr.String(), err)
@@ -296,6 +309,7 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 		GlobalExitRootManager:    globalExitRoot,
 		DAProtocol:               dap,
 		OldGlobalExitRootManager: oldGlobalExitRoot,
+		EigendaVerifier:          eigendaVerifier,
 		SCAddresses:              scAddresses,
 		RollupID:                 rollupID,
 		GasProviders: externalGasProviders{
@@ -1688,6 +1702,12 @@ func decodeSequencedForceBatches(txData []byte, lastBatchNumber uint64, sequence
 		}
 	}
 	return sequencedForcedBatches, nil
+}
+
+// VerifyDataAvailabilityMessage verifies the data availability message from the current
+// canonical chain. If DA message is valid, no error is returned.
+func (etherMan *Client) VerifyDataAvailabilityMessage(dataAvailabilityMessage []byte) error {
+	return etherMan.EigendaVerifier.VerifyMessage(&bind.CallOpts{Pending: false}, [32]byte{}, dataAvailabilityMessage)
 }
 
 func prepareBlock(vLog types.Log, t time.Time, fullBlock *types.Block) Block {

@@ -54,6 +54,14 @@ SyncInterval = "2s"
 SyncChunkSize = 100
 TrustedSequencerURL = "" # If it is empty or not specified, then the value is read from the smc
 
+[DataAvailability]
+Hostname = "disperser-holesky.eigenda.xyz"
+Port = 443
+Timeout = "30s"
+UseSecureGrpcFlag = true
+RetrieveBlobStatusPeriod = "5s"
+BlobStatusConfirmedTimeout = "15m"
+
 [MTClient]
 URI = "zkevm-prover:50061"
 

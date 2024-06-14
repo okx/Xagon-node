@@ -9,6 +9,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/config/apollo"
 	"github.com/0xPolygonHermez/zkevm-node/dataavailability"
 	"github.com/0xPolygonHermez/zkevm-node/dataavailability/datacommittee"
+	"github.com/0xPolygonHermez/zkevm-node/dataavailability/eigenda"
 	"github.com/0xPolygonHermez/zkevm-node/etherman"
 	"github.com/0xPolygonHermez/zkevm-node/ethtxmanager"
 	"github.com/0xPolygonHermez/zkevm-node/event"
@@ -123,6 +124,19 @@ func newDataAvailability(c config.Config, st *state.State, etherman *etherman.Cl
 		if err != nil {
 			return nil, err
 		}
+	case string(dataavailability.DataAvailabilityEigenDA):
+		var (
+			pk  *ecdsa.PrivateKey
+			err error
+		)
+		if isSequenceSender {
+			_, pk, err = etherman.LoadAuthFromKeyStoreXLayer(c.SequenceSender.DAPermitApiPrivateKey.Path, c.SequenceSender.DAPermitApiPrivateKey.Password)
+			if err != nil {
+				return nil, err
+			}
+			log.Infof("from pk %s", crypto.PubkeyToAddress(pk.PublicKey))
+		}
+		daBackend = eigenda.NewDataAvailabilityProvider(c.DataAvailability)
 	default:
 		return nil, fmt.Errorf("unexpected / unsupported DA protocol: %s", daProtocolName)
 	}

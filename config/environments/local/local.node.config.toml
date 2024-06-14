@@ -137,6 +137,14 @@ GeneratingProofCleanupThreshold = "10m"
 UpgradeEtrogBatchNumber = 0
 BatchProofL1BlockConfirmations = 2
 
+[DataAvailability]
+Hostname = "disperser-holesky.eigenda.xyz"
+Port = 443
+Timeout = "30s"
+UseSecureGrpcFlag = true
+RetrieveBlobStatusPeriod = "5s"
+BlobStatusConfirmedTimeout = "15m"
+
 [EthTxManager]
 ForcedGas = 0
 PrivateKeys = [

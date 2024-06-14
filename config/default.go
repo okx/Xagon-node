@@ -236,6 +236,14 @@ AggLayerTxTimeout = "5m"
 AggLayerURL = ""
 SequencerPrivateKey = {}
 
+[DataAvailability]
+Hostname = "disperser-holesky.eigenda.xyz"
+Port = 443
+Timeout = "30s"
+UseSecureGrpcFlag = true
+RetrieveBlobStatusPeriod = "5s"
+BlobStatusConfirmedTimeout = "15m"
+
 [L2GasPriceSuggester]
 Type = "follower"
 UpdatePeriod = "10s"

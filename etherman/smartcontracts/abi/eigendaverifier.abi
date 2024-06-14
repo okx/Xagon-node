@@ -1,0 +1,563 @@
+[
+  {
+    "type": "constructor",
+    "inputs": [
+      {
+        "name": "_admin",
+        "type": "address",
+        "internalType": "address"
+      },
+      {
+        "name": "_eigenDAServiceManager",
+        "type": "address",
+        "internalType": "contract IEigenDAServiceManager"
+      }
+    ],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "acceptAdminRole",
+    "inputs": [],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "admin",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "decodeBlobData",
+    "inputs": [
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [
+      {
+        "name": "blobData",
+        "type": "tuple",
+        "internalType": "struct EigenDAVerifier.BlobData",
+        "components": [
+          {
+            "name": "blobHeader",
+            "type": "tuple",
+            "internalType": "struct IEigenDAServiceManager.BlobHeader",
+            "components": [
+              {
+                "name": "commitment",
+                "type": "tuple",
+                "internalType": "struct BN254.G1Point",
+                "components": [
+                  {
+                    "name": "X",
+                    "type": "uint256",
+                    "internalType": "uint256"
+                  },
+                  {
+                    "name": "Y",
+                    "type": "uint256",
+                    "internalType": "uint256"
+                  }
+                ]
+              },
+              {
+                "name": "dataLength",
+                "type": "uint32",
+                "internalType": "uint32"
+              },
+              {
+                "name": "quorumBlobParams",
+                "type": "tuple[]",
+                "internalType": "struct IEigenDAServiceManager.QuorumBlobParam[]",
+                "components": [
+                  {
+                    "name": "quorumNumber",
+                    "type": "uint8",
+                    "internalType": "uint8"
+                  },
+                  {
+                    "name": "adversaryThresholdPercentage",
+                    "type": "uint8",
+                    "internalType": "uint8"
+                  },
+                  {
+                    "name": "confirmationThresholdPercentage",
+                    "type": "uint8",
+                    "internalType": "uint8"
+                  },
+                  {
+                    "name": "chunkLength",
+                    "type": "uint32",
+                    "internalType": "uint32"
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "blobVerificationProof",
+            "type": "tuple",
+            "internalType": "struct EigenDARollupUtils.BlobVerificationProof",
+            "components": [
+              {
+                "name": "batchId",
+                "type": "uint32",
+                "internalType": "uint32"
+              },
+              {
+                "name": "blobIndex",
+                "type": "uint32",
+                "internalType": "uint32"
+              },
+              {
+                "name": "batchMetadata",
+                "type": "tuple",
+                "internalType": "struct IEigenDAServiceManager.BatchMetadata",
+                "components": [
+                  {
+                    "name": "batchHeader",
+                    "type": "tuple",
+                    "internalType": "struct IEigenDAServiceManager.BatchHeader",
+                    "components": [
+                      {
+                        "name": "blobHeadersRoot",
+                        "type": "bytes32",
+                        "internalType": "bytes32"
+                      },
+                      {
+                        "name": "quorumNumbers",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                      },
+                      {
+                        "name": "signedStakeForQuorums",
+                        "type": "bytes",
+                        "internalType": "bytes"
+                      },
+                      {
+                        "name": "referenceBlockNumber",
+                        "type": "uint32",
+                        "internalType": "uint32"
+                      }
+                    ]
+                  },
+                  {
+                    "name": "signatoryRecordHash",
+                    "type": "bytes32",
+                    "internalType": "bytes32"
+                  },
+                  {
+                    "name": "confirmationBlockNumber",
+                    "type": "uint32",
+                    "internalType": "uint32"
+                  }
+                ]
+              },
+              {
+                "name": "inclusionProof",
+                "type": "bytes",
+                "internalType": "bytes"
+              },
+              {
+                "name": "quorumIndices",
+                "type": "bytes",
+                "internalType": "bytes"
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "getDataAvailabilityProtocol",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "getProcotolName",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "string",
+        "internalType": "string"
+      }
+    ],
+    "stateMutability": "pure"
+  },
+  {
+    "type": "function",
+    "name": "pendingAdmin",
+    "inputs": [],
+    "outputs": [
+      {
+        "name": "",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "stateMutability": "view"
+  },
+  {
+    "type": "function",
+    "name": "setDataAvailabilityProtocol",
+    "inputs": [
+      {
+        "name": "newDataAvailabilityProtocol",
+        "type": "address",
+        "internalType": "contract IEigenDAServiceManager"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "transferAdminRole",
+    "inputs": [
+      {
+        "name": "newPendingAdmin",
+        "type": "address",
+        "internalType": "address"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  },
+  {
+    "type": "function",
+    "name": "verifyMessage",
+    "inputs": [
+      {
+        "name": "",
+        "type": "bytes32",
+        "internalType": "bytes32"
+      },
+      {
+        "name": "data",
+        "type": "bytes",
+        "internalType": "bytes"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "view"
+  },
+  {
+    "type": "event",
+    "name": "AcceptAdminRole",
+    "inputs": [
+      {
+        "name": "newAdmin",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "SetDataAvailabilityProtocol",
+    "inputs": [
+      {
+        "name": "newTrustedSequencer",
+        "type": "address",
+        "indexed": false,
+        "internalType": "contract IEigenDAServiceManager"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "event",
+    "name": "TransferAdminRole",
+    "inputs": [
+      {
+        "name": "newPendingAdmin",
+        "type": "address",
+        "indexed": false,
+        "internalType": "address"
+      }
+    ],
+    "anonymous": false
+  },
+  {
+    "type": "error",
+    "name": "BatchAlreadyVerified",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "BatchNotSequencedOrNotSequenceEnd",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ExceedMaxVerifyBatches",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FinalNumBatchBelowLastVerifiedBatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FinalNumBatchDoesNotMatchPendingState",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "FinalPendingStateNumInvalid",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ForceBatchNotAllowed",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ForceBatchTimeoutNotExpired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ForceBatchesAlreadyActive",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ForceBatchesDecentralized",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ForceBatchesNotAllowedOnEmergencyState",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ForceBatchesOverflow",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "ForcedDataDoesNotMatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GasTokenNetworkMustBeZeroOnEther",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "GlobalExitRootNotExist",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "HaltTimeoutNotExpired",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "HaltTimeoutNotExpiredAfterEmergencyState",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "HugeTokenMetadataNotSupported",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InitNumBatchAboveLastVerifiedBatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InitNumBatchDoesNotMatchPendingState",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InitSequencedBatchDoesNotMatch",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidInitializeTransaction",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidProof",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRangeBatchTimeTarget",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRangeForceBatchTimeout",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "InvalidRangeMultiplierBatchFee",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "MaxTimestampSequenceInvalid",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NewAccInputHashDoesNotExist",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NewPendingStateTimeoutMustBeLower",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NewStateRootNotInsidePrime",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NewTrustedAggregatorTimeoutMustBeLower",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotEnoughMaticAmount",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "NotEnoughPOLAmount",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OldAccInputHashDoesNotExist",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OldStateRootDoesNotExist",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyAdmin",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyPendingAdmin",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyRollupManager",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyTrustedAggregator",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "OnlyTrustedSequencer",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PendingStateDoesNotExist",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PendingStateInvalid",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PendingStateNotConsolidable",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "PendingStateTimeoutExceedHaltAggregationTimeout",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SequenceZeroBatches",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SequencedTimestampBelowForcedTimestamp",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "SequencedTimestampInvalid",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "StoredRootMustBeDifferentThanNewRoot",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TransactionsLengthAboveMax",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TrustedAggregatorTimeoutExceedHaltAggregationTimeout",
+    "inputs": []
+  },
+  {
+    "type": "error",
+    "name": "TrustedAggregatorTimeoutNotExpired",
+    "inputs": []
+  }
+]
