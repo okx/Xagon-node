@@ -115,7 +115,7 @@ func (p *PostgresPoolStorage) IsFreeGasAddr(ctx context.Context, addr common.Add
 
 // AddFreeGasAddr add free gas address
 func (p *PostgresPoolStorage) AddFreeGasAddr(ctx context.Context, addr common.Address) error {
-	sql := `INSERT INTO pool.free_gas(addr) VALUES ($1)`
+	sql := `INSERT INTO pool.free_gas(addr) VALUES ($1) ON CONFLICT(addr) do NOTHING`
 
 	_, err := p.db.Exec(ctx, sql, addr.String())
 	if err != nil {
