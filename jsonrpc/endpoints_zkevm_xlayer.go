@@ -1,11 +1,12 @@
 package jsonrpc
 
 import (
-	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
-	"fmt"
-	"github.com/jackc/pgx/v4"
 	"context"
+	"fmt"
+
 	"github.com/0xPolygonHermez/zkevm-node/hex"
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
+	"github.com/jackc/pgx/v4"
 )
 
 // GetBatchSealTime returns the seal time
