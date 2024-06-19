@@ -9,7 +9,7 @@ import (
 
 // GetLastL2BlockTimeByBatchNumber gets the last l2 block time in a batch by batch number
 func (p *PostgresStorage) GetLastL2BlockTimeByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (uint64, error) {
-	const query = "SELECT created_at FROM state.l2block b WHERE batch_num = $1 ORDER BY b.block_num DESC LIMIT 1"
+	const query = "SELECT header FROM state.l2block b WHERE batch_num = $1 ORDER BY b.block_num DESC LIMIT 1"
 
 	header := &state.L2Header{}
 	q := p.getExecQuerier(dbTx)
