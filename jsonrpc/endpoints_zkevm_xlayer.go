@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx/v4"
 	"context"
+	"github.com/0xPolygonHermez/zkevm-node/hex"
 )
 
 // GetBatchSealTime returns the seal time
@@ -16,10 +17,11 @@ func (z *ZKEVMEndpoints) GetBatchSealTime(batchNumber types.BatchNumber) (interf
 			return nil, rpcErr
 		}
 
-		sealTime, err := z.state.GetLastL2BlockCreateTimeBatchNumber(ctx, batchNumber, dbTx)
+		sealTime, err := z.state.GetLastL2BlockTimeByBatchNumber(ctx, batchNumber, dbTx)
 		if err != nil {
 			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't get last l2 block create time from state by batch number %v", batchNumber), err, true)
 		}
-		return sealTime.Unix(), nil
+
+		return hex.EncodeUint64(sealTime), nil
 	})
 }
