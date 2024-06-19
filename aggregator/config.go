@@ -35,6 +35,10 @@ type Config struct {
 	// Port for the grpc server
 	Port int `mapstructure:"Port"`
 
+	// Parallel means send requests to prover in parallel
+	Parallel  bool   `mapstructure:"Parallel"`
+	ParaCount uint64 `mapstructure:"ParaCount"`
+
 	// RetryTime is the time the aggregator main loop sleeps if there are no proofs to aggregate
 	// or batches to generate proofs. It is also used in the isSynced loop
 	RetryTime types.Duration `mapstructure:"RetryTime"`

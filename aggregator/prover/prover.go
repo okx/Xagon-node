@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/aggregator/metrics"
@@ -24,6 +25,8 @@ var (
 
 // Prover abstraction of the grpc prover client.
 type Prover struct {
+	sync.Mutex
+
 	name                      string
 	id                        string
 	address                   net.Addr
@@ -325,6 +328,8 @@ func (p *Prover) waitProof(ctx context.Context, proofID string) (*GetProofRespon
 // call sends a message to the prover and waits to receive the response over
 // the connection stream.
 func (p *Prover) call(req *AggregatorMessage) (*ProverMessage, error) {
+	p.Lock()
+	defer p.Unlock()
 	if err := p.stream.Send(req); err != nil {
 		return nil, err
 	}
