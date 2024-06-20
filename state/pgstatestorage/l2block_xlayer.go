@@ -22,7 +22,7 @@ func (p *PostgresStorage) GetLastL2BlockTimeByBatchNumber(ctx context.Context, b
 
 	header := &state.L2Header{}
 	q := p.getExecQuerier(dbTx)
-	err := q.QueryRow(ctx, query, batchNumber).Scan(&header)
+	err = q.QueryRow(ctx, query, batchNumber).Scan(&header)
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		return 0, state.ErrNotFound
