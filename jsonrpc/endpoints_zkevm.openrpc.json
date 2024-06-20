@@ -177,8 +177,7 @@
       "result": {
         "$ref": "#/components/contentDescriptors/BatchDataResult"
       }
-    },
-    {
+    }, {
       "name": "zkevm_getBatchByNumber",
       "summary": "Gets a batch for a given number",
       "params": [
@@ -481,6 +480,22 @@
         "description": "The amount of gas price",
         "schema": {
           "$ref": "#/components/schemas/Integer"
+        }
+      }
+    },
+    {
+      "name": "zkevm_getBatchSealTime",
+      "summary": "Get Batch seal time",
+      "params": [
+        {
+          "$ref": "#/components/contentDescriptors/BatchNumber"
+        }
+      ],
+      "result": {
+        "name": "result",
+        "description": "The batch seal time",
+        "schema": {
+          "$ref": "#/components/schemas/Timestamp"
         }
       }
     }
@@ -1470,6 +1485,11 @@
             "$ref": "#/components/schemas/Integer"
           }
         }
+      },
+      "Timestamp": {
+        "title": "timestamp",
+        "type": "string",
+        "description": "The unix timestamp of the batch"
       }
     }
   }
