@@ -20,7 +20,7 @@ func (z *ZKEVMEndpoints) GetBatchSealTime(batchNumber types.BatchNumber) (interf
 
 		sealTime, err := z.state.GetLastL2BlockTimeByBatchNumber(ctx, batchNumber, dbTx)
 		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't get last l2 block time from state batch number %v, error: %v", batchNumber, err), nil, false)
+			return RPCErrorResponse(types.DefaultErrorCode, fmt.Sprintf("couldn't get batch number %v's seal time, error: %v", batchNumber, err), nil, false)
 		}
 
 		return hex.EncodeUint64(sealTime), nil
