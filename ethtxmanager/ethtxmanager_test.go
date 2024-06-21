@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/config/types"
-	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/0xPolygonHermez/zkevm-node/test/dbutils"
 	"github.com/ethereum/go-ethereum"
 	"github.com/ethereum/go-ethereum/common"
@@ -116,14 +115,6 @@ func TestTxGetMined(t *testing.T) {
 	etherman.
 		On("GetRevertMessage", ctx, signedTx).
 		Return("", nil).
-		Once()
-
-	block := &state.Block{
-		BlockNumber: blockNumber.Uint64(),
-	}
-	st.
-		On("GetLastBlock", ctx, nil).
-		Return(block, nil).
 		Once()
 
 	err = ethTxManagerClient.Add(ctx, owner, id, from, to, value, data, gasOffset, nil)
@@ -263,14 +254,6 @@ func TestTxGetMinedAfterReviewed(t *testing.T) {
 		Return(receipt, nil).
 		Once()
 
-	block := &state.Block{
-		BlockNumber: blockNumber.Uint64(),
-	}
-	st.
-		On("GetLastBlock", ctx, nil).
-		Return(block, nil).
-		Once()
-
 	// Build result
 	etherman.
 		On("GetTx", ctx, firstSignedTx.Hash()).
@@ -383,16 +366,8 @@ func TestTxGetMinedAfterConfirmedAndReorged(t *testing.T) {
 	}
 	etherman.
 		On("GetTxReceipt", ctx, signedTx.Hash()).
-		Return(receipt, nil).
-		Once()
-
-	block := &state.Block{
-		BlockNumber: blockNumber.Uint64(),
-	}
-	st.
-		On("GetLastBlock", ctx, nil).
 		Run(func(args mock.Arguments) { ethTxManagerClient.Stop() }). // stops the management cycle to avoid problems with mocks
-		Return(block, nil).
+		Return(receipt, nil).
 		Once()
 
 	// Build Result 1
@@ -433,12 +408,8 @@ func TestTxGetMinedAfterConfirmedAndReorged(t *testing.T) {
 	// Monitoring Cycle 3
 	etherman.
 		On("CheckTxWasMined", ctx, signedTx.Hash()).
-		Return(true, receipt, nil).
-		Once()
-	st.
-		On("GetLastBlock", ctx, nil).
 		Run(func(args mock.Arguments) { ethTxManagerClient.Stop() }). // stops the management cycle to avoid problems with mocks
-		Return(block, nil).
+		Return(true, receipt, nil).
 		Once()
 
 	// Build Result 3
@@ -641,14 +612,6 @@ func TestExecutionReverted(t *testing.T) {
 	etherman.
 		On("GetTxReceipt", ctx, secondSignedTx.Hash()).
 		Return(receipt, nil).
-		Once()
-
-	block := &state.Block{
-		BlockNumber: blockNumber.Uint64(),
-	}
-	st.
-		On("GetLastBlock", ctx, nil).
-		Return(block, nil).
 		Once()
 
 	// Build result
@@ -957,14 +920,6 @@ func TestFailedToEstimateTxWithForcedGasGetMined(t *testing.T) {
 	etherman.
 		On("GetRevertMessage", ctx, signedTx).
 		Return("", nil).
-		Once()
-
-	block := &state.Block{
-		BlockNumber: blockNumber.Uint64(),
-	}
-	st.
-		On("GetLastBlock", ctx, nil).
-		Return(block, nil).
 		Once()
 
 	err = ethTxManagerClient.Add(ctx, owner, id, from, to, value, data, gasOffset, nil)

@@ -125,13 +125,13 @@ func NewSynchronizer(
 		syncBlockProtection:           syncBlockProtection,
 		halter:                        syncCommon.NewCriticalErrorHalt(eventLog, 5*time.Second), //nolint:gomnd
 	}
-	if cfg.L1BlockCheck.Enable {
+	if cfg.L1BlockCheck.Enabled {
 		log.Infof("L1BlockChecker enabled: %s", cfg.L1BlockCheck.String())
 		l1BlockChecker := l1_check_block.NewCheckL1BlockHash(ethMan, res.state,
 			l1_check_block.NewSafeL1BlockNumberFetch(l1_check_block.StringToL1BlockPoint(cfg.L1BlockCheck.L1SafeBlockPoint), cfg.L1BlockCheck.L1SafeBlockOffset))
 
 		var preCheckAsync syncinterfaces.AsyncL1BlockChecker
-		if cfg.L1BlockCheck.PreCheckEnable {
+		if cfg.L1BlockCheck.PreCheckEnabled {
 			log.Infof("L1BlockChecker enabled precheck from: %s/%d to: %s/%d",
 				cfg.L1BlockCheck.L1SafeBlockPoint, cfg.L1BlockCheck.L1SafeBlockOffset,
 				cfg.L1BlockCheck.L1PreSafeBlockPoint, cfg.L1BlockCheck.L1PreSafeBlockOffset)
@@ -151,7 +151,7 @@ func NewSynchronizer(
 			time.Second)
 	}
 
-	if !isTrustedSequencer {
+	if !isTrustedSequencer && cfg.L2Synchronization.Enabled {
 		log.Info("Permissionless: creating and Initializing L2 synchronization components")
 		L1SyncChecker := l2_sync_etrog.NewCheckSyncStatusToProcessBatch(res.zkEVMClient, res.state)
 		sync := &res
@@ -170,7 +170,10 @@ func NewSynchronizer(
 			uint64(state.FORKID_ELDERBERRY): syncTrustedStateEtrog,
 			uint64(state.FORKID_9):          syncTrustedStateEtrog,
 		}, res.state)
+	} else {
+		log.Info("L2 synchronization disabled or running in trusted sequencer mode")
 	}
+
 	var l1checkerL2Blocks *actions.CheckL2BlockHash
 	if cfg.L1SyncCheckL2BlockHash {
 		if !isTrustedSequencer {
@@ -304,7 +307,7 @@ func (s *ClientSynchronizer) Sync() error {
 				return rollback(s.ctx, dbTx, fmt.Errorf("genesis Block number configured is not valid. It is required the block number where the PolygonZkEVM smc was deployed"))
 			}
 
-			// Sync events from RollupManager that happen before rollup creation
+			// XLayer, sync events from RollupManager that happen before rollup creation
 			log.Info("synchronizing events from RollupManager that happen before rollup creation")
 			for i := s.genesis.RollupManagerBlockNumber; true; i += s.cfg.SyncChunkSize {
 				toBlock := min(i+s.cfg.SyncChunkSize-1, s.genesis.RollupBlockNumber-1)
@@ -438,6 +441,8 @@ func (s *ClientSynchronizer) Sync() error {
 			}
 			log.Infof("latestSequencedBatchNumber: %d, latestSyncedBatch: %d, lastVerifiedBatchNumber: %d", latestSequencedBatchNumber, latestSyncedBatch, lastVerifiedBatchNumber)
 			resetDone := false
+
+			// XLayer metrics
 			metrics.TrustBatchNum(latestSequencedBatchNumber)
 			metrics.VirtualBatchNum(latestSyncedBatch)
 			metrics.VerifiedBatchNum(lastVerifiedBatchNumber)
@@ -447,7 +452,7 @@ func (s *ClientSynchronizer) Sync() error {
 			// latestSequencedBatchNumber -> last batch on SMC
 			if latestSyncedBatch >= latestSequencedBatchNumber {
 				startTrusted := time.Now()
-				if s.syncTrustedStateExecutor != nil && !s.isTrustedSequencer {
+				if s.syncTrustedStateExecutor != nil {
 					log.Info("Syncing trusted state (permissionless)")
 					//Sync Trusted State
 					log.Debug("Doing reorg check before L2 sync")
@@ -805,7 +810,7 @@ func (s *ClientSynchronizer) ProcessBlockRange(blocks []etherman.Block, order ma
 }
 
 func (s *ClientSynchronizer) syncTrustedState(latestSyncedBatch uint64) error {
-	if s.syncTrustedStateExecutor == nil || s.isTrustedSequencer {
+	if s.syncTrustedStateExecutor == nil {
 		return nil
 	}
 

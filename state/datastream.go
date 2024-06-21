@@ -2,14 +2,16 @@ package state
 
 import (
 	"context"
-	"encoding/binary"
 	"math/big"
+	"time"
 
 	"github.com/0xPolygonHermez/zkevm-data-streamer/datastreamer"
 	"github.com/0xPolygonHermez/zkevm-node/log"
+	"github.com/0xPolygonHermez/zkevm-node/state/datastream"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/iden3/go-iden3-crypto/keccak256"
 	"github.com/jackc/pgx/v4"
+	"google.golang.org/protobuf/proto"
 )
 
 const (
@@ -17,18 +19,6 @@ const (
 	StreamTypeSequencer datastreamer.StreamType = 1
 	// EntryTypeBookMark represents a bookmark entry
 	EntryTypeBookMark datastreamer.EntryType = datastreamer.EtBookmark
-	// EntryTypeL2BlockStart represents a L2 block start
-	EntryTypeL2BlockStart datastreamer.EntryType = 1
-	// EntryTypeL2Tx represents a L2 transaction
-	EntryTypeL2Tx datastreamer.EntryType = 2
-	// EntryTypeL2BlockEnd represents a L2 block end
-	EntryTypeL2BlockEnd datastreamer.EntryType = 3
-	// EntryTypeUpdateGER represents a GER update
-	EntryTypeUpdateGER datastreamer.EntryType = 4
-	// BookMarkTypeL2Block represents a L2 block bookmark
-	BookMarkTypeL2Block byte = 0
-	// BookMarkTypeBatch represents a batch
-	BookMarkTypeBatch byte = 1
 	// SystemSC is the system smart contract address
 	SystemSC = "0x000000000000000000000000000000005ca1ab1e"
 	// posConstant is the constant used to compute the position of the intermediate state root
@@ -38,7 +28,8 @@ const (
 // DSBatch represents a data stream batch
 type DSBatch struct {
 	Batch
-	ForkID uint16
+	ForkID         uint64
+	EtrogTimestamp *time.Time
 }
 
 // DSFullBatch represents a data stream batch ant its L2 blocks
@@ -55,177 +46,32 @@ type DSL2FullBlock struct {
 
 // DSL2Block is a full l2 block
 type DSL2Block struct {
-	BatchNumber     uint64         // 8 bytes
-	L2BlockNumber   uint64         // 8 bytes
-	Timestamp       int64          // 8 bytes
-	L1InfoTreeIndex uint32         // 4 bytes
-	L1BlockHash     common.Hash    // 32 bytes
-	GlobalExitRoot  common.Hash    // 32 bytes
-	Coinbase        common.Address // 20 bytes
-	ForkID          uint16         // 2 bytes
-	ChainID         uint32         // 4 bytes
-	BlockHash       common.Hash    // 32 bytes
-	StateRoot       common.Hash    // 32 bytes
-}
-
-// DSL2BlockStart represents a data stream L2 block start
-type DSL2BlockStart struct {
-	BatchNumber     uint64         // 8 bytes
-	L2BlockNumber   uint64         // 8 bytes
-	Timestamp       int64          // 8 bytes
-	DeltaTimestamp  uint32         // 4 bytes
-	L1InfoTreeIndex uint32         // 4 bytes
-	L1BlockHash     common.Hash    // 32 bytes
-	GlobalExitRoot  common.Hash    // 32 bytes
-	Coinbase        common.Address // 20 bytes
-	ForkID          uint16         // 2 bytes
-	ChainID         uint32         // 4 bytes
-
-}
-
-// Encode returns the encoded DSL2BlockStart as a byte slice
-func (b DSL2BlockStart) Encode() []byte {
-	bytes := make([]byte, 0)
-	bytes = binary.BigEndian.AppendUint64(bytes, b.BatchNumber)
-	bytes = binary.BigEndian.AppendUint64(bytes, b.L2BlockNumber)
-	bytes = binary.BigEndian.AppendUint64(bytes, uint64(b.Timestamp))
-	bytes = binary.BigEndian.AppendUint32(bytes, b.DeltaTimestamp)
-	bytes = binary.BigEndian.AppendUint32(bytes, b.L1InfoTreeIndex)
-	bytes = append(bytes, b.L1BlockHash.Bytes()...)
-	bytes = append(bytes, b.GlobalExitRoot.Bytes()...)
-	bytes = append(bytes, b.Coinbase.Bytes()...)
-	bytes = binary.BigEndian.AppendUint16(bytes, b.ForkID)
-	bytes = binary.BigEndian.AppendUint32(bytes, b.ChainID)
-	return bytes
-}
-
-// Decode decodes the DSL2BlockStart from a byte slice
-func (b DSL2BlockStart) Decode(data []byte) DSL2BlockStart {
-	b.BatchNumber = binary.BigEndian.Uint64(data[0:8])
-	b.L2BlockNumber = binary.BigEndian.Uint64(data[8:16])
-	b.Timestamp = int64(binary.BigEndian.Uint64(data[16:24]))
-	b.DeltaTimestamp = binary.BigEndian.Uint32(data[24:28])
-	b.L1InfoTreeIndex = binary.BigEndian.Uint32(data[28:32])
-	b.L1BlockHash = common.BytesToHash(data[32:64])
-	b.GlobalExitRoot = common.BytesToHash(data[64:96])
-	b.Coinbase = common.BytesToAddress(data[96:116])
-	b.ForkID = binary.BigEndian.Uint16(data[116:118])
-	b.ChainID = binary.BigEndian.Uint32(data[118:122])
-
-	return b
+	BatchNumber     uint64
+	L2BlockNumber   uint64
+	Timestamp       uint64
+	MinTimestamp    uint64
+	L1InfoTreeIndex uint32
+	L1BlockHash     common.Hash
+	GlobalExitRoot  common.Hash
+	Coinbase        common.Address
+	ForkID          uint64
+	ChainID         uint64
+	BlockHash       common.Hash
+	StateRoot       common.Hash
+	BlockGasLimit   uint64
+	BlockInfoRoot   common.Hash
 }
 
 // DSL2Transaction represents a data stream L2 transaction
 type DSL2Transaction struct {
-	L2BlockNumber               uint64      // Not included in the encoded data
-	ImStateRoot                 common.Hash // Not included in the encoded data
-	EffectiveGasPricePercentage uint8       // 1 byte
-	IsValid                     uint8       // 1 byte
-	StateRoot                   common.Hash // 32 bytes
-	EncodedLength               uint32      // 4 bytes
+	L2BlockNumber               uint64
+	ImStateRoot                 common.Hash
+	EffectiveGasPricePercentage uint8
+	IsValid                     uint8
+	Index                       uint64
+	StateRoot                   common.Hash
+	EncodedLength               uint32
 	Encoded                     []byte
-}
-
-// Encode returns the encoded DSL2Transaction as a byte slice
-func (l DSL2Transaction) Encode() []byte {
-	bytes := make([]byte, 0)
-	bytes = append(bytes, l.EffectiveGasPricePercentage)
-	bytes = append(bytes, l.IsValid)
-	bytes = append(bytes, l.StateRoot[:]...)
-	bytes = binary.BigEndian.AppendUint32(bytes, l.EncodedLength)
-	bytes = append(bytes, l.Encoded...)
-	return bytes
-}
-
-// Decode decodes the DSL2Transaction from a byte slice
-func (l DSL2Transaction) Decode(data []byte) DSL2Transaction {
-	l.EffectiveGasPricePercentage = data[0]
-	l.IsValid = data[1]
-	l.StateRoot = common.BytesToHash(data[2:34])
-	l.EncodedLength = binary.BigEndian.Uint32(data[34:38])
-	l.Encoded = data[38:]
-	return l
-}
-
-// DSL2BlockEnd represents a L2 block end
-type DSL2BlockEnd struct {
-	L2BlockNumber uint64      // 8 bytes
-	BlockHash     common.Hash // 32 bytes
-	StateRoot     common.Hash // 32 bytes
-}
-
-// Encode returns the encoded DSL2BlockEnd as a byte slice
-func (b DSL2BlockEnd) Encode() []byte {
-	bytes := make([]byte, 0)
-	bytes = binary.BigEndian.AppendUint64(bytes, b.L2BlockNumber)
-	bytes = append(bytes, b.BlockHash[:]...)
-	bytes = append(bytes, b.StateRoot[:]...)
-	return bytes
-}
-
-// Decode decodes the DSL2BlockEnd from a byte slice
-func (b DSL2BlockEnd) Decode(data []byte) DSL2BlockEnd {
-	b.L2BlockNumber = binary.BigEndian.Uint64(data[0:8])
-	b.BlockHash = common.BytesToHash(data[8:40])
-	b.StateRoot = common.BytesToHash(data[40:72])
-	return b
-}
-
-// DSBookMark represents a data stream bookmark
-type DSBookMark struct {
-	Type  byte   // 1 byte
-	Value uint64 // 8 bytes
-}
-
-// Encode returns the encoded DSBookMark as a byte slice
-func (b DSBookMark) Encode() []byte {
-	bytes := make([]byte, 0)
-	bytes = append(bytes, b.Type)
-	bytes = binary.BigEndian.AppendUint64(bytes, b.Value)
-	return bytes
-}
-
-// Decode decodes the DSBookMark from a byte slice
-func (b DSBookMark) Decode(data []byte) DSBookMark {
-	b.Type = data[0]
-	b.Value = binary.BigEndian.Uint64(data[1:9])
-	return b
-}
-
-// DSUpdateGER represents a data stream GER update
-type DSUpdateGER struct {
-	BatchNumber    uint64         // 8 bytes
-	Timestamp      int64          // 8 bytes
-	GlobalExitRoot common.Hash    // 32 bytes
-	Coinbase       common.Address // 20 bytes
-	ForkID         uint16         // 2 bytes
-	ChainID        uint32         // 4 bytes
-	StateRoot      common.Hash    // 32 bytes
-}
-
-// Encode returns the encoded DSUpdateGER as a byte slice
-func (g DSUpdateGER) Encode() []byte {
-	bytes := make([]byte, 0)
-	bytes = binary.BigEndian.AppendUint64(bytes, g.BatchNumber)
-	bytes = binary.BigEndian.AppendUint64(bytes, uint64(g.Timestamp))
-	bytes = append(bytes, g.GlobalExitRoot[:]...)
-	bytes = append(bytes, g.Coinbase[:]...)
-	bytes = binary.BigEndian.AppendUint16(bytes, g.ForkID)
-	bytes = binary.BigEndian.AppendUint32(bytes, g.ChainID)
-	bytes = append(bytes, g.StateRoot[:]...)
-	return bytes
-}
-
-// Decode decodes the DSUpdateGER from a byte slice
-func (g DSUpdateGER) Decode(data []byte) DSUpdateGER {
-	g.BatchNumber = binary.BigEndian.Uint64(data[0:8])
-	g.Timestamp = int64(binary.BigEndian.Uint64(data[8:16]))
-	g.GlobalExitRoot = common.BytesToHash(data[16:48])
-	g.Coinbase = common.BytesToAddress(data[48:68])
-	g.ForkID = binary.BigEndian.Uint16(data[68:70])
-	g.ChainID = binary.BigEndian.Uint32(data[70:74])
-	g.StateRoot = common.BytesToHash(data[74:106])
-	return g
 }
 
 // DSState gathers the methods required to interact with the data stream state.
@@ -240,14 +86,14 @@ type DSState interface {
 	GetL1InfoRootLeafByIndex(ctx context.Context, l1InfoTreeIndex uint32, dbTx pgx.Tx) (L1InfoTreeExitRootStorageEntry, error)
 }
 
-// GenerateDataStreamerFile generates or resumes a data stream file
-func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.StreamServer, stateDB DSState, readWIPBatch bool, imStateRoots *map[uint64][]byte, chainID uint64, upgradeEtrogBatchNumber uint64) error {
+// GenerateDataStreamFile generates or resumes a data stream file
+func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.StreamServer, stateDB DSState, readWIPBatch bool, imStateRoots *map[uint64][]byte, chainID uint64, upgradeEtrogBatchNumber uint64) error {
 	header := streamServer.GetHeader()
 
 	var currentBatchNumber uint64 = 0
 	var lastAddedL2BlockNumber uint64 = 0
 	var lastAddedBatchNumber uint64 = 0
-	var previousTimestamp int64 = 0
+	var previousTimestamp uint64 = 0
 
 	if header.TotalEntries == 0 {
 		// Get Genesis block
@@ -261,52 +107,88 @@ func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.St
 			return err
 		}
 
-		bookMark := DSBookMark{
-			Type:  BookMarkTypeBatch,
+		bookMark := &datastream.BookMark{
+			Type:  datastream.BookmarkType_BOOKMARK_TYPE_BATCH,
 			Value: genesisL2Block.BatchNumber,
 		}
 
-		_, err = streamServer.AddStreamBookmark(bookMark.Encode())
+		marshalledBookMark, err := proto.Marshal(bookMark)
 		if err != nil {
 			return err
 		}
 
-		bookMark = DSBookMark{
-			Type:  BookMarkTypeL2Block,
+		_, err = streamServer.AddStreamBookmark(marshalledBookMark)
+		if err != nil {
+			return err
+		}
+
+		genesisBatchStart := &datastream.BatchStart{
+			Number:  genesisL2Block.BatchNumber,
+			Type:    datastream.BatchType_BATCH_TYPE_UNSPECIFIED,
+			ForkId:  genesisL2Block.ForkID,
+			ChainId: chainID,
+		}
+
+		marshalledGenesisBatchStart, err := proto.Marshal(genesisBatchStart)
+		if err != nil {
+			return err
+		}
+
+		_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START), marshalledGenesisBatchStart)
+		if err != nil {
+			return err
+		}
+
+		bookMark = &datastream.BookMark{
+			Type:  datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK,
 			Value: genesisL2Block.L2BlockNumber,
 		}
 
-		_, err = streamServer.AddStreamBookmark(bookMark.Encode())
+		marshalledBookMark, err = proto.Marshal(bookMark)
 		if err != nil {
 			return err
 		}
 
-		genesisBlock := DSL2BlockStart{
-			BatchNumber:     genesisL2Block.BatchNumber,
-			L2BlockNumber:   genesisL2Block.L2BlockNumber,
-			Timestamp:       genesisL2Block.Timestamp,
+		_, err = streamServer.AddStreamBookmark(marshalledBookMark)
+		if err != nil {
+			return err
+		}
+
+		genesisBlock := &datastream.L2Block{
+			Number:          genesisL2Block.L2BlockNumber,
 			DeltaTimestamp:  0,
-			L1InfoTreeIndex: 0,
-			GlobalExitRoot:  genesisL2Block.GlobalExitRoot,
-			Coinbase:        genesisL2Block.Coinbase,
-			ForkID:          genesisL2Block.ForkID,
-			ChainID:         uint32(chainID),
+			MinTimestamp:    0,
+			L1InfotreeIndex: 0,
+			Hash:            genesisL2Block.BlockHash.Bytes(),
+			StateRoot:       genesisL2Block.StateRoot.Bytes(),
+			GlobalExitRoot:  genesisL2Block.GlobalExitRoot.Bytes(),
+			Coinbase:        genesisL2Block.Coinbase.Bytes(),
 		}
 
-		log.Infof("Genesis block: %+v", genesisBlock)
+		log.Debugf("Genesis block: %+v", genesisBlock)
 
-		_, err = streamServer.AddStreamEntry(1, genesisBlock.Encode())
+		marshalledGenesisBlock, err := proto.Marshal(genesisBlock)
 		if err != nil {
 			return err
 		}
 
-		genesisBlockEnd := DSL2BlockEnd{
-			L2BlockNumber: genesisL2Block.L2BlockNumber,
-			BlockHash:     genesisL2Block.BlockHash,
-			StateRoot:     genesisL2Block.StateRoot,
+		_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK), marshalledGenesisBlock)
+		if err != nil {
+			return err
 		}
 
-		_, err = streamServer.AddStreamEntry(EntryTypeL2BlockEnd, genesisBlockEnd.Encode())
+		genesisBatchEnd := &datastream.BatchEnd{
+			Number:        genesisL2Block.BatchNumber,
+			LocalExitRoot: common.Hash{}.Bytes(),
+			StateRoot:     genesisL2Block.StateRoot.Bytes(),
+		}
+
+		marshalledGenesisBatchEnd, err := proto.Marshal(genesisBatchEnd)
+		if err != nil {
+			return err
+		}
+
+		_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END), marshalledGenesisBatchEnd)
 		if err != nil {
 			return err
 		}
@@ -325,35 +207,97 @@ func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.St
 		log.Infof("Latest entry: %+v", latestEntry)
 
 		switch latestEntry.Type {
-		case EntryTypeUpdateGER:
-			log.Info("Latest entry type is UpdateGER")
-			currentBatchNumber = binary.BigEndian.Uint64(latestEntry.Data[0:8])
-			currentBatchNumber++
-		case EntryTypeL2BlockEnd:
-			log.Info("Latest entry type is L2BlockEnd")
-			blockEnd := DSL2BlockEnd{}.Decode(latestEntry.Data)
-			currentL2BlockNumber := blockEnd.L2BlockNumber
+		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START):
+			log.Info("Latest entry type is Batch Start")
 
-			bookMark := DSBookMark{
-				Type:  BookMarkTypeL2Block,
-				Value: currentL2BlockNumber,
+			batchStart := &datastream.BatchStart{}
+			if err := proto.Unmarshal(latestEntry.Data, batchStart); err != nil {
+				return err
 			}
 
-			firstEntry, err := streamServer.GetFirstEventAfterBookmark(bookMark.Encode())
+			currentBatchNumber = batchStart.Number
+		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END):
+			log.Info("Latest entry type is Batch End")
+
+			batchEnd := &datastream.BatchStart{}
+			if err := proto.Unmarshal(latestEntry.Data, batchEnd); err != nil {
+				return err
+			}
+
+			currentBatchNumber = batchEnd.Number
+			currentBatchNumber++
+		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_UPDATE_GER):
+			log.Info("Latest entry type is UpdateGER")
+
+			updateGer := &datastream.UpdateGER{}
+			if err := proto.Unmarshal(latestEntry.Data, updateGer); err != nil {
+				return err
+			}
+
+			currentBatchNumber = updateGer.BatchNumber
+			currentBatchNumber++
+		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK):
+			log.Info("Latest entry type is L2Block")
+
+			l2Block := &datastream.L2Block{}
+
+			if err := proto.Unmarshal(latestEntry.Data, l2Block); err != nil {
+				return err
+			}
+
+			currentL2BlockNumber := l2Block.Number
+			currentBatchNumber = l2Block.BatchNumber
+			previousTimestamp = l2Block.Timestamp
+			lastAddedL2BlockNumber = currentL2BlockNumber
+		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_TRANSACTION):
+			log.Info("Latest entry type is Transaction")
+
+			transaction := &datastream.Transaction{}
+			if err := proto.Unmarshal(latestEntry.Data, transaction); err != nil {
+				return err
+			}
+
+			currentL2BlockNumber := transaction.L2BlockNumber
+			currentBatchNumber = transaction.L2BlockNumber
+			lastAddedL2BlockNumber = currentL2BlockNumber
+
+			// Get Previous l2block timestamp
+			bookMark := &datastream.BookMark{
+				Type:  datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK,
+				Value: currentL2BlockNumber - 1,
+			}
+
+			marshalledBookMark, err := proto.Marshal(bookMark)
 			if err != nil {
 				return err
 			}
 
-			blockStart := DSL2BlockStart{}.Decode(firstEntry.Data)
+			prevL2BlockEntryNumber, err := streamServer.GetBookmark(marshalledBookMark)
+			if err != nil {
+				return err
+			}
 
-			currentBatchNumber = blockStart.BatchNumber
-			previousTimestamp = blockStart.Timestamp
-			lastAddedL2BlockNumber = currentL2BlockNumber
+			prevL2BlockEntry, err := streamServer.GetEntry(prevL2BlockEntryNumber)
+			if err != nil {
+				return err
+			}
+
+			prevL2Block := &datastream.L2Block{}
+			if err := proto.Unmarshal(prevL2BlockEntry.Data, prevL2Block); err != nil {
+				return err
+			}
+
+			previousTimestamp = prevL2Block.Timestamp
+
 		case EntryTypeBookMark:
 			log.Info("Latest entry type is BookMark")
-			bookMark := DSBookMark{}
-			bookMark = bookMark.Decode(latestEntry.Data)
-			if bookMark.Type == BookMarkTypeBatch {
+
+			bookMark := &datastream.BookMark{}
+			if err := proto.Unmarshal(latestEntry.Data, bookMark); err != nil {
+				return err
+			}
+
+			if bookMark.Type == datastream.BookmarkType_BOOKMARK_TYPE_BATCH {
 				currentBatchNumber = bookMark.Value
 			} else {
 				log.Fatalf("Latest entry type is an unexpected bookmark type: %v", bookMark.Type)
@@ -424,21 +368,51 @@ func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.St
 				return err
 			}
 
-			bookMark := DSBookMark{
-				Type:  BookMarkTypeBatch,
+			bookMark := &datastream.BookMark{
+				Type:  datastream.BookmarkType_BOOKMARK_TYPE_BATCH,
 				Value: batch.BatchNumber,
+			}
+
+			marshalledBookMark, err := proto.Marshal(bookMark)
+			if err != nil {
+				return err
 			}
 
 			missingBatchBookMark := true
 			if b == 0 {
-				_, err = streamServer.GetBookmark(bookMark.Encode())
+				_, err = streamServer.GetBookmark(marshalledBookMark)
 				if err == nil {
 					missingBatchBookMark = false
 				}
 			}
 
 			if missingBatchBookMark {
-				_, err = streamServer.AddStreamBookmark(bookMark.Encode())
+				_, err = streamServer.AddStreamBookmark(marshalledBookMark)
+				if err != nil {
+					return err
+				}
+
+				batchStart := &datastream.BatchStart{
+					Number:  batch.BatchNumber,
+					Type:    datastream.BatchType_BATCH_TYPE_REGULAR,
+					ForkId:  batch.ForkID,
+					ChainId: chainID,
+				}
+
+				if batch.ForkID >= FORKID_ETROG && (batch.BatchNumber == 1 || (upgradeEtrogBatchNumber != 0 && batch.BatchNumber == upgradeEtrogBatchNumber)) {
+					batchStart.Type = datastream.BatchType_BATCH_TYPE_INJECTED
+				}
+
+				if batch.ForcedBatchNum != nil {
+					batchStart.Type = datastream.BatchType_BATCH_TYPE_FORCED
+				}
+
+				marshalledBatchStart, err := proto.Marshal(batchStart)
+				if err != nil {
+					return err
+				}
+
+				_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_START), marshalledBatchStart)
 				if err != nil {
 					return err
 				}
@@ -448,17 +422,22 @@ func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.St
 				// Empty batch
 				// Check if there is a GER update
 				if batch.GlobalExitRoot != currentGER && batch.GlobalExitRoot != (common.Hash{}) {
-					updateGer := DSUpdateGER{
+					updateGER := &datastream.UpdateGER{
 						BatchNumber:    batch.BatchNumber,
-						Timestamp:      batch.Timestamp.Unix(),
-						GlobalExitRoot: batch.GlobalExitRoot,
-						Coinbase:       batch.Coinbase,
-						ForkID:         batch.ForkID,
-						ChainID:        uint32(chainID),
-						StateRoot:      batch.StateRoot,
+						Timestamp:      uint64(batch.Timestamp.Unix()),
+						GlobalExitRoot: batch.GlobalExitRoot.Bytes(),
+						Coinbase:       batch.Coinbase.Bytes(),
+						ForkId:         batch.ForkID,
+						ChainId:        chainID,
+						StateRoot:      batch.StateRoot.Bytes(),
 					}
 
-					_, err = streamServer.AddStreamEntry(EntryTypeUpdateGER, updateGer.Encode())
+					marshalledUpdateGER, err := proto.Marshal(updateGER)
+					if err != nil {
+						return err
+					}
+
+					_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_UPDATE_GER), marshalledUpdateGER)
 					if err != nil {
 						return err
 					}
@@ -517,38 +496,67 @@ func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.St
 						}
 					}
 
-					blockStart := DSL2BlockStart{
+					streamL2Block := &datastream.L2Block{
+						Number:          l2Block.L2BlockNumber,
 						BatchNumber:     l2Block.BatchNumber,
-						L2BlockNumber:   l2Block.L2BlockNumber,
 						Timestamp:       l2Block.Timestamp,
 						DeltaTimestamp:  uint32(l2Block.Timestamp - previousTimestamp),
-						L1InfoTreeIndex: l1InfoTreeIndex,
-						L1BlockHash:     l1BlockHash,
-						GlobalExitRoot:  l2Block.GlobalExitRoot,
-						Coinbase:        l2Block.Coinbase,
-						ForkID:          l2Block.ForkID,
-						ChainID:         uint32(chainID),
+						MinTimestamp:    uint64(batch.Timestamp.Unix()),
+						L1Blockhash:     l1BlockHash.Bytes(),
+						L1InfotreeIndex: l1InfoTreeIndex,
+						Hash:            l2Block.BlockHash.Bytes(),
+						StateRoot:       l2Block.StateRoot.Bytes(),
+						GlobalExitRoot:  l2Block.GlobalExitRoot.Bytes(),
+						Coinbase:        l2Block.Coinbase.Bytes(),
+						BlockInfoRoot:   l2Block.BlockInfoRoot.Bytes(),
+						BlockGasLimit:   l2Block.BlockGasLimit,
+					}
+
+					// Keep the l2 block hash as it is, as the state root can be found in the StateRoot field
+					// So disable this
+					/*
+						if l2Block.ForkID >= FORKID_ETROG {
+							streamL2Block.Hash = l2Block.StateRoot.Bytes()
+						}
+					*/
+
+					if l2Block.ForkID == FORKID_ETROG && batch.EtrogTimestamp != nil {
+						streamL2Block.MinTimestamp = uint64(batch.EtrogTimestamp.Unix())
+					}
+
+					if l2Block.ForkID >= FORKID_ETROG && l2Block.L1InfoTreeIndex == 0 {
+						streamL2Block.MinTimestamp = 0
 					}
 
 					previousTimestamp = l2Block.Timestamp
 
-					bookMark := DSBookMark{
-						Type:  BookMarkTypeL2Block,
-						Value: blockStart.L2BlockNumber,
+					bookMark := &datastream.BookMark{
+						Type:  datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK,
+						Value: streamL2Block.Number,
 					}
 
-					// Check if l2 block was already added
-					_, err = streamServer.GetBookmark(bookMark.Encode())
-					if err == nil {
-						continue
-					}
-
-					_, err = streamServer.AddStreamBookmark(bookMark.Encode())
+					marshalledBookMark, err := proto.Marshal(bookMark)
 					if err != nil {
 						return err
 					}
 
-					_, err = streamServer.AddStreamEntry(EntryTypeL2BlockStart, blockStart.Encode())
+					// Check if l2 block was already added
+					_, err = streamServer.GetBookmark(marshalledBookMark)
+					if err == nil {
+						continue
+					}
+
+					_, err = streamServer.AddStreamBookmark(marshalledBookMark)
+					if err != nil {
+						return err
+					}
+
+					marshalledL2Block, err := proto.Marshal(streamL2Block)
+					if err != nil {
+						return err
+					}
+
+					_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK), marshalledL2Block)
 					if err != nil {
 						return err
 					}
@@ -559,7 +567,7 @@ func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.St
 						// > ETROG => IM State root is retrieved from the receipt.im_state_root
 						if l2Block.ForkID < FORKID_ETROG {
 							// Populate intermediate state root with information from the system SC (or cache if available)
-							if imStateRoots == nil || (*imStateRoots)[blockStart.L2BlockNumber] == nil {
+							if imStateRoots == nil || (*imStateRoots)[streamL2Block.Number] == nil {
 								position := GetSystemSCPosition(l2Block.L2BlockNumber)
 								imStateRoot, err := stateDB.GetStorageAt(ctx, common.HexToAddress(SystemSC), big.NewInt(0).SetBytes(position), l2Block.StateRoot)
 								if err != nil {
@@ -567,35 +575,57 @@ func GenerateDataStreamerFile(ctx context.Context, streamServer *datastreamer.St
 								}
 								tx.StateRoot = common.BigToHash(imStateRoot)
 							} else {
-								tx.StateRoot = common.BytesToHash((*imStateRoots)[blockStart.L2BlockNumber])
+								tx.StateRoot = common.BytesToHash((*imStateRoots)[streamL2Block.Number])
 							}
 						} else if l2Block.ForkID > FORKID_ETROG {
 							tx.StateRoot = tx.ImStateRoot
 						}
 
-						_, err = streamServer.AddStreamEntry(EntryTypeL2Tx, tx.Encode())
+						transaction := &datastream.Transaction{
+							L2BlockNumber:               tx.L2BlockNumber,
+							Index:                       tx.Index,
+							IsValid:                     tx.IsValid != 0,
+							Encoded:                     tx.Encoded,
+							EffectiveGasPricePercentage: uint32(tx.EffectiveGasPricePercentage),
+							ImStateRoot:                 tx.StateRoot.Bytes(),
+						}
+
+						// Clear the state root if the ForkID is > ETROG
+						if l2Block.ForkID > FORKID_ETROG {
+							transaction.ImStateRoot = common.Hash{}.Bytes()
+						}
+
+						marshalledTransaction, err := proto.Marshal(transaction)
+						if err != nil {
+							return err
+						}
+
+						_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_TRANSACTION), marshalledTransaction)
 						if err != nil {
 							return err
 						}
 					}
 
-					blockEnd := DSL2BlockEnd{
-						L2BlockNumber: l2Block.L2BlockNumber,
-						BlockHash:     l2Block.BlockHash,
-						StateRoot:     l2Block.StateRoot,
-					}
-
-					if l2Block.ForkID >= FORKID_ETROG {
-						blockEnd.BlockHash = l2Block.StateRoot
-					}
-
-					_, err = streamServer.AddStreamEntry(EntryTypeL2BlockEnd, blockEnd.Encode())
-					if err != nil {
-						return err
-					}
 					currentGER = l2Block.GlobalExitRoot
 				}
 			}
+
+			batchEnd := &datastream.BatchEnd{
+				Number:        batch.BatchNumber,
+				LocalExitRoot: batch.LocalExitRoot.Bytes(),
+				StateRoot:     batch.StateRoot.Bytes(),
+			}
+
+			marshalledBatch, err := proto.Marshal(batchEnd)
+			if err != nil {
+				return err
+			}
+
+			_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END), marshalledBatch)
+			if err != nil {
+				return err
+			}
+
 			// Commit at the end of each batch group
 			err = streamServer.CommitAtomicOp()
 			if err != nil {

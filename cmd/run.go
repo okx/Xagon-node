@@ -208,6 +208,7 @@ func start(cliCtx *cli.Context) error {
 				poolInstance.StartPollingMinSuggestedGasPrice(cliCtx.Context)
 			}
 			poolInstance.StartRefreshingBlockedAddressesPeriodically()
+			// XLayer handler
 			poolInstance.StartRefreshingWhiteAddressesPeriodically()
 			apis := map[string]bool{}
 			for _, a := range cliCtx.StringSlice(config.FlagHTTPAPI) {
@@ -434,6 +435,8 @@ func runJSONRPCServer(c config.Config, etherman *etherman.Client, chainID uint64
 }
 
 func createSequencer(cfg config.Config, pool *pool.Pool, st *state.State, etherman *etherman.Client, eventLog *event.EventLog) *sequencer.Sequencer {
+	cfg.Sequencer.L2Coinbase = cfg.SequenceSender.L2Coinbase
+
 	seq, err := sequencer.New(cfg.Sequencer, cfg.State.Batch, cfg.Pool, pool, st, etherman, eventLog)
 	if err != nil {
 		log.Fatal(err)
@@ -467,6 +470,7 @@ func createSequenceSender(cfg config.Config, pool *pool.Pool, etmStorage *ethtxm
 }
 
 func runAggregator(ctx context.Context, c aggregator.Config, etherman *etherman.Client, ethTxManager *ethtxmanager.Client, st *state.State) {
+	// XLayer handler
 	var (
 		aggCli *agglayerClient.Client
 		pk     *ecdsa.PrivateKey

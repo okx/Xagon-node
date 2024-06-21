@@ -94,6 +94,7 @@ func (g *ProcessorL1SequenceBatches) processSequenceBatches(ctx context.Context,
 		return nil
 	}
 	for _, sbatch := range sequencedBatches {
+		// XLayer validium
 		batchL2Data, err := g.getValidiumL2Data(ctx, sbatch)
 		if err != nil {
 			log.Errorf("error getting validiumL2Data. BatchNumber: %d, BlockNumber: %d, error: %v", sbatch.BatchNumber, blockNumber, err)

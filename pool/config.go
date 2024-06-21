@@ -49,6 +49,9 @@ type Config struct {
 
 	// ForkID is the current fork ID of the chain
 	ForkID uint64 `mapstructure:"ForkID"`
+	// TxFeeCap is the global transaction fee(price * gaslimit) cap for
+	// send-transaction variants. The unit is ether. 0 means no cap.
+	TxFeeCap float64 `mapstructure:"TxFeeCap"`
 
 	// XLayer config
 	// BlockedList is the blocked address list

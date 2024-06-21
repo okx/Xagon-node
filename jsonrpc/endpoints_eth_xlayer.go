@@ -20,7 +20,6 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/hexutil"
 	evmtypes "github.com/ethereum/go-ethereum/core/types"
-	"github.com/jackc/pgx/v4"
 )
 
 var debugEndPoints *DebugEndpoints
@@ -51,43 +50,42 @@ func (e *EthEndpoints) GetInternalTransactions(hash types.ArgHash) (interface{},
 		}
 	}
 
-	return debugEndPoints.txMan.NewDbTxScope(debugEndPoints.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
-		ret, err := debugEndPoints.buildInnerTransaction(ctx, hash.Hash(), dbTx)
-		if err != nil {
-			return ret, err
-		}
+	ctx := context.Background()
+	ret, err := debugEndPoints.buildInnerTransaction(ctx, hash.Hash(), nil)
+	if err != nil {
+		return ret, err
+	}
 
-		jr, ok := ret.(json.RawMessage)
-		if !ok {
-			return nil, types.NewRPCError(types.ParserErrorCode, "cant transfer to json raw message")
-		}
-		r, stderr := jr.MarshalJSON()
-		if stderr != nil {
-			return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
-		}
-		var of okFrame
-		stderr = json.Unmarshal(r, &of)
-		if stderr != nil {
-			return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
-		}
-		result := internalTxTraceToInnerTxs(of)
-		metrics.RequestInnerTxExecutedCount()
+	jr, ok := ret.(json.RawMessage)
+	if !ok {
+		return nil, types.NewRPCError(types.ParserErrorCode, "cant transfer to json raw message")
+	}
+	r, stderr := jr.MarshalJSON()
+	if stderr != nil {
+		return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
+	}
+	var of okFrame
+	stderr = json.Unmarshal(r, &of)
+	if stderr != nil {
+		return nil, types.NewRPCError(types.ParserErrorCode, stderr.Error())
+	}
+	result := internalTxTraceToInnerTxs(of)
+	metrics.RequestInnerTxExecutedCount()
 
-		if e.cfg.EnableInnerTxCacheDB {
-			// Add inner txs to the pool
-			if innerTxBlob, err := json.Marshal(result); err == nil {
-				go func() {
-					dbContext, c := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
-					defer c()
-					if err := e.pool.AddInnerTx(dbContext, hash.Hash(), innerTxBlob); err != nil {
-						metrics.RequestInnerTxAddErrorCount()
-					}
-				}()
-			}
+	if e.cfg.EnableInnerTxCacheDB {
+		// Add inner txs to the pool
+		if innerTxBlob, err := json.Marshal(result); err == nil {
+			go func() {
+				dbContext, c := context.WithTimeout(context.Background(), 3*time.Second) //nolint:gomnd
+				defer c()
+				if err := e.pool.AddInnerTx(dbContext, hash.Hash(), innerTxBlob); err != nil {
+					metrics.RequestInnerTxAddErrorCount()
+				}
+			}()
 		}
+	}
 
-		return result, nil
-	})
+	return result, nil
 }
 
 type okLog struct {
@@ -233,23 +231,21 @@ func internalTxTraceToInnerTx(currentTx okFrame, name string, depth int, index i
 // GetBlockInternalTransactions returns internal transactions by block hash
 func (e *EthEndpoints) GetBlockInternalTransactions(hash types.ArgHash) (interface{}, types.Error) {
 	blockInternalTxs := make(map[common.Hash]interface{})
-	_, err := e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
-		c, err := e.state.GetL2BlockTransactionCountByHash(ctx, hash.Hash(), dbTx)
-		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, "failed to count transactions", err, true)
+	ctx := context.Background()
+	c, err := e.state.GetL2BlockTransactionCountByHash(ctx, hash.Hash(), nil)
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, "failed to count transactions", err, true)
+	}
+	for i := 0; i < int(c); i++ {
+		tx, err := e.state.GetTransactionByL2BlockHashAndIndex(ctx, hash.Hash(), uint64(i), nil)
+		if errors.Is(err, state.ErrNotFound) {
+			return nil, nil
+		} else if err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, "failed to get transaction", err, true)
 		}
-		for i := 0; i < int(c); i++ {
-			tx, err := e.state.GetTransactionByL2BlockHashAndIndex(ctx, hash.Hash(), uint64(i), dbTx)
-			if errors.Is(err, state.ErrNotFound) {
-				return nil, nil
-			} else if err != nil {
-				return RPCErrorResponse(types.DefaultErrorCode, "failed to get transaction", err, true)
-			}
-			blockInternalTxs[tx.Hash()] = nil
-		}
+		blockInternalTxs[tx.Hash()] = nil
+	}
 
-		return nil, nil
-	})
 	if err != nil {
 		return RPCErrorResponse(types.DefaultErrorCode, "failed to count transactions", err, true)
 	}
@@ -308,26 +304,23 @@ func (e *EthEndpoints) GetBlockInternalTransactionsByIndexAndLimit(hash types.Ar
 		overSizeMsg := fmt.Sprintf("limit exceeds maximum size: %d", maxLimitSize)
 		return RPCErrorResponse(types.DefaultErrorCode, overSizeMsg, nil, true)
 	}
+	ctx := context.Background()
 	blockInternalTxs := make([]*evmtypes.Transaction, 0, int(limit))
-	_, err := e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
-		c, err := e.state.GetL2BlockTransactionCountByHash(ctx, hash.Hash(), dbTx)
-		if err != nil {
-			return RPCErrorResponse(types.DefaultErrorCode, "failed to count transactions", err, true)
+	c, err := e.state.GetL2BlockTransactionCountByHash(ctx, hash.Hash(), nil)
+	if err != nil {
+		return RPCErrorResponse(types.DefaultErrorCode, "failed to count transactions", err, true)
+	}
+	start := min(int(c), int(index))
+	end := min(int(c), int(index)+int(limit))
+	for i := start; i < end; i++ {
+		tx, err := e.state.GetTransactionByL2BlockHashAndIndex(ctx, hash.Hash(), uint64(i), nil)
+		if errors.Is(err, state.ErrNotFound) {
+			return nil, nil
+		} else if err != nil {
+			return RPCErrorResponse(types.DefaultErrorCode, "failed to get transaction", err, true)
 		}
-		start := min(int(c), int(index))
-		end := min(int(c), int(index)+int(limit))
-		for i := start; i < end; i++ {
-			tx, err := e.state.GetTransactionByL2BlockHashAndIndex(ctx, hash.Hash(), uint64(i), dbTx)
-			if errors.Is(err, state.ErrNotFound) {
-				return nil, nil
-			} else if err != nil {
-				return RPCErrorResponse(types.DefaultErrorCode, "failed to get transaction", err, true)
-			}
-			blockInternalTxs = append(blockInternalTxs, tx)
-		}
-
-		return nil, nil
-	})
+		blockInternalTxs = append(blockInternalTxs, tx)
+	}
 	if err != nil {
 		return RPCErrorResponse(types.DefaultErrorCode, "failed to count transactions", err, true)
 	}

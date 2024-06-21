@@ -10,6 +10,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/ethtxmanager"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
+	"github.com/ethereum/go-ethereum/common"
 	"github.com/jackc/pgx/v4"
 )
 
@@ -17,7 +18,58 @@ func (s *SequenceSender) tryToSendSequenceXLayer(ctx context.Context) {
 	retry := false
 	// process monitored sequences before starting a next cycle
 	s.ethTxManager.ProcessPendingMonitoredTxs(ctx, ethTxManagerOwner, func(result ethtxmanager.MonitoredTxResult, dbTx pgx.Tx) {
-		if result.Status == ethtxmanager.MonitoredTxStatusFailed {
+		if result.Status == ethtxmanager.MonitoredTxStatusConfirmed {
+			if len(result.Txs) > 0 {
+				var txL1BlockNumber uint64
+				var txHash common.Hash
+				receiptFound := false
+				for _, tx := range result.Txs {
+					if tx.Receipt != nil {
+						txL1BlockNumber = tx.Receipt.BlockNumber.Uint64()
+						txHash = tx.Tx.Hash()
+						receiptFound = true
+						break
+					}
+				}
+
+				if !receiptFound {
+					s.halt(ctx, fmt.Errorf("monitored tx %s for sequence [%d-%d] is confirmed but doesn't have a receipt", result.ID, s.lastSequenceInitialBatch, s.lastSequenceEndBatch))
+				}
+
+				// wait L1 confirmation blocks
+				log.Infof("waiting %d L1 block confirmations for sequence [%d-%d], L1 block: %d, tx: %s",
+					s.cfg.SequenceL1BlockConfirmations, s.lastSequenceInitialBatch, s.lastSequenceEndBatch, txL1BlockNumber, txHash)
+				for {
+					lastL1BlockHeader, err := s.etherman.GetLatestBlockHeader(ctx)
+					if err != nil {
+						log.Errorf("failed to get last L1 block number, err: %v", err)
+					} else {
+						lastL1BlockNumber := lastL1BlockHeader.Number.Uint64()
+
+						if lastL1BlockNumber >= txL1BlockNumber+s.cfg.SequenceL1BlockConfirmations {
+							log.Infof("continuing, last L1 block: %d", lastL1BlockNumber)
+							break
+						}
+					}
+					time.Sleep(waitRetryGetL1Block)
+				}
+
+				lastSCBatchNum, err := s.etherman.GetLatestBatchNumber()
+				if err != nil {
+					log.Warnf("failed to get from the SC last sequenced batch number, err: %v", err)
+					return
+				}
+
+				// If it's the first time we call that function after the restart of the sequence-sender (lastSequenceBatch is 0) and we are having the
+				// confirmation of a pending L1 tx sent before the sequence-sender was restarted, we don't know which batch was the last sequenced.
+				// Therefore we cannot compare the last sequenced batch in the SC with the last sequenced from sequence-sender. We skip this check
+				if s.lastSequenceEndBatch != 0 && (lastSCBatchNum != s.lastSequenceEndBatch) {
+					s.halt(ctx, fmt.Errorf("last sequenced batch from SC %d doesn't match last sequenced batch sent %d", lastSCBatchNum, s.lastSequenceEndBatch))
+				}
+			} else {
+				s.halt(ctx, fmt.Errorf("monitored tx %s for sequence [%d-%d] doesn't have transactions to be checked", result.ID, s.lastSequenceInitialBatch, s.lastSequenceEndBatch))
+			}
+		} else { // Monitored tx is failed
 			retry = true
 			mTxResultLogger := ethtxmanager.CreateMonitoredTxResultLogger(ethTxManagerOwner, result)
 			mTxResultLogger.Error("failed to send sequence, TODO: review this fatal and define what to do in this case")
@@ -28,13 +80,12 @@ func (s *SequenceSender) tryToSendSequenceXLayer(ctx context.Context) {
 		return
 	}
 
-	// Check if synchronizer is up to date
-	synced, err := s.isSynced(ctx, retriesSanityCheck, waitRetrySanityCheck)
+	sanityCheckOk, err := s.sanityCheck(ctx, retriesSanityCheck, waitRetrySanityCheck)
 	if err != nil {
 		s.halt(ctx, err)
 	}
-	if !synced {
-		log.Info("wait virtual state to be synced...")
+	if !sanityCheckOk {
+		log.Info("sanity check failed, retrying...")
 		time.Sleep(5 * time.Second) // nolint:gomnd
 		return
 	}
@@ -52,7 +103,7 @@ func (s *SequenceSender) tryToSendSequenceXLayer(ctx context.Context) {
 		return
 	}
 
-	lastVirtualBatchNum, err := s.state.GetLastVirtualBatchNum(ctx, nil)
+	lastVirtualBatchNum, err := s.etherman.GetLatestBatchNumber()
 	if err != nil {
 		log.Errorf("failed to get last virtual batch num, err: %v", err)
 		return
@@ -79,7 +130,7 @@ func (s *SequenceSender) tryToSendSequenceXLayer(ctx context.Context) {
 			return
 		}
 
-		elapsed, waitTime := s.marginTimeElapsed(ctx, lastL2BlockTimestamp, lastL1BlockHeader.Time, timeMargin)
+		elapsed, waitTime := s.marginTimeElapsed(lastL2BlockTimestamp, lastL1BlockHeader.Time, timeMargin)
 
 		if !elapsed {
 			log.Infof("waiting at least %d seconds to send sequences, time difference between last L1 block %d (ts: %d) and last L2 block %d (ts: %d) in the sequence is lower than %d seconds",
@@ -96,7 +147,7 @@ func (s *SequenceSender) tryToSendSequenceXLayer(ctx context.Context) {
 	for {
 		currentTime := uint64(time.Now().Unix())
 
-		elapsed, waitTime := s.marginTimeElapsed(ctx, lastL2BlockTimestamp, currentTime, timeMargin)
+		elapsed, waitTime := s.marginTimeElapsed(lastL2BlockTimestamp, currentTime, timeMargin)
 
 		// Wait if the time difference is less than timeMargin (L1BlockTimestampMargin)
 		if !elapsed {
@@ -130,13 +181,16 @@ func (s *SequenceSender) tryToSendSequenceXLayer(ctx context.Context) {
 		mTxLogger.Errorf("error to add sequences tx to eth tx manager: ", err)
 		return
 	}
+
+	s.lastSequenceInitialBatch = sequences[0].BatchNumber
+	s.lastSequenceEndBatch = lastSequence.BatchNumber
 }
 
 // getSequencesToSend generates an array of sequences to be send to L1.
 // If the array is empty, it doesn't necessarily mean that there are no sequences to be sent,
 // it could be that it's not worth it to do so yet.
 func (s *SequenceSender) getSequencesToSendXLayer(ctx context.Context) ([]types.Sequence, error) {
-	lastVirtualBatchNum, err := s.state.GetLastVirtualBatchNum(ctx, nil)
+	lastVirtualBatchNum, err := s.etherman.GetLatestBatchNumber()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get last virtual batch num, err: %v", err)
 	}

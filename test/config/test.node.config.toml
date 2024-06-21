@@ -127,6 +127,7 @@ StateConsistencyCheckInterval = "5s"
 		L2BlockMaxDeltaTimestamp = "4s"
 		ResourceExhaustedMarginPct = 10
 		StateRootSyncInterval = "60s"
+		FlushIdCheckInterval = "50ms"
 		HaltOnBatchNumber = 0
 		SequentialBatchSanityCheck = false
 		SequentialProcessL2Block = false
@@ -148,6 +149,7 @@ L1BlockTimestampMargin = "5s"
 MaxTxSizeForL1 = 131072
 MaxBatchesForL1 = 10
 SenderAddress = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+SequenceL1BlockConfirmations = 2
 L2Coinbase = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
 PrivateKey = {Path = "/pk/sequencer.keystore", Password = "testonly"}
 	[SequenceSender.StreamClient]

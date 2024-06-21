@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"strconv"
 	"sync"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/common/math"
 	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/params"
 )
 
 var (
@@ -43,7 +45,6 @@ type Pool struct {
 	cfg                     Config
 	batchConstraintsCfg     state.BatchConstraintsCfg
 	blockedAddresses        sync.Map
-	whitelistedAddresses    sync.Map
 	minSuggestedGasPrice    *big.Int
 	minSuggestedGasPriceMux *sync.RWMutex
 	eventLog                *event.EventLog
@@ -51,8 +52,11 @@ type Pool struct {
 	gasPrices               GasPrices
 	gasPricesMux            *sync.RWMutex
 	effectiveGasPrice       *EffectiveGasPrice
-	dynamicGasPrice         *big.Int
-	dgpMux                  *sync.RWMutex
+
+	// XLayer config
+	whitelistedAddresses sync.Map
+	dynamicGasPrice      *big.Int
+	dgpMux               *sync.RWMutex
 }
 
 type preExecutionResponse struct {
@@ -466,6 +470,10 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		return ErrNegativeValue
 	}
 
+	if err := checkTxFee(poolTx.GasPrice(), poolTx.Gas(), p.cfg.TxFeeCap); err != nil {
+		return err
+	}
+
 	// check if sender is blocked
 	blocked := p.checkBlockedAddr(from)
 	if blocked {
@@ -473,7 +481,7 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		return ErrBlockedSender
 	}
 
-	// check if receiver is blocked
+	// XLayer check if receiver is blocked
 	if to := poolTx.To(); to != nil {
 		blocked = p.checkBlockedAddr(*to)
 		if blocked {
@@ -482,7 +490,7 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		}
 	}
 
-	// check if sender is whitelisted
+	// XLayer check if sender is whitelisted
 	if getEnableWhitelist(p.cfg.EnableWhitelist) {
 		_, listed := p.whitelistedAddresses.Load(from.String())
 		if !listed {
@@ -507,7 +515,7 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		return ErrNonceTooLow
 	}
 
-	// check if sender has reached the limit of transactions in the pool
+	// XLayer check if sender has reached the limit of transactions in the pool
 	accountQueue := getAccountQueue(p.cfg.AccountQueue)
 	if accountQueue > 0 {
 		// txCount, err := p.storage.CountTransactionsByFromAndStatus(ctx, from, TxStatusPending)
@@ -611,6 +619,7 @@ func (p *Pool) validateTx(ctx context.Context, poolTx Transaction) error {
 		return err
 	}
 
+	// XLayer free gas
 	if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) {
 		if err := p.checkAndUpdateFreeGasAddr(ctx, poolTx, from, lastL2Block.Root()); err != nil {
 			return err
@@ -769,4 +778,20 @@ func IntrinsicGas(tx types.Transaction) (uint64, error) {
 		gas += z * txDataZeroGas
 	}
 	return gas, nil
+}
+
+// checkTxFee is an internal function used to check whether the fee of
+// the given transaction is _reasonable_(under the cap).
+func checkTxFee(gasPrice *big.Int, gas uint64, cap float64) error {
+	// Short circuit if there is no cap for transaction fee at all.
+	if cap == 0 {
+		return nil
+	}
+	feeEth := new(big.Float).Quo(new(big.Float).SetInt(new(big.Int).Mul(gasPrice, new(big.Int).SetUint64(gas))), new(big.Float).SetInt(big.NewInt(params.Ether)))
+	feeFloat, _ := feeEth.Float64()
+	if feeFloat > cap {
+		feeFloatTruncated := strconv.FormatFloat(feeFloat, 'f', -1, 64)
+		return fmt.Errorf("tx fee (%s ether) exceeds the configured cap (%.2f ether)", feeFloatTruncated, cap)
+	}
+	return nil
 }
