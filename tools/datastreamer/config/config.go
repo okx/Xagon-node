@@ -7,6 +7,7 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-data-streamer/datastreamer"
 	"github.com/0xPolygonHermez/zkevm-data-streamer/log"
+	"github.com/0xPolygonHermez/zkevm-node/config/types"
 	"github.com/0xPolygonHermez/zkevm-node/db"
 	"github.com/0xPolygonHermez/zkevm-node/state/runtime/executor"
 	"github.com/mitchellh/mapstructure"
@@ -48,6 +49,8 @@ type StreamServerCfg struct {
 	Log log.Config `mapstructure:"Log"`
 	// UpgradeEtrogBatchNumber is the batch number of the upgrade etrog
 	UpgradeEtrogBatchNumber uint64 `mapstructure:"UpgradeEtrogBatchNumber"`
+	// WriteTimeout is the TCP write timeout when sending data to a datastream client
+	WriteTimeout types.Duration `mapstructure:"WriteTimeout"`
 }
 
 // Config is the configuration for the tool

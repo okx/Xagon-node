@@ -1402,6 +1402,16 @@
 							"type": "integer",
 							"description": "UpgradeEtrogBatchNumber is the batch number of the upgrade etrog",
 							"default": 0
+						},
+						"WriteTimeout": {
+							"type": "string",
+							"title": "Duration",
+							"description": "WriteTimeout is the TCP write timeout when sending data to a datastream client",
+							"default": "5s",
+							"examples": [
+								"1m",
+								"300ms"
+							]
 						}
 					},
 					"additionalProperties": false,

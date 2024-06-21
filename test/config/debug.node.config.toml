@@ -113,6 +113,7 @@ StateConsistencyCheckInterval = "5s"
 		Port = 6900
 		Filename = "/datastreamer/datastream.bin"
 		Version = 1
+		WriteTimeout = "5s"
 		Enabled = true
 
 [SequenceSender]

@@ -58,6 +58,8 @@ type StreamServerCfg struct {
 	Log log.Config `mapstructure:"Log"`
 	// UpgradeEtrogBatchNumber is the batch number of the upgrade etrog
 	UpgradeEtrogBatchNumber uint64 `mapstructure:"UpgradeEtrogBatchNumber"`
+	// WriteTimeout is the TCP write timeout when sending data to a datastream client
+	WriteTimeout types.Duration `mapstructure:"WriteTimeout"`
 }
 
 // FinalizerCfg contains the finalizer's configuration properties

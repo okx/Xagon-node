@@ -7,6 +7,7 @@ Port = 6901
 Filename = "datastream.bin"
 Version = 1
 ChainID = 1440
+WriteTimeout = "5s"
 UpgradeEtrogBatchNumber = 0
 
 [StateDB]
