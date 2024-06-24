@@ -1,6 +1,6 @@
 # XLayer Node
 
-XLayer Node is a Go implementation of a node that operates the XLayer Network.
+XLayer Node is a Go implementation of a node that operates the XLayer Network....
 
 ## About the XLayer network
 
