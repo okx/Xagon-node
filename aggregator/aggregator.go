@@ -173,12 +173,12 @@ func (a *Aggregator) Stop() {
 // Prover client and the Aggregator server.
 func (a *Aggregator) Channel(stream prover.AggregatorService_ChannelServer) error {
 	if a.cfg.Parallel {
-		return a.ChannelParallel(stream)
+		return a.channelParallel(stream)
 	}
-	return a.ChannelSerialize(stream)
+	return a.channelSerialize(stream)
 }
 
-func (a *Aggregator) ChannelParallel(stream prover.AggregatorService_ChannelServer) error {
+func (a *Aggregator) channelParallel(stream prover.AggregatorService_ChannelServer) error {
 	metrics.ConnectedProver()
 	defer metrics.DisconnectedProver()
 
@@ -213,10 +213,10 @@ func (a *Aggregator) ChannelParallel(stream prover.AggregatorService_ChannelServ
 		paraCount = 2
 	}
 	for i := uint64(0); i < paraCount; i++ {
-		go a.GenerateBatchProofRoutine(ctx, prover)
+		go a.generateBatchProofRoutine(ctx, prover)
 	}
-	go a.AggregateProofsRoutine(ctx, prover)
-	go a.BuildFinalProofRoutine(ctx, prover)
+	go a.aggregateProofsRoutine(ctx, prover)
+	go a.buildFinalProofRoutine(ctx, prover)
 
 	select {
 	case <-a.ctx.Done():
@@ -228,7 +228,7 @@ func (a *Aggregator) ChannelParallel(stream prover.AggregatorService_ChannelServ
 	}
 }
 
-func (a *Aggregator) ChannelSerialize(stream prover.AggregatorService_ChannelServer) error {
+func (a *Aggregator) channelSerialize(stream prover.AggregatorService_ChannelServer) error {
 	metrics.ConnectedProver()
 	defer metrics.DisconnectedProver()
 
@@ -302,7 +302,7 @@ func (a *Aggregator) ChannelSerialize(stream prover.AggregatorService_ChannelSer
 	}
 }
 
-func (a *Aggregator) AggregateProofsRoutine(ctx context.Context, prover *prover.Prover) {
+func (a *Aggregator) aggregateProofsRoutine(ctx context.Context, prover *prover.Prover) {
 	for {
 		select {
 		case <-a.ctx.Done():
@@ -338,7 +338,7 @@ func (a *Aggregator) AggregateProofsRoutine(ctx context.Context, prover *prover.
 	}
 }
 
-func (a *Aggregator) GenerateBatchProofRoutine(ctx context.Context, prover *prover.Prover) {
+func (a *Aggregator) generateBatchProofRoutine(ctx context.Context, prover *prover.Prover) {
 	for {
 		select {
 		case <-a.ctx.Done():
@@ -373,7 +373,7 @@ func (a *Aggregator) GenerateBatchProofRoutine(ctx context.Context, prover *prov
 	}
 }
 
-func (a *Aggregator) BuildFinalProofRoutine(ctx context.Context, prover *prover.Prover) {
+func (a *Aggregator) buildFinalProofRoutine(ctx context.Context, prover *prover.Prover) {
 	for {
 		select {
 		case <-a.ctx.Done():
