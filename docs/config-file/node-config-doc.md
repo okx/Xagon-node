@@ -3930,7 +3930,7 @@ Password="testonly"
 **Description:** Configuration of the aggregator service
 
 | Property                                                                                            | Pattern | Type    | Deprecated | Definition | Title/Description                                                                                                                                                                                                                                                                                                                                                                                                             |
-|-----------------------------------------------------------------------------------------------------| ------- |---------| ---------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| --------------------------------------------------------------------------------------------------- | ------- | ------- | ---------- | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | - [Host](#Aggregator_Host )                                                                         | No      | string  | No         | -          | Host for the grpc server                                                                                                                                                                                                                                                                                                                                                                                                      |
 | - [Port](#Aggregator_Port )                                                                         | No      | integer | No         | -          | Port for the grpc server                                                                                                                                                                                                                                                                                                                                                                                                      |
 | - [Parallel](#Aggregator_Parallel )                                                                 | No      | boolean | No         | -          | Parallel means send requests to prover in parallel                                                                                                                                                                                                                                                                                                                                                                            |
@@ -3982,7 +3982,35 @@ Host="0.0.0.0"
 Port=50081
 ```
 
-### <a name="Aggregator_RetryTime"></a>12.3. `Aggregator.RetryTime`
+### <a name="Aggregator_Parallel"></a>12.3. `Aggregator.Parallel`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** Parallel means send requests to prover in parallel
+
+**Example setting the default value** (false):
+```
+[Aggregator]
+Parallel=false
+```
+
+### <a name="Aggregator_ParaCount"></a>12.4. `Aggregator.ParaCount`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Description:** ParaCount means parallel count for sending requests to prover
+
+**Example setting the default value** (0):
+```
+[Aggregator]
+ParaCount=0
+```
+
+### <a name="Aggregator_RetryTime"></a>12.5. `Aggregator.RetryTime`
 
 **Title:** Duration
 
@@ -4009,7 +4037,7 @@ or batches to generate proofs. It is also used in the isSynced loop
 RetryTime="5s"
 ```
 
-### <a name="Aggregator_VerifyProofInterval"></a>12.4. `Aggregator.VerifyProofInterval`
+### <a name="Aggregator_VerifyProofInterval"></a>12.6. `Aggregator.VerifyProofInterval`
 
 **Title:** Duration
 
@@ -4035,7 +4063,7 @@ RetryTime="5s"
 VerifyProofInterval="1m30s"
 ```
 
-### <a name="Aggregator_ProofStatePollingInterval"></a>12.5. `Aggregator.ProofStatePollingInterval`
+### <a name="Aggregator_ProofStatePollingInterval"></a>12.7. `Aggregator.ProofStatePollingInterval`
 
 **Title:** Duration
 
@@ -4061,7 +4089,7 @@ VerifyProofInterval="1m30s"
 ProofStatePollingInterval="5s"
 ```
 
-### <a name="Aggregator_TxProfitabilityCheckerType"></a>12.6. `Aggregator.TxProfitabilityCheckerType`
+### <a name="Aggregator_TxProfitabilityCheckerType"></a>12.8. `Aggregator.TxProfitabilityCheckerType`
 
 **Type:** : `string`
 
@@ -4076,13 +4104,13 @@ possible values: base/acceptall
 TxProfitabilityCheckerType="acceptall"
 ```
 
-### <a name="Aggregator_TxProfitabilityMinReward"></a>12.7. `[Aggregator.TxProfitabilityMinReward]`
+### <a name="Aggregator_TxProfitabilityMinReward"></a>12.9. `[Aggregator.TxProfitabilityMinReward]`
 
 **Type:** : `object`
 **Description:** TxProfitabilityMinReward min reward for base tx profitability checker when aggregator will validate batch
 this parameter is used for the base tx profitability checker
 
-### <a name="Aggregator_IntervalAfterWhichBatchConsolidateAnyway"></a>12.8. `Aggregator.IntervalAfterWhichBatchConsolidateAnyway`
+### <a name="Aggregator_IntervalAfterWhichBatchConsolidateAnyway"></a>12.10. `Aggregator.IntervalAfterWhichBatchConsolidateAnyway`
 
 **Title:** Duration
 
@@ -4108,7 +4136,7 @@ this parameter is used for the base tx profitability checker
 IntervalAfterWhichBatchConsolidateAnyway="0s"
 ```
 
-### <a name="Aggregator_ChainID"></a>12.9. `Aggregator.ChainID`
+### <a name="Aggregator_ChainID"></a>12.11. `Aggregator.ChainID`
 
 **Type:** : `integer`
 
@@ -4122,7 +4150,7 @@ IntervalAfterWhichBatchConsolidateAnyway="0s"
 ChainID=0
 ```
 
-### <a name="Aggregator_ForkId"></a>12.10. `Aggregator.ForkId`
+### <a name="Aggregator_ForkId"></a>12.12. `Aggregator.ForkId`
 
 **Type:** : `integer`
 
@@ -4136,7 +4164,7 @@ ChainID=0
 ForkId=0
 ```
 
-### <a name="Aggregator_SenderAddress"></a>12.11. `Aggregator.SenderAddress`
+### <a name="Aggregator_SenderAddress"></a>12.13. `Aggregator.SenderAddress`
 
 **Type:** : `string`
 
@@ -4151,7 +4179,7 @@ to sign the L1 txs
 SenderAddress=""
 ```
 
-### <a name="Aggregator_CleanupLockedProofsInterval"></a>12.12. `Aggregator.CleanupLockedProofsInterval`
+### <a name="Aggregator_CleanupLockedProofsInterval"></a>12.14. `Aggregator.CleanupLockedProofsInterval`
 
 **Title:** Duration
 
@@ -4177,7 +4205,7 @@ SenderAddress=""
 CleanupLockedProofsInterval="2m0s"
 ```
 
-### <a name="Aggregator_GeneratingProofCleanupThreshold"></a>12.13. `Aggregator.GeneratingProofCleanupThreshold`
+### <a name="Aggregator_GeneratingProofCleanupThreshold"></a>12.15. `Aggregator.GeneratingProofCleanupThreshold`
 
 **Type:** : `string`
 
@@ -4193,7 +4221,7 @@ allowed to be cleared.
 GeneratingProofCleanupThreshold="10m"
 ```
 
-### <a name="Aggregator_GasOffset"></a>12.14. `Aggregator.GasOffset`
+### <a name="Aggregator_GasOffset"></a>12.16. `Aggregator.GasOffset`
 
 **Type:** : `integer`
 
@@ -4216,7 +4244,7 @@ final gas: 1100
 GasOffset=0
 ```
 
-### <a name="Aggregator_UpgradeEtrogBatchNumber"></a>12.15. `Aggregator.UpgradeEtrogBatchNumber`
+### <a name="Aggregator_UpgradeEtrogBatchNumber"></a>12.17. `Aggregator.UpgradeEtrogBatchNumber`
 
 **Type:** : `integer`
 
@@ -4230,7 +4258,7 @@ GasOffset=0
 UpgradeEtrogBatchNumber=0
 ```
 
-### <a name="Aggregator_BatchProofL1BlockConfirmations"></a>12.16. `Aggregator.BatchProofL1BlockConfirmations`
+### <a name="Aggregator_BatchProofL1BlockConfirmations"></a>12.18. `Aggregator.BatchProofL1BlockConfirmations`
 
 **Type:** : `integer`
 
@@ -4244,7 +4272,7 @@ UpgradeEtrogBatchNumber=0
 BatchProofL1BlockConfirmations=2
 ```
 
-### <a name="Aggregator_SettlementBackend"></a>12.17. `Aggregator.SettlementBackend`
+### <a name="Aggregator_SettlementBackend"></a>12.19. `Aggregator.SettlementBackend`
 
 **Type:** : `string`
 
@@ -4258,7 +4286,7 @@ BatchProofL1BlockConfirmations=2
 SettlementBackend="l1"
 ```
 
-### <a name="Aggregator_AggLayerTxTimeout"></a>12.18. `Aggregator.AggLayerTxTimeout`
+### <a name="Aggregator_AggLayerTxTimeout"></a>12.20. `Aggregator.AggLayerTxTimeout`
 
 **Title:** Duration
 
@@ -4284,7 +4312,7 @@ SettlementBackend="l1"
 AggLayerTxTimeout="5m0s"
 ```
 
-### <a name="Aggregator_AggLayerURL"></a>12.19. `Aggregator.AggLayerURL`
+### <a name="Aggregator_AggLayerURL"></a>12.21. `Aggregator.AggLayerURL`
 
 **Type:** : `string`
 
@@ -4298,7 +4326,7 @@ AggLayerTxTimeout="5m0s"
 AggLayerURL=""
 ```
 
-### <a name="Aggregator_SequencerPrivateKey"></a>12.20. `[Aggregator.SequencerPrivateKey]`
+### <a name="Aggregator_SequencerPrivateKey"></a>12.22. `[Aggregator.SequencerPrivateKey]`
 
 **Type:** : `object`
 **Description:** SequencerPrivateKey Private key of the trusted sequencer
@@ -4308,7 +4336,7 @@ AggLayerURL=""
 | - [Path](#Aggregator_SequencerPrivateKey_Path )         | No      | string | No         | -          | Path is the file path for the key store file           |
 | - [Password](#Aggregator_SequencerPrivateKey_Password ) | No      | string | No         | -          | Password is the password to decrypt the key store file |
 
-#### <a name="Aggregator_SequencerPrivateKey_Path"></a>12.20.1. `Aggregator.SequencerPrivateKey.Path`
+#### <a name="Aggregator_SequencerPrivateKey_Path"></a>12.22.1. `Aggregator.SequencerPrivateKey.Path`
 
 **Type:** : `string`
 
@@ -4322,7 +4350,7 @@ AggLayerURL=""
 Path=""
 ```
 
-#### <a name="Aggregator_SequencerPrivateKey_Password"></a>12.20.2. `Aggregator.SequencerPrivateKey.Password`
+#### <a name="Aggregator_SequencerPrivateKey_Password"></a>12.22.2. `Aggregator.SequencerPrivateKey.Password`
 
 **Type:** : `string`
 
