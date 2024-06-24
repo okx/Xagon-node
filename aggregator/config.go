@@ -36,7 +36,8 @@ type Config struct {
 	Port int `mapstructure:"Port"`
 
 	// Parallel means send requests to prover in parallel
-	Parallel  bool   `mapstructure:"Parallel"`
+	Parallel bool `mapstructure:"Parallel"`
+	// ParaCount means parallel count for sending requests to prover
 	ParaCount uint64 `mapstructure:"ParaCount"`
 
 	// RetryTime is the time the aggregator main loop sleeps if there are no proofs to aggregate

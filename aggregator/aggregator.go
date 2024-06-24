@@ -39,6 +39,8 @@ const (
 	monitoredIDFormat = "proof-from-%v-to-%v"
 
 	forkId9 = uint64(9)
+
+	minParaCount = 2
 )
 
 type finalProofMsg struct {
@@ -209,8 +211,8 @@ func (a *Aggregator) channelParallel(stream prover.AggregatorService_ChannelServ
 
 	// We start multi batch proof routines, one aggregate proof routine and one final proof routine in parallel.
 	paraCount := a.cfg.ParaCount
-	if paraCount < 2 {
-		paraCount = 2
+	if paraCount < minParaCount {
+		paraCount = minParaCount
 	}
 	for i := uint64(0); i < paraCount; i++ {
 		go a.generateBatchProofRoutine(ctx, prover)
