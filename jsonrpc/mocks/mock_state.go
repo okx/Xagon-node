@@ -151,6 +151,11 @@ func (_m *StateMock) EstimateGas(transaction *coretypes.Transaction, senderAddre
 	return r0, r1, r2
 }
 
+// EstimateGasOpt provides a mock function with given fields: transaction, senderAddress, l2BlockNumber, dbTx
+func (_m *StateMock) EstimateGasOpt(transaction *coretypes.Transaction, senderAddress common.Address, isGasFreeSender bool, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error) {
+	return _m.EstimateGas(transaction, senderAddress, isGasFreeSender, l2BlockNumber, dbTx)
+}
+
 // GetBalance provides a mock function with given fields: ctx, address, root
 func (_m *StateMock) GetBalance(ctx context.Context, address common.Address, root common.Hash) (*big.Int, error) {
 	ret := _m.Called(ctx, address, root)
