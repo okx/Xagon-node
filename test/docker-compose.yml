@@ -518,14 +518,27 @@ services:
     ports:
       # - 50051:50051 # Prover
       - 50052:50052 # Mock prover
+      - 50061:50061 # MT
+      - 50071:50071 # Executor
     volumes:
       - ./config/test.prover.config.json:/usr/src/app/config.json
     command: >
       zkProver -c /usr/src/app/config.json
 
+  xlayer-mock-prover:
+    container_name: xlayer-mock-prover
+    image: xzavier2048/xlayer-prover
+    ports:
+      # - 50051:50051 # Prover
+      - 50052:50052 # Mock prover
+    volumes:
+      - ./config/test.prover2.config.json:/usr/src/app/config.json
+    command: >
+      zkProver -c /usr/src/app/config.json
+
   xlayer-executor:
     container_name: xlayer-executor
-    image: hermeznetwork/zkevm-prover:v6.0.0
+    image: xzavier2048/xlayer-prover
     ports:
       - 50061:50061 # MT
       - 50071:50071 # Executor

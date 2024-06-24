@@ -123,8 +123,8 @@ StateConsistencyCheckInterval = "5s"
 		ForcedBatchesCheckInterval = "10s"
 		L1InfoTreeL1BlockConfirmations = 0
 		L1InfoTreeCheckInterval = "10s"
-		BatchMaxDeltaTimestamp = "20s"
-		L2BlockMaxDeltaTimestamp = "4s"
+		BatchMaxDeltaTimestamp = "5s"
+		L2BlockMaxDeltaTimestamp = "2s"
 		ResourceExhaustedMarginPct = 10
 		StateRootSyncInterval = "60s"
 		HaltOnBatchNumber = 0
@@ -155,7 +155,9 @@ PrivateKey = {Path = "/pk/sequencer.keystore", Password = "testonly"}
 [Aggregator]
 Host = "0.0.0.0"
 Port = 50081
-RetryTime = "5s"
+Parallel = true
+ParaCount = 2
+RetryTime = "1s"
 VerifyProofInterval = "10s"
 TxProfitabilityCheckerType = "acceptall"
 TxProfitabilityMinReward = "1.1"
@@ -185,10 +187,10 @@ DefaultGasPriceWei = 1000000000
 MaxGasPriceWei = 0
 
 [MTClient]
-URI  = "xlayer-prover:50061"
+URI  = "xlayer-executor:50061"
 
 [Executor]
-URI = "xlayer-prover:50071"
+URI = "xlayer-executor:50071"
 MaxGRPCMessageSize = 100000000
 
 [Metrics]
