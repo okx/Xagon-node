@@ -221,6 +221,8 @@ GasOffset = 80000
 [Aggregator]
 Host = "0.0.0.0"
 Port = 50081
+Parallel = false
+ParaCount = 0
 RetryTime = "5s"
 VerifyProofInterval = "90s"
 TxProfitabilityCheckerType = "acceptall"
