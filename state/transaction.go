@@ -928,7 +928,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	}
 	log.Infof("state-EstimateGas time. getBlock:%vms, getBatch:%vms, getForkID:%vms, getNonce:%vms, getEnd:%vms, internalGas:%vms, exec:%vms",
 		getBlockTime.Milliseconds(), getBatchTime.Milliseconds(), getForkIDTime.Milliseconds(), getNonceTime.Milliseconds(), getEndTime.Milliseconds(), internalGasTime.Milliseconds(), time.Since(t6).Milliseconds())
-	log.Infof("state-EstimateGas value. first gasUsed:%d, final gas", firstGasued, highEnd)
+	log.Infof("state-EstimateGas value. first gasUsed:%d, final gas:%d", firstGasued, highEnd)
 
 	return highEnd, nil, nil
 }
