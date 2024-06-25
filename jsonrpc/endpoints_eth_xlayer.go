@@ -278,6 +278,9 @@ func (e *EthEndpoints) getGasEstimationWithFactorXLayer(gasEstimation uint64) ui
 	if gasLimitFactor > 0 {
 		gasEstimationWithFactor = uint64(float64(gasEstimation) * gasLimitFactor)
 	}
+	if gasEstimationWithFactor > state.MaxTxGasLimit {
+		gasEstimationWithFactor = state.MaxTxGasLimit
+	}
 	return gasEstimationWithFactor
 }
 
