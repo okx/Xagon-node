@@ -198,8 +198,13 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 	if err != nil {
 		return nil, types.NewRPCError(types.DefaultErrorCode, "failed to check gas-free", err)
 	}
-
-	gasEstimation, returnValue, err := e.state.EstimateGas(tx, sender, isGasFreeSender, blockToProcess, nil)
+	var gasEstimation uint64
+	var returnValue []byte
+	if e.enableEstimateGasOpt() {
+		gasEstimation, returnValue, err = e.state.EstimateGasOpt(tx, sender, isGasFreeSender, blockToProcess, nil)
+	} else {
+		gasEstimation, returnValue, err = e.state.EstimateGas(tx, sender, isGasFreeSender, blockToProcess, nil)
+	}
 	if errors.Is(err, runtime.ErrExecutionReverted) {
 		data := make([]byte, len(returnValue))
 		copy(data, returnValue)
