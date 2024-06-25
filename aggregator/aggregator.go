@@ -39,8 +39,6 @@ const (
 	monitoredIDFormat = "proof-from-%v-to-%v"
 
 	forkId9 = uint64(9)
-
-	minParaCount = 2
 )
 
 type finalProofMsg struct {
@@ -180,56 +178,6 @@ func (a *Aggregator) Channel(stream prover.AggregatorService_ChannelServer) erro
 	return a.channelSerialize(stream)
 }
 
-func (a *Aggregator) channelParallel(stream prover.AggregatorService_ChannelServer) error {
-	metrics.ConnectedProver()
-	defer metrics.DisconnectedProver()
-
-	ctx := stream.Context()
-	var proverAddr net.Addr
-	p, ok := peer.FromContext(ctx)
-	if ok {
-		proverAddr = p.Addr
-	}
-	prover, err := prover.New(stream, proverAddr, a.cfg.ProofStatePollingInterval)
-	if err != nil {
-		return err
-	}
-
-	log := log.WithFields(
-		"prover", prover.Name(),
-		"proverId", prover.ID(),
-		"proverAddr", prover.Addr(),
-	)
-	log.Info("Establishing stream connection with prover")
-
-	// Check if prover supports the required Fork ID
-	if !prover.SupportsForkID(forkId9) {
-		err := errors.New("prover does not support required fork ID")
-		log.Warn(FirstToUpper(err.Error()))
-		return err
-	}
-
-	// We start multi batch proof routines, one aggregate proof routine and one final proof routine in parallel.
-	paraCount := a.cfg.ParaCount
-	if paraCount < minParaCount {
-		paraCount = minParaCount
-	}
-	for i := uint64(0); i < paraCount; i++ {
-		go a.generateBatchProofRoutine(ctx, prover)
-	}
-	go a.aggregateProofsRoutine(ctx, prover)
-	go a.buildFinalProofRoutine(ctx, prover)
-
-	select {
-	case <-a.ctx.Done():
-		// server disconnected
-		return a.ctx.Err()
-	case <-ctx.Done():
-		// client disconnected
-		return ctx.Err()
-	}
-}
-
 func (a *Aggregator) channelSerialize(stream prover.AggregatorService_ChannelServer) error {
 	metrics.ConnectedProver()
 	defer metrics.DisconnectedProver()
@@ -296,113 +244,6 @@ func (a *Aggregator) channelSerialize(stream prover.AggregatorService_ChannelSer
 					log.Errorf("Error trying to generate proof: %v", err)
 				}
 			}
-			if !proofGenerated {
-				// if no proof was generated (aggregated or batch) wait some time before retry
-				time.Sleep(a.cfg.RetryTime.Duration)
-			} // if proof was generated we retry immediately as probably we have more proofs to process
-		}
-	}
-}
-
-func (a *Aggregator) aggregateProofsRoutine(ctx context.Context, prover *prover.Prover) {
-	for {
-		select {
-		case <-a.ctx.Done():
-			// server disconnected
-			return
-		case <-ctx.Done():
-			// client disconnected
-			return
-
-		default:
-			isIdle, err := prover.IsIdle()
-			if err != nil {
-				log.Errorf("Failed to check if prover is idle: %v", err)
-				time.Sleep(a.cfg.RetryTime.Duration)
-				continue
-			}
-			if !isIdle {
-				log.Debug("Prover is not idle")
-				time.Sleep(a.cfg.RetryTime.Duration)
-				continue
-			}
-
-			proofGenerated, err := a.tryAggregateProofs(ctx, prover)
-			if err != nil {
-				log.Errorf("Error trying to aggregate proofs: %v", err)
-			}
-
-			if !proofGenerated {
-				// if no proof was generated (aggregated or batch) wait some time before retry
-				time.Sleep(a.cfg.RetryTime.Duration)
-			} // if proof was generated we retry immediately as probably we have more proofs to process
-		}
-	}
-}
-
-func (a *Aggregator) generateBatchProofRoutine(ctx context.Context, prover *prover.Prover) {
-	for {
-		select {
-		case <-a.ctx.Done():
-			// server disconnected
-			return
-		case <-ctx.Done():
-			// client disconnected
-			return
-
-		default:
-			isIdle, err := prover.IsIdle()
-			if err != nil {
-				log.Errorf("Failed to check if prover is idle: %v", err)
-				time.Sleep(a.cfg.RetryTime.Duration)
-				continue
-			}
-			if !isIdle {
-				log.Debug("Prover is not idle")
-				time.Sleep(a.cfg.RetryTime.Duration)
-				continue
-			}
-
-			proofGenerated, err := a.tryGenerateBatchProof(ctx, prover)
-			if err != nil {
-				log.Errorf("Error trying to generate proof: %v", err)
-			}
-			if !proofGenerated {
-				// if no proof was generated (aggregated or batch) wait some time before retry
-				time.Sleep(a.cfg.RetryTime.Duration)
-			} // if proof was generated we retry immediately as probably we have more proofs to process
-		}
-	}
-}
-
-func (a *Aggregator) buildFinalProofRoutine(ctx context.Context, prover *prover.Prover) {
-	for {
-		select {
-		case <-a.ctx.Done():
-			// server disconnected
-			return
-		case <-ctx.Done():
-			// client disconnected
-			return
-
-		default:
-			isIdle, err := prover.IsIdle()
-			if err != nil {
-				log.Errorf("Failed to check if prover is idle: %v", err)
-				time.Sleep(a.cfg.RetryTime.Duration)
-				continue
-			}
-			if !isIdle {
-				log.Debug("Prover is not idle")
-				time.Sleep(a.cfg.RetryTime.Duration)
-				continue
-			}
-
-			proofGenerated, err := a.tryBuildFinalProof(ctx, prover, nil)
-			if err != nil {
-				log.Errorf("Error checking proofs to verify: %v", err)
-			}
-
 			if !proofGenerated {
 				// if no proof was generated (aggregated or batch) wait some time before retry
 				time.Sleep(a.cfg.RetryTime.Duration)
