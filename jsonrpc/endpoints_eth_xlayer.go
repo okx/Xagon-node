@@ -278,7 +278,23 @@ func (e *EthEndpoints) getGasEstimationWithFactorXLayer(gasEstimation uint64) ui
 	if gasLimitFactor > 0 {
 		gasEstimationWithFactor = uint64(float64(gasEstimation) * gasLimitFactor)
 	}
+	if gasEstimationWithFactor > state.MaxTxGasLimit {
+		gasEstimationWithFactor = state.MaxTxGasLimit
+	}
 	return gasEstimationWithFactor
+}
+
+func (e *EthEndpoints) enableEstimateGasOpt() bool {
+	res := false
+	if getApolloConfig().Enable() {
+		getApolloConfig().RLock()
+		res = getApolloConfig().EnableEstimateGasOpt
+		getApolloConfig().RUnlock()
+	} else {
+		res = e.cfg.EnableEstimateGasOpt
+	}
+
+	return res
 }
 
 // internal

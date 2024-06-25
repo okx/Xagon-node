@@ -863,6 +863,8 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	if lowEnd < estimationResult.gasUsed {
 		lowEnd = estimationResult.gasUsed
 	}
+	firstLowEnd := lowEnd
+	firstGasued := estimationResult.gasUsed
 
 	optimisticGasLimit := (estimationResult.gasUsed + estimationResult.gasRefund + params.CallStipend) * 64 / 63 // nolint:gomnd
 	if optimisticGasLimit < highEnd {
@@ -927,6 +929,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	}
 	log.Infof("state-EstimateGas time. getBlock:%vms, getBatch:%vms, getForkID:%vms, getNonce:%vms, getEnd:%vms, internalGas:%vms, exec:%vms",
 		getBlockTime.Milliseconds(), getBatchTime.Milliseconds(), getForkIDTime.Milliseconds(), getNonceTime.Milliseconds(), getEndTime.Milliseconds(), internalGasTime.Milliseconds(), time.Since(t6).Milliseconds())
+	log.Infof("state-EstimateGas value.firstLowEnd:%d, first gasUsed:%d, final gas:%d, factor:%f", firstLowEnd, firstGasued, highEnd, float64(highEnd)/float64(firstGasued))
 
 	return highEnd, nil, nil
 }

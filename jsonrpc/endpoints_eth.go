@@ -207,7 +207,13 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 		t2 := time.Now()
 		toTxTime := t2.Sub(t1)
 
-		gasEstimation, returnValue, err := e.state.EstimateGas(tx, sender, isGasFreeSender, blockToProcess, dbTx)
+		var gasEstimation uint64
+		var returnValue []byte
+		if e.enableEstimateGasOpt() {
+			gasEstimation, returnValue, err = e.state.EstimateGasOpt(tx, sender, isGasFreeSender, blockToProcess, dbTx)
+		} else {
+			gasEstimation, returnValue, err = e.state.EstimateGas(tx, sender, isGasFreeSender, blockToProcess, dbTx)
+		}
 		if errors.Is(err, runtime.ErrExecutionReverted) {
 			data := make([]byte, len(returnValue))
 			copy(data, returnValue)

@@ -12,6 +12,7 @@ type ApolloConfig struct {
 	BatchRequestsEnabled bool
 	BatchRequestsLimit   uint
 	GasLimitFactor       float64
+	EnableEstimateGasOpt bool
 	DisableAPIs          []string
 	RateLimit            RateLimitConfig
 	DynamicGP            DynamicGPConfig
@@ -63,6 +64,7 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().BatchRequestsEnabled = apolloConfig.BatchRequestsEnabled
 	getApolloConfig().BatchRequestsLimit = apolloConfig.BatchRequestsLimit
 	getApolloConfig().GasLimitFactor = apolloConfig.GasLimitFactor
+	getApolloConfig().EnableEstimateGasOpt = apolloConfig.EnableEstimateGasOpt
 	getApolloConfig().setDisableAPIs(apolloConfig.DisableAPIs)
 	setRateLimit(apolloConfig.RateLimit)
 	setApiAuth(apolloConfig.ApiAuthentication)

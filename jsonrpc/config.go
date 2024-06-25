@@ -87,7 +87,8 @@ type Config struct {
 	// suggested gas limit: 100
 	// GasLimitFactor: 1.1
 	// gas limit = 110
-	GasLimitFactor float64 `mapstructure:"GasLimitFactor"`
+	GasLimitFactor       float64 `mapstructure:"GasLimitFactor"`
+	EnableEstimateGasOpt bool    `mapstructure:"EnableEstimateGasOpt"`
 
 	// DisableAPIs disable some API
 	DisableAPIs []string `mapstructure:"DisableAPIs"`
