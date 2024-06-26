@@ -1571,6 +1571,16 @@
 					"description": "Port for the grpc server",
 					"default": 50081
 				},
+				"Parallel": {
+					"type": "boolean",
+					"description": "Parallel means send requests to prover in parallel",
+					"default": false
+				},
+				"ParaCount": {
+					"type": "integer",
+					"description": "ParaCount means parallel count for sending requests to prover",
+					"default": 0
+				},
 				"RetryTime": {
 					"type": "string",
 					"title": "Duration",
