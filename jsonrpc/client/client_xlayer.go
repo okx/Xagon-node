@@ -25,13 +25,16 @@ func JSONRPCRelay(url string, request types.Request) (types.Response, error) {
 	defer httpRes.Body.Close()
 
 	if httpRes.StatusCode != http.StatusOK {
-		return types.Response{}, fmt.Errorf("%v - %v", httpRes.StatusCode, string(resBody))
+		return types.Response{}, fmt.Errorf("http error: %v - %v", httpRes.StatusCode, string(resBody))
 	}
 
 	var res types.Response
 	err = json.Unmarshal(resBody, &res)
 	if err != nil {
 		return types.Response{}, err
+	}
+	if res.Error != nil {
+		return types.Response{}, fmt.Errorf("response error: %v - %v", res.Error.Code, res.Error.Message)
 	}
 	return res, nil
 }
