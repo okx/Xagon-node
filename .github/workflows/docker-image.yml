@@ -1,5 +1,8 @@
 on:
-  workflow_dispatch
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
   build:
