@@ -386,6 +386,7 @@ func (s *Server) handleBatchRequest(httpRequest *http.Request, w http.ResponseWr
 		metrics.RequestMethodDuration(request.Method, st)
 		methods += request.Method + ","
 	}
+	metrics.RequestBatchSize(len(responses))
 	log.Infof("Batch request handled: %s total: %d", methods, len(responses))
 
 	respBytes, _ := json.Marshal(responses)
