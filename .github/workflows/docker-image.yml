@@ -1,0 +1,27 @@
+on:
+  workflow_dispatch
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - name: Login to Docker Hub
+      uses: docker/login-action@v1 
+      with:
+        username: ${{ secrets.DOCKER_HUB_USERNAME }}
+        password: ${{ secrets.DOCKER_HUB_ACCESS_TOKEN }}
+    - name: Prepare
+      id: prep
+      run: |
+        # Replace slashes with underscores and remove any characters that are not alphanumeric or underscores
+        REF_NAME=${{ github.ref_name }}
+        SAFE_REF_NAME=$(echo $REF_NAME | sed 's|/|_|g' | sed 's/[^a-zA-Z0-9_]//g')
+        echo "SAFE_REF_NAME=$SAFE_REF_NAME" >> $GITHUB_ENV
+        echo $GITHUB_ENV
+    - name: Build and Push Docker image
+      run: |
+        DATE_TAG=$(date '+%Y%m%d%H%M%S')
+        IMAGE_TAG=${{ secrets.DOCKER_HUB_USERNAME }}/xlayer-nonde:${{ env.SAFE_REF_NAME }}-$DATE_TAG
+        docker build -t $IMAGE_TAG -f Dockerfile .
+        docker push $IMAGE_TAG
