@@ -27,6 +27,6 @@ jobs:
     - name: Build and Push Docker image
       run: |
         DATE_TAG=$(date '+%Y%m%d%H%M%S')
-        IMAGE_TAG=${{ secrets.DOCKER_HUB_USERNAME }}/xlayer-nonde:${{ env.SAFE_REF_NAME }}-$DATE_TAG
+        IMAGE_TAG=${{ secrets.DOCKER_HUB_USERNAME }}/xlayer-node:${{ env.SAFE_REF_NAME }}-$DATE_TAG
         docker build -t $IMAGE_TAG -f Dockerfile .
         docker push $IMAGE_TAG
