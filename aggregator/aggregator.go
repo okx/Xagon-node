@@ -771,7 +771,7 @@ func (a *Aggregator) getAndLockBatchToProve(ctx context.Context, prover proverIn
 	if a.cfg.BatchProofL1BlockConfirmations <= lastL1BlockNumber {
 		maxL1BlockNumber = lastL1BlockNumber - a.cfg.BatchProofL1BlockConfirmations
 	}
-	log.Debugf("Max L1 block number for getting next virtual batch to prove: %d", maxL1BlockNumber)
+	log.Debugf("Max L1 block number for getting next virtual batch to prove: %d, lastL1BlockNumber:%v,lastVerifiedBatch:%v", maxL1BlockNumber, lastL1BlockNumber, lastVerifiedBatch.BatchNumber)
 
 	// Get virtual batch pending to generate proof
 	batchToVerify, err := a.State.GetVirtualBatchToProve(ctx, lastVerifiedBatch.BatchNumber, maxL1BlockNumber, nil)

@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"github.com/0xPolygonHermez/zkevm-node/log"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/hex"
@@ -804,6 +805,7 @@ func (p *PostgresStorage) GetVirtualBatchToProve(ctx context.Context, lastVerfie
 		ORDER BY b.batch_num ASC LIMIT 1
 		`
 	e := p.getExecQuerier(dbTx)
+	log.Infof("GetVirtualBatchToProve query %v: %v, %v", query, lastVerfiedBatchNumber, maxL1Block)
 	row := e.QueryRow(ctx, query, lastVerfiedBatchNumber, maxL1Block)
 	batch, err := scanBatch(row)
 	if errors.Is(err, pgx.ErrNoRows) {
