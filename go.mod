@@ -182,6 +182,7 @@ require (
 	github.com/0xPolygon/cdk-data-availability v0.0.5
 	github.com/apolloconfig/agollo/v4 v4.0.9
 	github.com/fatih/color v1.16.0
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/nacos-group/nacos-sdk-go v1.1.4
 	github.com/prometheus/client_golang v1.18.0
 	github.com/segmentio/kafka-go v0.4.47
