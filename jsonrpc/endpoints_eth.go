@@ -111,13 +111,13 @@ func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash
 
 		// X Layer LRU
 		if lru_xlayer.GetConfig().Enable {
-			ret, errValue, ok := getCallResultFromLRU(blockToProcess, tx.To(), tx.Data())
+			ret, errValue, ok := getCallResultFromLRU(blockToProcess, sender, tx)
 			if ok {
 				log.Infof("Call result from LRU cache: %v, %v", ret, errValue)
 				return ret, errValue
 			}
 			defer func() {
-				setCallResultToLRU(blockToProcess, tx.To(), tx.Data(), respRet, errRet)
+				setCallResultToLRU(blockToProcess, sender, tx, respRet, errRet)
 			}()
 		}
 
