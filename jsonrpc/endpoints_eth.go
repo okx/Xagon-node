@@ -210,7 +210,7 @@ func (e *EthEndpoints) EstimateGas(arg *types.TxArgs, blockArg *types.BlockNumbe
 		var gasEstimation uint64
 		var returnValue []byte
 		if e.enableEstimateGasOpt() {
-			gasEstimation, returnValue, err = e.state.EstimateGasOpt(tx, sender, isGasFreeSender, blockToProcess, dbTx)
+			gasEstimation, returnValue, err = e.state.EstimateGasOpt(tx, sender, isGasFreeSender, blockToProcess, dbTx, e.enableEstimateGasUltraOpt())
 		} else {
 			gasEstimation, returnValue, err = e.state.EstimateGas(tx, sender, isGasFreeSender, blockToProcess, dbTx)
 		}
