@@ -15,7 +15,7 @@ import (
 )
 
 // EstimateGasOpt for a transaction
-func (s *State) EstimateGasOpt(transaction *types.Transaction, senderAddress common.Address, isGasFreeSender bool, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error) {
+func (s *State) EstimateGasOpt(transaction *types.Transaction, senderAddress common.Address, isGasFreeSender bool, l2BlockNumber *uint64, dbTx pgx.Tx, ultraOpt bool) (uint64, []byte, error) {
 	const ethTransferGas = 21000
 
 	ctx := context.Background()
@@ -104,6 +104,10 @@ func (s *State) EstimateGasOpt(transaction *types.Transaction, senderAddress com
 	lowEnd, err := core.IntrinsicGas(transaction.Data(), transaction.AccessList(), s.isContractCreation(transaction), true, false, false)
 	if err != nil {
 		return 0, nil, err
+	}
+
+	if ultraOpt {
+		return lowEnd, nil, nil
 	}
 
 	// if the intrinsic gas is the same as the constant value for eth transfer

@@ -152,7 +152,7 @@ func (_m *StateMock) EstimateGas(transaction *coretypes.Transaction, senderAddre
 }
 
 // EstimateGasOpt provides a mock function with given fields: transaction, senderAddress, l2BlockNumber, dbTx
-func (_m *StateMock) EstimateGasOpt(transaction *coretypes.Transaction, senderAddress common.Address, isGasFreeSender bool, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error) {
+func (_m *StateMock) EstimateGasOpt(transaction *coretypes.Transaction, senderAddress common.Address, isGasFreeSender bool, l2BlockNumber *uint64, dbTx pgx.Tx, ultraOpt bool) (uint64, []byte, error) {
 	return _m.EstimateGas(transaction, senderAddress, isGasFreeSender, l2BlockNumber, dbTx)
 }
 
