@@ -731,6 +731,10 @@
 					"type": "boolean",
 					"default": false
 				},
+				"EnableEstimateGasUltraOpt": {
+					"type": "boolean",
+					"default": false
+				},
 				"DisableAPIs": {
 					"items": {
 						"type": "string"
