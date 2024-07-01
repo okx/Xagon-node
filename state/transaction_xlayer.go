@@ -105,8 +105,11 @@ func (s *State) EstimateGasOpt(transaction *types.Transaction, senderAddress com
 	if err != nil {
 		return 0, nil, err
 	}
+	staticGas := lowEnd
 
+	// xLayer opt
 	if ultraOpt {
+		log.Infof("state-EstimateGas value. UltraOpt:%v, gas:%d", ultraOpt, lowEnd)
 		return lowEnd, nil, nil
 	}
 
@@ -165,6 +168,7 @@ func (s *State) EstimateGasOpt(transaction *types.Transaction, senderAddress com
 
 	log.Infof("state-EstimateGas time. getBlock:%vms, getBatch:%vms, getForkID:%vms, getNonce:%vms, getEnd:%vms, internalGas:%vms",
 		getBlockTime.Milliseconds(), getBatchTime.Milliseconds(), getForkIDTime.Milliseconds(), getNonceTime.Milliseconds(), getEndTime.Milliseconds(), internalGasTime.Milliseconds())
+	log.Infof("state-EstimateGas value. UltraOpt:%v, IntrinsicGas:%d, finalGas:%d", ultraOpt, staticGas, estimationResult.gasUsed)
 
 	return estimationResult.gasUsed, nil, nil
 }
