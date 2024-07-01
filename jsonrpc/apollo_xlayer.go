@@ -3,6 +3,7 @@ package jsonrpc
 import (
 	"sync"
 
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/lru_xlayer"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 )
 
@@ -70,6 +71,7 @@ func UpdateConfig(apolloConfig Config) {
 	setApiAuth(apolloConfig.ApiAuthentication)
 	getApolloConfig().DynamicGP = apolloConfig.DynamicGP
 	getApolloConfig().setApiRelayCfg(apolloConfig.ApiRelay)
+	lru_xlayer.SetConfig(apolloConfig.LRUConfig)
 	getApolloConfig().Unlock()
 }
 

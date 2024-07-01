@@ -13,6 +13,7 @@ import (
 
 	"github.com/0xPolygonHermez/zkevm-node/hex"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/client"
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/lru_xlayer"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/pool"
@@ -71,7 +72,7 @@ func (e *EthEndpoints) BlockNumber() (interface{}, types.Error) {
 // executed contract and potential error.
 // Note, this function doesn't make any changes in the state/blockchain and is
 // useful to execute view/pure methods and retrieve values.
-func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash) (interface{}, types.Error) {
+func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash) (respRet interface{}, errRet types.Error) {
 	return e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
 		if arg == nil {
 			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 0", nil, false)
@@ -106,6 +107,18 @@ func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash
 		sender, tx, err := arg.ToTransaction(ctx, e.state, state.MaxTxGasLimit, block.Root(), defaultSenderAddress, dbTx)
 		if err != nil {
 			return RPCErrorResponse(types.DefaultErrorCode, "failed to convert arguments into an unsigned transaction", err, false)
+		}
+
+		// X Layer LRU
+		if lru_xlayer.GetConfig().Enable {
+			ret, errValue, ok := getCallResultFromLRU(blockToProcess, tx.To(), tx.Data())
+			if ok {
+				log.Infof("Call result from LRU cache: %v, %v", ret, errValue)
+				return ret, errValue
+			}
+			defer func() {
+				setCallResultToLRU(blockToProcess, tx.To(), tx.Data(), respRet, errRet)
+			}()
 		}
 
 		result, err := e.state.ProcessUnsignedTransaction(ctx, tx, sender, blockToProcess, true, dbTx)

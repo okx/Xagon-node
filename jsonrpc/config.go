@@ -2,6 +2,7 @@ package jsonrpc
 
 import (
 	"github.com/0xPolygonHermez/zkevm-node/config/types"
+	lru "github.com/0xPolygonHermez/zkevm-node/jsonrpc/lru_xlayer"
 	"github.com/ethereum/go-ethereum/common"
 )
 
@@ -110,6 +111,9 @@ type Config struct {
 
 	// ApiRelay defines the relay configuration for the API
 	ApiRelay ApiRelayConfig `mapstructure:"ApiRelay"`
+
+	// LRUConfig defines the LRU cache configuration
+	LRUConfig lru.Config `mapstructure:"LRUConfig"`
 }
 
 // ZKCountersLimits defines the ZK Counter limits

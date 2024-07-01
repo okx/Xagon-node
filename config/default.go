@@ -142,6 +142,9 @@ DisableAPIs = []
 		Enabled = false
 		DestURI = "" 
 		RPCs = []
+    [RPC.LRUConfig]
+		Enable = false
+		Size = 1000
 
 [Synchronizer]
 SyncInterval = "1s"

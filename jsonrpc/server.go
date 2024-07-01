@@ -13,6 +13,7 @@ import (
 	"syscall"
 	"time"
 
+	lru "github.com/0xPolygonHermez/zkevm-node/jsonrpc/lru_xlayer"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
@@ -90,6 +91,10 @@ func NewServer(
 		handler: handler,
 		chainID: chainID,
 	}
+
+	// X Layer handler
+	lru.Init(cfg.LRUConfig)
+
 	return srv
 }
 
