@@ -374,7 +374,7 @@ func (s *Server) handleBatchRequest(httpRequest *http.Request, w http.ResponseWr
 	}
 
 	responses := make([]types.Response, 0, len(requests))
-
+	var methods string
 	for _, request := range requests {
 		if !methodRateLimitAllow(request.Method) {
 			responses = append(responses, types.NewResponse(request, nil, types.NewRPCError(types.InvalidParamsErrorCode, "server is too busy")))
@@ -389,7 +389,10 @@ func (s *Server) handleBatchRequest(httpRequest *http.Request, w http.ResponseWr
 		}
 		responses = append(responses, response)
 		metrics.RequestMethodDuration(request.Method, st)
+		methods += request.Method + ","
 	}
+	metrics.RequestBatchSize(len(responses))
+	log.Infof("Batch request handled: %s total: %d", methods, len(responses))
 
 	respBytes, _ := json.Marshal(responses)
 	_, err = w.Write(respBytes)

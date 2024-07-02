@@ -1334,6 +1334,7 @@ FreeGasLimit=0
 | - [NacosWs](#RPC_NacosWs )                                                   | No      | object           | No         | -          | NacosWs configuration                                                                                                                                                                                                                                                                                                                              |
 | - [GasLimitFactor](#RPC_GasLimitFactor )                                     | No      | number           | No         | -          | GasLimitFactor is used to multiply the suggested gas provided by the network<br />in order to allow a enough gas to be set for all the transactions default value is 1.<br /><br />ex:<br />suggested gas limit: 100<br />GasLimitFactor: 1<br />gas limit = 100<br /><br />suggested gas limit: 100<br />GasLimitFactor: 1.1<br />gas limit = 110 |
 | - [EnableEstimateGasOpt](#RPC_EnableEstimateGasOpt )                         | No      | boolean          | No         | -          | -                                                                                                                                                                                                                                                                                                                                                  |
+| - [EnableEstimateGasUltraOpt](#RPC_EnableEstimateGasUltraOpt )               | No      | boolean          | No         | -          | -                                                                                                                                                                                                                                                                                                                                                  |
 | - [DisableAPIs](#RPC_DisableAPIs )                                           | No      | array of string  | No         | -          | DisableAPIs disable some API                                                                                                                                                                                                                                                                                                                       |
 | - [RateLimit](#RPC_RateLimit )                                               | No      | object           | No         | -          | RateLimit enable rate limit                                                                                                                                                                                                                                                                                                                        |
 | - [DynamicGP](#RPC_DynamicGP )                                               | No      | object           | No         | -          | DynamicGP defines the config of dynamic gas price                                                                                                                                                                                                                                                                                                  |
@@ -1942,7 +1943,19 @@ GasLimitFactor=1
 EnableEstimateGasOpt=false
 ```
 
-### <a name="RPC_DisableAPIs"></a>8.23. `RPC.DisableAPIs`
+### <a name="RPC_EnableEstimateGasUltraOpt"></a>8.23. `RPC.EnableEstimateGasUltraOpt`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Example setting the default value** (false):
+```
+[RPC]
+EnableEstimateGasUltraOpt=false
+```
+
+### <a name="RPC_DisableAPIs"></a>8.24. `RPC.DisableAPIs`
 
 **Type:** : `array of string`
 
@@ -1956,7 +1969,7 @@ EnableEstimateGasOpt=false
 DisableAPIs=[]
 ```
 
-### <a name="RPC_RateLimit"></a>8.24. `[RPC.RateLimit]`
+### <a name="RPC_RateLimit"></a>8.25. `[RPC.RateLimit]`
 
 **Type:** : `object`
 **Description:** RateLimit enable rate limit
@@ -1969,7 +1982,7 @@ DisableAPIs=[]
 | - [RateLimitDuration](#RPC_RateLimit_RateLimitDuration ) | No      | integer         | No         | -          | RateLimitDuration defines the time window for the rate limit                      |
 | - [SpecialApis](#RPC_RateLimit_SpecialApis )             | No      | array of object | No         | -          | SpecialApis defines the apis that need to be rate limited with special rate limit |
 
-#### <a name="RPC_RateLimit_Enabled"></a>8.24.1. `RPC.RateLimit.Enabled`
+#### <a name="RPC_RateLimit_Enabled"></a>8.25.1. `RPC.RateLimit.Enabled`
 
 **Type:** : `boolean`
 
@@ -1983,7 +1996,7 @@ DisableAPIs=[]
 Enabled=false
 ```
 
-#### <a name="RPC_RateLimit_RateLimitApis"></a>8.24.2. `RPC.RateLimit.RateLimitApis`
+#### <a name="RPC_RateLimit_RateLimitApis"></a>8.25.2. `RPC.RateLimit.RateLimitApis`
 
 **Type:** : `array of string`
 
@@ -1997,7 +2010,7 @@ Enabled=false
 RateLimitApis=[]
 ```
 
-#### <a name="RPC_RateLimit_RateLimitCount"></a>8.24.3. `RPC.RateLimit.RateLimitCount`
+#### <a name="RPC_RateLimit_RateLimitCount"></a>8.25.3. `RPC.RateLimit.RateLimitCount`
 
 **Type:** : `integer`
 
@@ -2011,7 +2024,7 @@ RateLimitApis=[]
 RateLimitCount=100
 ```
 
-#### <a name="RPC_RateLimit_RateLimitDuration"></a>8.24.4. `RPC.RateLimit.RateLimitDuration`
+#### <a name="RPC_RateLimit_RateLimitDuration"></a>8.25.4. `RPC.RateLimit.RateLimitDuration`
 
 **Type:** : `integer`
 
@@ -2025,7 +2038,7 @@ RateLimitCount=100
 RateLimitDuration=1
 ```
 
-#### <a name="RPC_RateLimit_SpecialApis"></a>8.24.5. `RPC.RateLimit.SpecialApis`
+#### <a name="RPC_RateLimit_SpecialApis"></a>8.25.5. `RPC.RateLimit.SpecialApis`
 
 **Type:** : `array of object`
 
@@ -2051,7 +2064,7 @@ SpecialApis=[]
 | ----------------------------------------------------- | ---------------------------------------------------------- |
 | [SpecialApis items](#RPC_RateLimit_SpecialApis_items) | RateLimitItem defines the special rate limit for some apis |
 
-##### <a name="autogenerated_heading_3"></a>8.24.5.1. [RPC.RateLimit.SpecialApis.SpecialApis items]
+##### <a name="autogenerated_heading_3"></a>8.25.5.1. [RPC.RateLimit.SpecialApis.SpecialApis items]
 
 **Type:** : `object`
 **Description:** RateLimitItem defines the special rate limit for some apis
@@ -2062,22 +2075,22 @@ SpecialApis=[]
 | - [Count](#RPC_RateLimit_SpecialApis_items_Count )       | No      | integer | No         | -          | Count defines the maximum burst size of requests    |
 | - [Duration](#RPC_RateLimit_SpecialApis_items_Duration ) | No      | integer | No         | -          | Duration defines the time window for the rate limit |
 
-##### <a name="RPC_RateLimit_SpecialApis_items_Api"></a>8.24.5.1.1. `RPC.RateLimit.SpecialApis.SpecialApis items.Api`
+##### <a name="RPC_RateLimit_SpecialApis_items_Api"></a>8.25.5.1.1. `RPC.RateLimit.SpecialApis.SpecialApis items.Api`
 
 **Type:** : `string`
 **Description:** Api defines the api that need to be rate limited
 
-##### <a name="RPC_RateLimit_SpecialApis_items_Count"></a>8.24.5.1.2. `RPC.RateLimit.SpecialApis.SpecialApis items.Count`
+##### <a name="RPC_RateLimit_SpecialApis_items_Count"></a>8.25.5.1.2. `RPC.RateLimit.SpecialApis.SpecialApis items.Count`
 
 **Type:** : `integer`
 **Description:** Count defines the maximum burst size of requests
 
-##### <a name="RPC_RateLimit_SpecialApis_items_Duration"></a>8.24.5.1.3. `RPC.RateLimit.SpecialApis.SpecialApis items.Duration`
+##### <a name="RPC_RateLimit_SpecialApis_items_Duration"></a>8.25.5.1.3. `RPC.RateLimit.SpecialApis.SpecialApis items.Duration`
 
 **Type:** : `integer`
 **Description:** Duration defines the time window for the rate limit
 
-### <a name="RPC_DynamicGP"></a>8.25. `[RPC.DynamicGP]`
+### <a name="RPC_DynamicGP"></a>8.26. `[RPC.DynamicGP]`
 
 **Type:** : `object`
 **Description:** DynamicGP defines the config of dynamic gas price
@@ -2093,7 +2106,7 @@ SpecialApis=[]
 | - [MinPrice](#RPC_DynamicGP_MinPrice )                           | No      | integer | No         | -          | MinPrice defines the dynamic gas price lower limit                                    |
 | - [UpdatePeriod](#RPC_DynamicGP_UpdatePeriod )                   | No      | string  | No         | -          | Duration                                                                              |
 
-#### <a name="RPC_DynamicGP_Enabled"></a>8.25.1. `RPC.DynamicGP.Enabled`
+#### <a name="RPC_DynamicGP_Enabled"></a>8.26.1. `RPC.DynamicGP.Enabled`
 
 **Type:** : `boolean`
 
@@ -2107,7 +2120,7 @@ SpecialApis=[]
 Enabled=false
 ```
 
-#### <a name="RPC_DynamicGP_CongestionTxThreshold"></a>8.25.2. `RPC.DynamicGP.CongestionTxThreshold`
+#### <a name="RPC_DynamicGP_CongestionTxThreshold"></a>8.26.2. `RPC.DynamicGP.CongestionTxThreshold`
 
 **Type:** : `integer`
 
@@ -2121,7 +2134,7 @@ Enabled=false
 CongestionTxThreshold=100
 ```
 
-#### <a name="RPC_DynamicGP_CheckBatches"></a>8.25.3. `RPC.DynamicGP.CheckBatches`
+#### <a name="RPC_DynamicGP_CheckBatches"></a>8.26.3. `RPC.DynamicGP.CheckBatches`
 
 **Type:** : `integer`
 
@@ -2135,7 +2148,7 @@ CongestionTxThreshold=100
 CheckBatches=5
 ```
 
-#### <a name="RPC_DynamicGP_SampleNumber"></a>8.25.4. `RPC.DynamicGP.SampleNumber`
+#### <a name="RPC_DynamicGP_SampleNumber"></a>8.26.4. `RPC.DynamicGP.SampleNumber`
 
 **Type:** : `integer`
 
@@ -2149,7 +2162,7 @@ CheckBatches=5
 SampleNumber=3
 ```
 
-#### <a name="RPC_DynamicGP_Percentile"></a>8.25.5. `RPC.DynamicGP.Percentile`
+#### <a name="RPC_DynamicGP_Percentile"></a>8.26.5. `RPC.DynamicGP.Percentile`
 
 **Type:** : `integer`
 
@@ -2163,7 +2176,7 @@ SampleNumber=3
 Percentile=70
 ```
 
-#### <a name="RPC_DynamicGP_MaxPrice"></a>8.25.6. `RPC.DynamicGP.MaxPrice`
+#### <a name="RPC_DynamicGP_MaxPrice"></a>8.26.6. `RPC.DynamicGP.MaxPrice`
 
 **Type:** : `integer`
 
@@ -2177,7 +2190,7 @@ Percentile=70
 MaxPrice=20000000000
 ```
 
-#### <a name="RPC_DynamicGP_MinPrice"></a>8.25.7. `RPC.DynamicGP.MinPrice`
+#### <a name="RPC_DynamicGP_MinPrice"></a>8.26.7. `RPC.DynamicGP.MinPrice`
 
 **Type:** : `integer`
 
@@ -2191,7 +2204,7 @@ MaxPrice=20000000000
 MinPrice=2000000000
 ```
 
-#### <a name="RPC_DynamicGP_UpdatePeriod"></a>8.25.8. `RPC.DynamicGP.UpdatePeriod`
+#### <a name="RPC_DynamicGP_UpdatePeriod"></a>8.26.8. `RPC.DynamicGP.UpdatePeriod`
 
 **Title:** Duration
 
@@ -2217,7 +2230,7 @@ MinPrice=2000000000
 UpdatePeriod="10s"
 ```
 
-### <a name="RPC_EnableInnerTxCacheDB"></a>8.26. `RPC.EnableInnerTxCacheDB`
+### <a name="RPC_EnableInnerTxCacheDB"></a>8.27. `RPC.EnableInnerTxCacheDB`
 
 **Type:** : `boolean`
 
@@ -2231,12 +2244,12 @@ UpdatePeriod="10s"
 EnableInnerTxCacheDB=false
 ```
 
-### <a name="RPC_BridgeAddress"></a>8.27. `RPC.BridgeAddress`
+### <a name="RPC_BridgeAddress"></a>8.28. `RPC.BridgeAddress`
 
 **Type:** : `array of integer`
 **Description:** BridgeAddress is the address of the bridge contract
 
-### <a name="RPC_ApiAuthentication"></a>8.28. `[RPC.ApiAuthentication]`
+### <a name="RPC_ApiAuthentication"></a>8.29. `[RPC.ApiAuthentication]`
 
 **Type:** : `object`
 **Description:** ApiAuthentication defines the authentication configuration for the API
@@ -2246,7 +2259,7 @@ EnableInnerTxCacheDB=false
 | - [Enabled](#RPC_ApiAuthentication_Enabled ) | No      | boolean         | No         | -          | Enabled defines if the api authentication is enabled |
 | - [ApiKeys](#RPC_ApiAuthentication_ApiKeys ) | No      | array of object | No         | -          | ApiKeys defines the api keys                         |
 
-#### <a name="RPC_ApiAuthentication_Enabled"></a>8.28.1. `RPC.ApiAuthentication.Enabled`
+#### <a name="RPC_ApiAuthentication_Enabled"></a>8.29.1. `RPC.ApiAuthentication.Enabled`
 
 **Type:** : `boolean`
 
@@ -2260,7 +2273,7 @@ EnableInnerTxCacheDB=false
 Enabled=false
 ```
 
-#### <a name="RPC_ApiAuthentication_ApiKeys"></a>8.28.2. `RPC.ApiAuthentication.ApiKeys`
+#### <a name="RPC_ApiAuthentication_ApiKeys"></a>8.29.2. `RPC.ApiAuthentication.ApiKeys`
 
 **Type:** : `array of object`
 
@@ -2286,7 +2299,7 @@ ApiKeys=[]
 | ----------------------------------------------------- | --------------------------- |
 | [ApiKeys items](#RPC_ApiAuthentication_ApiKeys_items) | KeyItem is the api key item |
 
-##### <a name="autogenerated_heading_4"></a>8.28.2.1. [RPC.ApiAuthentication.ApiKeys.ApiKeys items]
+##### <a name="autogenerated_heading_4"></a>8.29.2.1. [RPC.ApiAuthentication.ApiKeys.ApiKeys items]
 
 **Type:** : `object`
 **Description:** KeyItem is the api key item
@@ -2297,22 +2310,22 @@ ApiKeys=[]
 | - [Key](#RPC_ApiAuthentication_ApiKeys_items_Key )         | No      | string | No         | -          | Key defines the key              |
 | - [Timeout](#RPC_ApiAuthentication_ApiKeys_items_Timeout ) | No      | string | No         | -          | Timeout defines the timeout      |
 
-##### <a name="RPC_ApiAuthentication_ApiKeys_items_Project"></a>8.28.2.1.1. `RPC.ApiAuthentication.ApiKeys.ApiKeys items.Project`
+##### <a name="RPC_ApiAuthentication_ApiKeys_items_Project"></a>8.29.2.1.1. `RPC.ApiAuthentication.ApiKeys.ApiKeys items.Project`
 
 **Type:** : `string`
 **Description:** Name defines the name of the key
 
-##### <a name="RPC_ApiAuthentication_ApiKeys_items_Key"></a>8.28.2.1.2. `RPC.ApiAuthentication.ApiKeys.ApiKeys items.Key`
+##### <a name="RPC_ApiAuthentication_ApiKeys_items_Key"></a>8.29.2.1.2. `RPC.ApiAuthentication.ApiKeys.ApiKeys items.Key`
 
 **Type:** : `string`
 **Description:** Key defines the key
 
-##### <a name="RPC_ApiAuthentication_ApiKeys_items_Timeout"></a>8.28.2.1.3. `RPC.ApiAuthentication.ApiKeys.ApiKeys items.Timeout`
+##### <a name="RPC_ApiAuthentication_ApiKeys_items_Timeout"></a>8.29.2.1.3. `RPC.ApiAuthentication.ApiKeys.ApiKeys items.Timeout`
 
 **Type:** : `string`
 **Description:** Timeout defines the timeout
 
-### <a name="RPC_ApiRelay"></a>8.29. `[RPC.ApiRelay]`
+### <a name="RPC_ApiRelay"></a>8.30. `[RPC.ApiRelay]`
 
 **Type:** : `object`
 **Description:** ApiRelay defines the relay configuration for the API
@@ -2323,7 +2336,7 @@ ApiKeys=[]
 | - [DestURI](#RPC_ApiRelay_DestURI ) | No      | string          | No         | -          | -                 |
 | - [RPCs](#RPC_ApiRelay_RPCs )       | No      | array of string | No         | -          | -                 |
 
-#### <a name="RPC_ApiRelay_Enabled"></a>8.29.1. `RPC.ApiRelay.Enabled`
+#### <a name="RPC_ApiRelay_Enabled"></a>8.30.1. `RPC.ApiRelay.Enabled`
 
 **Type:** : `boolean`
 
@@ -2335,7 +2348,7 @@ ApiKeys=[]
 Enabled=false
 ```
 
-#### <a name="RPC_ApiRelay_DestURI"></a>8.29.2. `RPC.ApiRelay.DestURI`
+#### <a name="RPC_ApiRelay_DestURI"></a>8.30.2. `RPC.ApiRelay.DestURI`
 
 **Type:** : `string`
 
@@ -2347,7 +2360,7 @@ Enabled=false
 DestURI=""
 ```
 
-#### <a name="RPC_ApiRelay_RPCs"></a>8.29.3. `RPC.ApiRelay.RPCs`
+#### <a name="RPC_ApiRelay_RPCs"></a>8.30.3. `RPC.ApiRelay.RPCs`
 
 **Type:** : `array of string`
 

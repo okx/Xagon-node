@@ -297,6 +297,19 @@ func (e *EthEndpoints) enableEstimateGasOpt() bool {
 	return res
 }
 
+func (e *EthEndpoints) enableEstimateGasUltraOpt() bool {
+	res := false
+	if getApolloConfig().Enable() {
+		getApolloConfig().RLock()
+		res = getApolloConfig().EnableEstimateGasUltraOpt
+		getApolloConfig().RUnlock()
+	} else {
+		res = e.cfg.EnableEstimateGasUltraOpt
+	}
+
+	return res
+}
+
 // internal
 func (e *EthEndpoints) newPendingTransactionFilterXLayer(wsConn *concurrentWsConn) (interface{}, types.Error) {
 	//XLayer handle

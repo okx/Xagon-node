@@ -18,6 +18,7 @@ var (
 	requestRelayFailCountName   = requestPrefix + "relay_fail_count"
 	requestCallCachedName       = requestPrefix + "call_cached"
 	requestCallExecutedName     = requestPrefix + "call_executed"
+	requestBatchSizeName        = requestPrefix + "batch_size"
 
 	wsRequestPrefix             = prefix + "ws_request_"
 	requestWsMethodName         = wsRequestPrefix + "method"
@@ -39,6 +40,10 @@ var (
 		{
 			Name: lastRawGasPriceName,
 			Help: "[JSONRPC] raw gas price",
+		},
+		{
+			Name: requestBatchSizeName,
+			Help: "[JSONRPC] batch request size",
 		},
 	}
 
@@ -207,6 +212,11 @@ func RequestAuthErrorCount(tp RequestAuthErrorType) {
 // RequestRelayFailCount increments the requests handled counter vector by one for the given project.
 func RequestRelayFailCount(method string) {
 	metrics.CounterVecInc(requestRelayFailCountName, method)
+}
+
+// RequestBatchSize increments the batch requests count
+func RequestBatchSize(batchSize int) {
+	metrics.GaugeSet(requestBatchSizeName, float64(batchSize))
 }
 
 // RequestCallCachedCount increments the call cached counter vector by one.
