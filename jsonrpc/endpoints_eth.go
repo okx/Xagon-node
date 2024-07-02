@@ -111,7 +111,6 @@ func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash
 
 		// X Layer LRU
 		if lru_xlayer.GetConfig().Enable {
-			log.Infof("LRU cache is enabled")
 			ret, errValue, ok := getCallResultFromLRU(blockToProcess, sender, tx)
 			if ok {
 				log.Infof("Call result from LRU cache: %v, %v", ret, errValue)
