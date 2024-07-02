@@ -3,12 +3,12 @@ package jsonrpc
 import (
 	"fmt"
 
-	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/lru_xlayer"
-	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
-
-	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/common"
 	ethtypes "github.com/ethereum/go-ethereum/core/types"
+
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/lru_xlayer"
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
+	"github.com/0xPolygonHermez/zkevm-node/log"
 )
 
 func getCallKey(blockNumber *uint64, sender common.Address, tx *ethtypes.Transaction) (string, string) {
