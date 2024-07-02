@@ -72,8 +72,8 @@ func (e *EthEndpoints) BlockNumber() (interface{}, types.Error) {
 // executed contract and potential error.
 // Note, this function doesn't make any changes in the state/blockchain and is
 // useful to execute view/pure methods and retrieve values.
-func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash) (respRet interface{}, errRet types.Error) {
-	return e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (interface{}, types.Error) {
+func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash) (interface{}, types.Error) {
+	return e.txMan.NewDbTxScope(e.state, func(ctx context.Context, dbTx pgx.Tx) (respRet interface{}, errRet types.Error) {
 		if arg == nil {
 			return RPCErrorResponse(types.InvalidParamsErrorCode, "missing value for required argument 0", nil, false)
 		}
