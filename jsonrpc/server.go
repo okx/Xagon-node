@@ -93,7 +93,7 @@ func NewServer(
 	}
 
 	// X Layer handler
-	lru.Init(cfg.LRUConfig)
+	lru.SetConfig(cfg.LRUConfig)
 
 	return srv
 }

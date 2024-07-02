@@ -18,17 +18,14 @@ func getCallKey(blockNumber *uint64, sender common.Address, tx *ethtypes.Transac
 
 func getCallResultFromLRU(blockNumber *uint64, sender common.Address, tx *ethtypes.Transaction) (interface{}, types.Error, bool) {
 	retKey, errKey := getCallKey(blockNumber, sender, tx)
-	log.Infof("getCallResultFromLRU retKey: %s, errKey: %s", retKey, errKey)
 	value, ok := lru_xlayer.GetLRU().Get(retKey)
 	if !ok {
 		return nil, nil, false
 	}
-	log.Infof("getCallResultFromLRU value: %v", value)
 	errValue, ok := lru_xlayer.GetLRU().Get(errKey)
 	if !ok {
 		return nil, nil, false
 	}
-	log.Infof("getCallResultFromLRU errValue: %v", errValue)
 	if errValue == nil {
 		return value, nil, true
 	}
@@ -51,6 +48,4 @@ func setCallResultToLRU(blockNumber *uint64, sender common.Address, tx *ethtypes
 	if err != nil {
 		log.Debugf("Failed to set value to LRU cache call err: %v", err)
 	}
-
-	log.Infof("setCallResultToLRU retKey: %s, v: %v, errKey: %s, v: %v", retKey, errKey, value, errValue)
 }

@@ -14,6 +14,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/hex"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/client"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/lru_xlayer"
+	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/pool"
@@ -114,8 +115,10 @@ func (e *EthEndpoints) Call(arg *types.TxArgs, blockArg *types.BlockNumberOrHash
 			ret, errValue, ok := getCallResultFromLRU(blockToProcess, sender, tx)
 			if ok {
 				log.Infof("Call result from LRU cache: %v, %v", ret, errValue)
+				metrics.RequestCallCachedCount()
 				return ret, errValue
 			}
+			metrics.RequestCallExecutedCount()
 			defer func() {
 				setCallResultToLRU(blockToProcess, sender, tx, respRet, errRet)
 			}()

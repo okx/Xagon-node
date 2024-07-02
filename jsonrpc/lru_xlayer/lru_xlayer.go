@@ -51,9 +51,3 @@ func GetLRU() *LRUCache {
 	})
 	return instance
 }
-
-// Init initializes the LRU cache.
-func Init(config Config) {
-	SetConfig(config)
-	GetLRU()
-}
