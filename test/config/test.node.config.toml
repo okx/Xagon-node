@@ -87,6 +87,9 @@ DisableAPIs = []
 	[RPC.WebSockets]
 		Enabled = true
 		Port = 8133
+	[RPC.LRUConfig]
+		Enable = true
+		Size = 1000
 
 [Synchronizer]
 SyncInterval = "1s"
