@@ -36,6 +36,7 @@ func getCallResultFromLRU(blockNumber *uint64, sender common.Address, tx *ethtyp
 
 func setCallResultToLRU(blockNumber *uint64, sender common.Address, tx *ethtypes.Transaction, value interface{}, errValue types.Error) {
 	retKey, errKey := getCallKey(blockNumber, sender, tx)
+	log.Infof("setCallResultToLRU retKey: %s, errKey: %s", retKey, errKey)
 	err := lru_xlayer.GetLRU().Set(retKey, value)
 	if err != nil {
 		log.Debugf("Failed to set value to LRU cache call ret: %v", err)
