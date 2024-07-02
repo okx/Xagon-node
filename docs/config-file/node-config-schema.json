@@ -920,6 +920,21 @@
 					"additionalProperties": false,
 					"type": "object",
 					"description": "ApiRelay defines the relay configuration for the API"
+				},
+				"LRUConfig": {
+					"properties": {
+						"Enable": {
+							"type": "boolean",
+							"default": false
+						},
+						"Size": {
+							"type": "integer",
+							"default": 1000
+						}
+					},
+					"additionalProperties": false,
+					"type": "object",
+					"description": "LRUConfig defines the LRU cache configuration"
 				}
 			},
 			"additionalProperties": false,

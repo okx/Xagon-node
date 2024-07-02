@@ -1342,6 +1342,7 @@ FreeGasLimit=0
 | - [BridgeAddress](#RPC_BridgeAddress )                                       | No      | array of integer | No         | -          | BridgeAddress is the address of the bridge contract                                                                                                                                                                                                                                                                                                |
 | - [ApiAuthentication](#RPC_ApiAuthentication )                               | No      | object           | No         | -          | ApiAuthentication defines the authentication configuration for the API                                                                                                                                                                                                                                                                             |
 | - [ApiRelay](#RPC_ApiRelay )                                                 | No      | object           | No         | -          | ApiRelay defines the relay configuration for the API                                                                                                                                                                                                                                                                                               |
+| - [LRUConfig](#RPC_LRUConfig )                                               | No      | object           | No         | -          | LRUConfig defines the LRU cache configuration                                                                                                                                                                                                                                                                                                      |
 
 ### <a name="RPC_Host"></a>8.1. `RPC.Host`
 
@@ -2370,6 +2371,40 @@ DestURI=""
 ```
 [RPC.ApiRelay]
 RPCs=[]
+```
+
+### <a name="RPC_LRUConfig"></a>8.31. `[RPC.LRUConfig]`
+
+**Type:** : `object`
+**Description:** LRUConfig defines the LRU cache configuration
+
+| Property                           | Pattern | Type    | Deprecated | Definition | Title/Description |
+| ---------------------------------- | ------- | ------- | ---------- | ---------- | ----------------- |
+| - [Enable](#RPC_LRUConfig_Enable ) | No      | boolean | No         | -          | -                 |
+| - [Size](#RPC_LRUConfig_Size )     | No      | integer | No         | -          | -                 |
+
+#### <a name="RPC_LRUConfig_Enable"></a>8.31.1. `RPC.LRUConfig.Enable`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Example setting the default value** (false):
+```
+[RPC.LRUConfig]
+Enable=false
+```
+
+#### <a name="RPC_LRUConfig_Size"></a>8.31.2. `RPC.LRUConfig.Size`
+
+**Type:** : `integer`
+
+**Default:** `1000`
+
+**Example setting the default value** (1000):
+```
+[RPC.LRUConfig]
+Size=1000
 ```
 
 ## <a name="Synchronizer"></a>9. `[Synchronizer]`
