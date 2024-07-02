@@ -18,13 +18,19 @@ func getCallKey(blockNumber *uint64, sender common.Address, tx *ethtypes.Transac
 
 func getCallResultFromLRU(blockNumber *uint64, sender common.Address, tx *ethtypes.Transaction) (interface{}, types.Error, bool) {
 	retKey, errKey := getCallKey(blockNumber, sender, tx)
+	log.Infof("getCallResultFromLRU retKey: %s, errKey: %s", retKey, errKey)
 	value, ok := lru_xlayer.GetLRU().Get(retKey)
 	if !ok {
 		return nil, nil, false
 	}
+	log.Infof("getCallResultFromLRU value: %v", value)
 	errValue, ok := lru_xlayer.GetLRU().Get(errKey)
 	if !ok {
 		return nil, nil, false
+	}
+	log.Infof("getCallResultFromLRU errValue: %v", errValue)
+	if errValue == nil {
+		return value, nil, true
 	}
 	v, ok := errValue.(types.Error)
 	if !ok {
