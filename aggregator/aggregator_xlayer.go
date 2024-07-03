@@ -14,6 +14,13 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/state"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/jackc/pgx/v4"
+	"github.com/0xPolygonHermez/zkevm-node/aggregator/metrics"
+)
+
+var (
+	nowSendTxStartBatchNumber uint64 = 0
+	nowWaitMinedStartBatchNumber uint64 = 0
+	initStartBatchNumber bool = false
 )
 
 func (a *Aggregator) settleDirect(
@@ -96,13 +103,26 @@ func (a *Aggregator) settleWithAggLayer(
 		return false
 	}
 
+	if !initStartBatchNumber {
+		nowSendTxStartBatchNumber = proof.BatchNumber
+		nowWaitMinedStartBatchNumber = proof.BatchNumber
+		initStartBatchNumber = true
+	}
+
 	log.Debug("final proof signedTx: ", signedTx.Tx.ZKP.Proof.Hex())
 	txHash, err := a.AggLayerClient.SendTx(*signedTx)
 	if err != nil {
 		log.Errorf("failed to send tx to the interop: %v", err)
 		a.handleFailureToSendToAggLayer(ctx, proof)
-
+		// Monitor Failure with metrics
+		if nowSendTxStartBatchNumber == proof.BatchNumber {
+			metrics.SendTxFailedInc()
+		}
 		return false
+	} else {
+		// reset counter when success
+		metrics.SendTxFailedReset()
+		nowSendTxStartBatchNumber = proof.BatchNumberFinal + 1
 	}
 
 	log.Infof("tx %s sent to agglayer, waiting to be mined", txHash.Hex())
@@ -112,8 +132,15 @@ func (a *Aggregator) settleWithAggLayer(
 	if err := a.AggLayerClient.WaitTxToBeMined(txHash, waitCtx); err != nil {
 		log.Errorf("interop didn't mine the tx: %v", err)
 		a.handleFailureToSendToAggLayer(ctx, proof)
-
+		// Monitor Failure with metrics
+		if nowWaitMinedStartBatchNumber == proof.BatchNumber {
+			metrics.WaitMinedFailedInc()
+		}
 		return false
+	}else {
+		// reset counter when success
+		metrics.WaitMinedFailedReset()
+		nowWaitMinedStartBatchNumber = proof.BatchNumberFinal + 1
 	}
 
 	// TODO: wait for synchronizer to catch up
