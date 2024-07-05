@@ -2335,6 +2335,7 @@ ApiKeys=[]
 | - [Enabled](#RPC_ApiRelay_Enabled ) | No      | boolean         | No         | -          | -                 |
 | - [DestURI](#RPC_ApiRelay_DestURI ) | No      | string          | No         | -          | -                 |
 | - [RPCs](#RPC_ApiRelay_RPCs )       | No      | array of string | No         | -          | -                 |
+| - [Rerun](#RPC_ApiRelay_Rerun )     | No      | boolean         | No         | -          | -                 |
 
 #### <a name="RPC_ApiRelay_Enabled"></a>8.30.1. `RPC.ApiRelay.Enabled`
 
@@ -2370,6 +2371,18 @@ DestURI=""
 ```
 [RPC.ApiRelay]
 RPCs=[]
+```
+
+#### <a name="RPC_ApiRelay_Rerun"></a>8.30.4. `RPC.ApiRelay.Rerun`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Example setting the default value** (false):
+```
+[RPC.ApiRelay]
+Rerun=false
 ```
 
 ## <a name="Synchronizer"></a>9. `[Synchronizer]`
