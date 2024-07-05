@@ -8,16 +8,17 @@ import (
 
 // ApolloConfig is the apollo RPC dynamic config
 type ApolloConfig struct {
-	EnableApollo         bool
-	BatchRequestsEnabled bool
-	BatchRequestsLimit   uint
-	GasLimitFactor       float64
-	EnableEstimateGasOpt bool
-	DisableAPIs          []string
-	RateLimit            RateLimitConfig
-	DynamicGP            DynamicGPConfig
-	ApiAuthentication    ApiAuthConfig
-	ApiRelay             ApiRelayConfig
+	EnableApollo              bool
+	BatchRequestsEnabled      bool
+	BatchRequestsLimit        uint
+	GasLimitFactor            float64
+	EnableEstimateGasOpt      bool
+	EnableEstimateGasUltraOpt bool
+	DisableAPIs               []string
+	RateLimit                 RateLimitConfig
+	DynamicGP                 DynamicGPConfig
+	ApiAuthentication         ApiAuthConfig
+	ApiRelay                  ApiRelayConfig
 
 	sync.RWMutex
 }
@@ -65,6 +66,7 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().BatchRequestsLimit = apolloConfig.BatchRequestsLimit
 	getApolloConfig().GasLimitFactor = apolloConfig.GasLimitFactor
 	getApolloConfig().EnableEstimateGasOpt = apolloConfig.EnableEstimateGasOpt
+	getApolloConfig().EnableEstimateGasUltraOpt = apolloConfig.EnableEstimateGasUltraOpt
 	getApolloConfig().setDisableAPIs(apolloConfig.DisableAPIs)
 	setRateLimit(apolloConfig.RateLimit)
 	setApiAuth(apolloConfig.ApiAuthentication)

@@ -172,6 +172,13 @@ func (a *Aggregator) Stop() {
 // Channel implements the bi-directional communication channel between the
 // Prover client and the Aggregator server.
 func (a *Aggregator) Channel(stream prover.AggregatorService_ChannelServer) error {
+	if a.cfg.Parallel {
+		return a.channelParallel(stream)
+	}
+	return a.channelSerialize(stream)
+}
+
+func (a *Aggregator) channelSerialize(stream prover.AggregatorService_ChannelServer) error {
 	metrics.ConnectedProver()
 	defer metrics.DisconnectedProver()
 
