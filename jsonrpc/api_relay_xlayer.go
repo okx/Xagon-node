@@ -12,6 +12,7 @@ type ApiRelayConfig struct {
 	Enabled bool     `mapstructure:"Enabled"`
 	DestURI string   `mapstructure:"DestURI"`
 	RPCs    []string `mapstructure:"RPCs"`
+	Rerun   bool     `mapstructure:"Rerun"`
 }
 
 func shouldRelay(localCfg ApiRelayConfig, name string) bool {
@@ -25,6 +26,15 @@ func shouldRelay(localCfg ApiRelayConfig, name string) bool {
 	}
 
 	return enable && contained
+}
+
+func shouldRerun(localCfg ApiRelayConfig) bool {
+	if getApolloConfig().Enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		return getApolloConfig().ApiRelay.Rerun
+	}
+	return localCfg.Rerun
 }
 
 func getRelayDestURI(localDestURI string) string {
@@ -42,7 +52,7 @@ func getRelayDestURI(localDestURI string) string {
 func tryRelay(localCfg ApiRelayConfig, request types.Request) (types.Response, bool) {
 	if shouldRelay(localCfg, request.Method) && pass(&request) {
 		destURI := getRelayDestURI(localCfg.DestURI)
-		res, err := client.JSONRPCRelay(destURI, request)
+		res, err := client.JSONRPCRelay(destURI, request, shouldRerun(localCfg))
 		if err != nil {
 			log.Errorf("failed to relay %v to %s: %v", request.Method, destURI, err)
 			metrics.RequestRelayFailCount(request.Method)
