@@ -2293,7 +2293,7 @@ func Test_AddTx_TxFeeCap(t *testing.T) {
 			nonce:         0,
 			gas:           uint64(100000),
 			gasPrice:      "10000000000001",
-			expectedError: fmt.Errorf("tx fee (1.0000000000001 ether) exceeds the configured cap (1.00 ether)"),
+			expectedError: fmt.Errorf("tx fee (1.0000000000001 okb) exceeds the configured cap (1.00 okb)"),
 		},
 	}
 

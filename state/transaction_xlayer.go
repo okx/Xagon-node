@@ -15,7 +15,7 @@ import (
 )
 
 // EstimateGasOpt for a transaction
-func (s *State) EstimateGasOpt(transaction *types.Transaction, senderAddress common.Address, isGasFreeSender bool, l2BlockNumber *uint64, dbTx pgx.Tx) (uint64, []byte, error) {
+func (s *State) EstimateGasOpt(transaction *types.Transaction, senderAddress common.Address, isGasFreeSender bool, l2BlockNumber *uint64, dbTx pgx.Tx, ultraOpt bool) (uint64, []byte, error) {
 	const ethTransferGas = 21000
 
 	ctx := context.Background()
@@ -106,6 +106,12 @@ func (s *State) EstimateGasOpt(transaction *types.Transaction, senderAddress com
 		return 0, nil, err
 	}
 
+	// xLayer opt
+	if ultraOpt {
+		log.Infof("state-EstimateGas value. UltraOpt:%v, gas:%d", ultraOpt, lowEnd)
+		return lowEnd, nil, nil
+	}
+
 	// if the intrinsic gas is the same as the constant value for eth transfer
 	// and the transaction has a receiver address
 	if lowEnd == ethTransferGas && transaction.To() != nil {
@@ -161,6 +167,7 @@ func (s *State) EstimateGasOpt(transaction *types.Transaction, senderAddress com
 
 	log.Infof("state-EstimateGas time. getBlock:%vms, getBatch:%vms, getForkID:%vms, getNonce:%vms, getEnd:%vms, internalGas:%vms",
 		getBlockTime.Milliseconds(), getBatchTime.Milliseconds(), getForkIDTime.Milliseconds(), getNonceTime.Milliseconds(), getEndTime.Milliseconds(), internalGasTime.Milliseconds())
+	log.Infof("state-EstimateGas value. UltraOpt:%v, IntrinsicGas:%d, finalGas:%d", ultraOpt, lowEnd, estimationResult.gasUsed)
 
 	return estimationResult.gasUsed, nil, nil
 }

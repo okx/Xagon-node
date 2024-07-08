@@ -1,15 +1,15 @@
 {
-    "runExecutorServer": true,
+    "runExecutorServer": false,
     "runExecutorClient": false,
     "runExecutorClientMultithread": false,
 
-    "runHashDBServer": true,
+    "runHashDBServer": false,
     "runHashDBTest": false,
 
     "runAggregatorServer": false,
     "runAggregatorClient": false,
     "runAggregatorClientMock": true, 
-    "aggregatorClientMockTimeout": 1,
+    "aggregatorClientMockTimeout": 10,
     "proverName": "test-prover",
     
     "runFileGenBatchProof": false,

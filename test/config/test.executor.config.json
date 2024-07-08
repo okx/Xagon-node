@@ -8,15 +8,13 @@
 
     "runAggregatorServer": false,
     "runAggregatorClient": false,
-    "runAggregatorClientMock": true, 
-    "aggregatorClientMockTimeout": 1,
-    "proverName": "test-prover",
-    
+
     "runFileGenBatchProof": false,
     "runFileGenAggregatedProof": false,
     "runFileGenFinalProof": false,
     "runFileProcessBatch": false,
     "runFileProcessBatchMultithread": false,
+    "runFileExecutor": false,
 
     "runKeccakScriptGenerator": false,
     "runKeccakTest": false,
@@ -25,38 +23,49 @@
     "runMemAlignSMTest": false,
     "runSHA256Test": false,
     "runBlakeTest": false,
+    "runECRecoverTest": false,
 
     "executeInParallel": true,
     "useMainExecGenerated": true,
+
     "saveRequestToFile": false,
     "saveInputToFile": false,
     "saveDbReadsToFile": false,
     "saveDbReadsToFileOnChange": false,
-    "saveOutputToFile": true,
-    "saveProofToFile": true,
+    "saveOutputToFile": false,
+    "saveProofToFile": false,
     "saveResponseToFile": false,
+    "saveFilesInSubfolders": false,
+
     "loadDBToMemCache": true,
+    "loadDBToMemCacheInParallel": false,
+    "loadDBToMemTimeout": 30000000,
+    "dbMTCacheSize": 1024,
+    "dbProgramCacheSize": 1024,
+
     "opcodeTracer": false,
     "logRemoteDbReads": false,
+    "logExecutorServerInput": false,
+    "logExecutorServerInputGasThreshold": 0,
     "logExecutorServerResponses": false,
-
-    "proverServerPort": 50051,
-    "proverServerMockPort": 50052,
-    "proverServerMockTimeout": 10000000,
-    "proverClientPort": 50051,
-    "proverClientHost": "127.0.0.1",
+    "logExecutorServerTxs": true,
 
     "executorServerPort": 50071,
     "executorROMLineTraces": false,
+    "executorTimeStatistics": false,
     "executorClientPort": 50071,
     "executorClientHost": "127.0.0.1",
+    "executorClientLoops": 1,
 
     "hashDBServerPort": 50061,
     "hashDBURL": "local",
+    "dbCacheSynchURL_disabled": "127.0.0.1:50061",
 
     "aggregatorServerPort": 50081,
     "aggregatorClientPort": 50081,
     "aggregatorClientHost": "xlayer-aggregator",
+    "aggregatorClientMockTimeout": 10000000,
+    "aggregatorClientWatchdogTimeout": 60000000,
 
     "mapConstPolsFile": false,
     "mapConstantsTreeFile": false,
@@ -64,27 +73,34 @@
     "inputFile": "input_executor_0.json",
     "inputFile2": "input_executor_1.json",
 
-    "keccakScriptFile": "config/scripts/keccak_script.json",
-    "storageRomFile": "config/scripts/storage_sm_rom.json",
+    "outputPath": "runtime/output",
+    "configPath": "config",
 
-    "outputPath": "output",
+    "zkevmCmPols_disabled": "runtime/zkevm.commit",
+    "zkevmCmPolsAfterExecutor_disabled": "runtime/zkevm.commit",
+    "c12aCmPols": "runtime/c12a.commit",
+    "recursive1CmPols_disabled": "runtime/recursive1.commit",
+    "recursive2CmPols_disabled": "runtime/recursive2.commit",
+    "recursivefCmPols_disabled": "runtime/recursivef.commit",
+    "finalCmPols_disabled": "runtime/final.commit",
+    "publicsOutput": "public.json",
+    "proofFile": "proof.json",
 
     "databaseURL": "postgresql://prover_user:prover_pass@xlayer-state-db:5432/prover_db",
     "dbNodesTableName": "state.nodes",
     "dbProgramTableName": "state.program",
     "dbMultiWrite": true,
-    "dbFlushInParallel": false,
-    "dbMTCacheSize": 1024,
-    "dbProgramCacheSize": 512,
+    "dbConnectionsPool": true,
     "dbNumberOfPoolConnections": 30,
-    "dbGetTree": true,
+    "dbMetrics": false,
+    "dbClearCache": false,
+    "dbGetTree": false,
+    "dbReadRetryDelay": 100000,
     "cleanerPollingPeriod": 600,
     "requestsPersistence": 3600,
     "maxExecutorThreads": 20,
     "maxProverThreads": 8,
     "maxHashDBThreads": 8,
-    "ECRecoverPrecalc": false,
-    "ECRecoverPrecalcNThreads": 4,
-    "stateManager": true,
-    "useAssociativeCache" : false
-}
+
+    "fullTracerTraceReserveSize": 262144
+  }
