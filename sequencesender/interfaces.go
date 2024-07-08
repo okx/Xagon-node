@@ -22,6 +22,7 @@ type etherman interface {
 	GetLatestBlockHeader(ctx context.Context) (*types.Header, error)
 	GetLatestBatchNumber() (uint64, error)
 
+	// XLayer API
 	BuildSequenceBatchesTxDataXLayer(sender common.Address, sequences []ethmanTypes.Sequence, maxSequenceTimestamp uint64, initSequenceBatchNumber uint64, l2Coinbase common.Address, committeeSignaturesAndAddrs []byte) (to *common.Address, data []byte, err error)
 	EstimateGasSequenceBatchesXLayer(sender common.Address, sequences []ethmanTypes.Sequence, maxSequenceTimestamp uint64, initSequenceBatchNumber uint64, l2Coinbase common.Address, committeeSignaturesAndAddrs []byte) (*types.Transaction, error)
 }

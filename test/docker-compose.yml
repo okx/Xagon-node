@@ -515,11 +515,14 @@ services:
   xlayer-prover:
     container_name: xlayer-prover
     image: hermeznetwork/zkevm-prover:v6.0.0
+    platform: linux/amd64
     ports:
       # - 50051:50051 # Prover
       - 50052:50052 # Mock prover
       - 50061:50061 # MT
       - 50071:50071 # Executor
+    environment:
+      - EXPERIMENTAL_DOCKER_DESKTOP_FORCE_QEMU=1
     volumes:
       - ./config/test.prover.config.json:/usr/src/app/config.json
     command: >
@@ -702,7 +705,10 @@ services:
 
   xlayer-permissionless-prover:
     container_name: xlayer-permissionless-prover
+    platform: linux/amd64
     image: hermeznetwork/zkevm-prover:v6.0.0
+    environment:
+      - EXPERIMENTAL_DOCKER_DESKTOP_FORCE_QEMU=1
     ports:
       # - 50058:50058 # Prover
       - 50059:50052 # Mock prover

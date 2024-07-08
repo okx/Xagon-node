@@ -287,9 +287,7 @@ func GenerateReceipt(blockNumber *big.Int, processedTx *ProcessTransactionRespon
 		ContractAddress:  processedTx.CreateAddress,
 		Logs:             processedTx.Logs,
 	}
-
-	// for XLayer
-	if forkID <= FORKID_ELDERBERRY {
+	if forkID <= FORKID_ETROG {
 		receipt.PostState = processedTx.StateRoot.Bytes()
 		receipt.CumulativeGasUsed = processedTx.GasUsed
 	} else {
@@ -313,9 +311,7 @@ func GenerateReceipt(blockNumber *big.Int, processedTx *ProcessTransactionRespon
 	for i := 0; i < len(receipt.Logs); i++ {
 		receipt.Logs[i].TxHash = processedTx.Tx.Hash()
 	}
-
-	// for XLayer
-	if forkID <= FORKID_ELDERBERRY {
+	if forkID <= FORKID_ETROG {
 		if processedTx.RomError == nil {
 			receipt.Status = types.ReceiptStatusSuccessful
 		} else {

@@ -446,7 +446,7 @@ func NewBatch(ctx context.Context, st StateInterface, batch *state.Batch, virtua
 	return res, nil
 }
 
-// BatchFilter is a list of batch numbers to retrieve
+// BatchFilter is a list of batch numbers to retrieve, XLayer
 type BatchFilter struct {
 	Numbers []BatchNumber `json:"numbers"`
 }

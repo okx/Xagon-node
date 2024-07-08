@@ -31,6 +31,7 @@ type Batch struct {
 	finalRemainingResources     state.BatchResources // remaining batch resources when a L2 block is processed
 	finalHighReservedZKCounters state.ZKCounters
 	closingReason               state.ClosingReason
+	finalLocalExitRoot          common.Hash
 }
 
 func (b *Batch) isEmpty() bool {
@@ -101,6 +102,7 @@ func (f *finalizer) setWIPBatch(ctx context.Context, wipStateBatch *state.Batch)
 		finalRemainingResources:     remainingResources,
 		imHighReservedZKCounters:    wipStateBatch.HighReservedZKCounters,
 		finalHighReservedZKCounters: wipStateBatch.HighReservedZKCounters,
+		finalLocalExitRoot:          wipStateBatch.LocalExitRoot,
 	}
 
 	return wipBatch, nil
@@ -315,7 +317,7 @@ func (f *finalizer) openNewWIPBatch(batchNumber uint64, stateRoot common.Hash) *
 
 	return &Batch{
 		batchNumber:             batchNumber,
-		coinbase:                f.sequencerAddress,
+		coinbase:                f.l2Coinbase,
 		initialStateRoot:        stateRoot,
 		imStateRoot:             stateRoot,
 		finalStateRoot:          stateRoot,
@@ -323,6 +325,7 @@ func (f *finalizer) openNewWIPBatch(batchNumber uint64, stateRoot common.Hash) *
 		imRemainingResources:    maxRemainingResources,
 		finalRemainingResources: maxRemainingResources,
 		closingReason:           state.EmptyClosingReason,
+		finalLocalExitRoot:      state.ZeroHash,
 	}
 }
 
@@ -331,7 +334,7 @@ func (f *finalizer) insertSIPBatch(ctx context.Context, batchNumber uint64, stat
 	// open next batch
 	newStateBatch := state.Batch{
 		BatchNumber:    batchNumber,
-		Coinbase:       f.sequencerAddress,
+		Coinbase:       f.l2Coinbase,
 		Timestamp:      now(),
 		StateRoot:      stateRoot,
 		GlobalExitRoot: state.ZeroHash,
@@ -346,7 +349,9 @@ func (f *finalizer) insertSIPBatch(ctx context.Context, batchNumber uint64, stat
 	}
 
 	// Send batch bookmark to the datastream
-	f.DSSendBatchBookmark(batchNumber)
+	f.DSSendBatchBookmark(ctx, batchNumber)
+	// Send batch start to the datastream
+	f.DSSendBatchStart(ctx, batchNumber, false)
 
 	// Check if synchronizer is up-to-date
 	//TODO: review if this is needed
@@ -410,6 +415,9 @@ func (f *finalizer) closeSIPBatch(ctx context.Context, dbTx pgx.Tx) error {
 			_, _ = f.batchSanityCheck(ctx, batchNumber, initialStateRoot, finalStateRoot)
 		}()
 	}
+
+	// Sent batch to DS
+	f.DSSendBatchEnd(ctx, f.sipBatch.batchNumber, f.sipBatch.finalStateRoot, f.sipBatch.finalLocalExitRoot)
 
 	log.Infof("sip batch %d closed in statedb, closing reason: %s", f.sipBatch.batchNumber, f.sipBatch.closingReason)
 

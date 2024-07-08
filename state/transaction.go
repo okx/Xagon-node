@@ -208,9 +208,9 @@ func (s *State) StoreTransactions(ctx context.Context, batchNumber uint64, proce
 }
 
 // StoreL2Block stores a l2 block into the state
-func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *ProcessBlockResponse, txsEGPLog []*EffectiveGasPriceLog, dbTx pgx.Tx) error {
+func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *ProcessBlockResponse, txsEGPLog []*EffectiveGasPriceLog, dbTx pgx.Tx) (common.Hash, error) {
 	if dbTx == nil {
-		return ErrDBTxNil
+		return common.Hash{}, ErrDBTxNil
 	}
 
 	log.Debugf("storing l2 block %d, txs %d, hash %s", l2Block.BlockNumber, len(l2Block.TransactionResponses), l2Block.BlockHash.String())
@@ -218,14 +218,14 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 
 	prevL2BlockHash, err := s.GetL2BlockHashByNumber(ctx, l2Block.BlockNumber-1, dbTx)
 	if err != nil {
-		return err
+		return common.Hash{}, err
 	}
 
 	forkID := s.GetForkIDByBatchNumber(batchNumber)
 
 	gasLimit := l2Block.GasLimit
 	// We check/set the maximum value of gasLimit for batches <= to ETROG fork. For batches >= to ELDERBERRY fork we use always the value returned by the executor
-	if forkID <= FORKID_ELDERBERRY && gasLimit > MaxL2BlockGasLimit {
+	if forkID <= FORKID_ETROG && gasLimit > MaxL2BlockGasLimit {
 		gasLimit = MaxL2BlockGasLimit
 	}
 
@@ -289,12 +289,12 @@ func (s *State) StoreL2Block(ctx context.Context, batchNumber uint64, l2Block *P
 
 	// Store L2 block and its transactions
 	if err := s.AddL2Block(ctx, batchNumber, block, receipts, txsL2Hash, storeTxsEGPData, imStateRoots, dbTx); err != nil {
-		return err
+		return common.Hash{}, err
 	}
 
 	log.Debugf("stored L2 block %d for batch %d, storing time %v", header.Number, batchNumber, time.Since(start))
 
-	return nil
+	return block.Hash(), nil
 }
 
 // PreProcessUnsignedTransaction processes the unsigned transaction in order to calculate its zkCounters
@@ -840,6 +840,7 @@ func (s *State) EstimateGas(transaction *types.Transaction, senderAddress common
 	if err != nil {
 		return 0, nil, err
 	}
+
 	if estimationResult.failed {
 		if estimationResult.reverted {
 			return 0, estimationResult.returnValue, estimationResult.executionError
@@ -945,6 +946,7 @@ func (s *State) internalTestGasEstimationTransactionV1(ctx context.Context, batc
 		timestamp = uint64(time.Now().Unix())
 	}
 
+	// XLayer free gas
 	gp := transaction.GasPrice()
 	if isGasFreeSender {
 		gp = big.NewInt(0)
@@ -1049,6 +1051,7 @@ func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batc
 	deltaTimestamp := uint32(uint64(time.Now().Unix()) - l2Block.Time())
 	transactions := s.BuildChangeL2Block(deltaTimestamp, uint32(0))
 
+	// XLayer free gas
 	gp := transaction.GasPrice()
 	if isGasFreeSender {
 		gp = big.NewInt(0)
@@ -1154,12 +1157,6 @@ func (s *State) internalTestGasEstimationTransactionV2(ctx context.Context, batc
 	return result, nil
 }
 
-// Checks if the EVM stopped tx execution due to OOC error
-func isOOCError(err error) bool {
-	romErr := executor.RomErrorCode(err)
-	return executor.IsROMOutOfCountersError(romErr)
-}
-
 // Checks if executor level valid gas errors occurred
 func isGasApplyError(err error) bool {
 	return errors.Is(err, ErrNotEnoughIntrinsicGas)
@@ -1173,4 +1170,10 @@ func isGasEVMError(err error) bool {
 // Checks if the EVM reverted during execution
 func isEVMRevertError(err error) bool {
 	return errors.Is(err, runtime.ErrExecutionReverted)
+}
+
+// Checks if the EVM stopped tx execution due to OOC error
+func isOOCError(err error) bool {
+	romErr := executor.RomErrorCode(err)
+	return executor.IsROMOutOfCountersError(romErr)
 }
