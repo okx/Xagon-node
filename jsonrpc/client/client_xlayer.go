@@ -12,7 +12,7 @@ import (
 // JSONRPCRelay executes a 2.0 JSON RPC HTTP Post Request to the provided URL with
 // types.Request, which is compatible with the Ethereum
 // JSON RPC Server.
-func JSONRPCRelay(url string, request types.Request) (types.Response, error) {
+func JSONRPCRelay(url string, request types.Request, rerun bool) (types.Response, error) {
 	httpRes, err := sendJSONRPC_HTTPRequest(url, request)
 	if err != nil {
 		return types.Response{}, err
@@ -33,7 +33,7 @@ func JSONRPCRelay(url string, request types.Request) (types.Response, error) {
 	if err != nil {
 		return types.Response{}, err
 	}
-	if res.Error != nil {
+	if res.Error != nil && rerun {
 		return types.Response{}, fmt.Errorf("response error: %v - %v", res.Error.Code, res.Error.Message)
 	}
 	return res, nil

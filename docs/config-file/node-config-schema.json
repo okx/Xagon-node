@@ -920,6 +920,10 @@
 							},
 							"type": "array",
 							"default": []
+						},
+						"Rerun": {
+							"type": "boolean",
+							"default": false
 						}
 					},
 					"additionalProperties": false,
