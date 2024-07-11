@@ -695,9 +695,6 @@ run: ## Runs a full node
 	$(RUNL1NETWORK)
 	sleep 1
 	$(RUNZKPROVER)
-	$(RUNMOCKPROVER2)
-	$(RUNMOCKPROVER3)
-	$(RUNMOCKPROVER4)
 	$(RUNAPPROVE)
 	sleep 3
 	$(RUNSYNC)
@@ -710,6 +707,9 @@ run: ## Runs a full node
 	$(RUNL2GASPRICER)
 	$(RUNAGGREGATOR)
 	$(RUNJSONRPC)
+	$(RUNMOCKPROVER2)
+	$(RUNMOCKPROVER3)
+	$(RUNMOCKPROVER4)
 
 .PHONY: run-v1tov2
 run-v1tov2: ## Runs a full node using v1tov2 network
