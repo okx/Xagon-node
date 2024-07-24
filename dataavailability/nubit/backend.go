@@ -4,9 +4,9 @@ import (
 	"context"
 	"crypto/ecdsa"
 	"encoding/hex"
+	"strings"
 	"time"
 
-	daTypes "github.com/0xPolygon/cdk-data-availability/types"
 	polygondatacommittee "github.com/0xPolygonHermez/zkevm-node/etherman/smartcontracts/polygondatacommittee_xlayer"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/common"
@@ -46,7 +46,8 @@ func NewNubitDABackend(
 		return nil, err
 	}
 	// TODO: Check if name byte array requires zero padding
-	name, err := hex.DecodeString(cfg.NubitNamespace)
+	hexStr := hex.EncodeToString([]byte(cfg.NubitModularAppName))
+	name, err := hex.DecodeString(strings.Repeat("0", 29-len(hexStr)) + hexStr)
 	if err != nil {
 		log.Errorf("error decoding NubitDA namespace config: %+v", err)
 		return nil, err
@@ -83,33 +84,12 @@ func (backend *NubitDABackend) PostSequence(ctx context.Context, batchesData [][
 		return nil, err
 	}
 
-	// Add to batches data cache
-	backend.batchesDataCache = append(backend.batchesDataCache, encodedData)
-	backend.batchesDataSize += uint64(len(encodedData))
-	if backend.batchesDataSize < backend.config.NubitMaxBatchesSize {
-		log.Infof("Added batches data to NubitDABackend cache, current length: %+v", len(encodedData))
-		return nil, nil
-	}
-	if time.Since(backend.commitTime) < 12*time.Second {
-		time.Sleep(time.Since(backend.commitTime))
-	}
-
-	data, err := MarshalBatchData(backend.batchesDataCache)
-	if err != nil {
-		log.Errorf("Marshal batch data failed: %s", err)
-		return nil, err
-	}
-	id, err := backend.client.Submit(ctx, [][]byte{data}, -1, backend.ns)
+	id, err := backend.client.Submit(ctx, [][]byte{encodedData}, -1, backend.ns)
 	if err != nil {
 		log.Errorf("Submit batch data with NubitDA client failed: %s", err)
 		return nil, err
 	}
 	log.Infof("Data submitted to Nubit DA: %d bytes against namespace %v sent with id %#x", len(backend.batchesDataCache), backend.ns, id)
-
-	// Reset batches data cache and DA commit time
-	backend.commitTime = time.Now()
-	backend.batchesDataCache = [][]byte{}
-	backend.batchesDataSize = 0
 
 	// Get proof
 	tries := uint64(0)
@@ -133,27 +113,13 @@ func (backend *NubitDABackend) PostSequence(ctx context.Context, batchesData [][
 		return nil, err
 	}
 
-	// // TODO: use bridge API data
-	// batchDAData := BatchDAData{ID: id}
-	// log.Infof("Nubit DA data ID: %+v", batchDAData)
-	// returnData, err := batchDAData.Encode()
-	// if err != nil {
-	// 	return nil, fmt.Errorf("Encode batch data failed: %w", err)
-	// }
-
-	// Sign sequence
-	sequence := daTypes.Sequence{}
-	for _, seq := range batchesData {
-		sequence = append(sequence, seq)
-	}
-	signedSequence, err := sequence.Sign(backend.privKey)
+	batchDAData := BatchDAData{}
+	batchDAData.ID = id
+	encode, err := batchDAData.Encode()
 	if err != nil {
-		log.Errorf("Failed to sign sequence with pk: %v", err)
 		return nil, err
 	}
-	signature := append(sequence.HashToSign(), signedSequence.Signature...)
-
-	return signature, nil
+	return encode, nil
 }
 
 // GetSequence gets the sequence data from NubitDA layer
