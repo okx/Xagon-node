@@ -243,6 +243,15 @@ AggLayerTxTimeout = "5m"
 AggLayerURL = ""
 SequencerPrivateKey = {}
 
+[DataAvailability]
+NubitRpcURL = ""
+NubitModularAppName = ""
+NubitAuthKey = ""
+NubitNamespace = "xlayer"
+NubitMaxBatchesSize = "102400"
+NubitGetProofMaxRetry = "10"
+NubitGetProofWaitPeriod = "5s"
+
 [L2GasPriceSuggester]
 Type = "follower"
 UpdatePeriod = "10s"

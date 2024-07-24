@@ -1,6 +1,8 @@
 module github.com/0xPolygonHermez/zkevm-node
 
-go 1.21
+go 1.21.1
+
+toolchain go1.22.2
 
 require (
 	github.com/0xPolygonHermez/zkevm-data-streamer v0.2.3-RC4
@@ -23,7 +25,7 @@ require (
 	github.com/rubenv/sql-migrate v1.6.1
 	github.com/spf13/afero v1.11.0
 	github.com/spf13/viper v1.18.2
-	github.com/stretchr/testify v1.8.4
+	github.com/stretchr/testify v1.9.0
 	github.com/umbracle/ethgo v0.1.4-0.20230712173909-df37dddf16f0
 	github.com/urfave/cli/v2 v2.26.0
 	go.uber.org/zap v1.26.0
@@ -68,6 +70,7 @@ require (
 	github.com/dlclark/regexp2 v1.7.0 // indirect
 	github.com/emirpasic/gods v1.18.1 // indirect
 	github.com/ethereum/c-kzg-4844 v0.4.0 // indirect
+	github.com/filecoin-project/go-jsonrpc v0.3.1 // indirect
 	github.com/fjl/memsize v0.0.0-20190710130421-bcb5799ab5e5 // indirect
 	github.com/fsnotify/fsnotify v1.7.0 // indirect
 	github.com/gballet/go-libpcsclite v0.0.0-20190607065134-2772fd86a8ff // indirect
@@ -94,6 +97,7 @@ require (
 	github.com/holiman/billy v0.0.0-20230718173358-1c7e68d277a7 // indirect
 	github.com/holiman/bloomfilter/v2 v2.0.3 // indirect
 	github.com/huin/goupnp v1.3.0 // indirect
+	github.com/ipfs/go-log/v2 v2.0.8 // indirect
 	github.com/jackc/chunkreader/v2 v2.0.1 // indirect
 	github.com/jackc/pgio v1.0.0 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
@@ -147,7 +151,7 @@ require (
 	github.com/spf13/cast v1.6.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/status-im/keycard-go v0.2.0 // indirect
-	github.com/stretchr/objx v0.5.0 // indirect
+	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/supranational/blst v0.3.11 // indirect
 	github.com/tklauser/go-sysconf v0.3.12 // indirect
@@ -158,12 +162,14 @@ require (
 	github.com/wk8/go-ordered-map/v2 v2.1.8 // indirect
 	github.com/xanzy/ssh-agent v0.3.3 // indirect
 	github.com/xrash/smetrics v0.0.0-20201216005158-039620a65673 // indirect
+	go.opencensus.io v0.24.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	golang.org/x/mod v0.14.0 // indirect
 	golang.org/x/sys v0.16.0 // indirect
 	golang.org/x/term v0.16.0 // indirect
 	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/tools v0.17.0 // indirect
+	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20231120223509-83a465c0220f // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.0.0 // indirect
@@ -184,6 +190,7 @@ require (
 	github.com/fatih/color v1.16.0
 	github.com/nacos-group/nacos-sdk-go v1.1.4
 	github.com/prometheus/client_golang v1.18.0
+	github.com/rollkit/go-da v0.5.0
 	github.com/segmentio/kafka-go v0.4.47
 	golang.org/x/exp v0.0.0-20240205201215-2c58cdc269a3
 	golang.org/x/time v0.5.0
