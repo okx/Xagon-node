@@ -8,12 +8,17 @@ import (
 	"github.com/ethereum/go-ethereum/crypto"
 )
 
-// EncodeSequence is the helper function to encode sequence data into 1D byte array. The
-// encoding scheme is ensured to be lossless.
+// EncodeSequence is the helper function to encode sequence data and their metadata into 1D byte array.
+// The encoding scheme is ensured to be lossless.
 //
-// The first n+1 8-bytes of the blob contains the metadata of the batches data.
-// The first 8-bytes stores the size of the sequence, and the next 8-bytes will store the
-// byte array length of every batch data.
+// When encoding the blob data, the first 8-bytes stores the size of the batches (n) in the sequence. The
+// next n slots of sized 40 bytes stores the metadata of the batches data.
+// The first 8-bytes of the batches metadata stores the batches data length, and the next 32-bytes stores
+// the batches hash.
+//
+// The remaining n slots contains the batches data, each slot length is specified in the retrieved batch
+// metadata.
+// Zero-padding empty 31-byte array using a kzgpad encoding scheme (Pad One Byte codec).
 func EncodeSequence(batchesData [][]byte) []byte {
 	sequence := []byte{}
 	metadata := []byte{}
@@ -44,13 +49,9 @@ func EncodeSequence(batchesData [][]byte) []byte {
 	return sequence
 }
 
-// DecodeSequence is the helper function to decode 1D byte array into sequence data. The
-// encoding scheme is ensured to be lossless.
-//
-// When decoding the blob data, the first n+1 8-bytes of the blob contains the metadata of
-// the batches data.
-// The first 8-bytes stores the size of the sequence, and the next 8-bytes will store the
-// byte array length of every batch data.
+// DecodeSequence is the helper function to decode the 1D byte array into sequence data and the batches
+// metadata. The decoding sceheme is ensured to be lossless and follows the encoding scheme specified in
+// the EncodeSequence function.
 func DecodeSequence(blobData []byte) ([][]byte, []common.Hash) {
 	// Blob deserialization
 	blobData = codec.RemoveEmptyByteFromPaddedBytes(blobData)
