@@ -105,7 +105,6 @@ func (d *DataAvailabilityProvider) PostSequence(ctx context.Context, batchesData
 // L2 batches data. The EigenDA provider does not use batchHashes to retrieve the L2
 // batches data.
 func (d *DataAvailabilityProvider) GetSequence(ctx context.Context, batchHashes []common.Hash, dataAvailabilityMessage []byte) ([][]byte, error) {
-	var batchesData [][]byte
 	blobData, err := TryDecodeFromDataAvailabilityMessage(dataAvailabilityMessage)
 	if err != nil {
 		log.Error("Error decoding from da message: ", err)
@@ -121,9 +120,8 @@ func (d *DataAvailabilityProvider) GetSequence(ctx context.Context, batchHashes 
 		log.Error("Error retrieving blob from EigenDA disperser: ", err)
 		return nil, err
 	}
-	data, _ := DecodeSequence(reply.GetData())
-	batchesData = append(batchesData, data...)
 
+	batchesData, _ := DecodeSequence(reply.GetData())
 	return batchesData, nil
 }
 
