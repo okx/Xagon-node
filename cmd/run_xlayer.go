@@ -94,6 +94,7 @@ func newDataAvailability(c config.Config, st *state.State, etherman *etherman.Cl
 
 	// Backend specific config
 	daProtocolName, err := etherman.GetDAProtocolName()
+	daProtocolName = string(dataavailability.DataAvailabilityNubitDA)
 	if err != nil {
 		return nil, fmt.Errorf("error getting data availability protocol name: %v", err)
 	}
