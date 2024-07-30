@@ -279,7 +279,7 @@ func NewClient(cfg Config, l1Config L1Config) (*Client, error) {
 	}
 	metrics.Register()
 	// Get RollupID
-	rollupID, err := rollupManager.RollupAddressToID(&bind.CallOpts{Pending: false}, l1Config.ZkEVMAddr)
+	rollupID, err := rollupManager.RollupAddressToID(&bind.CallOpts{Pending: false}, l1Config.RollupManagerAddr)
 	if err != nil {
 		log.Debugf("error rollupManager.RollupAddressToID(%s). Error: %w", l1Config.RollupManagerAddr, err)
 		return nil, err
