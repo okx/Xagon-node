@@ -244,11 +244,9 @@ AggLayerURL = ""
 SequencerPrivateKey = {}
 
 [DataAvailability]
-NubitRpcURL = ""
-NubitModularAppName = ""
+NubitRpcURL = "http://127.0.0.1:26658"
 NubitAuthKey = ""
 NubitNamespace = "xlayer"
-NubitMaxBatchesSize = "102400"
 NubitGetProofMaxRetry = "10"
 NubitGetProofWaitPeriod = "5s"
 

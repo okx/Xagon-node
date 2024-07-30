@@ -136,16 +136,7 @@ func newDataAvailability(c config.Config, st *state.State, etherman *etherman.Cl
 			}
 			log.Infof("from pk %s", crypto.PubkeyToAddress(pk.PublicKey))
 		}
-		dacAddr, err := etherman.GetDAProtocolAddr()
-		if err != nil {
-			return nil, fmt.Errorf("error getting trusted sequencer URI. Error: %v", err)
-		}
-		daBackend, err = nubit.NewNubitDABackend(
-			c.Etherman.URL,
-			dacAddr,
-			pk,
-			&c.DataAvailability,
-		)
+		daBackend, err = nubit.NewNubitDABackend(&c.DataAvailability, pk)
 		if err != nil {
 			return nil, err
 		}
