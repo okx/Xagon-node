@@ -28,7 +28,7 @@ func NewNubitDABackend(
 	cfg *Config,
 	privKey *ecdsa.PrivateKey,
 ) (*NubitDABackend, error) {
-	log.Infof("NubitDABackend config: %#v ", cfg)
+	log.Infof("NubitDABackend config: %#v", cfg)
 	cn, err := proxy.NewClient(cfg.NubitRpcURL, cfg.NubitAuthKey)
 	if err != nil {
 		return nil, err
@@ -43,7 +43,7 @@ func NewNubitDABackend(
 	if err != nil {
 		return nil, err
 	}
-	log.Infof("NubitDABackend namespace: %s ", string(name))
+	log.Infof("NubitDABackend namespace: %s", string(name))
 
 	return &NubitDABackend{
 		config:     cfg,
