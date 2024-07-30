@@ -97,7 +97,7 @@ func (backend *NubitDABackend) PostSequence(ctx context.Context, batchesData [][
 
 		// Retries
 		tries += 1
-		time.Sleep(backend.config.NubitGetProofWaitPeriod)
+		time.Sleep(backend.config.NubitGetProofWaitPeriod.Duration)
 	}
 	if !posted {
 		log.Errorf("Get blob proof on Nubit DA failed: %s", err)
