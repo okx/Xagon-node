@@ -11,6 +11,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/0xPolygonHermez/zkevm-node/config/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/rollkit/go-da/proxy"
@@ -24,7 +25,7 @@ func TestOffchainPipeline(t *testing.T) {
 		NubitAuthKey:            "",
 		NubitNamespace:          "xlayer",
 		NubitGetProofMaxRetry:   10,
-		NubitGetProofWaitPeriod: 5 * time.Second,
+		NubitGetProofWaitPeriod: types.NewDuration(5 * time.Second),
 	}
 	pk, err := ecdsa.GenerateKey(elliptic.P256(), crand.Reader)
 	require.NoError(t, err)
@@ -72,7 +73,7 @@ func TestOffchainPipelineWithRandomData(t *testing.T) {
 		NubitAuthKey:            "",
 		NubitNamespace:          "xlayer",
 		NubitGetProofMaxRetry:   10,
-		NubitGetProofWaitPeriod: 5 * time.Second,
+		NubitGetProofWaitPeriod: types.NewDuration(5 * time.Second),
 	}
 	pk, err := ecdsa.GenerateKey(elliptic.P256(), crand.Reader)
 	require.NoError(t, err)
