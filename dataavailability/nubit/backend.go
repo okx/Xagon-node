@@ -40,9 +40,6 @@ func NewNubitDABackend(
 		log.Errorf("error decoding NubitDA namespace config: %+v", err)
 		return nil, err
 	}
-	if err != nil {
-		return nil, err
-	}
 	log.Infof("NubitDABackend namespace: %s", string(name))
 
 	return &NubitDABackend{
