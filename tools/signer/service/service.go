@@ -71,7 +71,7 @@ func NewServer(cfg *config.Config, ctx context.Context) *Server {
 
 	var err error
 	srv.ethClient, err = etherman.NewClient(srv.ethCfg, srv.l1Cfg)
-	log.Infof("zjg, %v,%v,%v,%v", srv.ethCfg.URL, srv.l1Cfg.L1ChainID, srv.l1Cfg.ZkEVMAddr, srv.l1Cfg.RollupManagerAddr)
+	log.Infof("url: %v, l1 chain id: %v, zkevm addr: %v, rollup manager addr: %v", srv.ethCfg.URL, srv.l1Cfg.L1ChainID, srv.l1Cfg.ZkEVMAddr, srv.l1Cfg.RollupManagerAddr)
 	if err != nil {
 		log.Fatal("error creating etherman client. Error: %v", err)
 	}
