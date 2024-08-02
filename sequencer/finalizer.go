@@ -408,10 +408,27 @@ func (f *finalizer) finalizeBatches(ctx context.Context) {
 		}
 
 		start := now()
-		tx, err := f.workerIntf.GetBestFittingTx(f.wipBatch.imRemainingResources, f.wipBatch.imHighReservedZKCounters)
+		tx, oocTxs, err := f.workerIntf.GetBestFittingTx(f.wipBatch.imRemainingResources, f.wipBatch.imHighReservedZKCounters, (f.wipBatch.countOfL2Blocks == 0 && f.wipL2Block.isEmpty()))
 		seqMetrics.GetLogStatistics().CumulativeTiming(seqMetrics.GetTx, time.Since(start))
 
-		// If we have txs pending to process but none of them fits into the wip batch, we close the wip batch and open a new one
+		// Set as invalid txs in the worker pool that will never fit into an empty batch
+		for _, oocTx := range oocTxs {
+			log.Infof("tx %s doesn't fits in empty batch %d (node OOC), setting tx as invalid in the pool", oocTx.HashStr, f.wipL2Block.trackingNum, f.wipBatch.batchNumber)
+
+			f.LogEvent(ctx, event.Level_Info, event.EventID_NodeOOC,
+				fmt.Sprintf("tx %s doesn't fits in empty batch %d (node OOC), from: %s, IP: %s", oocTx.HashStr, f.wipBatch.batchNumber, oocTx.FromStr, oocTx.IP), nil)
+
+			// Delete the transaction from the worker
+			f.workerIntf.DeleteTx(oocTx.Hash, oocTx.From)
+
+			errMsg := "node OOC"
+			err = f.poolIntf.UpdateTxStatus(ctx, oocTx.Hash, pool.TxStatusInvalid, false, &errMsg)
+			if err != nil {
+				log.Errorf("failed to update status to invalid in the pool for tx %s, error: %v", oocTx.Hash.String(), err)
+			}
+		}
+
+		// We have txs pending to process but none of them fits into the wip batch we close the wip batch and open a new one
 		if err == ErrNoFittingTransaction {
 			f.finalizeWIPBatch(ctx, state.NoTxFitsClosingReason)
 			continue
@@ -726,11 +743,11 @@ func (f *finalizer) handleProcessTransactionResponse(ctx context.Context, tx *Tx
 	} else {
 		log.Infof("current tx %s needed resources exceeds the remaining batch resources, overflow resource: %s, updating metadata for tx in worker and continuing. counters: {batch: %s, used: %s, reserved: %s, needed: %s, high: %s}",
 			tx.HashStr, overflowResource, f.logZKCounters(f.wipBatch.imRemainingResources.ZKCounters), f.logZKCounters(result.UsedZkCounters), f.logZKCounters(result.ReservedZkCounters), f.logZKCounters(neededZKCounters), f.logZKCounters(f.wipBatch.imHighReservedZKCounters))
-		if !f.batchConstraints.IsWithinConstraints(result.ReservedZkCounters) {
-			log.Infof("current tx %s reserved resources exceeds the max limit for batch resources (node OOC), setting tx as invalid in the pool", tx.HashStr)
+		if err := f.batchConstraints.CheckNodeLevelOOC(result.ReservedZkCounters); err != nil {
+			log.Infof("current tx %s reserved resources exceeds the max limit for batch resources (node OOC), setting tx as invalid in the pool, error: %v", tx.HashStr, err)
 
 			f.LogEvent(ctx, event.Level_Info, event.EventID_NodeOOC,
-				fmt.Sprintf("tx %s exceeds node max limit batch resources (node OOC), from: %s, IP: %s", tx.HashStr, tx.FromStr, tx.IP), nil)
+				fmt.Sprintf("tx %s exceeds node max limit batch resources (node OOC), from: %s, IP: %s, error: %v", tx.HashStr, tx.FromStr, tx.IP, err), nil)
 
 			// Delete the transaction from the txSorted list
 			f.workerIntf.DeleteTx(tx.Hash, tx.From)

@@ -88,7 +88,7 @@ type stateInterface interface {
 }
 
 type workerInterface interface {
-	GetBestFittingTx(remainingResources state.BatchResources, highReservedCounters state.ZKCounters) (*TxTracker, error)
+	GetBestFittingTx(remainingResources state.BatchResources, highReservedCounters state.ZKCounters, fistL2Block bool) (*TxTracker, []*TxTracker, error)
 	UpdateAfterSingleSuccessfulTxExecution(from common.Address, touchedAddresses map[common.Address]*state.InfoReadWrite) []*TxTracker
 	UpdateTxZKCounters(txHash common.Hash, from common.Address, usedZKCounters state.ZKCounters, reservedZKCounters state.ZKCounters)
 	AddTxTracker(ctx context.Context, txTracker *TxTracker) (replacedTx *TxTracker, dropReason error)
