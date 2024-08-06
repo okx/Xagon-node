@@ -25,10 +25,11 @@ type L1 struct {
 	SeqPrivateKey types.KeystoreFileConfig `mapstructure:"SeqPrivateKey"`
 	AggPrivateKey types.KeystoreFileConfig `mapstructure:"AggPrivateKey"`
 
-	PolygonMaticAddress       common.Address `mapstructure:"PolygonMaticAddress"`
-	GlobalExitRootManagerAddr common.Address `mapstructure:"GlobalExitRootManagerAddress"`
-	DataCommitteeAddr         common.Address `mapstructure:"DataCommitteeAddress"`
-	PolygonZkEVMAddress       common.Address `mapstructure:"PolygonZkEVMAddress"`
+	PolygonMaticAddress         common.Address `mapstructure:"PolygonMaticAddress"`
+	GlobalExitRootManagerAddr   common.Address `mapstructure:"GlobalExitRootManagerAddress"`
+	DataCommitteeAddr           common.Address `mapstructure:"DataCommitteeAddress"`
+	PolygonZkEVMAddress         common.Address `mapstructure:"PolygonZkEVMAddress"`
+	PolygonRollupManagerAddress common.Address `mapstructure:"PolygonRollupManagerAddress"`
 }
 
 // Config is the configuration for the tool
