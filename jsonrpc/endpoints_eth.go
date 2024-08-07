@@ -473,7 +473,7 @@ func (e *EthEndpoints) GetFilterChanges(filterID string) (interface{}, types.Err
 				return nil, rpcErr
 			}
 			if len(res) == 0 {
-				return []common.Hash, nil
+				return []common.Hash{}, nil
 			}
 			return res, nil
 		}
