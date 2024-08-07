@@ -2,7 +2,6 @@ package sequencer
 
 import (
 	"context"
-	"github.com/ethereum/go-ethereum/common"
 	"math/big"
 	"strings"
 	"time"
@@ -11,6 +10,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/pool"
 	pmetric "github.com/0xPolygonHermez/zkevm-node/sequencer/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/state"
+	"github.com/ethereum/go-ethereum/common"
 )
 
 var countinterval = 10
