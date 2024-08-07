@@ -75,7 +75,7 @@ type Config struct {
 	FreeGasList []FreeGasInfo `mapstructure:"FreeGasList"`
 }
 
-// FreeGasInfo contains the detail for what tx should be free
+// FreeGasInfo contains the details for what tx should be free
 type FreeGasInfo struct {
 	From             string  `mapstructure:"From"`
 	To               string  `mapstructure:"To"`

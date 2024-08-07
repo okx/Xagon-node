@@ -505,6 +505,29 @@
 					"type": "integer",
 					"description": "FreeGasLimit is the max gas allowed use to do a free gas tx",
 					"default": 0
+				},
+				"FreeGasList": {
+					"items": {
+						"properties": {
+							"From": {
+								"type": "string"
+							},
+							"To": {
+								"type": "string"
+							},
+							"MethodSig": {
+								"type": "string"
+							},
+							"GasPriceMultiple": {
+								"type": "number"
+							}
+						},
+						"additionalProperties": false,
+						"type": "object",
+						"description": "FreeGasInfo contains the details for what tx should be free"
+					},
+					"type": "array",
+					"description": "FreeGasList is the special project of XLayer"
 				}
 			},
 			"additionalProperties": false,

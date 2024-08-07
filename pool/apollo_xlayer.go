@@ -213,6 +213,7 @@ func isBlockedAddress(localBlockedList []string, address common.Address) bool {
 	return contains(localBlockedList, address)
 }
 
+// GetSpecialFreeGasList returns the special project in XLayer for free gas
 func GetSpecialFreeGasList(freeGasList []FreeGasInfo) []FreeGasInfo {
 	if getApolloConfig().enable() {
 		getApolloConfig().RLock()
