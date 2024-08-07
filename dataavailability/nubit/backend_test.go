@@ -50,10 +50,10 @@ func TestOffchainPipeline(t *testing.T) {
 
 	blobData, err := TryDecodeFromDataAvailabilityMessage(msg)
 	require.NoError(t, err)
-	require.NotNil(t, blobData.BlobID)
-	require.NotNil(t, blobData.Signature)
-	require.NotZero(t, len(blobData.BlobID))
-	require.NotZero(t, len(blobData.Signature))
+	require.NotNil(t, blobData.NubitHeight)
+	require.NotNil(t, blobData.Commitment)
+	require.NotZero(t, len(blobData.NubitHeight))
+	require.NotZero(t, len(blobData.Commitment))
 	fmt.Println("Decoding DA msg successful")
 
 	// Retrieve sequence with provider
@@ -103,10 +103,10 @@ func TestOffchainPipelineWithRandomData(t *testing.T) {
 
 	blobData, err := TryDecodeFromDataAvailabilityMessage(msg)
 	require.NoError(t, err)
-	require.NotNil(t, blobData.BlobID)
-	require.NotNil(t, blobData.Signature)
-	require.NotZero(t, len(blobData.BlobID))
-	require.NotZero(t, len(blobData.Signature))
+	require.NotNil(t, blobData.NubitHeight)
+	require.NotNil(t, blobData.Commitment)
+	require.NotZero(t, len(blobData.NubitHeight))
+	require.NotZero(t, len(blobData.Commitment))
 	fmt.Println("Decoding DA msg successful")
 
 	// Retrieve sequence with provider

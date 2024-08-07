@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	daTypes "github.com/0xPolygon/cdk-data-availability/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/rollkit/go-da"
@@ -21,6 +20,15 @@ type NubitDABackend struct {
 	namespace  da.Namespace
 	privKey    *ecdsa.PrivateKey
 	commitTime time.Time
+}
+
+const heightLen = 8
+
+func MakeID(height []byte, commitment da.Commitment) da.ID {
+	id := make([]byte, heightLen+len(commitment))
+	copy(id[:heightLen], height)
+	copy(id[heightLen:], commitment)
+	return id
 }
 
 // NewNubitDABackend is the factory method to create a new instance of NubitDABackend
@@ -67,13 +75,23 @@ func (backend *NubitDABackend) PostSequence(ctx context.Context, batchesData [][
 
 	// Encode NubitDA blob data
 	data := EncodeSequence(batchesData)
-	ids, err := backend.client.Submit(ctx, [][]byte{data}, -1, backend.namespace)
-	// Ensure only a single blob ID returned
-	if err != nil || len(ids) != 1 {
+
+	// Submit the blob.
+	// TODO: Add the gas estimation function.
+	blobIDs, err := backend.client.Submit(ctx, [][]byte{data}, 0.01, backend.namespace)
+
+	// Ensure only a single blobID returned
+	if err != nil || len(blobIDs) != 1 {
 		log.Errorf("Submit batch data with NubitDA client failed: %s", err)
 		return nil, err
 	}
-	blobID := ids[0]
+
+	blobID := blobIDs[0]
+
+	// blobID implementation:
+	// height: 8 bytes
+	// commitment: 32 bytes
+
 	backend.commitTime = time.Now()
 	log.Infof("Data submitted to Nubit DA: %d bytes against namespace %v sent with id %#x", len(data), backend.namespace, blobID)
 
@@ -81,13 +99,13 @@ func (backend *NubitDABackend) PostSequence(ctx context.Context, batchesData [][
 	tries := uint64(0)
 	posted := false
 	for tries < backend.config.NubitGetProofMaxRetry {
-		dataProof, err := backend.client.GetProofs(ctx, [][]byte{blobID}, backend.namespace)
+		inclusionProof, err := backend.client.GetProofs(ctx, [][]byte{blobID}, backend.namespace)
 		if err != nil {
 			log.Infof("Proof not available: %s", err)
 		}
-		if len(dataProof) == 1 {
+		if len(inclusionProof) == 1 {
 			// TODO: add data proof to DA message
-			log.Infof("Data proof from Nubit DA received: %+v", dataProof)
+			log.Infof("Inclusion proof from Nubit DA received: %+v", inclusionProof)
 			posted = true
 			break
 		}
@@ -97,24 +115,13 @@ func (backend *NubitDABackend) PostSequence(ctx context.Context, batchesData [][
 		time.Sleep(backend.config.NubitGetProofWaitPeriod.Duration)
 	}
 	if !posted {
-		log.Errorf("Get blob proof on Nubit DA failed: %s", err)
+		log.Errorf("Get inclusion proof on Nubit DA failed: %s", err)
 		return nil, err
 	}
 
-	// Get abi-encoded data availability message
-	sequence := daTypes.Sequence{}
-	for _, seq := range batchesData {
-		sequence = append(sequence, seq)
-	}
-	signedSequence, err := sequence.Sign(backend.privKey)
-	if err != nil {
-		log.Errorf("Failed to sign sequence with pk: %v", err)
-		return nil, err
-	}
-	signature := append(sequence.HashToSign(), signedSequence.Signature...)
 	blobData := BlobData{
-		BlobID:    blobID,
-		Signature: signature,
+		NubitHeight: blobID[:heightLen],
+		Commitment:  blobID[heightLen:],
 	}
 
 	return TryEncodeToDataAvailabilityMessage(blobData)
@@ -128,7 +135,9 @@ func (backend *NubitDABackend) GetSequence(ctx context.Context, batchHashes []co
 		return nil, err
 	}
 
-	reply, err := backend.client.Get(ctx, [][]byte{blobData.BlobID}, backend.namespace)
+	blobID := MakeID(blobData.NubitHeight, blobData.NubitHeight)
+
+	reply, err := backend.client.Get(ctx, [][]byte{blobID}, backend.namespace)
 	if err != nil || len(reply) != 1 {
 		log.Error("Error retrieving blob from NubitDA client: ", err)
 		return nil, err

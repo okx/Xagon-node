@@ -14,8 +14,8 @@ var ErrConvertFromABIInterface = errors.New("conversion from abi interface error
 
 // BlobData is the NubitDA blob data
 type BlobData struct {
-	BlobID    []byte `abi:"blobID"`
-	Signature []byte `abi:"signature"`
+	NubitHeight []byte `abi:"nubitHeight"`
+	Commitment  []byte `abi:"commitment"`
 }
 
 // TryEncodeToDataAvailabilityMessage is a fallible encoding method to encode
@@ -75,13 +75,13 @@ func TryDecodeFromDataAvailabilityMessage(msg []byte) (BlobData, error) {
 		value := val.Field(i)
 
 		switch field.Name {
-		case "BlobID":
-			blobData.BlobID, err = convertBlobID(value)
+		case "NubitHeight":
+			blobData.NubitHeight, err = convertHeight(value)
 			if err != nil {
 				return BlobData{}, ErrConvertFromABIInterface
 			}
-		case "Signature":
-			blobData.Signature, err = convertSignature(value)
+		case "Commitment":
+			blobData.Commitment, err = convertCommitment(value)
 			if err != nil {
 				return BlobData{}, ErrConvertFromABIInterface
 			}
@@ -94,10 +94,10 @@ func TryDecodeFromDataAvailabilityMessage(msg []byte) (BlobData, error) {
 }
 
 // -------- Helper fallible conversion methods --------
-func convertBlobID(val reflect.Value) ([]byte, error) {
+func convertHeight(val reflect.Value) ([]byte, error) {
 	return val.Interface().([]byte), nil
 }
 
-func convertSignature(val reflect.Value) ([]byte, error) {
+func convertCommitment(val reflect.Value) ([]byte, error) {
 	return val.Interface().([]byte), nil
 }

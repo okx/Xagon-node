@@ -11,12 +11,12 @@ const blobDataABI = `[
 			"internalType": "struct NubitDAVerifier.BlobData",
 			"components": [
 				{
-				"name": "blobID",
+				"name": "nubitHeight",
 				"type": "bytes",
 				"internalType": "bytes"
 				},
 				{
-				"name": "signature",
+				"name": "commitment",
 				"type": "bytes",
 				"internalType": "bytes"
 				}
