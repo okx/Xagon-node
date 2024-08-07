@@ -116,6 +116,14 @@ func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.
 	if isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims { // claim tx
 		return true, nil
 	}
+	freeGpList := GetSpecialFreeGasList(p.cfg.FreeGasList)
+	for _, info := range freeGpList {
+		if from.String() == info.From {
+			if poolTx.To().String() == info.To && strings.HasPrefix("0x"+common.Bytes2Hex(poolTx.Data()), info.MethodSig) {
+				return true, nil
+			}
+		}
+	}
 	if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) && poolTx.GasPrice().Cmp(big.NewInt(0)) == 0 { // free-gas tx by count
 		isFreeAddr, err := p.storage.IsFreeGasAddr(ctx, from)
 		if err != nil {

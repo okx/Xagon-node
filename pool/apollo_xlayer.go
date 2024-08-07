@@ -20,6 +20,7 @@ type apolloConfig struct {
 	FreeGasExAddress     []string
 	FreeGasCountPerAddr  uint64
 	FreeGasLimit         uint64
+	FreeGasList          []FreeGasInfo
 
 	BlockedList []string
 
@@ -41,6 +42,14 @@ func (c *apolloConfig) enable() bool {
 	c.RLock()
 	defer c.RUnlock()
 	return c.EnableApollo
+}
+
+func (c *apolloConfig) setFreeGasList(freeGasList []FreeGasInfo) {
+	if c == nil || !c.EnableApollo {
+		return
+	}
+	c.FreeGasList = make([]FreeGasInfo, len(freeGasList))
+	copy(c.FreeGasList, freeGasList)
 }
 
 func (c *apolloConfig) setFreeGasAddresses(freeGasAddrs []string) {
@@ -95,6 +104,7 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().setFreeGasExAddresses(apolloConfig.FreeGasExAddress)
 	getApolloConfig().FreeGasCountPerAddr = apolloConfig.FreeGasCountPerAddr
 	getApolloConfig().FreeGasLimit = apolloConfig.FreeGasLimit
+	getApolloConfig().setFreeGasList(apolloConfig.FreeGasList)
 
 	getApolloConfig().Unlock()
 }
@@ -201,4 +211,14 @@ func isBlockedAddress(localBlockedList []string, address common.Address) bool {
 	}
 
 	return contains(localBlockedList, address)
+}
+
+func GetSpecialFreeGasList(freeGasList []FreeGasInfo) []FreeGasInfo {
+	if getApolloConfig().enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		return getApolloConfig().FreeGasList
+	}
+
+	return freeGasList
 }

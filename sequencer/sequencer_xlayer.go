@@ -2,7 +2,9 @@ package sequencer
 
 import (
 	"context"
+	"github.com/ethereum/go-ethereum/common"
 	"math/big"
+	"strings"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/log"
@@ -36,14 +38,26 @@ func (s *Sequencer) countReadyTx() {
 	state.InfiniteSafeRun(s.updateReadyTxCount, "error counting ready tx", time.Second)
 }
 
-func (s *Sequencer) checkFreeGas(tx pool.Transaction, txTracker *TxTracker) (freeGp, claimTx bool) {
+func (s *Sequencer) checkFreeGas(tx pool.Transaction, txTracker *TxTracker) (freeGp, claimTx bool, gpMul float64) {
 	// check if tx is init-free-gas and if it can be prior pack
 	freeGp = tx.GasPrice().Cmp(big.NewInt(0)) == 0
+	gpMul = getInitGasPriceMultiple(s.cfg.InitGasPriceMultiple)
 
 	// check if tx is bridge-claim
 	addrs := getPackBatchSpacialList(s.cfg.PackBatchSpacialList)
 	if addrs[txTracker.FromStr] {
 		claimTx = true
+	}
+
+	// special project of XLayer
+	freeGpList := pool.GetSpecialFreeGasList(s.poolCfg.FreeGasList)
+	for _, info := range freeGpList {
+		if txTracker.From.String() == info.From {
+			if tx.To().String() == info.To && strings.HasPrefix("0x"+common.Bytes2Hex(tx.Data()), info.MethodSig) {
+				gpMul = info.GasPriceMultiple
+				return
+			}
+		}
 	}
 
 	return
