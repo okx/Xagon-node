@@ -506,17 +506,34 @@
 					"description": "FreeGasLimit is the max gas allowed use to do a free gas tx",
 					"default": 0
 				},
+				"EnableFreeGasList": {
+					"type": "boolean",
+					"description": "EnableFreeGasList enable the special project of XLayer for free gas",
+					"default": false
+				},
 				"FreeGasList": {
 					"items": {
 						"properties": {
-							"From": {
+							"Name": {
 								"type": "string"
 							},
-							"To": {
-								"type": "string"
+							"FromList": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
 							},
-							"MethodSig": {
-								"type": "string"
+							"ToList": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							"MethodSigs": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
 							},
 							"GasPriceMultiple": {
 								"type": "number"
