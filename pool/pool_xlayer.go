@@ -40,6 +40,15 @@ func contains(s []string, ele common.Address) bool {
 	return false
 }
 
+func containsMethod(data string, methods []string) bool {
+	for _, m := range methods {
+		if strings.HasPrefix(data, m) {
+			return true
+		}
+	}
+	return false
+}
+
 // StartRefreshingWhiteAddressesPeriodically will make this instance of the pool
 // to check periodically(accordingly to the configuration) for updates regarding
 // the white address and update the in memory blocked addresses
@@ -113,17 +122,23 @@ func (p *Pool) GetDynamicGasPrice() *big.Int {
 }
 
 func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.Address) (bool, error) {
-	if isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims { // claim tx
+	// claim tx
+	if isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims {
 		return true, nil
 	}
-	freeGpList := GetSpecialFreeGasList(p.cfg.FreeGasList)
-	for _, info := range freeGpList {
-		if from.String() == info.From {
-			if poolTx.To().String() == info.To && strings.HasPrefix("0x"+common.Bytes2Hex(poolTx.Data()), info.MethodSig) {
-				return true, nil
-			}
+
+	// special project
+	if GetEnableSpecialFreeGasList(p.cfg.EnableFreeGasList) {
+		fromToName, freeGpList := GetSpecialFreeGasList(p.cfg.FreeGasList)
+		info := freeGpList[fromToName[from.String()]]
+		if info != nil &&
+			contains(info.ToList, *poolTx.To()) &&
+			containsMethod("0x"+common.Bytes2Hex(poolTx.Data()), info.MethodSigs) {
+			return true, nil
 		}
 	}
+
+	// new bridge address
 	if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) && poolTx.GasPrice().Cmp(big.NewInt(0)) == 0 { // free-gas tx by count
 		isFreeAddr, err := p.storage.IsFreeGasAddr(ctx, from)
 		if err != nil {

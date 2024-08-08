@@ -20,7 +20,11 @@ type apolloConfig struct {
 	FreeGasExAddress     []string
 	FreeGasCountPerAddr  uint64
 	FreeGasLimit         uint64
-	FreeGasList          []FreeGasInfo
+
+	// for special project
+	EnableFreeGasList  bool
+	FreeGasFromNameMap map[string]string       // map[from]projectName
+	FreeGasList        map[string]*FreeGasInfo // map[projectName]FreeGasInfo
 
 	BlockedList []string
 
@@ -48,8 +52,14 @@ func (c *apolloConfig) setFreeGasList(freeGasList []FreeGasInfo) {
 	if c == nil || !c.EnableApollo {
 		return
 	}
-	c.FreeGasList = make([]FreeGasInfo, len(freeGasList))
-	copy(c.FreeGasList, freeGasList)
+	c.FreeGasFromNameMap = make(map[string]string)
+	c.FreeGasList = make(map[string]*FreeGasInfo, len(freeGasList))
+	for _, info := range freeGasList {
+		for _, from := range info.FromList {
+			c.FreeGasFromNameMap[from] = info.Name
+		}
+		c.FreeGasList[info.Name] = &info
+	}
 }
 
 func (c *apolloConfig) setFreeGasAddresses(freeGasAddrs []string) {
@@ -104,6 +114,7 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().setFreeGasExAddresses(apolloConfig.FreeGasExAddress)
 	getApolloConfig().FreeGasCountPerAddr = apolloConfig.FreeGasCountPerAddr
 	getApolloConfig().FreeGasLimit = apolloConfig.FreeGasLimit
+	getApolloConfig().EnableFreeGasList = apolloConfig.EnableFreeGasList
 	getApolloConfig().setFreeGasList(apolloConfig.FreeGasList)
 
 	getApolloConfig().Unlock()
@@ -213,13 +224,32 @@ func isBlockedAddress(localBlockedList []string, address common.Address) bool {
 	return contains(localBlockedList, address)
 }
 
-// GetSpecialFreeGasList returns the special project in XLayer for free gas
-func GetSpecialFreeGasList(freeGasList []FreeGasInfo) []FreeGasInfo {
+// GetEnableSpecialFreeGasList returns enable flag of FreeGasList
+func GetEnableSpecialFreeGasList(enableFreeGasList bool) bool {
 	if getApolloConfig().enable() {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
-		return getApolloConfig().FreeGasList
+		return getApolloConfig().EnableFreeGasList
+	}
+	return enableFreeGasList
+}
+
+// GetSpecialFreeGasList returns the special project in XLayer for free gas
+func GetSpecialFreeGasList(freeGasList []FreeGasInfo) (map[string]string, map[string]*FreeGasInfo) {
+	if getApolloConfig().enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		return getApolloConfig().FreeGasFromNameMap, getApolloConfig().FreeGasList
 	}
 
-	return freeGasList
+	freeGasFromNameMap := make(map[string]string)
+	freeGasMap := make(map[string]*FreeGasInfo, len(freeGasList))
+	for _, info := range freeGasList {
+		for _, from := range info.FromList {
+			freeGasFromNameMap[from] = info.Name
+		}
+		freeGasMap[info.Name] = &info
+	}
+
+	return freeGasFromNameMap, freeGasMap
 }

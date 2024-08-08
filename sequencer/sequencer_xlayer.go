@@ -15,6 +15,24 @@ import (
 
 var countinterval = 10
 
+func contains(s []string, ele common.Address) bool {
+	for _, e := range s {
+		if common.HexToAddress(e) == ele {
+			return true
+		}
+	}
+	return false
+}
+
+func containsMethod(data string, methods []string) bool {
+	for _, m := range methods {
+		if strings.HasPrefix(data, m) {
+			return true
+		}
+	}
+	return false
+}
+
 func (s *Sequencer) countPendingTx() {
 	for {
 		<-time.After(time.Second * time.Duration(countinterval))
@@ -49,14 +67,15 @@ func (s *Sequencer) checkFreeGas(tx pool.Transaction, txTracker *TxTracker) (fre
 		claimTx = true
 	}
 
-	// special project of XLayer
-	freeGpList := pool.GetSpecialFreeGasList(s.poolCfg.FreeGasList)
-	for _, info := range freeGpList {
-		if txTracker.From.String() == info.From {
-			if tx.To().String() == info.To && strings.HasPrefix("0x"+common.Bytes2Hex(tx.Data()), info.MethodSig) {
-				gpMul = info.GasPriceMultiple
-				return
-			}
+	// check if tx is from special project
+	if pool.GetEnableSpecialFreeGasList(s.poolCfg.EnableFreeGasList) {
+		fromToName, freeGpList := pool.GetSpecialFreeGasList(s.poolCfg.FreeGasList)
+		info := freeGpList[fromToName[txTracker.FromStr]]
+		if info != nil &&
+			contains(info.ToList, *tx.To()) &&
+			containsMethod("0x"+common.Bytes2Hex(tx.Data()), info.MethodSigs) {
+			gpMul = info.GasPriceMultiple
+			return
 		}
 	}
 

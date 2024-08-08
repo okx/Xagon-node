@@ -71,16 +71,19 @@ type Config struct {
 	FreeGasCountPerAddr uint64 `mapstructure:"FreeGasCountPerAddr"`
 	// FreeGasLimit is the max gas allowed use to do a free gas tx
 	FreeGasLimit uint64 `mapstructure:"FreeGasLimit"`
+	// EnableFreeGasList enable the special project of XLayer for free gas
+	EnableFreeGasList bool `mapstructure:"EnableFreeGasList"`
 	// FreeGasList is the special project of XLayer
 	FreeGasList []FreeGasInfo `mapstructure:"FreeGasList"`
 }
 
 // FreeGasInfo contains the details for what tx should be free
 type FreeGasInfo struct {
-	From             string  `mapstructure:"From"`
-	To               string  `mapstructure:"To"`
-	MethodSig        string  `mapstructure:"MethodSig"`
-	GasPriceMultiple float64 `mapstructure:"GasPriceMultiple"`
+	Name             string   `mapstructure:"Name"`
+	FromList         []string `mapstructure:"FromList"`
+	ToList           []string `mapstructure:"ToList"`
+	MethodSigs       []string `mapstructure:"MethodSigs"`
+	GasPriceMultiple float64  `mapstructure:"GasPriceMultiple"`
 }
 
 // EffectiveGasPriceCfg contains the configuration properties for the effective gas price
