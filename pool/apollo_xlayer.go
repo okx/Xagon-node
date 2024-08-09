@@ -58,8 +58,8 @@ func (c *apolloConfig) setFreeGasList(freeGasList []FreeGasInfo) {
 		for _, from := range info.FromList {
 			c.FreeGasFromNameMap[from] = info.Name
 		}
-		name := info.Name
-		c.FreeGasList[name] = &info
+		infoCopy := info
+		c.FreeGasList[info.Name] = &infoCopy
 	}
 }
 
@@ -249,8 +249,8 @@ func GetSpecialFreeGasList(freeGasList []FreeGasInfo) (map[string]string, map[st
 		for _, from := range info.FromList {
 			freeGasFromNameMap[from] = info.Name
 		}
-		name := info.Name
-		freeGasMap[name] = &info
+		infoCopy := info
+		freeGasMap[info.Name] = &infoCopy
 	}
 
 	return freeGasFromNameMap, freeGasMap
