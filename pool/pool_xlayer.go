@@ -31,7 +31,8 @@ const (
 	MainnetBridgeURL = "https://www.okx.com/xlayer/bridge"
 )
 
-func contains(s []string, ele common.Address) bool {
+// Contains returns if string[] contains ele string
+func Contains(s []string, ele common.Address) bool {
 	for _, e := range s {
 		if common.HexToAddress(e) == ele {
 			return true
@@ -40,7 +41,8 @@ func contains(s []string, ele common.Address) bool {
 	return false
 }
 
-func containsMethod(data string, methods []string) bool {
+// ContainsMethod returns if data has prefix of method sig
+func ContainsMethod(data string, methods []string) bool {
 	for _, m := range methods {
 		if strings.HasPrefix(data, m) {
 			return true
@@ -132,8 +134,8 @@ func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.
 		fromToName, freeGpList := GetSpecialFreeGasList(p.cfg.FreeGasList)
 		info := freeGpList[fromToName[from.String()]]
 		if info != nil &&
-			contains(info.ToList, *poolTx.To()) &&
-			containsMethod("0x"+common.Bytes2Hex(poolTx.Data()), info.MethodSigs) {
+			Contains(info.ToList, *poolTx.To()) &&
+			ContainsMethod("0x"+common.Bytes2Hex(poolTx.Data()), info.MethodSigs) {
 			return true, nil
 		}
 	}

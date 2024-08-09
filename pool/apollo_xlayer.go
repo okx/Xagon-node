@@ -58,7 +58,8 @@ func (c *apolloConfig) setFreeGasList(freeGasList []FreeGasInfo) {
 		for _, from := range info.FromList {
 			c.FreeGasFromNameMap[from] = info.Name
 		}
-		c.FreeGasList[info.Name] = &info
+		name := info.Name
+		c.FreeGasList[name] = &info
 	}
 }
 
@@ -140,10 +141,10 @@ func isFreeGasAddress(localFreeGasAddrs []string, address common.Address) bool {
 	if getApolloConfig().enable() {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
-		return contains(getApolloConfig().FreeGasAddresses, address)
+		return Contains(getApolloConfig().FreeGasAddresses, address)
 	}
 
-	return contains(localFreeGasAddrs, address)
+	return Contains(localFreeGasAddrs, address)
 }
 
 func getEnableFreeGasByNonce(enableFreeGasByNonce bool) bool {
@@ -160,10 +161,10 @@ func isFreeGasExAddress(localFreeGasExAddrs []string, address common.Address) bo
 	if getApolloConfig().enable() {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
-		return contains(getApolloConfig().FreeGasExAddress, address)
+		return Contains(getApolloConfig().FreeGasExAddress, address)
 	}
 
-	return contains(localFreeGasExAddrs, address)
+	return Contains(localFreeGasExAddrs, address)
 }
 
 func getFreeGasCountPerAddr(localFreeGasCountPerAddr uint64) uint64 {
@@ -218,10 +219,10 @@ func isBlockedAddress(localBlockedList []string, address common.Address) bool {
 	if getApolloConfig().enable() {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
-		return contains(getApolloConfig().BlockedList, address)
+		return Contains(getApolloConfig().BlockedList, address)
 	}
 
-	return contains(localBlockedList, address)
+	return Contains(localBlockedList, address)
 }
 
 // GetEnableSpecialFreeGasList returns enable flag of FreeGasList
@@ -248,7 +249,8 @@ func GetSpecialFreeGasList(freeGasList []FreeGasInfo) (map[string]string, map[st
 		for _, from := range info.FromList {
 			freeGasFromNameMap[from] = info.Name
 		}
-		freeGasMap[info.Name] = &info
+		name := info.Name
+		freeGasMap[name] = &info
 	}
 
 	return freeGasFromNameMap, freeGasMap

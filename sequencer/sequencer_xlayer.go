@@ -3,7 +3,6 @@ package sequencer
 import (
 	"context"
 	"math/big"
-	"strings"
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/log"
@@ -14,24 +13,6 @@ import (
 )
 
 var countinterval = 10
-
-func contains(s []string, ele common.Address) bool {
-	for _, e := range s {
-		if common.HexToAddress(e) == ele {
-			return true
-		}
-	}
-	return false
-}
-
-func containsMethod(data string, methods []string) bool {
-	for _, m := range methods {
-		if strings.HasPrefix(data, m) {
-			return true
-		}
-	}
-	return false
-}
 
 func (s *Sequencer) countPendingTx() {
 	for {
@@ -65,6 +46,7 @@ func (s *Sequencer) checkFreeGas(tx pool.Transaction, txTracker *TxTracker) (fre
 	addrs := getPackBatchSpacialList(s.cfg.PackBatchSpacialList)
 	if addrs[txTracker.FromStr] {
 		claimTx = true
+		gpMul = getGasPriceMultiple(s.cfg.GasPriceMultiple)
 	}
 
 	// check if tx is from special project
@@ -72,8 +54,8 @@ func (s *Sequencer) checkFreeGas(tx pool.Transaction, txTracker *TxTracker) (fre
 		fromToName, freeGpList := pool.GetSpecialFreeGasList(s.poolCfg.FreeGasList)
 		info := freeGpList[fromToName[txTracker.FromStr]]
 		if info != nil &&
-			contains(info.ToList, *tx.To()) &&
-			containsMethod("0x"+common.Bytes2Hex(tx.Data()), info.MethodSigs) {
+			pool.Contains(info.ToList, *tx.To()) &&
+			pool.ContainsMethod("0x"+common.Bytes2Hex(tx.Data()), info.MethodSigs) {
 			gpMul = info.GasPriceMultiple
 			return
 		}
