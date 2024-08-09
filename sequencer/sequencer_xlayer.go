@@ -47,6 +47,7 @@ func (s *Sequencer) checkFreeGas(tx pool.Transaction, txTracker *TxTracker) (fre
 	if addrs[txTracker.FromStr] {
 		claimTx = true
 		gpMul = getGasPriceMultiple(s.cfg.GasPriceMultiple)
+		return
 	}
 
 	// check if tx is from special project
