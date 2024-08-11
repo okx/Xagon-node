@@ -16,6 +16,7 @@ var ErrConvertFromABIInterface = errors.New("conversion from abi interface error
 type BlobData struct {
 	NubitHeight []byte `abi:"nubitHeight"`
 	Commitment  []byte `abi:"commitment"`
+	SharesProof []byte `abi:"sharesProof"`
 }
 
 // TryEncodeToDataAvailabilityMessage is a fallible encoding method to encode
@@ -85,6 +86,11 @@ func TryDecodeFromDataAvailabilityMessage(msg []byte) (BlobData, error) {
 			if err != nil {
 				return BlobData{}, ErrConvertFromABIInterface
 			}
+		case "SharesProof":
+			blobData.SharesProof, err = convertSharesProof(value)
+			if err != nil {
+				return BlobData{}, ErrConvertFromABIInterface
+			}
 		default:
 			return BlobData{}, ErrConvertFromABIInterface
 		}
@@ -99,5 +105,9 @@ func convertHeight(val reflect.Value) ([]byte, error) {
 }
 
 func convertCommitment(val reflect.Value) ([]byte, error) {
+	return val.Interface().([]byte), nil
+}
+
+func convertSharesProof(val reflect.Value) ([]byte, error) {
 	return val.Interface().([]byte), nil
 }

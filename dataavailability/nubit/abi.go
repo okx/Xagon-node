@@ -19,6 +19,11 @@ const blobDataABI = `[
 				"name": "commitment",
 				"type": "bytes",
 				"internalType": "bytes"
+				},
+				{
+				"name": "sharesProof",
+				"type": "bytes",
+				"internalType": "bytes"
 				}
 			]
 			}

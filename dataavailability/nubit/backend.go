@@ -3,6 +3,7 @@ package nubit
 import (
 	"context"
 	"crypto/ecdsa"
+	"encoding/binary"
 	"encoding/hex"
 	"strings"
 	"time"
@@ -16,6 +17,7 @@ import (
 // NubitDABackend implements the DA integration with Nubit DA layer
 type NubitDABackend struct {
 	client     da.DA
+	validator  Validator
 	config     *Config
 	namespace  da.Namespace
 	privKey    *ecdsa.PrivateKey
@@ -42,6 +44,8 @@ func NewNubitDABackend(
 		return nil, err
 	}
 
+	va := NewJSONRPCValidator(cfg.NubitValidatorURL)
+
 	hexStr := hex.EncodeToString([]byte(cfg.NubitNamespace))
 	name, err := hex.DecodeString(strings.Repeat("0", NubitNamespaceBytesLength-len(hexStr)) + hexStr)
 	if err != nil {
@@ -55,6 +59,7 @@ func NewNubitDABackend(
 		privKey:    privKey,
 		namespace:  name,
 		client:     cn,
+		validator:  va,
 		commitTime: time.Now(),
 	}, nil
 }
@@ -87,6 +92,9 @@ func (backend *NubitDABackend) PostSequence(ctx context.Context, batchesData [][
 	}
 
 	blobID := blobIDs[0]
+	height := blobID[:heightLen]
+	log.Infof("Current Nubit height: %d", binary.LittleEndian.Uint64(height[:]))
+	commitment := blobID[heightLen:]
 
 	// blobID implementation:
 	// height: 8 bytes
@@ -98,33 +106,55 @@ func (backend *NubitDABackend) PostSequence(ctx context.Context, batchesData [][
 	// Get proof of batches data on NubitDA layer
 	tries := uint64(0)
 	posted := false
+	proofs := make([]*NamespaceRangeProof, 0)
 	for tries < backend.config.NubitGetProofMaxRetry {
-		inclusionProof, err := backend.client.GetProofs(ctx, [][]byte{blobID}, backend.namespace)
-		if err != nil {
-			log.Infof("Proof not available: %s", err)
-		}
-		if len(inclusionProof) == 1 {
-			// TODO: add data proof to DA message
-			log.Infof("Inclusion proof from Nubit DA received: %+v", inclusionProof)
-			posted = true
-			break
-		}
-
-		// Retries
-		tries += 1
 		time.Sleep(backend.config.NubitGetProofWaitPeriod.Duration)
+		inclusionProofBytes, err := backend.client.GetProofs(ctx, [][]byte{blobID}, backend.namespace)
+		if err != nil {
+			log.Errorf("Inclusion proof is not available: %s", err)
+			// Retries
+			tries += 1
+		} else {
+			// Never retry if the interface is invalid/incompatible.
+			proofs, err = UnmarshalInclusionProofs(inclusionProofBytes)
+			if err != nil {
+				log.Errorf("Inclusion proof is not valid: %s", err)
+				return nil, err
+			} else {
+				posted = true
+				break
+			}
+		}
 	}
 	if !posted {
 		log.Errorf("Get inclusion proof on Nubit DA failed: %s", err)
 		return nil, err
 	}
 
-	blobData := BlobData{
-		NubitHeight: blobID[:heightLen],
-		Commitment:  blobID[heightLen:],
+	// Get the row proof via the NamespaceRangeProof.
+
+	sharesProofs := make([]ShareProof, 0)
+	for _, p := range proofs {
+		height_i := int64(binary.LittleEndian.Uint64(height[:]))
+		start := uint64(p.Start)
+		end := uint64(p.End)
+		sharesProof, err := backend.validator.ProveShares(height_i, start, end)
+		if err != nil {
+			log.Errorf("Get shares proof on Nubit Validator failed: %s", err)
+			return nil, err
+		}
+		sharesProofs = append(sharesProofs, *sharesProof)
 	}
 
-	return TryEncodeToDataAvailabilityMessage(blobData)
+	// TODO: Finish the proof convertion in the polygon context.
+
+	daMessage := BlobData{
+		NubitHeight: height,
+		Commitment:  commitment,
+		SharesProof: make([]byte, 0),
+	}
+
+	return TryEncodeToDataAvailabilityMessage(daMessage)
 }
 
 // GetSequence gets the sequence data from NubitDA layer

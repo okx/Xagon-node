@@ -22,6 +22,7 @@ import (
 func TestOffchainPipeline(t *testing.T) {
 	cfg := Config{
 		NubitRpcURL:             "http://127.0.0.1:26658",
+		NubitValidatorURL:       "https://validator.nubit-alphatestnet-1.com:26657",
 		NubitAuthKey:            "",
 		NubitNamespace:          "xlayer",
 		NubitGetProofMaxRetry:   10,
