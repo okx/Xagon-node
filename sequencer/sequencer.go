@@ -231,18 +231,19 @@ func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) erro
 		return err
 	}
 
-	// XLayer claim tx
-	freeGp, isClaimTx := s.checkFreeGas(tx, txTracker)
+	// XLayer free gas tx
+	freeGp, isClaimTx, gp := s.checkFreeGas(tx, txTracker)
 	if freeGp {
 		defaultGp := s.pool.GetDynamicGasPrice()
-		baseGp := s.worker.getBaseClaimGp(defaultGp)
-		copyBaseGp := new(big.Int).Set(baseGp)
+		copyBaseGp := new(big.Int)
 		if isClaimTx {
 			txTracker.IsClaimTx = true
-			txTracker.GasPrice = copyBaseGp.Mul(copyBaseGp, new(big.Int).SetUint64(uint64(getGasPriceMultiple(s.cfg.GasPriceMultiple))))
+			baseGp := s.worker.getBaseClaimGp(defaultGp)
+			copyBaseGp.Set(baseGp)
 		} else {
-			txTracker.GasPrice = defaultGp.Mul(defaultGp, new(big.Int).SetUint64(uint64(getInitGasPriceMultiple(s.cfg.InitGasPriceMultiple))))
+			copyBaseGp.Set(defaultGp)
 		}
+		txTracker.GasPrice = copyBaseGp.Mul(copyBaseGp, new(big.Int).SetUint64(uint64(gp)))
 	}
 
 	replacedTx, dropReason := s.worker.AddTxTracker(ctx, txTracker)
