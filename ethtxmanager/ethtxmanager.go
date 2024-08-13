@@ -186,9 +186,10 @@ func (c *Client) buildResult(ctx context.Context, mTx monitoredTx) (MonitoredTxR
 	}
 
 	result := MonitoredTxResult{
-		ID:     mTx.id,
-		Status: mTx.status,
-		Txs:    txs,
+		ID:          mTx.id,
+		Status:      mTx.status,
+		BlockNumber: mTx.blockNumber,
+		Txs:         txs,
 	}
 
 	return result, nil

@@ -182,9 +182,10 @@ func (mTx *monitoredTx) blockNumberU64Ptr() *uint64 {
 
 // MonitoredTxResult represents the result of a execution of a monitored tx
 type MonitoredTxResult struct {
-	ID     string
-	Status MonitoredTxStatus
-	Txs    map[common.Hash]TxResult
+	ID          string
+	Status      MonitoredTxStatus
+	BlockNumber *big.Int
+	Txs         map[common.Hash]TxResult
 }
 
 // TxResult represents the result of a execution of a ethereum transaction in the block chain

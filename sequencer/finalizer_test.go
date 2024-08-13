@@ -984,11 +984,11 @@ func TestFinalizer_finalizeSIPBatch(t *testing.T) {
 			stateMock.On("CloseWIPBatch", ctx, receipt, mock.Anything).Return(tc.managerErr).Once()
 
 			if tc.managerErr == nil {
-				stateMock.On("GetBatchByNumber", ctx, f.sipBatch.batchNumber, nil).Return(&state.Batch{BatchNumber: f.sipBatch.batchNumber}, nilErr).Once()
+				stateMock.On("GetBatchByNumber", ctx, f.sipBatch.batchNumber, mock.Anything).Return(&state.Batch{BatchNumber: f.sipBatch.batchNumber}, nilErr).Once()
 				stateMock.On("GetForkIDByBatchNumber", f.wipBatch.batchNumber).Return(uint64(9)).Once()
-				stateMock.On("GetL1InfoTreeDataFromBatchL2Data", ctx, mock.Anything, nil).Return(map[uint32]state.L1DataV2{}, state.ZeroHash, state.ZeroHash, nil)
+				stateMock.On("GetL1InfoTreeDataFromBatchL2Data", ctx, mock.Anything, mock.Anything).Return(map[uint32]state.L1DataV2{}, state.ZeroHash, state.ZeroHash, nil)
 				stateMock.On("ProcessBatchV2", ctx, mock.Anything, false).Return(&state.ProcessBatchResponse{}, "", nil)
-				stateMock.On("UpdateBatchAsChecked", ctx, f.sipBatch.batchNumber, nil).Return(nil)
+				stateMock.On("UpdateBatchAsChecked", ctx, f.sipBatch.batchNumber, mock.Anything).Return(nil)
 				dbTxMock.On("Commit", ctx).Return(nilErr).Once()
 			} else {
 				dbTxMock.On("Rollback", ctx).Return(nilErr).Once()

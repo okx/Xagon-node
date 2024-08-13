@@ -510,7 +510,8 @@ func (s *State) buildTrace(evm *fakevm.FakeEVM, result *runtime.ExecutionResult,
 		}
 
 		// Populate the step memory for future steps
-		step.Memory = memory.Data()
+		step.Memory = make([]byte, len(memory.Data()))
+		copy(step.Memory[0:], memory.Data()[0:])
 
 		// set Contract
 		contract := fakevm.NewContract(

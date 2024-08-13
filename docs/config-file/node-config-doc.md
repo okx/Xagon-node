@@ -3643,6 +3643,8 @@ EnableLog=true
 | - [Log](#Sequencer_StreamServer_Log )                                         | No      | object  | No         | -          | Log is the log configuration                                     |
 | - [UpgradeEtrogBatchNumber](#Sequencer_StreamServer_UpgradeEtrogBatchNumber ) | No      | integer | No         | -          | UpgradeEtrogBatchNumber is the batch number of the upgrade etrog |
 | - [WriteTimeout](#Sequencer_StreamServer_WriteTimeout )                       | No      | string  | No         | -          | Duration                                                         |
+| - [InactivityTimeout](#Sequencer_StreamServer_InactivityTimeout )             | No      | string  | No         | -          | Duration                                                         |
+| - [InactivityCheckInterval](#Sequencer_StreamServer_InactivityCheckInterval ) | No      | string  | No         | -          | Duration                                                         |
 
 #### <a name="Sequencer_StreamServer_Port"></a>10.9.1. `Sequencer.StreamServer.Port`
 
@@ -3852,6 +3854,58 @@ InitGasPriceMultiple=0
 ```
 [Sequencer]
 QueryPendingTxsLimit=0
+```
+
+#### <a name="Sequencer_StreamServer_InactivityTimeout"></a>10.9.9. `Sequencer.StreamServer.InactivityTimeout`
+
+**Title:** Duration
+
+**Type:** : `string`
+
+**Default:** `"2m0s"`
+
+**Description:** InactivityTimeout is the timeout to kill an inactive datastream client connection
+
+**Examples:** 
+
+```json
+"1m"
+```
+
+```json
+"300ms"
+```
+
+**Example setting the default value** ("2m0s"):
+```
+[Sequencer.StreamServer]
+InactivityTimeout="2m0s"
+```
+
+#### <a name="Sequencer_StreamServer_InactivityCheckInterval"></a>10.9.10. `Sequencer.StreamServer.InactivityCheckInterval`
+
+**Title:** Duration
+
+**Type:** : `string`
+
+**Default:** `"5s"`
+
+**Description:** InactivityCheckInterval is the time interval to check for datastream client connections that have reached the inactivity timeout to kill them
+
+**Examples:** 
+
+```json
+"1m"
+```
+
+```json
+"300ms"
+```
+
+**Example setting the default value** ("5s"):
+```
+[Sequencer.StreamServer]
+InactivityCheckInterval="5s"
 ```
 
 ## <a name="SequenceSender"></a>11. `[SequenceSender]`

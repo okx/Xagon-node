@@ -9,7 +9,7 @@ StreamType = 1
 [Offline]
 Port = 6901
 Filename = "datastreamer.bin"
-Version = 1
+Version = 4
 ChainID = 1440
 UpgradeEtrogBatchNumber = 0
 

@@ -5,9 +5,11 @@ StreamType = 1
 [Offline]
 Port = 6901
 Filename = "datastream.bin"
-Version = 3
+Version = 4
 ChainID = 1440
 WriteTimeout = "5s"
+InactivityTimeout = "120s"
+InactivityCheckInterval = "5s"
 UpgradeEtrogBatchNumber = 0
 
 [StateDB]

@@ -1493,6 +1493,26 @@
 								"1m",
 								"300ms"
 							]
+						},
+						"InactivityTimeout": {
+							"type": "string",
+							"title": "Duration",
+							"description": "InactivityTimeout is the timeout to kill an inactive datastream client connection",
+							"default": "2m0s",
+							"examples": [
+								"1m",
+								"300ms"
+							]
+						},
+						"InactivityCheckInterval": {
+							"type": "string",
+							"title": "Duration",
+							"description": "InactivityCheckInterval is the time interval to check for datastream client connections that have reached the inactivity timeout to kill them",
+							"default": "5s",
+							"examples": [
+								"1m",
+								"300ms"
+							]
 						}
 					},
 					"additionalProperties": false,

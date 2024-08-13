@@ -1,4 +1,6 @@
 # .goreleaser.yaml
+version: 2
+
 builds:
 - main: ./cmd/
   goos:
