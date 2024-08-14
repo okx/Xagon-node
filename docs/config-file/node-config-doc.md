@@ -3808,54 +3808,6 @@ UpgradeEtrogBatchNumber=0
 WriteTimeout="5s"
 ```
 
-### <a name="Sequencer_PackBatchSpacialList"></a>10.10. `Sequencer.PackBatchSpacialList`
-
-**Type:** : `array of string`
-**Description:** XLayer config
-PackBatchSpacialList is the list of addresses that will have a special gas price
-
-### <a name="Sequencer_GasPriceMultiple"></a>10.11. `Sequencer.GasPriceMultiple`
-
-**Type:** : `number`
-
-**Default:** `0`
-
-**Description:** GasPriceMultiple is the multiple of the gas price
-
-**Example setting the default value** (0):
-```
-[Sequencer]
-GasPriceMultiple=0
-```
-
-### <a name="Sequencer_InitGasPriceMultiple"></a>10.12. `Sequencer.InitGasPriceMultiple`
-
-**Type:** : `number`
-
-**Default:** `0`
-
-**Description:** InitGasPriceMultiple is the multiple of the gas price for init free gas tx
-
-**Example setting the default value** (0):
-```
-[Sequencer]
-InitGasPriceMultiple=0
-```
-
-### <a name="Sequencer_QueryPendingTxsLimit"></a>10.13. `Sequencer.QueryPendingTxsLimit`
-
-**Type:** : `integer`
-
-**Default:** `0`
-
-**Description:** QueryPendingTxsLimit is used to limit amount txs from the db
-
-**Example setting the default value** (0):
-```
-[Sequencer]
-QueryPendingTxsLimit=0
-```
-
 #### <a name="Sequencer_StreamServer_InactivityTimeout"></a>10.9.9. `Sequencer.StreamServer.InactivityTimeout`
 
 **Title:** Duration
@@ -3906,6 +3858,54 @@ InactivityTimeout="2m0s"
 ```
 [Sequencer.StreamServer]
 InactivityCheckInterval="5s"
+```
+
+### <a name="Sequencer_PackBatchSpacialList"></a>10.10. `Sequencer.PackBatchSpacialList`
+
+**Type:** : `array of string`
+**Description:** XLayer config
+PackBatchSpacialList is the list of addresses that will have a special gas price
+
+### <a name="Sequencer_GasPriceMultiple"></a>10.11. `Sequencer.GasPriceMultiple`
+
+**Type:** : `number`
+
+**Default:** `0`
+
+**Description:** GasPriceMultiple is the multiple of the gas price
+
+**Example setting the default value** (0):
+```
+[Sequencer]
+GasPriceMultiple=0
+```
+
+### <a name="Sequencer_InitGasPriceMultiple"></a>10.12. `Sequencer.InitGasPriceMultiple`
+
+**Type:** : `number`
+
+**Default:** `0`
+
+**Description:** InitGasPriceMultiple is the multiple of the gas price for init free gas tx
+
+**Example setting the default value** (0):
+```
+[Sequencer]
+InitGasPriceMultiple=0
+```
+
+### <a name="Sequencer_QueryPendingTxsLimit"></a>10.13. `Sequencer.QueryPendingTxsLimit`
+
+**Type:** : `integer`
+
+**Default:** `0`
+
+**Description:** QueryPendingTxsLimit is used to limit amount txs from the db
+
+**Example setting the default value** (0):
+```
+[Sequencer]
+QueryPendingTxsLimit=0
 ```
 
 ## <a name="SequenceSender"></a>11. `[SequenceSender]`
