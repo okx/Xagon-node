@@ -23,6 +23,10 @@ const (
 	SystemSC = "0x000000000000000000000000000000005ca1ab1e"
 	// posConstant is the constant used to compute the position of the intermediate state root
 	posConstant = 1
+	// DSVersion3 is the first protobuf version
+	DSVersion3 uint8 = 3
+	// DSVersion4 is the second protobuf version, includes l2BlockEnd
+	DSVersion4 uint8 = 4
 )
 
 // DSBatch represents a data stream batch
@@ -87,7 +91,7 @@ type DSState interface {
 }
 
 // GenerateDataStreamFile generates or resumes a data stream file
-func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.StreamServer, stateDB DSState, readWIPBatch bool, imStateRoots *map[uint64][]byte, chainID uint64, upgradeEtrogBatchNumber uint64) error {
+func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.StreamServer, stateDB DSState, readWIPBatch bool, imStateRoots *map[uint64][]byte, chainID uint64, upgradeEtrogBatchNumber uint64, version uint8) error {
 	header := streamServer.GetHeader()
 
 	var currentBatchNumber uint64 = 0
@@ -177,6 +181,22 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 			return err
 		}
 
+		if version >= DSVersion4 {
+			genesisBlockEnd := &datastream.L2BlockEnd{
+				Number: genesisL2Block.L2BlockNumber,
+			}
+
+			marshalledGenesisBlockEnd, err := proto.Marshal(genesisBlockEnd)
+			if err != nil {
+				return err
+			}
+
+			_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK_END), marshalledGenesisBlockEnd)
+			if err != nil {
+				return err
+			}
+		}
+
 		genesisBatchEnd := &datastream.BatchEnd{
 			Number:        genesisL2Block.BatchNumber,
 			LocalExitRoot: common.Hash{}.Bytes(),
@@ -249,6 +269,43 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 			currentBatchNumber = l2Block.BatchNumber
 			previousTimestamp = l2Block.Timestamp
 			lastAddedL2BlockNumber = currentL2BlockNumber
+
+		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK_END):
+			log.Info("Latest entry type is L2BlockEnd")
+
+			l2BlockEnd := &datastream.L2BlockEnd{}
+			if err := proto.Unmarshal(latestEntry.Data, l2BlockEnd); err != nil {
+				return err
+			}
+
+			currentL2BlockNumber := l2BlockEnd.Number
+
+			// Getting the l2 block is needed in order to get the batch number and the timestamp
+			bookMark := &datastream.BookMark{
+				Type:  datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK,
+				Value: currentL2BlockNumber,
+			}
+
+			marshalledBookMark, err := proto.Marshal(bookMark)
+			if err != nil {
+				return err
+			}
+
+			l2BlockEntry, err := streamServer.GetFirstEventAfterBookmark(marshalledBookMark)
+			if err != nil {
+				return err
+			}
+
+			l2Block := &datastream.L2Block{}
+
+			if err := proto.Unmarshal(l2BlockEntry.Data, l2Block); err != nil {
+				return err
+			}
+
+			currentBatchNumber = l2Block.BatchNumber
+			previousTimestamp = l2Block.Timestamp
+			lastAddedL2BlockNumber = currentL2BlockNumber
+
 		case datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_TRANSACTION):
 			log.Info("Latest entry type is Transaction")
 
@@ -258,26 +315,43 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 			}
 
 			currentL2BlockNumber := transaction.L2BlockNumber
-			currentBatchNumber = transaction.L2BlockNumber
 			lastAddedL2BlockNumber = currentL2BlockNumber
 
+			// Get current batch number
+			bookMarkCurrentL2Block := &datastream.BookMark{
+				Type:  datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK,
+				Value: currentL2BlockNumber,
+			}
+
+			marshalledBookMarkCurrentL2Block, err := proto.Marshal(bookMarkCurrentL2Block)
+			if err != nil {
+				return err
+			}
+
+			currentL2BlockEntry, err := streamServer.GetFirstEventAfterBookmark(marshalledBookMarkCurrentL2Block)
+			if err != nil {
+				return err
+			}
+
+			currentL2Block := &datastream.L2Block{}
+			if err := proto.Unmarshal(currentL2BlockEntry.Data, currentL2Block); err != nil {
+				return err
+			}
+
+			currentBatchNumber = currentL2Block.BatchNumber
+
 			// Get Previous l2block timestamp
-			bookMark := &datastream.BookMark{
+			bookMarkPrevL2Block := &datastream.BookMark{
 				Type:  datastream.BookmarkType_BOOKMARK_TYPE_L2_BLOCK,
 				Value: currentL2BlockNumber - 1,
 			}
 
-			marshalledBookMark, err := proto.Marshal(bookMark)
+			marshalledBookMarkPrevL2Block, err := proto.Marshal(bookMarkPrevL2Block)
 			if err != nil {
 				return err
 			}
 
-			prevL2BlockEntryNumber, err := streamServer.GetBookmark(marshalledBookMark)
-			if err != nil {
-				return err
-			}
-
-			prevL2BlockEntry, err := streamServer.GetEntry(prevL2BlockEntryNumber)
+			prevL2BlockEntry, err := streamServer.GetFirstEventAfterBookmark(marshalledBookMarkPrevL2Block)
 			if err != nil {
 				return err
 			}
@@ -419,29 +493,31 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 			}
 
 			if len(batch.L2Blocks) == 0 {
-				// Empty batch
-				// Check if there is a GER update
-				if batch.GlobalExitRoot != currentGER && batch.GlobalExitRoot != (common.Hash{}) {
-					updateGER := &datastream.UpdateGER{
-						BatchNumber:    batch.BatchNumber,
-						Timestamp:      uint64(batch.Timestamp.Unix()),
-						GlobalExitRoot: batch.GlobalExitRoot.Bytes(),
-						Coinbase:       batch.Coinbase.Bytes(),
-						ForkId:         batch.ForkID,
-						ChainId:        chainID,
-						StateRoot:      batch.StateRoot.Bytes(),
-					}
+				if !batch.WIP && batch.ForkID < FORKID_ETROG {
+					// Empty batch
+					// Check if there is a GER update
+					if batch.GlobalExitRoot != currentGER && batch.GlobalExitRoot != (common.Hash{}) {
+						updateGER := &datastream.UpdateGER{
+							BatchNumber:    batch.BatchNumber,
+							Timestamp:      uint64(batch.Timestamp.Unix()),
+							GlobalExitRoot: batch.GlobalExitRoot.Bytes(),
+							Coinbase:       batch.Coinbase.Bytes(),
+							ForkId:         batch.ForkID,
+							ChainId:        chainID,
+							StateRoot:      batch.StateRoot.Bytes(),
+						}
 
-					marshalledUpdateGER, err := proto.Marshal(updateGER)
-					if err != nil {
-						return err
-					}
+						marshalledUpdateGER, err := proto.Marshal(updateGER)
+						if err != nil {
+							return err
+						}
 
-					_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_UPDATE_GER), marshalledUpdateGER)
-					if err != nil {
-						return err
+						_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_UPDATE_GER), marshalledUpdateGER)
+						if err != nil {
+							return err
+						}
+						currentGER = batch.GlobalExitRoot
 					}
-					currentGER = batch.GlobalExitRoot
 				}
 			} else {
 				for blockIndex, l2Block := range batch.L2Blocks {
@@ -607,23 +683,41 @@ func GenerateDataStreamFile(ctx context.Context, streamServer *datastreamer.Stre
 					}
 
 					currentGER = l2Block.GlobalExitRoot
+
+					if version >= DSVersion4 {
+						streamL2BlockEnd := &datastream.L2BlockEnd{
+							Number: l2Block.L2BlockNumber,
+						}
+
+						marshalledL2BlockEnd, err := proto.Marshal(streamL2BlockEnd)
+						if err != nil {
+							return err
+						}
+
+						_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK_END), marshalledL2BlockEnd)
+						if err != nil {
+							return err
+						}
+					}
 				}
 			}
 
-			batchEnd := &datastream.BatchEnd{
-				Number:        batch.BatchNumber,
-				LocalExitRoot: batch.LocalExitRoot.Bytes(),
-				StateRoot:     batch.StateRoot.Bytes(),
-			}
+			if !batch.WIP {
+				batchEnd := &datastream.BatchEnd{
+					Number:        batch.BatchNumber,
+					LocalExitRoot: batch.LocalExitRoot.Bytes(),
+					StateRoot:     batch.StateRoot.Bytes(),
+				}
 
-			marshalledBatch, err := proto.Marshal(batchEnd)
-			if err != nil {
-				return err
-			}
+				marshalledBatch, err := proto.Marshal(batchEnd)
+				if err != nil {
+					return err
+				}
 
-			_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END), marshalledBatch)
-			if err != nil {
-				return err
+				_, err = streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_BATCH_END), marshalledBatch)
+				if err != nil {
+					return err
+				}
 			}
 
 			// Commit at the end of each batch group

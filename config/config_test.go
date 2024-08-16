@@ -174,6 +174,14 @@ func Test_Defaults(t *testing.T) {
 			expectedValue: types.NewDuration(5 * time.Second),
 		},
 		{
+			path:          "Sequencer.StreamServer.InactivityTimeout",
+			expectedValue: types.NewDuration(120 * time.Second),
+		},
+		{
+			path:          "Sequencer.StreamServer.InactivityCheckInterval",
+			expectedValue: types.NewDuration(5 * time.Second),
+		},
+		{
 			path:          "Sequencer.StreamServer.Enabled",
 			expectedValue: false,
 		},

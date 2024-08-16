@@ -1,6 +1,8 @@
 package state
 
 import (
+	"fmt"
+
 	"github.com/0xPolygonHermez/zkevm-node/config/types"
 	"github.com/0xPolygonHermez/zkevm-node/db"
 )
@@ -71,15 +73,42 @@ type BatchConstraintsCfg struct {
 	MaxSHA256Hashes      uint32 `mapstructure:"MaxSHA256Hashes"`
 }
 
-// IsWithinConstraints checks if the counters are within the batch constraints
-func (c BatchConstraintsCfg) IsWithinConstraints(counters ZKCounters) bool {
-	return counters.GasUsed <= c.MaxCumulativeGasUsed &&
-		counters.KeccakHashes <= c.MaxKeccakHashes &&
-		counters.PoseidonHashes <= c.MaxPoseidonHashes &&
-		counters.PoseidonPaddings <= c.MaxPoseidonPaddings &&
-		counters.MemAligns <= c.MaxMemAligns &&
-		counters.Arithmetics <= c.MaxArithmetics &&
-		counters.Binaries <= c.MaxBinaries &&
-		counters.Steps <= c.MaxSteps &&
-		counters.Sha256Hashes_V2 <= c.MaxSHA256Hashes
+// CheckNodeLevelOOC checks if the counters are within the batch constraints
+func (c BatchConstraintsCfg) CheckNodeLevelOOC(counters ZKCounters) error {
+	oocList := ""
+
+	if counters.GasUsed > c.MaxCumulativeGasUsed {
+		oocList += "GasUsed, "
+	}
+	if counters.KeccakHashes > c.MaxKeccakHashes {
+		oocList += "KeccakHashes, "
+	}
+	if counters.PoseidonHashes > c.MaxPoseidonHashes {
+		oocList += "PoseidonHashes, "
+	}
+	if counters.PoseidonPaddings > c.MaxPoseidonPaddings {
+		oocList += "PoseidonPaddings, "
+	}
+	if counters.MemAligns > c.MaxMemAligns {
+		oocList += "MemAligns, "
+	}
+	if counters.Arithmetics > c.MaxArithmetics {
+		oocList += "Arithmetics, "
+	}
+	if counters.Binaries > c.MaxBinaries {
+		oocList += "Binaries, "
+	}
+	if counters.Steps > c.MaxSteps {
+		oocList += "Steps, "
+	}
+	if counters.Sha256Hashes_V2 > c.MaxSHA256Hashes {
+		oocList += "Sha256Hashes, "
+	}
+
+	if oocList != "" {
+		oocList = oocList[:len(oocList)-2] // Remove last comma and blank space
+		return fmt.Errorf("out of counters at node level (%s)", oocList)
+	}
+
+	return nil
 }

@@ -27,6 +27,7 @@ type StructLogRes struct {
 	Depth         int                `json:"depth"`
 	Error         string             `json:"error,omitempty"`
 	Stack         *[]string          `json:"stack,omitempty"`
+	ReturnData    *string            `json:"returnData,omitempty"`
 	Memory        *[]string          `json:"memory,omitempty"`
 	Storage       *map[string]string `json:"storage,omitempty"`
 	RefundCounter uint64             `json:"refund,omitempty"`
@@ -122,6 +123,14 @@ func (l *JSONLogger) ParseTrace(result *runtime.ExecutionResult, receipt types.R
 			}
 			structLogRes.Storage = &storage
 		}
+
+		var returnData *string
+		if l.cfg.EnableReturnData && len(step.ReturnData) > 0 {
+			rd := hex.EncodeToHex(step.ReturnData)
+			returnData = &rd
+		}
+
+		structLogRes.ReturnData = returnData
 
 		structLogs = append(structLogs, structLogRes)
 	}
