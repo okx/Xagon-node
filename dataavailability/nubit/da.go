@@ -3,16 +3,17 @@ package nubit
 import (
 	"context"
 	"encoding/binary"
+	"encoding/json"
+	"fmt"
 
 	share "github.com/RiemaLabs/nubit-node/da"
+	"github.com/rollkit/go-da"
 
 	client "github.com/RiemaLabs/nubit-node/rpc/rpc/client"
 	nodeBlob "github.com/RiemaLabs/nubit-node/strucs/btx"
 )
 
-type ID []byte
-type Namespace []byte
-type Blob []byte
+var ErrNamespaceMismatch = fmt.Errorf("namespace mismatch")
 
 type RpcNodeClient struct {
 	ctx    context.Context
@@ -46,95 +47,167 @@ func (c *RpcNodeClient) Close() {
 	c.cancel()
 }
 
-// func (c *RpcNodeClient) RandSendblobFornamespace(ns namespace.Namespace) (uint64, error) {
+func (c *RpcNodeClient) GetProofs(ctx context.Context, ids []da.ID, namespace da.Namespace) ([]da.Proof, error) {
 
-// 	ctx, cancle := context.WithTimeout(c.ctx, 40*time.Second)
-// 	defer cancle()
-
-// 	nsp, err := share.NamespaceFromBytes(ns.Bytes())
-// 	if err != nil {
-// 		panic(err)
-// 	}
-
-// 	body, err := nodeBlob.NewBlobV0(nsp, bytes.Repeat([]byte{0x01}, 500*1024))
-// 	if err != nil {
-// 		return 0, err
-// 	}
-
-// 	return c.client.Blob.Submit(ctx, []*nodeBlob.Blob{body}, 0.01)
-// }
-
-// func (c *RpcNodeClient) NodeInfo() string {
-// 	info, err := c.client.Node.Info(c.ctx)
-// 	if err != nil {
-// 		return ""
-// 	}
-// 	return fmt.Sprintf("type:%s, version:%s", info.Type, info.APIVersion)
-// }
-
-func (c *RpcNodeClient) GetProofs(ctx context.Context, ids []ID, namespace Namespace) ([]*nodeBlob.Proof, error) {
-
-	pss := make([]*nodeBlob.Proof, len(ids))
+	pss := make([]da.Proof, len(ids))
 	for i, id := range ids {
-		height := binary.BigEndian.Uint64(id[:8])
+		hbyte, commitment := ParseID(id)
+		height := binary.LittleEndian.Uint64(hbyte)
 		np, err := share.NamespaceFromBytes(namespace)
 		if err != nil {
 			return nil, err
 		}
-		p, err := c.client.Blob.GetProof(ctx, height, np, nodeBlob.KzgCommitment(id[8:]))
+		p, err := c.client.Blob.GetProof(ctx, height, np, nodeBlob.KzgCommitment(commitment))
 		if err != nil {
 			return nil, err
 		}
-		pss[i] = p
+
+		js, err := json.Marshal(p)
+		if nil != err {
+			return nil, err
+		}
+
+		pss[i] = js
 	}
 	return pss, nil
 }
 
-func (c *RpcNodeClient) Submit(ctx context.Context, blobs []Blob, gasPrice float64, namespace Namespace) ([]ID, error) {
+func (c *RpcNodeClient) Submit(ctx context.Context, blobs []da.Blob, gasPrice float64, namespace da.Namespace) ([]da.ID, error) {
 	nsp, err := share.NamespaceFromBytes(namespace)
 	if err != nil {
 		panic(err)
 	}
 
 	bcs := make([]*nodeBlob.Blob, 0, len(blobs))
+	commitments := make([]nodeBlob.KzgCommitment, 0, len(blobs))
 	for _, b := range blobs {
 		blob, err := nodeBlob.NewBlobV0(nsp, b)
 		if err != nil {
 			return nil, err
 		}
 		bcs = append(bcs, blob)
+		commitments = append(commitments, blob.Commitment)
 	}
 	height, err := c.client.Blob.Submit(ctx, bcs, nodeBlob.GasPrice(gasPrice))
-	_ = height
-	// TODO
-	return []ID{}, err
+	if nil != err {
+		return nil, err
+	}
+
+	hbytes := [8]byte{}
+	binary.LittleEndian.PutUint64(hbytes[:], height)
+
+	IDs := make([]da.ID, len(commitments))
+	for i, c := range commitments {
+		IDs[i] = MakeID(hbytes[:], c)
+	}
+	return IDs, err
 }
 
-/*
-	// MaxBlobSize returns the max blob size
-	MaxBlobSize(ctx context.Context) (uint64, error)
+// MaxBlobSize returns the max blob size
+// TODO Temporarily set to 1M
+func (c *RpcNodeClient) MaxBlobSize(ctx context.Context) (uint64, error) {
+	return 1024 * 1024, nil
+}
 
-	// Get returns Blob for each given ID, or an error.
-	//
-	// Error should be returned if ID is not formatted properly, there is no Blob for given ID or any other client-level
-	// error occurred (dropped connection, timeout, etc).
-	Get(ctx context.Context, ids []ID, namespace Namespace) ([]Blob, error)
+// Get returns Blob for each given ID, or an error.
+//
+// Error should be returned if ID is not formatted properly, there is no Blob for given ID or any other client-level
+// error occurred (dropped connection, timeout, etc).
+func (c *RpcNodeClient) Get(ctx context.Context, ids []da.ID, namespace da.Namespace) ([]da.Blob, error) {
+	nsp, err := share.NamespaceFromBytes(namespace)
+	if err != nil {
+		return nil, err
+	}
+	blobs := make([]da.Blob, len(ids))
+	for i, id := range ids {
+		hbyte, commitment := ParseID(id)
+		// if bytes.Equal(np, nsp) {
+		// 	return nil, ErrNamespaceMismatch
+		// }
+		height := binary.LittleEndian.Uint64(hbyte)
+		b, err := c.client.Blob.Get(ctx, height, nsp, nodeBlob.KzgCommitment(commitment))
+		if err != nil {
+			return nil, err
+		}
+		blobs[i] = b.Data
+	}
+	return blobs, nil
 
-	// GetIDs returns IDs of all Blobs located in DA at given height.
-	GetIDs(ctx context.Context, height uint64, namespace Namespace) ([]ID, error)
+}
 
-	// GetProofs returns inclusion Proofs for Blobs specified by their IDs.
-	GetProofs(ctx context.Context, ids []ID, namespace Namespace) ([]Proof, error)
+// GetIDs returns IDs of all Blobs located in DA at given height.
+func (c *RpcNodeClient) GetIDs(ctx context.Context, height uint64, namespace da.Namespace) ([]da.ID, error) {
+	shareNamespace, err := share.NamespaceFromBytes(namespace)
+	if err != nil {
+		return nil, err
+	}
 
-	// Commit creates a Commitment for each given Blob.
-	Commit(ctx context.Context, blobs []Blob, namespace Namespace) ([]Commitment, error)
+	blobs, err := c.client.Blob.GetAll(ctx, height, []share.Namespace{shareNamespace})
+	if nil != err {
+		return nil, err
+	}
+	ids := make([]da.ID, len(blobs))
+	hbytes := [8]byte{}
+	binary.LittleEndian.PutUint64(hbytes[:], height)
+	for i, b := range blobs {
+		ids[i] = MakeID(hbytes[:], b.Commitment)
+	}
 
-	// Submit submits the Blobs to Data Availability layer.
-	//
-	// This method is synchronous. Upon successful submission to Data Availability layer, it returns the IDs identifying blobs
-	// in DA.
-	Submit(ctx context.Context, blobs []Blob, gasPrice float64, namespace Namespace) ([]ID, error)
+	return ids, nil
+}
 
-	// Validate validates Commitments against the corresponding Proofs. This should be possible without retrieving the Blobs.
-	Validate(ctx context.Context, ids []ID, proofs []Proof, namespace Namespace) ([]bool, error)
-*/
+// Commit creates a Commitment for each given Blob.
+func (c *RpcNodeClient) Commit(ctx context.Context, blobs []da.Blob, namespace da.Namespace) ([]da.Commitment, error) {
+	nsp, err := share.NamespaceFromBytes(namespace)
+	if err != nil {
+		return nil, err
+	}
+	cs := make([]da.Commitment, len(blobs))
+	for i, b := range blobs {
+		bb, err := nodeBlob.NewBlobV0(nsp, b)
+		if err != nil {
+			return nil, err
+		}
+		cs[i] = bb.Commitment
+	}
+	return cs, nil
+}
+
+// Validate validates Commitments against the corresponding Proofs. This should be possible without retrieving the Blobs.
+func (c *RpcNodeClient) Validate(ctx context.Context, ids []da.ID, proofs []da.Proof, namespace da.Namespace) ([]bool, error) {
+	nsp, err := share.NamespaceFromBytes(namespace)
+	if err != nil {
+		return nil, err
+	}
+	valids := make([]bool, len(ids))
+	for i, id := range ids {
+		hbyte, commitment := ParseID(id)
+		height := binary.LittleEndian.Uint64(hbyte)
+		p, err := c.client.Blob.GetProof(ctx, height, nsp, nodeBlob.KzgCommitment(commitment))
+		if err != nil {
+			return nil, err
+		}
+
+		proof := new(nodeBlob.Proof)
+		if err := json.Unmarshal(proofs[i], proof); err != nil {
+			return nil, err
+		}
+
+		valids[i] = equal(proof, p)
+	}
+	return valids, nil
+}
+
+func equal(p, input *nodeBlob.Proof) bool {
+
+	if p.Len() != input.Len() {
+		return false
+	}
+
+	for i := 0; i < p.Len(); i++ {
+		if (*p)[i].Equal((*input)[i]) {
+			return false
+		}
+	}
+	return true
+}

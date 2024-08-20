@@ -11,7 +11,6 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/rollkit/go-da"
-	"github.com/rollkit/go-da/proxy"
 )
 
 // NubitDABackend implements the DA integration with Nubit DA layer
@@ -33,16 +32,24 @@ func MakeID(height []byte, commitment da.Commitment) da.ID {
 	return id
 }
 
+func ParseID(id da.ID) (height []byte, commitment da.Commitment) {
+	height = id[:heightLen]
+	commitment = id[heightLen:]
+	return
+}
+
 // NewNubitDABackend is the factory method to create a new instance of NubitDABackend
 func NewNubitDABackend(
 	cfg *Config,
 	privKey *ecdsa.PrivateKey,
 ) (*NubitDABackend, error) {
 	log.Infof("NubitDABackend config: %#v", cfg)
-	cn, err := proxy.NewClient(cfg.NubitRpcURL, cfg.NubitAuthKey)
-	if err != nil {
-		return nil, err
-	}
+	// cn, err := proxy.NewClient(cfg.NubitRpcURL, cfg.NubitAuthKey)
+	// if err != nil {
+	// 	return nil, err
+	// }
+
+	cn := NewNodeRpc(cfg.NubitRpcURL, cfg.NubitAuthKey)
 
 	va := NewJSONRPCValidator(cfg.NubitValidatorURL)
 
