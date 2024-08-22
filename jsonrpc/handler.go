@@ -150,7 +150,7 @@ func (h *Handler) HandleWs(reqBody []byte, wsConn *concurrentWsConn, httpReq *ht
 	if err := json.Unmarshal(reqBody, &req); err != nil {
 		return types.NewResponse(req, nil, types.NewRPCError(types.InvalidRequestErrorCode, "Invalid json request")).Bytes()
 	}
-
+	jsonID := req.ID
 	// XLayer handler
 	st := time.Now()
 	defer metrics.WsRequestMethodCount(req.Method)
@@ -169,6 +169,7 @@ func (h *Handler) HandleWs(reqBody []byte, wsConn *concurrentWsConn, httpReq *ht
 	if !relayed {
 		response = h.Handle(handleReq)
 	}
+	log.Infof("hellodex WS method %s jsonID %v %v took %v", req.Method, jsonID, response.ID, time.Since(st))
 
 	return response.Bytes()
 }

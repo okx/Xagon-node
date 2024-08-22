@@ -9,6 +9,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/nacos"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
+	"github.com/0xPolygonHermez/zkevm-node/log"
 )
 
 func (s *Server) registerNacos() {
@@ -88,6 +89,7 @@ func (s *Server) handleWsBatch(httpRequest *http.Request, wsConn *concurrentWsCo
 		if !relayed {
 			response = s.handler.Handle(req)
 		}
+		log.Infof("hellodex batch WS message method %v, jsonID %v %v cost %v", req.Method, req.ID, response.ID, time.Since(st))
 		responses = append(responses, response)
 		metrics.RequestMethodDuration(request.Method, st)
 	}
