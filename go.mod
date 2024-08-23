@@ -59,8 +59,8 @@ require (
 	github.com/RiemaLabs/go-libp2p-header v0.1.0-rc.1 // indirect
 	github.com/RiemaLabs/go-libp2p-messenger v0.1.0-rc.1 // indirect
 	github.com/RiemaLabs/merkletree v0.1.0-rc.1 // indirect
-	github.com/RiemaLabs/nubit-kzg v0.1.2-0.20240817025049-bcdd21440abf // indirect
-	github.com/RiemaLabs/nubit-validator v0.1.0-rc.4.0.20240817045448-9bac41b1967f // indirect
+	github.com/RiemaLabs/nubit-kzg v0.1.2-0.20240823030753-7b6a9885f6ff // indirect
+	github.com/RiemaLabs/nubit-validator v0.1.0-rc.4.0.20240823025143-a248bf3f72ac // indirect
 	github.com/RiemaLabs/rsmt2d v0.1.2-0.20240816110857-5f97e0be10c5 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
 	github.com/VictoriaMetrics/fastcache v1.12.1 // indirect
@@ -412,7 +412,7 @@ require (
 require (
 	github.com/0xPolygon/agglayer v0.0.1
 	github.com/0xPolygon/cdk-data-availability v0.0.5
-	github.com/RiemaLabs/nubit-node v0.1.0-rc.3.0.20240817110242-60ac84ce4e40
+	github.com/RiemaLabs/nubit-node v0.1.0-rc.3.0.20240823030808-bfb68309fd7a
 	github.com/RiemaLabs/nuport-offchain v0.0.0-20240820134941-64b93558de09
 	github.com/apolloconfig/agollo/v4 v4.0.9
 	github.com/cometbft/cometbft v0.38.10
@@ -436,5 +436,5 @@ replace (
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 	// broken goleveldb needs to be replaced for the cosmos-sdk and nubit-validator
 	github.com/syndtr/goleveldb => github.com/syndtr/goleveldb v1.0.1-0.20210819022825-2ae1ddf74ef7
-	github.com/tendermint/tendermint => github.com/RiemaLabs/nubit-core v0.1.0-rc.2.0.20240817105340-28a06c9db64d
+	github.com/tendermint/tendermint => github.com/RiemaLabs/nubit-core v0.1.0-rc.2.0.20240823023210-3a3bbe816fa1
 )

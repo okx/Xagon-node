@@ -136,7 +136,8 @@ func newDataAvailability(c config.Config, st *state.State, etherman *etherman.Cl
 			}
 			log.Infof("from pk %s", crypto.PubkeyToAddress(pk.PublicKey))
 		}
-		daBackend, err = nubit.NewNubitDABackend(&c.DataAvailability, pk)
+		//	daBackend, err = nubit.NewNubitDABackend(&c.DataAvailability, pk)
+		daBackend, err = nubit.NewGeneralDA(&c.DataAvailability, c.Etherman.URL)
 		if err != nil {
 			return nil, err
 		}

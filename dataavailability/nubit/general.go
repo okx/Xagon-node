@@ -1,7 +1,9 @@
 package nubit
 
 import (
+	"bytes"
 	"context"
+	"encoding/binary"
 	"fmt"
 
 	"github.com/RiemaLabs/nuport-offchain/das"
@@ -56,9 +58,19 @@ func (s *GeneralDA) PostSequence(ctx context.Context, batchesData [][]byte) ([]b
 }
 
 func (s *GeneralDA) GetSequence(ctx context.Context, batchHashes []common.Hash, dataAvailabilityMessage []byte) ([][]byte, error) {
-	bp := &das.BlobPointer{}
 
-	if err := bp.UnmarshalBinary(dataAvailabilityMessage); err != nil {
+	var flag byte
+
+	buf := bytes.NewReader(dataAvailabilityMessage)
+	binary.Read(buf, binary.BigEndian, &flag)
+	if flag != das.NubitMessageHeaderFlag {
+		return nil, fmt.Errorf("invalid data availability message flag, %d", flag)
+	}
+
+	bpBinary := make([]byte, len(dataAvailabilityMessage)-1)
+
+	bp := &das.BlobPointer{}
+	if err := bp.UnmarshalBinary(bpBinary); err != nil {
 		return nil, err
 	}
 
