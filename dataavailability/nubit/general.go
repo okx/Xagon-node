@@ -52,7 +52,7 @@ func (s *GeneralDA) PostSequence(ctx context.Context, batchesData [][]byte) ([]b
 		}
 		return reply.Receipt, nil
 	}
-	return nil, fmt.Errorf("Batch data is being submitted, try again later")
+	return nil, fmt.Errorf("another batch data is being submitted")
 }
 
 func (s *GeneralDA) GetSequence(ctx context.Context, batchHashes []common.Hash, dataAvailabilityMessage []byte) ([][]byte, error) {

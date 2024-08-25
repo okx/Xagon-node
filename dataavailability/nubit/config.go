@@ -16,8 +16,8 @@ const NubitMinCommitTime time.Duration = 12 * time.Second
 type Config struct {
 	NubitRpcURL string `mapstructure:"NubitRpcURL"`
 	// NubitValidatorURL       string         `mapstructure:"NubitValidatorURL"`
-	NubitAuthKey            string         `mapstructure:"NubitAuthKey"`
-	NubitNamespace          string         `mapstructure:"NubitNamespace"`
-	NubitGetProofMaxRetry   uint64         `mapstructure:"NubitGetProofMaxRetry"`
-	NubitGetProofWaitPeriod types.Duration `mapstructure:"NubitGetProofWaitPeriod"`
+	// NubitAuthKey            string         `mapstructure:"NubitAuthKey"`
+	// NubitNamespace          string         `mapstructure:"NubitNamespace"`
+	// NubitGetProofMaxRetry   uint64         `mapstructure:"NubitGetProofMaxRetry"`
+	// NubitGetProofWaitPeriod types.Duration `mapstructure:"NubitGetProofWaitPeriod"`
 }
