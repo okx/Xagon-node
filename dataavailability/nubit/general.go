@@ -1,41 +1,31 @@
 package nubit
 
 import (
-	"bytes"
 	"context"
-	"encoding/binary"
 	"fmt"
+	"sync/atomic"
+	"time"
 
-	"github.com/RiemaLabs/nuport-offchain/das"
+	"github.com/0xPolygonHermez/zkevm-node/dataavailability/nubit/proto"
 	"github.com/ethereum/go-ethereum/common"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 )
 
-type DaClient interface {
-	das.NubitWriter
-	das.NubitReader
-}
-
 type GeneralDA struct {
-	client DaClient
+	client     proto.GeneralDAClient
+	commitTime int64
 }
 
-func NewGeneralDA(cfg *Config, ethRpc string) (*GeneralDA, error) {
-	c := &das.DAConfig{
-		Rpc:         cfg.NubitRpcURL,
-		AuthToken:   cfg.NubitAuthKey,
-		GasPrice:    0.01,
-		NamespaceId: cfg.NubitNamespace,
-		ValidatorConfig: &das.ValidatorConfig{
-			TendermintRPC:  cfg.NubitValidatorURL,
-			BlobstreamAddr: "", // TODO: add blobstream address
-			VerifyAddr:     "", // TODO: add verify address
-			EthClient:      ethRpc,
-		},
-	}
-	da, err := das.NewNubitDA(c, nil)
+func NewGeneralDA(cfg *Config) (*GeneralDA, error) {
+	conn, err := grpc.NewClient(cfg.NubitRpcURL, grpc.WithTransportCredentials(insecure.NewCredentials()))
 	if err != nil {
 		return nil, err
 	}
+	defer conn.Close()
+
+	da := proto.NewGeneralDAClient(conn)
+
 	return &GeneralDA{
 		client: da,
 	}, nil
@@ -46,40 +36,33 @@ func (s *GeneralDA) Init() error {
 }
 
 func (s *GeneralDA) PostSequence(ctx context.Context, batchesData [][]byte) ([]byte, error) {
-	// lastCommitTime := time.Since(backend.commitTime)
-	// if lastCommitTime < NubitMinCommitTime {
-	// 	time.Sleep(NubitMinCommitTime - lastCommitTime)
-	// }
+	old := atomic.LoadInt64(&s.commitTime)
+	lastCommitTime := time.Since(time.Unix(old, 0))
+	if lastCommitTime < NubitMinCommitTime {
+		time.Sleep(NubitMinCommitTime - lastCommitTime)
+	}
 
 	// Encode NubitDA blob data
 	data := EncodeSequence(batchesData)
 
-	return s.client.Store(ctx, data)
+	if atomic.CompareAndSwapInt64(&s.commitTime, old, time.Now().Unix()) {
+		reply, err := s.client.Store(ctx, &proto.StoreRequest{Data: data})
+		if nil != err {
+			return nil, err
+		}
+		return reply.Receipt, nil
+	}
+	return nil, fmt.Errorf("Batch data is being submitted, try again later")
 }
 
 func (s *GeneralDA) GetSequence(ctx context.Context, batchHashes []common.Hash, dataAvailabilityMessage []byte) ([][]byte, error) {
 
-	var flag byte
-
-	buf := bytes.NewReader(dataAvailabilityMessage)
-	binary.Read(buf, binary.BigEndian, &flag)
-	if flag != das.NubitMessageHeaderFlag {
-		return nil, fmt.Errorf("invalid data availability message flag, %d", flag)
-	}
-
-	bpBinary := make([]byte, len(dataAvailabilityMessage)-1)
-
-	bp := &das.BlobPointer{}
-	if err := bp.UnmarshalBinary(bpBinary); err != nil {
-		return nil, err
-	}
-
-	result, err := s.client.Read(ctx, bp)
+	result, err := s.client.Read(ctx, &proto.Receipt{Data: dataAvailabilityMessage})
 	if err != nil {
 		return nil, err
 	}
 
-	batchData, hashs := DecodeSequence(result.Message)
+	batchData, hashs := DecodeSequence(result.Result)
 	if len(hashs) != len(batchHashes) {
 		return nil, fmt.Errorf("invalid L2 batch data retrieval arguments, %d != %d", len(hashs), len(batchHashes))
 	}
