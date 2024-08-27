@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/0xPolygonHermez/zkevm-node/dataavailability/nubit/proto"
+	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/ethereum/go-ethereum/common"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
@@ -22,7 +23,8 @@ func NewGeneralDA(cfg *Config) (*GeneralDA, error) {
 	if err != nil {
 		return nil, err
 	}
-	defer conn.Close()
+
+	log.Debugf(" generalDA connected to %s", cfg.NubitRpcURL)
 
 	da := proto.NewGeneralDAClient(conn)
 
@@ -36,6 +38,7 @@ func (s *GeneralDA) Init() error {
 }
 
 func (s *GeneralDA) PostSequence(ctx context.Context, batchesData [][]byte) ([]byte, error) {
+	log.Debugf("GeneralDA PostSequence: %d batches", len(batchesData))
 	old := atomic.LoadInt64(&s.commitTime)
 	lastCommitTime := time.Since(time.Unix(old, 0))
 	if lastCommitTime < NubitMinCommitTime {

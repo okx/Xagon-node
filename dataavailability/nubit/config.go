@@ -2,8 +2,6 @@ package nubit
 
 import (
 	"time"
-
-	"github.com/0xPolygonHermez/zkevm-node/config/types"
 )
 
 // NubitNamespaceBytesLength is the fixed-size bytes array.
