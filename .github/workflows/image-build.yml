@@ -1,0 +1,61 @@
+name: image-builder
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to build'
+        required: false
+      tag:
+        description: 'Tag to build'
+        required: false
+
+jobs:
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        id: checkout
+        with:
+          ref: ${{ github.event.inputs.branch || github.event.inputs.tag }}
+
+      - name: check param
+        run: |
+          branch=${{ github.event.inputs.branch }}
+          tag=${{ github.event.inputs.tag }}
+          if [ -z "$branch" ] && [ -z "$tag" ]; then
+            echo "Both branch and tag are empty."
+            exit 1
+          elif [ -n "$branch" ] && [ -n "$tag" ]; then
+            echo "Both branch and tag are provided. Please provide only one."
+            exit 1
+          else
+            echo "Correct! One of branch or tag is provided."
+          fi
+
+      - name: Get current date
+        id: date
+        run: echo "DATE=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_ENV
+
+      - name: Get commit hash
+        id: commit
+        run: echo "HASH=$(git rev-parse --short HEAD)" >> $GITHUB_ENV
+
+      - name: Generate image tag
+        id: tag
+        run: |
+          BRANCH_TAG=$(echo "${{ github.event.inputs.branch || github.event.inputs.tag }}" | sed 's/\//_/g')
+          IMAGE_TAG="${BRANCH_TAG}_${DATE}_${HASH}"
+          echo "IMAGE_TAG=${IMAGE_TAG}" >> $GITHUB_ENV
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and Push Docker image
+        run: |
+          docker build -t "xlayerdev/xlayer-node:${{ env.IMAGE_TAG }}" .
+          docker push "xlayerdev/xlayer-node:${{ env.IMAGE_TAG }}"
