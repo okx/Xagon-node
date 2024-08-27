@@ -244,11 +244,7 @@ AggLayerURL = ""
 SequencerPrivateKey = {}
 
 [DataAvailability]
-NubitRpcURL = "http://127.0.0.1:26658"
-NubitAuthKey = ""
-NubitNamespace = "xlayer"
-NubitGetProofMaxRetry = "10"
-NubitGetProofWaitPeriod = "5s"
+NubitRpcURL = "http://127.0.0.1:9876"
 
 [L2GasPriceSuggester]
 Type = "follower"
