@@ -5,6 +5,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
+	"time"
 )
 
 // ApiRelayConfig is the api relay config
@@ -53,12 +54,14 @@ func getRelayDestURI(localDestURI string) string {
 func tryRelay(localCfg ApiRelayConfig, request types.Request) (types.Response, bool) {
 	if shouldRelay(localCfg, &request) {
 		destURI := getRelayDestURI(localCfg.DestURI)
+		ts := time.Now()
 		res, err := client.JSONRPCRelay(destURI, request, shouldRerun(localCfg))
 		if err != nil {
 			log.Errorf("failed to relay %v to %s: %v", request.Method, destURI, err)
 			metrics.RequestRelayFailCount(request.Method)
 			return types.Response{}, false
 		}
+		log.Infof("relayed %v to %s in %v", request.Method, destURI, time.Since(ts))
 
 		return res, true
 	}
