@@ -1,11 +1,12 @@
 package jsonrpc
 
 import (
+	"time"
+
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/client"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/jsonrpc/types"
 	"github.com/0xPolygonHermez/zkevm-node/log"
-	"time"
 )
 
 // ApiRelayConfig is the api relay config

@@ -964,6 +964,10 @@
 						"Rerun": {
 							"type": "boolean",
 							"default": false
+						},
+						"RelayAll": {
+							"type": "boolean",
+							"default": false
 						}
 					},
 					"additionalProperties": false,
