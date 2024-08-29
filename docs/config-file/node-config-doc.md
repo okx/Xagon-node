@@ -2412,12 +2412,13 @@ ApiKeys=[]
 **Type:** : `object`
 **Description:** ApiRelay defines the relay configuration for the API
 
-| Property                            | Pattern | Type            | Deprecated | Definition | Title/Description |
-| ----------------------------------- | ------- | --------------- | ---------- | ---------- | ----------------- |
-| - [Enabled](#RPC_ApiRelay_Enabled ) | No      | boolean         | No         | -          | -                 |
-| - [DestURI](#RPC_ApiRelay_DestURI ) | No      | string          | No         | -          | -                 |
-| - [RPCs](#RPC_ApiRelay_RPCs )       | No      | array of string | No         | -          | -                 |
-| - [Rerun](#RPC_ApiRelay_Rerun )     | No      | boolean         | No         | -          | -                 |
+| Property                              | Pattern | Type            | Deprecated | Definition | Title/Description |
+| ------------------------------------- | ------- | --------------- | ---------- | ---------- | ----------------- |
+| - [Enabled](#RPC_ApiRelay_Enabled )   | No      | boolean         | No         | -          | -                 |
+| - [DestURI](#RPC_ApiRelay_DestURI )   | No      | string          | No         | -          | -                 |
+| - [RPCs](#RPC_ApiRelay_RPCs )         | No      | array of string | No         | -          | -                 |
+| - [Rerun](#RPC_ApiRelay_Rerun )       | No      | boolean         | No         | -          | -                 |
+| - [RelayAll](#RPC_ApiRelay_RelayAll ) | No      | boolean         | No         | -          | -                 |
 
 #### <a name="RPC_ApiRelay_Enabled"></a>8.30.1. `RPC.ApiRelay.Enabled`
 
@@ -2465,6 +2466,18 @@ RPCs=[]
 ```
 [RPC.ApiRelay]
 Rerun=false
+```
+
+#### <a name="RPC_ApiRelay_RelayAll"></a>8.30.5. `RPC.ApiRelay.RelayAll`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Example setting the default value** (false):
+```
+[RPC.ApiRelay]
+RelayAll=false
 ```
 
 ## <a name="Synchronizer"></a>9. `[Synchronizer]`
