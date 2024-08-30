@@ -5,7 +5,7 @@ go 1.21.1
 toolchain go1.22.2
 
 require (
-	github.com/0xPolygonHermez/zkevm-data-streamer v0.2.3-RC4
+	github.com/0xPolygonHermez/zkevm-data-streamer v0.2.3
 	github.com/didip/tollbooth/v6 v6.1.2
 	github.com/dop251/goja v0.0.0-20230806174421-c933cf95e127
 	github.com/ethereum/go-ethereum v1.13.11
@@ -27,13 +27,13 @@ require (
 	github.com/spf13/viper v1.18.2
 	github.com/stretchr/testify v1.9.0
 	github.com/umbracle/ethgo v0.1.4-0.20230712173909-df37dddf16f0
-	github.com/urfave/cli/v2 v2.26.0
-	go.uber.org/zap v1.26.0
-	golang.org/x/crypto v0.26.0
-	golang.org/x/net v0.28.0
-	golang.org/x/sync v0.8.0
-	google.golang.org/grpc v1.65.0
-	google.golang.org/protobuf v1.34.2
+	github.com/urfave/cli/v2 v2.27.1
+	go.uber.org/zap v1.27.0
+	golang.org/x/crypto v0.18.0
+	golang.org/x/net v0.20.0
+	golang.org/x/sync v0.6.0
+	google.golang.org/grpc v1.60.1
+	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v2 v2.4.0
 	gopkg.in/yaml.v3 v3.0.1
 )

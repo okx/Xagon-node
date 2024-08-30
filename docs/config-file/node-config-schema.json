@@ -505,6 +505,46 @@
 					"type": "integer",
 					"description": "FreeGasLimit is the max gas allowed use to do a free gas tx",
 					"default": 0
+				},
+				"EnableFreeGasList": {
+					"type": "boolean",
+					"description": "EnableFreeGasList enable the special project of XLayer for free gas",
+					"default": false
+				},
+				"FreeGasList": {
+					"items": {
+						"properties": {
+							"Name": {
+								"type": "string"
+							},
+							"FromList": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							"ToList": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							"MethodSigs": {
+								"items": {
+									"type": "string"
+								},
+								"type": "array"
+							},
+							"GasPriceMultiple": {
+								"type": "number"
+							}
+						},
+						"additionalProperties": false,
+						"type": "object",
+						"description": "FreeGasInfo contains the details for what tx should be free"
+					},
+					"type": "array",
+					"description": "FreeGasList is the special project of XLayer"
 				}
 			},
 			"additionalProperties": false,
@@ -1448,6 +1488,26 @@
 							"type": "string",
 							"title": "Duration",
 							"description": "WriteTimeout is the TCP write timeout when sending data to a datastream client",
+							"default": "5s",
+							"examples": [
+								"1m",
+								"300ms"
+							]
+						},
+						"InactivityTimeout": {
+							"type": "string",
+							"title": "Duration",
+							"description": "InactivityTimeout is the timeout to kill an inactive datastream client connection",
+							"default": "2m0s",
+							"examples": [
+								"1m",
+								"300ms"
+							]
+						},
+						"InactivityCheckInterval": {
+							"type": "string",
+							"title": "Duration",
+							"description": "InactivityCheckInterval is the time interval to check for datastream client connections that have reached the inactivity timeout to kill them",
 							"default": "5s",
 							"examples": [
 								"1m",

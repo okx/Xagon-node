@@ -70,34 +70,43 @@ func (_m *WorkerMock) DeleteTxPendingToStore(txHash common.Hash, addr common.Add
 	_m.Called(txHash, addr)
 }
 
-// GetBestFittingTx provides a mock function with given fields: remainingResources, highReservedCounters
-func (_m *WorkerMock) GetBestFittingTx(remainingResources state.BatchResources, highReservedCounters state.ZKCounters) (*TxTracker, error) {
-	ret := _m.Called(remainingResources, highReservedCounters)
+// GetBestFittingTx provides a mock function with given fields: remainingResources, highReservedCounters, fistL2Block
+func (_m *WorkerMock) GetBestFittingTx(remainingResources state.BatchResources, highReservedCounters state.ZKCounters, fistL2Block bool) (*TxTracker, []*TxTracker, error) {
+	ret := _m.Called(remainingResources, highReservedCounters, fistL2Block)
 
 	if len(ret) == 0 {
 		panic("no return value specified for GetBestFittingTx")
 	}
 
 	var r0 *TxTracker
-	var r1 error
-	if rf, ok := ret.Get(0).(func(state.BatchResources, state.ZKCounters) (*TxTracker, error)); ok {
-		return rf(remainingResources, highReservedCounters)
+	var r1 []*TxTracker
+	var r2 error
+	if rf, ok := ret.Get(0).(func(state.BatchResources, state.ZKCounters, bool) (*TxTracker, []*TxTracker, error)); ok {
+		return rf(remainingResources, highReservedCounters, fistL2Block)
 	}
-	if rf, ok := ret.Get(0).(func(state.BatchResources, state.ZKCounters) *TxTracker); ok {
-		r0 = rf(remainingResources, highReservedCounters)
+	if rf, ok := ret.Get(0).(func(state.BatchResources, state.ZKCounters, bool) *TxTracker); ok {
+		r0 = rf(remainingResources, highReservedCounters, fistL2Block)
 	} else {
 		if ret.Get(0) != nil {
 			r0 = ret.Get(0).(*TxTracker)
 		}
 	}
 
-	if rf, ok := ret.Get(1).(func(state.BatchResources, state.ZKCounters) error); ok {
-		r1 = rf(remainingResources, highReservedCounters)
+	if rf, ok := ret.Get(1).(func(state.BatchResources, state.ZKCounters, bool) []*TxTracker); ok {
+		r1 = rf(remainingResources, highReservedCounters, fistL2Block)
 	} else {
-		r1 = ret.Error(1)
+		if ret.Get(1) != nil {
+			r1 = ret.Get(1).([]*TxTracker)
+		}
 	}
 
-	return r0, r1
+	if rf, ok := ret.Get(2).(func(state.BatchResources, state.ZKCounters, bool) error); ok {
+		r2 = rf(remainingResources, highReservedCounters, fistL2Block)
+	} else {
+		r2 = ret.Error(2)
+	}
+
+	return r0, r1, r2
 }
 
 // MoveTxPendingToStore provides a mock function with given fields: txHash, addr

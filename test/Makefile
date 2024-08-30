@@ -1,4 +1,4 @@
-DOCKERCOMPOSE := docker-compose -f docker-compose.yml
+DOCKERCOMPOSE := docker compose -f docker-compose.yml
 DOCKERCOMPOSEAPPSEQ := xlayer-sequencer
 DOCKERCOMPOSEAPPSEQSENDER := xlayer-sequence-sender
 DOCKERCOMPOSEAPPSIGNER := xlayer-signer

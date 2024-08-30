@@ -210,6 +210,8 @@ StateConsistencyCheckInterval = "5s"
 		Filename = ""
 		Version = 0
 		WriteTimeout = "5s"
+		InactivityTimeout = "120s"
+		InactivityCheckInterval = "5s"
 		Enabled = false
 
 [SequenceSender]

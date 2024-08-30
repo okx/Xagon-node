@@ -71,8 +71,8 @@ func (w *Worker) addTxTracker(ctx context.Context, tx *TxTracker, mutex *sync.Mu
 	}
 
 	// Make sure the transaction's reserved ZKCounters are within the constraints.
-	if !w.batchConstraints.IsWithinConstraints(tx.ReservedZKCounters) {
-		log.Errorf("outOfCounters error (node level) for tx %s", tx.Hash.String())
+	if err := w.batchConstraints.CheckNodeLevelOOC(tx.ReservedZKCounters); err != nil {
+		log.Infof("out of counters (node level) when adding tx %s from address %s, error: %v", tx.Hash, tx.From, err)
 		mutexUnlock(mutex)
 		return nil, pool.ErrOutOfCounters
 	}
@@ -422,7 +422,7 @@ func (w *Worker) DeleteTxPendingToStore(txHash common.Hash, addr common.Address)
 }
 
 // GetBestFittingTx gets the most efficient tx that fits in the available batch resources
-func (w *Worker) GetBestFittingTx(remainingResources state.BatchResources, highReservedCounters state.ZKCounters) (*TxTracker, error) {
+func (w *Worker) GetBestFittingTx(remainingResources state.BatchResources, highReservedCounters state.ZKCounters, isFistL2BlockAndEmpty bool) (*TxTracker, []*TxTracker, error) {
 	w.workerMutex.Lock()
 	defer w.workerMutex.Unlock()
 
@@ -434,7 +434,7 @@ func (w *Worker) GetBestFittingTx(remainingResources state.BatchResources, highR
 		w.reorgedTxs = w.reorgedTxs[1:]
 		if addrQueue, found := w.pool[reorgedTx.FromStr]; found {
 			if addrQueue.readyTx != nil && addrQueue.readyTx.Hash == reorgedTx.Hash {
-				return reorgedTx, nil
+				return reorgedTx, nil, nil
 			} else {
 				log.Warnf("reorged tx %s is not the ready tx for addrQueue %s, this shouldn't happen", reorgedTx.Hash, reorgedTx.From)
 			}
@@ -444,12 +444,14 @@ func (w *Worker) GetBestFittingTx(remainingResources state.BatchResources, highR
 	}
 
 	if w.txSortedList.len() == 0 {
-		return nil, ErrTransactionsListEmpty
+		return nil, nil, ErrTransactionsListEmpty
 	}
 
 	var (
-		tx         *TxTracker
-		foundMutex sync.RWMutex
+		tx          *TxTracker
+		foundMutex  sync.RWMutex
+		oocTxs      []*TxTracker
+		oocTxsMutex sync.Mutex
 	)
 
 	nGoRoutines := runtime.NumCPU()
@@ -474,7 +476,14 @@ func (w *Worker) GetBestFittingTx(remainingResources state.BatchResources, highR
 				needed, _ := getNeededZKCounters(highReservedCounters, txCandidate.UsedZKCounters, txCandidate.ReservedZKCounters)
 				fits, _ := bresources.Fits(state.BatchResources{ZKCounters: needed, Bytes: txCandidate.Bytes})
 				if !fits {
-					// We don't add this Tx
+					// If we are looking for a tx for the first empty L2 block in the batch and this tx doesn't fits in the batch, then this tx will never fit in any batch.
+					// We add the tx to the oocTxs slice. That slice will be returned to set these txs as invalid (and delete them from the worker) from the finalizer code
+					if isFistL2BlockAndEmpty {
+						oocTxsMutex.Lock()
+						oocTxs = append(oocTxs, txCandidate)
+						oocTxsMutex.Unlock()
+					}
+					// We continue looking for a tx that fits in the batch
 					continue
 				}
 
@@ -498,9 +507,15 @@ func (w *Worker) GetBestFittingTx(remainingResources state.BatchResources, highR
 		if !tx.IsClaimTx {
 			w.claimGp = tx.GasPrice
 		}
-		return tx, nil
+		return tx, oocTxs, nil
 	} else {
-		return nil, ErrNoFittingTransaction
+		// If the length of the oocTxs slice is equal to the length of the txSortedList this means that all the txs are ooc,
+		// therefore we need to return an error indicating that the list is empty
+		if w.txSortedList.len() == len(oocTxs) {
+			return nil, oocTxs, ErrTransactionsListEmpty
+		} else {
+			return nil, oocTxs, ErrNoFittingTransaction
+		}
 	}
 }
 

@@ -137,9 +137,11 @@ StateConsistencyCheckInterval = "5s"
 	[Sequencer.StreamServer]
 		Port = 6900
 		Filename = "/datastreamer/datastream.bin"
-		Version = 1
+		Version = 4
 		ChainID = 195
 		WriteTimeout = "5s"
+		InactivityTimeout = "120s"
+		InactivityCheckInterval = "5s"
 		Enabled = true
 
 [SequenceSender]

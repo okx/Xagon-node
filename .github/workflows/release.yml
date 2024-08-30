@@ -14,7 +14,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up Go
-        uses: actions/setup-go@v3
+        uses: actions/setup-go@v5
         with:
           go-version: 1.21
 
@@ -22,9 +22,9 @@ jobs:
         run: go install github.com/gobuffalo/packr/v2/packr2@v2.8.3
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v4
+        uses: goreleaser/goreleaser-action@v6
         with:
-          version: latest
+          version: '~> v2'
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.TOKEN_RELEASE }}
@@ -45,16 +45,6 @@ jobs:
           mv cardona/config/environments/cardona/example.env cardona
           sed -i -e "s/image: zkevm-node/image: hermeznetwork\/zkevm-node:$GIT_TAG_NAME/g" cardona/docker-compose.yml
           zip -r cardona.zip cardona
-          # TESTNET
-          mkdir -p testnet/config/environments/testnet
-          mkdir -p testnet/db/scripts
-          cp config/environments/testnet/* testnet/config/environments/testnet
-          cp docker-compose.yml testnet
-          sed -i 's/\/config\/environments\/${ZKEVM_NETWORK}/\/config\/environments\/testnet/g' testnet/docker-compose.yml
-          cp db/scripts/init_prover_db.sql testnet/db/scripts
-          mv testnet/config/environments/testnet/example.env testnet
-          sed -i -e "s/image: zkevm-node/image: hermeznetwork\/zkevm-node:$GIT_TAG_NAME/g" testnet/docker-compose.yml
-          zip -r testnet.zip testnet
           # MAINNET
           mkdir -p mainnet/config/environments/mainnet
           mkdir -p mainnet/db/scripts

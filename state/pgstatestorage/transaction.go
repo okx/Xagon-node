@@ -124,7 +124,13 @@ func (p *PostgresStorage) GetTxsOlderThanNL1Blocks(ctx context.Context, nL1Block
 // GetEncodedTransactionsByBatchNumber returns the encoded field of all
 // transactions in the given batch.
 func (p *PostgresStorage) GetEncodedTransactionsByBatchNumber(ctx context.Context, batchNumber uint64, dbTx pgx.Tx) (encodedTxs []string, effectivePercentages []uint8, err error) {
-	const getEncodedTransactionsByBatchNumberSQL = "SELECT encoded, COALESCE(effective_percentage, 255) FROM state.transaction t INNER JOIN state.l2block b ON t.l2_block_num = b.block_num WHERE b.batch_num = $1 ORDER BY l2_block_num ASC"
+	const getEncodedTransactionsByBatchNumberSQL = `
+		SELECT encoded, COALESCE(effective_percentage, 255) FROM state.transaction t 
+		INNER JOIN state.l2block b ON t.l2_block_num = b.block_num 
+		INNER JOIN state.receipt r ON t.hash = r.tx_hash
+		WHERE b.batch_num = $1 
+		ORDER BY l2_block_num, r.tx_index ASC
+		`
 
 	e := p.getExecQuerier(dbTx)
 	rows, err := e.Query(ctx, getEncodedTransactionsByBatchNumberSQL, batchNumber)

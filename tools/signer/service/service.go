@@ -66,10 +66,12 @@ func NewServer(cfg *config.Config, ctx context.Context) *Server {
 		ZkEVMAddr:                 cfg.L1.PolygonZkEVMAddress,
 		PolAddr:                   cfg.L1.PolygonMaticAddress,
 		GlobalExitRootManagerAddr: cfg.L1.GlobalExitRootManagerAddr,
+		RollupManagerAddr:         cfg.L1.PolygonRollupManagerAddress,
 	}
 
 	var err error
 	srv.ethClient, err = etherman.NewClient(srv.ethCfg, srv.l1Cfg)
+	log.Infof("url: %v, l1 chain id: %v, zkevm addr: %v, rollup manager addr: %v", srv.ethCfg.URL, srv.l1Cfg.L1ChainID, srv.l1Cfg.ZkEVMAddr, srv.l1Cfg.RollupManagerAddr)
 	if err != nil {
 		log.Fatal("error creating etherman client. Error: %v", err)
 	}

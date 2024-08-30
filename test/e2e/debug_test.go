@@ -321,6 +321,7 @@ func TestDebugTraceTransaction(t *testing.T) {
 		{name: "log0 all zeros", prepare: prepareLog0, createSignedTx: createLog0AllZeros},
 		{name: "log0 empty", prepare: prepareLog0, createSignedTx: createLog0Empty},
 		{name: "log0 short", prepare: prepareLog0, createSignedTx: createLog0Short},
+		{name: "sha256", prepare: prepareSha256, createSignedTx: createSha256},
 
 		// failed transactions
 		{name: "sc deployment reverted", createSignedTx: createScDeployRevertedSignedTx},
@@ -481,20 +482,27 @@ func TestDebugTraceTransaction(t *testing.T) {
 					referenceStructLogMap := referenceStructLogsMap[structLogIndex].(map[string]interface{})
 					resultStructLogMap := resultStructLogsMap[structLogIndex].(map[string]interface{})
 
-					require.Equal(t, referenceStructLogMap["pc"], resultStructLogMap["pc"], fmt.Sprintf("invalid struct log pc for network %s", networkName))
-					require.Equal(t, referenceStructLogMap["op"], resultStructLogMap["op"], fmt.Sprintf("invalid struct log op for network %s", networkName))
-					require.Equal(t, referenceStructLogMap["depth"], resultStructLogMap["depth"], fmt.Sprintf("invalid struct log depth for network %s", networkName))
+					referencePC := referenceStructLogMap["pc"]
+					referenceOP := referenceStructLogMap["op"]
 
-					pc := referenceStructLogMap["pc"]
-					op := referenceStructLogMap["op"]
+					require.Equal(t, referencePC, resultStructLogMap["pc"], fmt.Sprintf("invalid struct log pc for network %s", networkName))
+					require.Equal(t, referenceOP, resultStructLogMap["op"], fmt.Sprintf("invalid struct log op for network %s pc %v", networkName, referencePC))
+					require.Equal(t, referenceStructLogMap["depth"], resultStructLogMap["depth"], fmt.Sprintf("invalid struct log depth for network %s pc %v op %v", networkName, referencePC, referenceOP))
+
+					referenceReturnData, found := referenceStructLogMap["returnData"].([]interface{})
+					if found {
+						resultReturnData := resultStructLogMap["returnData"].([]interface{})
+
+						require.Equal(t, referenceReturnData, resultReturnData, fmt.Sprintf("return data doesn't match for pc %v op %v", referencePC, referenceOP))
+					}
 
 					referenceStack, found := referenceStructLogMap["stack"].([]interface{})
 					if found {
 						resultStack := resultStructLogMap["stack"].([]interface{})
 
-						require.Equal(t, len(referenceStack), len(resultStack), fmt.Sprintf("stack size doesn't match for pc %v op %v", pc, op))
+						require.Equal(t, len(referenceStack), len(resultStack), fmt.Sprintf("stack size doesn't match for pc %v op %v", referencePC, referenceOP))
 						for stackIndex := range referenceStack {
-							require.Equal(t, referenceStack[stackIndex], resultStack[stackIndex], fmt.Sprintf("stack index %v doesn't match for pc %v op %v", stackIndex, pc, op))
+							require.Equal(t, referenceStack[stackIndex], resultStack[stackIndex], fmt.Sprintf("stack index %v doesn't match for pc %v op %v", stackIndex, referencePC, referenceOP))
 						}
 					}
 
@@ -502,9 +510,9 @@ func TestDebugTraceTransaction(t *testing.T) {
 					if found {
 						resultMemory := resultStructLogMap["memory"].([]interface{})
 
-						require.Equal(t, len(referenceMemory), len(resultMemory), fmt.Sprintf("memory size doesn't match for pc %v op %v", pc, op))
+						require.Equal(t, len(referenceMemory), len(resultMemory), fmt.Sprintf("memory size doesn't match for pc %v op %v", referencePC, referenceOP))
 						for memoryIndex := range referenceMemory {
-							require.Equal(t, referenceMemory[memoryIndex], resultMemory[memoryIndex], fmt.Sprintf("memory index %v doesn't match for pc %v op %v", memoryIndex, pc, op))
+							require.Equal(t, referenceMemory[memoryIndex], resultMemory[memoryIndex], fmt.Sprintf("memory index %v doesn't match for pc %v op %v", memoryIndex, referencePC, referenceOP))
 						}
 					}
 
@@ -512,11 +520,11 @@ func TestDebugTraceTransaction(t *testing.T) {
 					if found {
 						resultStorage := resultStructLogMap["storage"].(map[string]interface{})
 
-						require.Equal(t, len(referenceStorage), len(resultStorage), fmt.Sprintf("storage size doesn't match for pc %v op %v", pc, op))
+						require.Equal(t, len(referenceStorage), len(resultStorage), fmt.Sprintf("storage size doesn't match for pc %v op %v", referencePC, referenceOP))
 						for storageKey, referenceStorageValue := range referenceStorage {
 							resultStorageValue, found := resultStorage[storageKey]
 							require.True(t, found, "storage address not found")
-							require.Equal(t, referenceStorageValue, resultStorageValue, fmt.Sprintf("storage value doesn't match for address %v for pc %v op %v", storageKey, pc, op))
+							require.Equal(t, referenceStorageValue, resultStorageValue, fmt.Sprintf("storage value doesn't match for address %v for pc %v op %v", storageKey, referencePC, referenceOP))
 						}
 					}
 				}

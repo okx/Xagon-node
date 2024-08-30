@@ -670,7 +670,7 @@ func (f *finalizer) openNewWIPL2Block(ctx context.Context, prevTimestamp uint64,
 
 		f.wipBatch.imHighReservedZKCounters = newHighZKCounters
 	} else {
-		log.Infof("new wip L2 block [%d] reserved resources exceeds the remaining batch resources, overflow resource: %s, closing WIP batch and creating new one. counters: {batch: %s, used: %s, reserved: %s, needed: %s, high: %s}",
+		log.Infof("new wip L2 block [%d] needed resources exceeds the remaining batch resources, overflow resource: %s, closing WIP batch and creating new one. counters: {batch: %s, used: %s, reserved: %s, needed: %s, high: %s}",
 			f.wipL2Block.trackingNum, overflowResource,
 			f.logZKCounters(f.wipBatch.imRemainingResources.ZKCounters), f.logZKCounters(f.wipL2Block.usedZKCountersOnNew), f.logZKCounters(f.wipL2Block.reservedZKCountersOnNew), f.logZKCounters(neededZKCounters), f.logZKCounters(f.wipBatch.imHighReservedZKCounters))
 	}
