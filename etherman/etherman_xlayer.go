@@ -1025,6 +1025,7 @@ func (etherMan *Client) sequenceBatchesXLayer(opts bind.TransactOpts, sequences 
 		log.Debugf("Batches to send: %+v", batches)
 		log.Debug("l2CoinBase: ", l2Coinbase)
 		log.Debug("Sequencer address: ", opts.From)
+		log.Debug("dataAvailabilityMessage: ", dataAvailabilityMessage)
 		a, err2 := polygonzkevm.PolygonvalidiumXlayerMetaData.GetAbi()
 		if err2 != nil {
 			log.Error("error getting abi. Error: ", err2)
