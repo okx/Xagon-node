@@ -12,7 +12,6 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/event"
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/state"
-	"github.com/ethereum/go-ethereum/common"
 	ethTypes "github.com/ethereum/go-ethereum/core/types"
 	"github.com/jackc/pgx/v4"
 )
@@ -101,25 +100,13 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 	s.ethTxManager.ProcessPendingMonitoredTxs(ctx, ethTxManagerOwner, func(result ethtxmanager.MonitoredTxResult, dbTx pgx.Tx) {
 		if result.Status == ethtxmanager.MonitoredTxStatusConfirmed {
 			if len(result.Txs) > 0 {
-				var txL1BlockNumber uint64
-				var txHash common.Hash
-				receiptFound := false
-				for _, tx := range result.Txs {
-					if tx.Receipt != nil {
-						txL1BlockNumber = tx.Receipt.BlockNumber.Uint64()
-						txHash = tx.Tx.Hash()
-						receiptFound = true
-						break
-					}
-				}
-
-				if !receiptFound {
-					s.halt(ctx, fmt.Errorf("monitored tx %s for sequence [%d-%d] is confirmed but doesn't have a receipt", result.ID, s.lastSequenceInitialBatch, s.lastSequenceEndBatch))
+				if result.BlockNumber == nil {
+					s.halt(ctx, fmt.Errorf("monitored tx %s for sequence [%d-%d] is confirmed but doesn't have L1 block number where tx was mined", result.ID, s.lastSequenceInitialBatch, s.lastSequenceEndBatch))
 				}
 
 				// wait L1 confirmation blocks
-				log.Infof("waiting %d L1 block confirmations for sequence [%d-%d], L1 block: %d, tx: %s",
-					s.cfg.SequenceL1BlockConfirmations, s.lastSequenceInitialBatch, s.lastSequenceEndBatch, txL1BlockNumber, txHash)
+				log.Infof("waiting %d L1 block confirmations for sequence [%d-%d], L1 block: %d",
+					s.cfg.SequenceL1BlockConfirmations, s.lastSequenceInitialBatch, s.lastSequenceEndBatch, result.BlockNumber)
 				for {
 					lastL1BlockHeader, err := s.etherman.GetLatestBlockHeader(ctx)
 					if err != nil {
@@ -127,7 +114,7 @@ func (s *SequenceSender) tryToSendSequence(ctx context.Context) {
 					} else {
 						lastL1BlockNumber := lastL1BlockHeader.Number.Uint64()
 
-						if lastL1BlockNumber >= txL1BlockNumber+s.cfg.SequenceL1BlockConfirmations {
+						if lastL1BlockNumber >= result.BlockNumber.Uint64()+s.cfg.SequenceL1BlockConfirmations {
 							log.Infof("continuing, last L1 block: %d", lastL1BlockNumber)
 							break
 						}

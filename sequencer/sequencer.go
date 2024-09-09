@@ -75,7 +75,7 @@ func (s *Sequencer) Start(ctx context.Context) {
 
 	// Start stream server if enabled
 	if s.cfg.StreamServer.Enabled {
-		s.streamServer, err = datastreamer.NewServer(s.cfg.StreamServer.Port, s.cfg.StreamServer.Version, s.cfg.StreamServer.ChainID, state.StreamTypeSequencer, s.cfg.StreamServer.Filename, s.cfg.StreamServer.WriteTimeout.Duration, &s.cfg.StreamServer.Log)
+		s.streamServer, err = datastreamer.NewServer(s.cfg.StreamServer.Port, s.cfg.StreamServer.Version, s.cfg.StreamServer.ChainID, state.StreamTypeSequencer, s.cfg.StreamServer.Filename, s.cfg.StreamServer.WriteTimeout.Duration, s.cfg.StreamServer.InactivityTimeout.Duration, s.cfg.StreamServer.InactivityCheckInterval.Duration, &s.cfg.StreamServer.Log)
 		if err != nil {
 			log.Fatalf("failed to create stream server, error: %v", err)
 		}
@@ -89,7 +89,7 @@ func (s *Sequencer) Start(ctx context.Context) {
 	}
 
 	if s.streamServer != nil {
-		go s.sendDataToStreamer(s.cfg.StreamServer.ChainID)
+		go s.sendDataToStreamer(s.cfg.StreamServer.ChainID, s.cfg.StreamServer.Version)
 	}
 
 	s.workerReadyTxsCond = newTimeoutCond(&sync.Mutex{})
@@ -136,7 +136,7 @@ func (s *Sequencer) checkStateInconsistency(ctx context.Context) {
 }
 
 func (s *Sequencer) updateDataStreamerFile(ctx context.Context, chainID uint64) {
-	err := state.GenerateDataStreamFile(ctx, s.streamServer, s.stateIntf, true, nil, chainID, s.cfg.StreamServer.UpgradeEtrogBatchNumber)
+	err := state.GenerateDataStreamFile(ctx, s.streamServer, s.stateIntf, true, nil, chainID, s.cfg.StreamServer.UpgradeEtrogBatchNumber, s.cfg.StreamServer.Version)
 	if err != nil {
 		log.Fatalf("failed to generate data streamer file, error: %v", err)
 	}
@@ -231,18 +231,19 @@ func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) erro
 		return err
 	}
 
-	// XLayer claim tx
-	freeGp, isClaimTx := s.checkFreeGas(tx, txTracker)
+	// XLayer free gas tx
+	freeGp, isClaimTx, gp := s.checkFreeGas(tx, txTracker)
 	if freeGp {
 		defaultGp := s.pool.GetDynamicGasPrice()
-		baseGp := s.worker.getBaseClaimGp(defaultGp)
-		copyBaseGp := new(big.Int).Set(baseGp)
+		copyBaseGp := new(big.Int)
 		if isClaimTx {
 			txTracker.IsClaimTx = true
-			txTracker.GasPrice = copyBaseGp.Mul(copyBaseGp, new(big.Int).SetUint64(uint64(getGasPriceMultiple(s.cfg.GasPriceMultiple))))
+			baseGp := s.worker.getBaseClaimGp(defaultGp)
+			copyBaseGp.Set(baseGp)
 		} else {
-			txTracker.GasPrice = defaultGp.Mul(defaultGp, new(big.Int).SetUint64(uint64(getInitGasPriceMultiple(s.cfg.InitGasPriceMultiple))))
+			copyBaseGp.Set(defaultGp)
 		}
+		txTracker.GasPrice = copyBaseGp.Mul(copyBaseGp, new(big.Int).SetUint64(uint64(gp)))
 	}
 
 	replacedTx, dropReason := s.worker.AddTxTracker(ctx, txTracker)
@@ -262,7 +263,7 @@ func (s *Sequencer) addTxToWorker(ctx context.Context, tx pool.Transaction) erro
 }
 
 // sendDataToStreamer sends data to the data stream server
-func (s *Sequencer) sendDataToStreamer(chainID uint64) {
+func (s *Sequencer) sendDataToStreamer(chainID uint64, version uint8) {
 	var err error
 	for {
 		// Read error from previous iteration
@@ -386,6 +387,24 @@ func (s *Sequencer) sendDataToStreamer(chainID uint64) {
 					_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_TRANSACTION), marshalledL2Transaction)
 					if err != nil {
 						log.Errorf("failed to add l2tx stream entry for l2block %d, error: %v", l2Block.L2BlockNumber, err)
+						continue
+					}
+				}
+
+				if version >= state.DSVersion4 {
+					streamL2BlockEnd := &datastream.L2BlockEnd{
+						Number: l2Block.L2BlockNumber,
+					}
+
+					marshalledL2BlockEnd, err := proto.Marshal(streamL2BlockEnd)
+					if err != nil {
+						log.Errorf("failed to marshal l2block %d, error: %v", l2Block.L2BlockNumber, err)
+						continue
+					}
+
+					_, err = s.streamServer.AddStreamEntry(datastreamer.EntryType(datastream.EntryType_ENTRY_TYPE_L2_BLOCK_END), marshalledL2BlockEnd)
+					if err != nil {
+						log.Errorf("failed to add stream entry for l2blockEnd %d, error: %v", l2Block.L2BlockNumber, err)
 						continue
 					}
 				}

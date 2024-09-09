@@ -51,6 +51,10 @@ type StreamServerCfg struct {
 	UpgradeEtrogBatchNumber uint64 `mapstructure:"UpgradeEtrogBatchNumber"`
 	// WriteTimeout is the TCP write timeout when sending data to a datastream client
 	WriteTimeout types.Duration `mapstructure:"WriteTimeout"`
+	// InactivityTimeout is the timeout to kill an inactive datastream client connection
+	InactivityTimeout types.Duration `mapstructure:"InactivityTimeout"`
+	// InactivityCheckInterval is the time interval to check for datastream client connections that have reached the inactivity timeout to kill them
+	InactivityCheckInterval types.Duration `mapstructure:"InactivityCheckInterval"`
 }
 
 // Config is the configuration for the tool

@@ -473,7 +473,7 @@ func (e *EthEndpoints) GetFilterChanges(filterID string) (interface{}, types.Err
 				return nil, rpcErr
 			}
 			if len(res) == 0 {
-				return nil, nil
+				return []common.Hash{}, nil
 			}
 			return res, nil
 		}
@@ -488,7 +488,7 @@ func (e *EthEndpoints) GetFilterChanges(filterID string) (interface{}, types.Err
 				return nil, rpcErr
 			}
 			if len(res) == 0 {
-				return nil, nil
+				return []common.Hash{}, nil
 			}
 			return res, nil
 		}
@@ -511,7 +511,7 @@ func (e *EthEndpoints) GetFilterChanges(filterID string) (interface{}, types.Err
 			}
 			res := resInterface.([]types.Log)
 			if len(res) == 0 {
-				return nil, nil
+				return []types.Log{}, nil
 			}
 			return res, nil
 		}

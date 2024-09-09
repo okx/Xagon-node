@@ -21,6 +21,11 @@ type apolloConfig struct {
 	FreeGasCountPerAddr  uint64
 	FreeGasLimit         uint64
 
+	// for special project
+	EnableFreeGasList  bool
+	FreeGasFromNameMap map[string]string       // map[from]projectName
+	FreeGasList        map[string]*FreeGasInfo // map[projectName]FreeGasInfo
+
 	BlockedList []string
 
 	sync.RWMutex
@@ -41,6 +46,21 @@ func (c *apolloConfig) enable() bool {
 	c.RLock()
 	defer c.RUnlock()
 	return c.EnableApollo
+}
+
+func (c *apolloConfig) setFreeGasList(freeGasList []FreeGasInfo) {
+	if c == nil || !c.EnableApollo {
+		return
+	}
+	c.FreeGasFromNameMap = make(map[string]string)
+	c.FreeGasList = make(map[string]*FreeGasInfo, len(freeGasList))
+	for _, info := range freeGasList {
+		for _, from := range info.FromList {
+			c.FreeGasFromNameMap[from] = info.Name
+		}
+		infoCopy := info
+		c.FreeGasList[info.Name] = &infoCopy
+	}
 }
 
 func (c *apolloConfig) setFreeGasAddresses(freeGasAddrs []string) {
@@ -95,6 +115,8 @@ func UpdateConfig(apolloConfig Config) {
 	getApolloConfig().setFreeGasExAddresses(apolloConfig.FreeGasExAddress)
 	getApolloConfig().FreeGasCountPerAddr = apolloConfig.FreeGasCountPerAddr
 	getApolloConfig().FreeGasLimit = apolloConfig.FreeGasLimit
+	getApolloConfig().EnableFreeGasList = apolloConfig.EnableFreeGasList
+	getApolloConfig().setFreeGasList(apolloConfig.FreeGasList)
 
 	getApolloConfig().Unlock()
 }
@@ -119,10 +141,10 @@ func isFreeGasAddress(localFreeGasAddrs []string, address common.Address) bool {
 	if getApolloConfig().enable() {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
-		return contains(getApolloConfig().FreeGasAddresses, address)
+		return Contains(getApolloConfig().FreeGasAddresses, address)
 	}
 
-	return contains(localFreeGasAddrs, address)
+	return Contains(localFreeGasAddrs, address)
 }
 
 func getEnableFreeGasByNonce(enableFreeGasByNonce bool) bool {
@@ -139,10 +161,10 @@ func isFreeGasExAddress(localFreeGasExAddrs []string, address common.Address) bo
 	if getApolloConfig().enable() {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
-		return contains(getApolloConfig().FreeGasExAddress, address)
+		return Contains(getApolloConfig().FreeGasExAddress, address)
 	}
 
-	return contains(localFreeGasExAddrs, address)
+	return Contains(localFreeGasExAddrs, address)
 }
 
 func getFreeGasCountPerAddr(localFreeGasCountPerAddr uint64) uint64 {
@@ -197,8 +219,39 @@ func isBlockedAddress(localBlockedList []string, address common.Address) bool {
 	if getApolloConfig().enable() {
 		getApolloConfig().RLock()
 		defer getApolloConfig().RUnlock()
-		return contains(getApolloConfig().BlockedList, address)
+		return Contains(getApolloConfig().BlockedList, address)
 	}
 
-	return contains(localBlockedList, address)
+	return Contains(localBlockedList, address)
+}
+
+// GetEnableSpecialFreeGasList returns enable flag of FreeGasList
+func GetEnableSpecialFreeGasList(enableFreeGasList bool) bool {
+	if getApolloConfig().enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		return getApolloConfig().EnableFreeGasList
+	}
+	return enableFreeGasList
+}
+
+// GetSpecialFreeGasList returns the special project in XLayer for free gas
+func GetSpecialFreeGasList(freeGasList []FreeGasInfo) (map[string]string, map[string]*FreeGasInfo) {
+	if getApolloConfig().enable() {
+		getApolloConfig().RLock()
+		defer getApolloConfig().RUnlock()
+		return getApolloConfig().FreeGasFromNameMap, getApolloConfig().FreeGasList
+	}
+
+	freeGasFromNameMap := make(map[string]string)
+	freeGasMap := make(map[string]*FreeGasInfo, len(freeGasList))
+	for _, info := range freeGasList {
+		for _, from := range info.FromList {
+			freeGasFromNameMap[from] = info.Name
+		}
+		infoCopy := info
+		freeGasMap[info.Name] = &infoCopy
+	}
+
+	return freeGasFromNameMap, freeGasMap
 }

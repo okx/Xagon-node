@@ -30,6 +30,7 @@ import (
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/Memory"
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/OpCallAux"
 	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/Revert2"
+	"github.com/0xPolygonHermez/zkevm-node/test/contracts/bin/Sha"
 	"github.com/0xPolygonHermez/zkevm-node/test/operations"
 	"github.com/0xPolygonHermez/zkevm-node/test/testutils"
 	"github.com/ethereum/go-ethereum"
@@ -949,6 +950,32 @@ func createLog0Short(t *testing.T, ctx context.Context, auth *bind.TransactOpts,
 	opts.GasLimit = fixedTxGasLimit
 
 	tx, err := sc.OpLog01(&opts)
+	require.NoError(t, err)
+
+	return tx, nil
+}
+
+func prepareSha256(t *testing.T, ctx context.Context, auth *bind.TransactOpts, client *ethclient.Client) (map[string]interface{}, error) {
+	_, tx, sc, err := Sha.DeploySha(auth, client)
+	require.NoError(t, err)
+
+	err = operations.WaitTxToBeMined(ctx, client, tx, operations.DefaultTimeoutTxToBeMined)
+	require.NoError(t, err)
+
+	return map[string]interface{}{
+		"sc": sc,
+	}, nil
+}
+
+func createSha256(t *testing.T, ctx context.Context, auth *bind.TransactOpts, client *ethclient.Client, customData map[string]interface{}) (*ethTypes.Transaction, error) {
+	scInterface := customData["sc"]
+	sc := scInterface.(*Sha.Sha)
+
+	opts := *auth
+	opts.NoSend = true
+	opts.GasLimit = fixedTxGasLimit
+
+	tx, err := sc.Hash(&opts)
 	require.NoError(t, err)
 
 	return tx, nil

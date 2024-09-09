@@ -31,9 +31,20 @@ const (
 	MainnetBridgeURL = "https://www.okx.com/xlayer/bridge"
 )
 
-func contains(s []string, ele common.Address) bool {
+// Contains returns if string[] contains ele string
+func Contains(s []string, ele common.Address) bool {
 	for _, e := range s {
 		if common.HexToAddress(e) == ele {
+			return true
+		}
+	}
+	return false
+}
+
+// ContainsMethod returns if data has prefix of method sig
+func ContainsMethod(data string, methods []string) bool {
+	for _, m := range methods {
+		if strings.HasPrefix(data, m) {
 			return true
 		}
 	}
@@ -113,9 +124,23 @@ func (p *Pool) GetDynamicGasPrice() *big.Int {
 }
 
 func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.Address) (bool, error) {
-	if isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims { // claim tx
+	// claim tx
+	if isFreeGasAddress(p.cfg.FreeGasAddress, from) && poolTx.IsClaims {
 		return true, nil
 	}
+
+	// special project
+	if GetEnableSpecialFreeGasList(p.cfg.EnableFreeGasList) {
+		fromToName, freeGpList := GetSpecialFreeGasList(p.cfg.FreeGasList)
+		info := freeGpList[fromToName[from.String()]]
+		if info != nil &&
+			Contains(info.ToList, *poolTx.To()) &&
+			ContainsMethod("0x"+common.Bytes2Hex(poolTx.Data()), info.MethodSigs) {
+			return true, nil
+		}
+	}
+
+	// new bridge address
 	if getEnableFreeGasByNonce(p.cfg.EnableFreeGasByNonce) && poolTx.GasPrice().Cmp(big.NewInt(0)) == 0 { // free-gas tx by count
 		isFreeAddr, err := p.storage.IsFreeGasAddr(ctx, from)
 		if err != nil {

@@ -134,6 +134,12 @@ func (a *Aggregator) Start(ctx context.Context) error {
 		return fmt.Errorf("failed to initialize proofs cache %w", err)
 	}
 
+	for !a.isSynced(ctx, nil) {
+		log.Info("Waiting for synchronizer to sync...")
+		time.Sleep(a.cfg.RetryTime.Duration)
+		continue
+	}
+
 	address := fmt.Sprintf("%s:%d", a.cfg.Host, a.cfg.Port)
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
