@@ -175,6 +175,10 @@ AggLayerTxTimeout = "5m"
 AggLayerURL = ""
 SequencerPrivateKey = {}
 
+[DataAvailability]
+NubitRpcURL = "0.0.0.0:9876"
+
+
 [EthTxManager]
 ForcedGas = 0
 PrivateKeys = [

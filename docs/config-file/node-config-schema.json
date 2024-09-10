@@ -1825,28 +1825,7 @@
 			"properties": {
 				"NubitRpcURL": {
 					"type": "string",
-					"default": "http://127.0.0.1:26658"
-				},
-				"NubitAuthKey": {
-					"type": "string",
-					"default": ""
-				},
-				"NubitNamespace": {
-					"type": "string",
-					"default": "xlayer"
-				},
-				"NubitGetProofMaxRetry": {
-					"type": "integer",
-					"default": 10
-				},
-				"NubitGetProofWaitPeriod": {
-					"type": "string",
-					"title": "Duration",
-					"default": "5s",
-					"examples": [
-						"1m",
-						"300ms"
-					]
+					"default": "http://127.0.0.1:9876"
 				}
 			},
 			"additionalProperties": false,
