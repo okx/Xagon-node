@@ -142,7 +142,6 @@ func newDataAvailability(c config.Config, st *state.State, etherman *etherman.Cl
 			return nil, err
 		}
 		log.Info("generalDA is constructed successfully")
-
 	default:
 		return nil, fmt.Errorf("unexpected / unsupported DA protocol: %s", daProtocolName)
 	}
