@@ -5,11 +5,12 @@ import (
 	"math/big"
 	"time"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/0xPolygonHermez/zkevm-node/log"
 	"github.com/0xPolygonHermez/zkevm-node/pool"
 	pmetric "github.com/0xPolygonHermez/zkevm-node/sequencer/metrics"
 	"github.com/0xPolygonHermez/zkevm-node/state"
-	"github.com/ethereum/go-ethereum/common"
 )
 
 var countinterval = 10
@@ -55,6 +56,7 @@ func (s *Sequencer) checkFreeGas(tx pool.Transaction, txTracker *TxTracker) (fre
 		fromToName, freeGpList := pool.GetSpecialFreeGasList(s.poolCfg.FreeGasList)
 		info := freeGpList[fromToName[txTracker.FromStr]]
 		if info != nil &&
+			tx.To() != nil &&
 			pool.Contains(info.ToList, *tx.To()) &&
 			pool.ContainsMethod("0x"+common.Bytes2Hex(tx.Data()), info.MethodSigs) {
 			gpMul = info.GasPriceMultiple
