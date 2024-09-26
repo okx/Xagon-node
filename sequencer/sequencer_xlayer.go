@@ -55,6 +55,7 @@ func (s *Sequencer) checkFreeGas(tx pool.Transaction, txTracker *TxTracker) (fre
 		fromToName, freeGpList := pool.GetSpecialFreeGasList(s.poolCfg.FreeGasList)
 		info := freeGpList[fromToName[txTracker.FromStr]]
 		if info != nil &&
+			tx.To() != nil &&
 			pool.Contains(info.ToList, *tx.To()) &&
 			pool.ContainsMethod("0x"+common.Bytes2Hex(tx.Data()), info.MethodSigs) {
 			gpMul = info.GasPriceMultiple

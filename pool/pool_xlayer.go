@@ -134,6 +134,7 @@ func (p *Pool) checkFreeGp(ctx context.Context, poolTx Transaction, from common.
 		fromToName, freeGpList := GetSpecialFreeGasList(p.cfg.FreeGasList)
 		info := freeGpList[fromToName[from.String()]]
 		if info != nil &&
+			poolTx.To() != nil &&
 			Contains(info.ToList, *poolTx.To()) &&
 			ContainsMethod("0x"+common.Bytes2Hex(poolTx.Data()), info.MethodSigs) {
 			return true, nil
