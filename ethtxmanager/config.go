@@ -51,4 +51,7 @@ type Config struct {
 
 	// CustodialAssets is the configuration for the custodial assets
 	CustodialAssets CustodialAssetsConfig `mapstructure:"CustodialAssets"`
+
+	// RPC is the configuration for the rpc server
+	RPC RPCConfig `mapstructure:"RPC"`
 }

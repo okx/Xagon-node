@@ -18,6 +18,7 @@ import (
 	"github.com/ethereum/go-ethereum/common"
 	"github.com/ethereum/go-ethereum/core/types"
 	"github.com/jackc/pgx/v4"
+	"net/http"
 )
 
 const (
@@ -45,6 +46,9 @@ type Client struct {
 	etherman ethermanInterface
 	storage  storageInterface
 	state    stateInterface
+
+	// X Layer
+	srv *http.Server
 }
 
 // New creates new eth tx manager
@@ -219,6 +223,7 @@ func (c *Client) Start() {
 // Stop will stops the monitored tx management
 func (c *Client) Stop() {
 	c.cancel()
+	c.stopRPC()
 }
 
 // Reorg updates all monitored txs from provided block number until the last one to

@@ -99,6 +99,10 @@ MaxGasPriceLimit = 0
 		OperateAmount = 0
 		RequestSignURI = "/priapi/v1/assetonchain/ecology/ecologyOperate"
 		QuerySignURI = "/priapi/v1/assetonchain/ecology/querySignDataByOrderNo"
+   [RPC]
+	    Enable = false
+		Host = "0.0.0.0"
+		Port = "7001"
 
 [RPC]
 Host = "0.0.0.0"
