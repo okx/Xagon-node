@@ -24,14 +24,14 @@ type Response struct {
 }
 
 func (c *Client) startRPC() error {
-	if c == nil || !c.cfg.RPC.Enable {
+	if c == nil || !c.cfg.HTTP.Enable {
 		return nil
 	}
 	if c.srv != nil {
 		return fmt.Errorf("server already started")
 	}
 
-	address := fmt.Sprintf("%s:%d", c.cfg.RPC.Host, c.cfg.RPC.Port)
+	address := fmt.Sprintf("%s:%d", c.cfg.HTTP.Host, c.cfg.HTTP.Port)
 
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
