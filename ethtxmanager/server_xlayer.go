@@ -1,12 +1,13 @@
 package ethtxmanager
 
 import (
-	"net/http"
+	"encoding/json"
 	"fmt"
 	"net"
-	"github.com/0xPolygonHermez/zkevm-node/log"
+	"net/http"
 	"time"
-	"encoding/json"
+
+	"github.com/0xPolygonHermez/zkevm-node/log"
 )
 
 const (
@@ -14,6 +15,7 @@ const (
 	referOrderId = "referOrderId"
 )
 
+// Response is the response structure for the rpc server
 type Response struct {
 	Code         int    `json:"code"`
 	Data         string `json:"data"`
@@ -23,12 +25,14 @@ type Response struct {
 	Message      string `json:"message"`
 }
 
-func (c *Client) startRPC() error {
+func (c *Client) startRPC() {
 	if c == nil || !c.cfg.HTTP.Enable {
-		return nil
+		log.Infof("rpc server is disabled")
+		return
 	}
 	if c.srv != nil {
-		return fmt.Errorf("server already started")
+		log.Errorf("server already started")
+		return
 	}
 
 	address := fmt.Sprintf("%s:%d", c.cfg.HTTP.Host, c.cfg.HTTP.Port)
@@ -36,7 +40,7 @@ func (c *Client) startRPC() error {
 	lis, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Errorf("failed to create tcp listener: %v", err)
-		return err
+		return
 	}
 
 	mux := http.NewServeMux()
@@ -52,28 +56,29 @@ func (c *Client) startRPC() error {
 	if err = c.srv.Serve(lis); err != nil {
 		if err == http.ErrServerClosed {
 			log.Infof("http server stopped")
-			return nil
+			return
 		}
 		log.Errorf("closed http connection: %v", err)
-		return err
+		return
 	}
 
-	return nil
+	return
 }
 
-func (c *Client) stopRPC() error {
+func (c *Client) stopRPC() {
 	if c == nil || c.srv == nil {
-		return nil
+		return
 	}
 
 	if err := c.srv.Close(); err != nil {
 		log.Errorf("failed to close http server: %v", err)
-		return err
+		return
 	}
 
-	return nil
+	return
 }
 
+// ServeHTTP handles the incoming HTTP requests
 func (c *Client) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		var resp Response

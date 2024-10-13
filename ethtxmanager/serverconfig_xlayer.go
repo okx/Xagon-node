@@ -1,5 +1,6 @@
 package ethtxmanager
 
+// RPCConfig is the configuration for the rpc server
 type RPCConfig struct {
 	// Enable is the flag to enable the rpc server
 	Enable bool `mapstructure:"Enable"`
