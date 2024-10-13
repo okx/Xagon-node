@@ -250,6 +250,7 @@ Url=""
 | - [GasPriceMarginFactor](#EthTxManager_GasPriceMarginFactor )   | No      | number          | No         | -          | GasPriceMarginFactor is used to multiply the suggested gas price provided by the network<br />in order to allow a different gas price to be set for all the transactions and making it<br />easier to have the txs prioritized in the pool, default value is 1.<br /><br />ex:<br />suggested gas price: 100<br />GasPriceMarginFactor: 1<br />gas price = 100<br /><br />suggested gas price: 100<br />GasPriceMarginFactor: 1.1<br />gas price = 110                                                                                                                                                                                              |
 | - [MaxGasPriceLimit](#EthTxManager_MaxGasPriceLimit )           | No      | integer         | No         | -          | MaxGasPriceLimit helps avoiding transactions to be sent over an specified<br />gas price amount, default value is 0, which means no limit.<br />If the gas price provided by the network and adjusted by the GasPriceMarginFactor<br />is greater than this configuration, transaction will have its gas price set to<br />the value configured in this config as the limit.<br /><br />ex:<br /><br />suggested gas price: 100<br />gas price margin factor: 20%<br />max gas price limit: 150<br />tx gas price = 120<br /><br />suggested gas price: 100<br />gas price margin factor: 20%<br />max gas price limit: 110<br />tx gas price = 110 |
 | - [CustodialAssets](#EthTxManager_CustodialAssets )             | No      | object          | No         | -          | CustodialAssets is the configuration for the custodial assets                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| - [HTTP](#EthTxManager_HTTP )                                   | No      | object          | No         | -          | HTTP is the configuration for the rpc server                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 
 ### <a name="EthTxManager_FrequencyToMonitorTxs"></a>6.1. `EthTxManager.FrequencyToMonitorTxs`
 
@@ -683,6 +684,59 @@ AccessKey=""
 ```
 [EthTxManager.CustodialAssets]
 SecretKey=""
+```
+
+### <a name="EthTxManager_HTTP"></a>6.8. `[EthTxManager.HTTP]`
+
+**Type:** : `object`
+**Description:** HTTP is the configuration for the rpc server
+
+| Property                               | Pattern | Type    | Deprecated | Definition | Title/Description                           |
+| -------------------------------------- | ------- | ------- | ---------- | ---------- | ------------------------------------------- |
+| - [Enable](#EthTxManager_HTTP_Enable ) | No      | boolean | No         | -          | Enable is the flag to enable the rpc server |
+| - [Host](#EthTxManager_HTTP_Host )     | No      | string  | No         | -          | Host is the host of the rpc server          |
+| - [Port](#EthTxManager_HTTP_Port )     | No      | integer | No         | -          | RPCPort is the port of the rpc server       |
+
+#### <a name="EthTxManager_HTTP_Enable"></a>6.8.1. `EthTxManager.HTTP.Enable`
+
+**Type:** : `boolean`
+
+**Default:** `false`
+
+**Description:** Enable is the flag to enable the rpc server
+
+**Example setting the default value** (false):
+```
+[EthTxManager.HTTP]
+Enable=false
+```
+
+#### <a name="EthTxManager_HTTP_Host"></a>6.8.2. `EthTxManager.HTTP.Host`
+
+**Type:** : `string`
+
+**Default:** `"0.0.0.0"`
+
+**Description:** Host is the host of the rpc server
+
+**Example setting the default value** ("0.0.0.0"):
+```
+[EthTxManager.HTTP]
+Host="0.0.0.0"
+```
+
+#### <a name="EthTxManager_HTTP_Port"></a>6.8.3. `EthTxManager.HTTP.Port`
+
+**Type:** : `integer`
+
+**Default:** `7001`
+
+**Description:** RPCPort is the port of the rpc server
+
+**Example setting the default value** (7001):
+```
+[EthTxManager.HTTP]
+Port=7001
 ```
 
 ## <a name="Pool"></a>7. `[Pool]`
