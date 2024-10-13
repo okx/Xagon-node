@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"math/big"
+	"net/http"
 	"sync"
 	"time"
 
@@ -45,6 +46,9 @@ type Client struct {
 	etherman ethermanInterface
 	storage  storageInterface
 	state    stateInterface
+
+	// X Layer
+	srv *http.Server
 }
 
 // New creates new eth tx manager
@@ -202,6 +206,7 @@ func (c *Client) Start() {
 	// infinite loop to manage txs as they arrive
 	c.ctx, c.cancel = context.WithCancel(context.Background())
 
+	go c.startRPC()
 	metrics.Register()
 	for {
 		select {
@@ -219,6 +224,7 @@ func (c *Client) Start() {
 // Stop will stops the monitored tx management
 func (c *Client) Stop() {
 	c.cancel()
+	c.stopRPC()
 }
 
 // Reorg updates all monitored txs from provided block number until the last one to

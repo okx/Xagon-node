@@ -258,6 +258,28 @@
 					"additionalProperties": false,
 					"type": "object",
 					"description": "CustodialAssets is the configuration for the custodial assets"
+				},
+				"HTTP": {
+					"properties": {
+						"Enable": {
+							"type": "boolean",
+							"description": "Enable is the flag to enable the rpc server",
+							"default": false
+						},
+						"Host": {
+							"type": "string",
+							"description": "Host is the host of the rpc server",
+							"default": "0.0.0.0"
+						},
+						"Port": {
+							"type": "integer",
+							"description": "RPCPort is the port of the rpc server",
+							"default": 7001
+						}
+					},
+					"additionalProperties": false,
+					"type": "object",
+					"description": "HTTP is the configuration for the rpc server"
 				}
 			},
 			"additionalProperties": false,

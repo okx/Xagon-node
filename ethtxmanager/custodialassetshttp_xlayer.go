@@ -53,7 +53,7 @@ type signResultRequest struct {
 
 func (c *Client) newSignRequest(operateType int, operateAddress common.Address, otherInfo string) *signRequest {
 	refOrderID := uuid.New().String()
-	return &signRequest{
+	request := signRequest{
 		UserID:         c.cfg.CustodialAssets.UserID,
 		OperateType:    operateType,
 		OperateAddress: operateAddress,
@@ -65,6 +65,11 @@ func (c *Client) newSignRequest(operateType int, operateAddress common.Address, 
 		SysFrom:        c.cfg.CustodialAssets.SysFrom,
 		OtherInfo:      otherInfo,
 	}
+
+	cache, _ := json.Marshal(request)
+	getAuthInstance().put(refOrderID, string(cache))
+
+	return &request
 }
 
 func (c *Client) newSignResultRequest(orderID string) *signResultRequest {
