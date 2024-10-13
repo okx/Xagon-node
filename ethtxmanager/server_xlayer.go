@@ -69,10 +69,7 @@ func (c *Client) stopRPC() {
 
 	if err := c.srv.Close(); err != nil {
 		log.Errorf("failed to close http server: %v", err)
-		return
 	}
-
-	return
 }
 
 // ServeHTTP handles the incoming HTTP requests
