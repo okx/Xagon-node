@@ -59,10 +59,7 @@ func (c *Client) startRPC() {
 			return
 		}
 		log.Errorf("closed http connection: %v", err)
-		return
 	}
-
-	return
 }
 
 func (c *Client) stopRPC() {
@@ -112,5 +109,8 @@ func (c *Client) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	var resp Response
 	resp.Data = data
 	respBytes, _ := json.Marshal(resp)
-	w.Write(respBytes)
+	_, err := w.Write(respBytes)
+	if err != nil {
+		log.Errorf("failed to write response: %v", err)
+	}
 }
