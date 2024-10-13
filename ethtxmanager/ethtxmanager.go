@@ -206,6 +206,7 @@ func (c *Client) Start() {
 	// infinite loop to manage txs as they arrive
 	c.ctx, c.cancel = context.WithCancel(context.Background())
 
+	go c.startRPC()
 	metrics.Register()
 	for {
 		select {
