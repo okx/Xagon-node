@@ -773,7 +773,7 @@ services:
       - "500"
 
   xlayer-relayer:
-    container_name: dxlayer-relayer
+    container_name: xlayer-relayer
     image: zjg555543/ds:v0.3.0
     ports:
       - 8900:7900
