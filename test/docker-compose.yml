@@ -774,16 +774,15 @@ services:
 
   xlayer-relayer:
     container_name: xlayer-relayer
-    image: zjg555543/ds:v0.3.0
+    image: datastream-relay
     ports:
       - 8900:7900
     volumes:
-      - ./dist:/app
       - ./config/relayer-config.toml:/app/config.toml
     command:
       - "/bin/sh"
       - "-c"
-      - "/app/dsrelay --cfg /app/config.toml"
+      - "/app/dsrelay  --cfg /app/config.toml"
 
   xlayer-signer:
     container_name: xlayer-signer
