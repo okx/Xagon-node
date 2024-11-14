@@ -774,7 +774,7 @@ services:
 
   xlayer-relayer:
     container_name: xlayer-relayer
-    image: datastream-relay
+    image: zjg555543/ds-v0.3.0-01
     ports:
       - 8900:7900
     volumes:
