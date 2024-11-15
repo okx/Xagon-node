@@ -458,6 +458,8 @@ services:
     ports:
       - 8545:8545
       - 8546:8546
+    volumes:
+      - ./ethdata/:/data/
     command:
       - "--http"
       - "--http.api"
