@@ -391,7 +391,7 @@ func (e *EthEndpoints) MinGasPrice() (interface{}, types.Error) {
 	if e.cfg.SequencerNodeURI != "" {
 		return e.getMinPriceFromSequencerNode()
 	}
-	delta := 30 * time.Second // nolint:gomnd
+	delta := 90 * time.Second // nolint:gomnd
 	gasPrice, err := e.pool.GetMinSuggestedGasPriceWithDelta(ctx, delta)
 	if err != nil {
 		return e.GasPrice()
