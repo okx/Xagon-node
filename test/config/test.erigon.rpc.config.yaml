@@ -1,0 +1,85 @@
+datadir: /home/erigon/data/
+chain: dynamic-mynetwork
+http: true
+private.api.addr: localhost:19091
+zkevm.l2-chain-id: 195
+zkevm.l2-sequencer-rpc-url: http://xlayer-json-rpc:8123
+zkevm.l2-datastreamer-url: xlayer-ds:7900
+zkevm.l1-chain-id: 1337
+zkevm.l1-rpc-url: http://xlayer-mock-l1-network:8545
+
+zkevm.address-sequencer: "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+zkevm.address-zkevm: "0xeb173087729c88a47568AF87b17C653039377BA6"
+zkevm.address-admin: "0x8f8E2d6cF621f30e9a11309D6A56A876281Fd534"
+zkevm.address-rollup: "0x2d42E2899662EFf08b13eeb65b154b904C7a1c8a"
+zkevm.address-ger-manager: "0xB8cedD4B9eF683f0887C44a6E4312dC7A6e2fcdB"
+
+zkevm.l1-rollup-id: 1
+zkevm.l1-first-block: 368
+zkevm.l1-block-range: 10
+zkevm.l1-query-delay: 6000
+zkevm.l1-highest-block-type: latest
+zkevm.rpc-ratelimit: 300
+zkevm.datastream-version: 2
+
+log.console.verbosity: info
+
+#zkevm.executor-urls: xlayer-executor:50071
+zkevm.executor-urls: ""
+zkevm.executor-strict: false
+zkevm.witness-full: false
+
+zkevm.sequencer-block-seal-time: "6s"
+zkevm.sequencer-batch-seal-time: "12s"
+zkevm.sequencer-batch-sleep-duration: "0s"
+
+zkevm.data-stream-host: "localhost"
+zkevm.data-stream-port: 6900
+zkevm.default-gas-price: 1000000000
+zkevm.max-gas-price: 0
+zkevm.gas-price-factor: 0.000001
+zkevm.allow-free-transactions: true
+zkevm.allow-internal-transactions: true
+externalcl: true
+http.api: [eth, debug, net, trace, web3, erigon, txpool, zkevm]
+http.addr: 0.0.0.0
+http.port: 8545
+http.vhosts: any
+http.corsdomain: any
+http.timeouts.read: "10s"
+http.timeouts.write: "10s"
+http.timeouts.idle: "10s"
+http.methodratelimit: "{\"methods\":[\"eth_syncing\"],\"count\":10,\"bucket\":1}"
+# http.apikeys: |
+#   {"project":"Biconomy","key":"45543e0adc5dd3e316044909d32501a5","timeout":"2030-12-31","methods":["eth_syncing"],"count":10000,"bucket":1}
+
+ws: true
+
+zkevm.apollo-enabled: false
+zkevm.apollo-ip-addr: ""
+zkevm.apollo-app-id: ""
+zkevm.apollo-namespace-name: ""
+
+zkevm.nacos-urls: ""
+zkevm.nacos-namespace-id: ""
+zkevm.nacos-application-name: ""
+zkevm.nacos-external-listen-addr: ""
+
+metrics: true
+metrics.addr: "0.0.0.0"
+metrics.port: 9095
+
+db.read.concurrency: 20000
+txpool.globalslots: 100000
+networkid: 195
+
+zkevm.pool-manager-url: http://xlayer-pool-manager:8545
+
+http.methodratelimit: "{\"methods\":[\"eth_syncing\"],\"count\":10,\"bucket\":1}"
+#http.apikeys: |
+#  {"project":"project1","key":"944cd2a6939eb23053289d9b91d6c498","timeout":"2033-12-12","methods":["eth_syncing"],"count":5,"bucket":1}
+
+pprof: true
+pprof.port: 6060
+pprof.addr: 0.0.0.0
+

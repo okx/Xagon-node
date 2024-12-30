@@ -144,7 +144,7 @@ STOPV1TOV2APPROVE := $(DOCKERCOMPOSE) stop $(DOCKERCOMPOSENODEAPPROVEV1TOV2) && 
 
 STOPMETRICS := $(DOCKERCOMPOSE) stop $(DOCKERCOMPOSEMETRICS) && $(DOCKERCOMPOSE) rm -f $(DOCKERCOMPOSEMETRICS)
 
-STOPDSDATA := rm -rf datastream.bin && rm -rf datastream.db
+STOPDSDATA := rm -rf datastream.bin && rm -rf datastream.db && rm -rf data;
 
 STOP := $(DOCKERCOMPOSE) down --remove-orphans
 
@@ -706,10 +706,17 @@ run: ## Runs a full node
 	$(RUNETHTXMANAGER)
 	$(RUNSEQUENCER)
 	#$(RUNSIGNER)
-	$(RUNSEQUENCESENDER)
 	$(RUNL2GASPRICER)
-	$(RUNAGGREGATOR)
 	$(RUNJSONRPC)
+
+	docker-compose up -d xlayer-ds
+	sleep 3
+	docker-compose up -d xlayer-rpc
+	docker-compose up -d xlayer-agg-db
+	sleep 3
+
+	docker-compose up -d xlayer-seqs
+	docker-compose up -d xlayer-agg
 
 .PHONY: run-v1tov2
 run-v1tov2: ## Runs a full node using v1tov2 network

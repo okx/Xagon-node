@@ -56,7 +56,7 @@
 
     "aggregatorServerPort": 50081,
     "aggregatorClientPort": 50081,
-    "aggregatorClientHost": "xlayer-aggregator",
+    "aggregatorClientHost": "xlayer-agg",
 
     "mapConstPolsFile": false,
     "mapConstantsTreeFile": false,

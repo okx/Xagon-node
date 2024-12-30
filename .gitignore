@@ -14,6 +14,7 @@
 /test/datastreamer/*.db/*
 /test/*.bin
 /test/*.db/*
+/test/data
 
 **/.DS_Store
 .vscode

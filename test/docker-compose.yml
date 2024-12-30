@@ -888,3 +888,94 @@ services:
       - ENABLE_REPORT_FORM=false
       - USE_FIAT_EXCHANGE_RATES=false
       - SHOW_OUTDATED_NETWORK_MODAL=false
+
+  xlayer-agg-db:
+    container_name: xlayer-agg-db
+    image: postgres:15
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+    ports:
+      - 5434:5432
+    environment:
+      - POSTGRES_USER=aggregator_user
+      - POSTGRES_PASSWORD=aggregator_password
+      - POSTGRES_DB=aggregator_db
+    command:
+      - "postgres"
+      - "-N"
+      - "500"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U aggregator_user -d aggregator_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  xlayer-agg:
+    container_name: xlayer-agg
+    image: zjg555543/cdk:v0.4.0-beta10
+    ports:
+      - 50081:50081
+    volumes:
+      - ./data/agg:/tmp/cdk
+      - ./aggregator.keystore:/pk/aggregator.keystore
+      - ./config/cdk.config.toml:/app/config.toml
+      - ./config/test.genesis.config.json:/app/genesis.json
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "/usr/local/bin/cdk-node run --cfg /app/config.toml --custom-network-file /app/genesis.json  --components aggregator"
+
+  xlayer-seqs:
+    container_name: xlayer-seqs
+    image: zjg555543/cdk:v0.4.0-beta10
+    volumes:
+      - ./data/seqs:/tmp/cdk
+      - ./sequencer.keystore:/pk/da.permit.keystore
+      - ./sequencer.keystore:/pk/sequencer.keystore
+      - ./config/cdk.config.toml:/app/config.toml
+      - ./config/test.genesis.config.json:/app/genesis.json
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "/usr/local/bin/cdk-node run --cfg /app/config.toml --custom-network-file /app/genesis.json --components sequence-sender"
+
+  xlayer-rpc:
+    container_name: xlayer-rpc
+    image: cdk-erigon
+    environment:
+      - CDK_ERIGON_SEQUENCER=0
+    ports:
+      - 6061:6060
+      - 18124:8545
+      - 6901:6900
+      - 19095:9095
+    volumes:
+      - ./data/rpc/:/home/erigon/data/
+      - ./config/test.erigon.rpc.config.yaml:/usr/src/app/config.yaml
+      - ./config/dynamic-mynetwork-allocs.json:/usr/src/app/dynamic-mynetwork-allocs.json
+      - ./config/dynamic-mynetwork-chainspec.json:/usr/src/app/dynamic-mynetwork-chainspec.json
+      - ./config/dynamic-mynetwork-conf.json:/usr/src/app/dynamic-mynetwork-conf.json
+    command: >
+      cdk-erigon --http.vhosts=* --http.corsdomain=* --ws --config=/usr/src/app/config.yaml
+
+  xlayer-ds:
+    container_name: xlayer-ds
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    image: zjg555543/xlayer-ds:basedev-merge-upstream-v0.2.7
+    ports:
+      - 7900:7900
+    volumes:
+      #      - ./data/ds/:/home/dsrelay/
+      - ./config/ds-config.toml:/app/config.toml
+    command:
+      - "/bin/sh"
+      - "-c"
+      - "/app/dsrelay --cfg /app/config.toml"
