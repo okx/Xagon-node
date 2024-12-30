@@ -63,7 +63,7 @@
 
     "aggregatorServerPort": 50081,
     "aggregatorClientPort": 50081,
-    "aggregatorClientHost": "xlayer-aggregator",
+    "aggregatorClientHost": "xlayer-agg",
     "aggregatorClientMockTimeout": 10000000,
     "aggregatorClientWatchdogTimeout": 60000000,
 

@@ -1,0 +1,172 @@
+ForkUpgradeBatchNumber = 0
+ForkUpgradeNewForkId = 0
+
+[Log]
+Environment = "development" # "production" or "development"
+Level = "info"
+Outputs = ["stderr"]
+
+[NetworkConfig.L1]
+L1ChainID = 1337
+PolAddr = "0x5FbDB2315678afecb367f032d93F642f64180aa3"
+ZkEVMAddr = "0xeb173087729c88a47568AF87b17C653039377BA6"
+RollupManagerAddr = "0x2d42E2899662EFf08b13eeb65b154b904C7a1c8a"
+GlobalExitRootManagerAddr = "0xB8cedD4B9eF683f0887C44a6E4312dC7A6e2fcdB"
+
+[Etherman]
+	URL="http://xlayer-mock-l1-network:8545"
+	ForkIDChunkSize=100
+	[Etherman.EthermanConfig]
+		URL="http://xlayer-mock-l1-network:8545"
+		MultiGasProvider=false
+		L1ChainID=1337
+		HTTPHeaders=[]
+		[Etherman.EthermanConfig.Etherscan]
+			ApiKey=""
+			Url="https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey="
+
+[Common]
+NetworkID = 1
+IsValidiumMode = true
+ContractVersions = "elderberry"
+
+[SequenceSender]
+WaitPeriodSendSequence = "15s"
+LastBatchVirtualizationTimeMaxWaitPeriod = "10s"
+L1BlockTimestampMargin = "30s"
+MaxTxSizeForL1 = 131072
+L2Coinbase = "0xf39fd6e51aad88f6f4ce6ab8827279cfffb92266"
+PrivateKey = {Path = "/pk/sequencer.keystore", Password = "testonly"}
+SequencesTxFileName = "sequencesender.json"
+GasOffset = 80000
+WaitPeriodPurgeTxFile = "60m"
+MaxPendingTx = 1
+MaxBatchesForL1 = 300
+BlockFinality = "FinalizedBlock"
+RPCURL = "http://xlayer-json-rpc:8123"
+GetBatchWaitInterval = "10s"
+	[SequenceSender.EthTxManager]
+		FrequencyToMonitorTxs = "1s"
+		WaitTxToBeMined = "2m"
+		GetReceiptMaxTime = "250ms"
+		GetReceiptWaitInterval = "1s"
+		PrivateKeys = [
+			{Path = "/pk/sequencer.keystore", Password = "testonly"},
+		]
+		ForcedGas = 0
+		GasPriceMarginFactor = 1
+		MaxGasPriceLimit = 0
+		StoragePath = "/tmp/cdk/ethtxmanager.sqlite"
+		ReadPendingL1Txs = false
+		SafeStatusL1NumberOfBlocks = 0
+		FinalizedStatusL1NumberOfBlocks = 0
+			[SequenceSender.EthTxManager.Etherman]
+				URL = "http://xlayer-mock-l1-network:8545"
+				MultiGasProvider = false
+				L1ChainID = 1337
+[Aggregator]
+# GRPC server host
+Host = "0.0.0.0"
+# GRPC server port
+Port = 50081
+RetryTime = "5s"
+VerifyProofInterval = "10s"
+ProofStatePollingInterval = "5s"
+TxProfitabilityCheckerType = "acceptall"
+TxProfitabilityMinReward = "1.1"
+IntervalAfterWhichBatchConsolidateAnyway="0s"
+BatchProofSanityCheckEnabled = true
+#  ChainID is L2ChainID. Is populated on runtimme
+ChainID = 0
+ForkId = 9
+SenderAddress = "0x70997970c51812dc3a010c7d01b50e0d17dc79c8"
+CleanupLockedProofsInterval = "2m"
+GeneratingProofCleanupThreshold = "10m"
+GasOffset = 0
+RPCURL = "http://xlayer-rpc:8545"
+WitnessURL = "http://xlayer-rpc:8545"
+UseFullWitness = false
+SettlementBackend = "l1"
+AggLayerTxTimeout = "5m"
+AggLayerURL = ""
+SyncModeOnlyEnabled = false
+	[Aggregator.SequencerPrivateKey]
+		Path = "/pk/sequencer.keystore"
+		Password = "testonly"
+	[Aggregator.DB]
+		Name = "aggregator_db"
+		User = "aggregator_user"
+		Password = "aggregator_password"
+		Host = "xlayer-agg-db"
+		Port = "5432"
+		EnableLog = false	
+		MaxConns = 200
+	[Aggregator.Log]
+		Environment = "development" # "production" or "development"
+		Level = "info"
+		Outputs = ["stderr"]
+	[Aggregator.EthTxManager]
+		FrequencyToMonitorTxs = "1s"
+		WaitTxToBeMined = "2m"
+		GetReceiptMaxTime = "250ms"
+		GetReceiptWaitInterval = "1s"
+		PrivateKeys = [
+			{Path = "/pk/aggregator.keystore", Password = "testonly"},
+		]
+		ForcedGas = 0
+		GasPriceMarginFactor = 1
+		MaxGasPriceLimit = 0
+		StoragePath = "/tmp/cdk/ethtxmanager.sqlite"
+		ReadPendingL1Txs = false
+		SafeStatusL1NumberOfBlocks = 0
+		FinalizedStatusL1NumberOfBlocks = 0
+			[Aggregator.EthTxManager.Etherman]
+				URL = "http://xlayer-mock-l1-network:8545"
+				L1ChainID = 1337
+				HTTPHeaders = []
+	[Aggregator.Synchronizer]
+		[Aggregator.Synchronizer.Log]
+			Environment = "development" # "production" or "development"
+			Level = "info"
+			Outputs = ["stderr"]
+		[Aggregator.Synchronizer.SQLDB]
+			DriverName = "sqlite3"
+			DataSource = "/tmp/cdk/aggregator_sync_db.sqlite"
+		[Aggregator.Synchronizer.Synchronizer]
+			SyncInterval = "10s"
+			SyncChunkSize = 1000
+			GenesisBlockNumber = 368
+			SyncUpToBlock = "finalized"
+			BlockFinality = "finalized"
+			OverrideStorageCheck = false
+		[Aggregator.Synchronizer.Etherman]
+			L1URL = "http://xlayer-mock-l1-network:8545"
+			ForkIDChunkSize = 100
+			L1ChainID = 1337
+			PararellBlockRequest = false
+			[Aggregator.Synchronizer.Etherman.Contracts]
+				GlobalExitRootManagerAddr = "0xB8cedD4B9eF683f0887C44a6E4312dC7A6e2fcdB"
+				RollupManagerAddr = "0x2d42E2899662EFf08b13eeb65b154b904C7a1c8a"
+				ZkEVMAddr = "0xeb173087729c88a47568AF87b17C653039377BA6"
+			[Aggregator.Synchronizer.Etherman.Validium]
+				Enabled = true
+				# L2URL, empty ask to contract
+				TrustedSequencerURL = ""
+				RetryOnDACErrorInterval = "1m"
+				DataSourcePriority = ["trusted", "external"]
+			[Aggregator.Synchronizer.Etherman.Validium.Translator]
+				FullMatchRules = []
+			[Aggregator.Synchronizer.Etherman.Validium.RateLimit]
+				NumRequests = 1000
+				Interval = "1s"
+[ReorgDetectorL1]
+DBPath = "/tmp/cdk/reorg_detector_l1.sqlite"
+
+[L1InfoTreeSync]
+DBPath = "/tmp/cdk/l1_info_tree_sync.sqlite"
+GlobalExitRootAddr="0xB8cedD4B9eF683f0887C44a6E4312dC7A6e2fcdB"
+RollupManagerAddr = "0x2d42E2899662EFf08b13eeb65b154b904C7a1c8a"
+SyncBlockChunkSize=10
+BlockFinality="LatestBlock"
+WaitForNewBlocksPeriod="100ms"
+InitialBlock= 368
