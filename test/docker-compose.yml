@@ -514,7 +514,7 @@ services:
 
   xlayer-prover:
     container_name: xlayer-prover
-    image: hermeznetwork/zkevm-prover:v6.0.0
+    image: hermeznetwork/zkevm-prover:v6.0.8
     platform: linux/amd64
     ports:
       # - 50051:50051 # Prover
@@ -530,7 +530,7 @@ services:
 
   xlayer-mock-prover:
     container_name: xlayer-mock-prover
-    image: hermeznetwork/zkevm-prover:v6.0.0
+    image: hermeznetwork/zkevm-prover:v6.0.8
     ports:
       # - 50051:50051 # Prover
       - 50052:50052 # Mock prover
@@ -541,7 +541,7 @@ services:
 
   xlayer-mock-prover2:
     container_name: xlayer-mock-prover2
-    image: hermeznetwork/zkevm-prover:v6.0.0
+    image: hermeznetwork/zkevm-prover:v6.0.8
     ports:
       # - 50051:50051 # Prover
       - 50252:50052 # Mock prover
@@ -552,7 +552,7 @@ services:
 
   xlayer-mock-prover3:
     container_name: xlayer-mock-prover3
-    image: hermeznetwork/zkevm-prover:v6.0.0
+    image: hermeznetwork/zkevm-prover:v6.0.8
     ports:
       # - 50051:50051 # Prover
       - 50352:50052 # Mock prover
@@ -563,7 +563,7 @@ services:
 
   xlayer-mock-prover4:
     container_name: xlayer-mock-prover4
-    image: hermeznetwork/zkevm-prover:v6.0.0
+    image: hermeznetwork/zkevm-prover:v6.0.8
     ports:
       # - 50051:50051 # Prover
       - 50452:50052 # Mock prover
@@ -574,7 +574,7 @@ services:
 
   xlayer-executor:
     container_name: xlayer-executor
-    image: hermeznetwork/zkevm-prover:v6.0.0
+    image: hermeznetwork/zkevm-prover:v6.0.8
     ports:
       - 50061:50061 # MT
       - 50071:50071 # Executor
@@ -706,7 +706,7 @@ services:
   xlayer-permissionless-prover:
     container_name: xlayer-permissionless-prover
     platform: linux/amd64
-    image: hermeznetwork/zkevm-prover:v6.0.0
+    image: hermeznetwork/zkevm-prover:v6.0.8
     environment:
       - EXPERIMENTAL_DOCKER_DESKTOP_FORCE_QEMU=1
     ports:
@@ -946,7 +946,7 @@ services:
 
   xlayer-rpc:
     container_name: xlayer-rpc
-    image: cdk-erigon
+    image: zjg555543/xlayer-erigon:dev-dcc81fa
     environment:
       - CDK_ERIGON_SEQUENCER=0
     ports:

@@ -69,7 +69,6 @@ metrics: true
 metrics.addr: "0.0.0.0"
 metrics.port: 9095
 
-db.read.concurrency: 20000
 txpool.globalslots: 100000
 networkid: 195
 
@@ -83,3 +82,6 @@ pprof: true
 pprof.port: 6060
 pprof.addr: 0.0.0.0
 
+db.pagesize: 8KB
+db.size.limit: 500MB
+db.read.concurrency: 10000
