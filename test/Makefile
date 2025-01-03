@@ -658,7 +658,7 @@ stop-approve-pol-v1tov2: ## Stops approve in node container
 	$(STOPV1TOV2APPROVE)
 
 .PHONY: run-bridge
-run-bridge: ## Runs a full node whit bridge services
+run: ## Runs a full node whit bridge services
 	$(RUNSTATEDB)
 	$(RUNPOOLDB)
 	$(RUNEVENTDB)
@@ -668,8 +668,6 @@ run-bridge: ## Runs a full node whit bridge services
 	$(RUN_COIN_KAFKA)
 	$(RUN_ZOOKEEPER)
 	$(RUNL1NETWORK)
-	$(RUNEXPLORERL1DB)
-	$(RUNEXPLORERL2DB)
 	sleep 1
 	$(RUNZKPROVER)
 	$(RUNAPPROVE)
@@ -685,56 +683,54 @@ run-bridge: ## Runs a full node whit bridge services
 	$(RUNJSONRPC)
 	$(RUN_BRIDGE)
 	$(RUN_BRIDGE_UI)
-	$(RUNEXPLORERJSONRPC)
-	$(RUNEXPLORERL1)
-	$(RUNEXPLORERL2)
-
-.PHONY: run
-run: ## Runs a full node
-	$(RUNSTATEDB)
-	$(RUNPOOLDB)
-	$(RUNEVENTDB)
-	$(RUNDACDB)
-	$(RUNL1NETWORK)
-	sleep 1
-	$(RUNZKPROVER)
-	$(RUNMOCKPROVER2)
-	$(RUNMOCKPROVER3)
-	$(RUNMOCKPROVER4)
-	$(RUNAPPROVE)
-	sleep 3
-	$(RUNSYNC)
-	sleep 4
-	$(RUNDACNODE)
-	$(RUNETHTXMANAGER)
-	$(RUNSEQUENCER)
-	#$(RUNSIGNER)
-	$(RUNSEQUENCESENDER)
-	$(RUNL2GASPRICER)
-	$(RUNAGGREGATOR)
-	$(RUNJSONRPC)
 	$(RUNRELAER)
 
-.PHONY: run-v1tov2
-run-v1tov2: ## Runs a full node using v1tov2 network
-	$(RUNSTATEDB)
-	$(RUNPOOLDB)
-	$(RUNEVENTDB)
-	$(RUNV1TOV2L1NETWORK)
-	sleep 1
-	$(RUNZKPROVER)
-	$(RUNV1TOV2APPROVE)
-	sleep 3
-	$(RUNV1TOV2SYNC)
-	sleep 4
-	$(RUNV1TOV2ETHTXMANAGER)
-	$(RUNV1TOV2SEQUENCER)
-	$(RUNV1TOV2SEQUENCESENDER)
-	$(RUNV1TOV2L2GASPRICER)
-	$(RUNV1TOV2AGGREGATOR)
-	$(RUNV1TOV2JSONRPC)
-
-.PHONY: stop
+#.PHONY: run
+#run: ## Runs a full node
+#	$(RUNSTATEDB)
+#	$(RUNPOOLDB)
+#	$(RUNEVENTDB)
+#	$(RUNDACDB)
+#	$(RUNL1NETWORK)
+#	sleep 1
+#	$(RUNZKPROVER)
+#	$(RUNMOCKPROVER2)
+#	$(RUNMOCKPROVER3)
+#	$(RUNMOCKPROVER4)
+#	$(RUNAPPROVE)
+#	sleep 3
+#	$(RUNSYNC)
+#	sleep 4
+#	$(RUNDACNODE)
+#	$(RUNETHTXMANAGER)
+#	$(RUNSEQUENCER)
+#	#$(RUNSIGNER)
+#	$(RUNSEQUENCESENDER)
+#	$(RUNL2GASPRICER)
+#	$(RUNAGGREGATOR)
+#	$(RUNJSONRPC)
+#	$(RUNRELAER)
+#
+#.PHONY: run-v1tov2
+#run-v1tov2: ## Runs a full node using v1tov2 network
+#	$(RUNSTATEDB)
+#	$(RUNPOOLDB)
+#	$(RUNEVENTDB)
+#	$(RUNV1TOV2L1NETWORK)
+#	sleep 1
+#	$(RUNZKPROVER)
+#	$(RUNV1TOV2APPROVE)
+#	sleep 3
+#	$(RUNV1TOV2SYNC)
+#	sleep 4
+#	$(RUNV1TOV2ETHTXMANAGER)
+#	$(RUNV1TOV2SEQUENCER)
+#	$(RUNV1TOV2SEQUENCESENDER)
+#	$(RUNV1TOV2L2GASPRICER)
+#	$(RUNV1TOV2AGGREGATOR)
+#	$(RUNV1TOV2JSONRPC)
+#
+#.PHONY: stop
 stop: ## Stops all services
 	$(STOP)
 	$(STOPDSDATA)
