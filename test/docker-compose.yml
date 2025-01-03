@@ -776,7 +776,7 @@ services:
 
   xlayer-relayer:
     container_name: xlayer-relayer
-    image: zjg555543/ds-v0.3.0-01
+    image: zjg555543/xlayer-ds:basedev-merge-upstream-v0.2.7
     ports:
       - 8900:7900
     volumes:
