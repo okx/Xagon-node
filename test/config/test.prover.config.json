@@ -8,10 +8,10 @@
 
     "runAggregatorServer": false,
     "runAggregatorClient": false,
-    "runAggregatorClientMock": true, 
+    "runAggregatorClientMock": true,
     "aggregatorClientMockTimeout": 1,
     "proverName": "test-prover",
-    
+
     "runFileGenBatchProof": false,
     "runFileGenAggregatedProof": false,
     "runFileGenFinalProof": false,
